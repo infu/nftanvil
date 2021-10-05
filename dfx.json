@@ -1,0 +1,35 @@
+{
+  "canisters": {
+    "dropship": {
+      "main": "src/dropship/main.mo",
+      "type": "motoko"
+    },
+    "dropship_assets": {
+      "dependencies": [
+        "dropship"
+      ],
+      "frontend": {
+        "entrypoint": "src/dropship_assets/src/index.html"
+      },
+      "source": [
+        "src/dropship_assets/assets",
+        "dist/dropship_assets/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "dfx": "0.8.1",
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    }
+  },
+  "version": 1
+}
