@@ -1,5 +1,10 @@
 {
-  "canisters": {
+  "canisters": { 
+    "dropship_test": {
+      "main": "src/dropship_test/main.mo",
+      "type": "motoko",
+	"dependencies": ["dropship"]
+    },
     "dropship": {
       "main": "src/dropship/main.mo",
       "type": "motoko"
@@ -21,7 +26,7 @@
   "defaults": {
     "build": {
       "args": "",
-      "packtool": ""
+      "packtool": "vessel sources"
     }
   },
   "dfx": "0.8.1",
