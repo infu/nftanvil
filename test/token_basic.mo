@@ -22,7 +22,9 @@ let nft = await Dropship.Token();
 // Debug.print(Principal.toText(Principal.fromActor(nft))); // BUG: this is not working when we run it from moc command line
 
 // we have to initialize, because the object doesn't know its cannisterId when instantiated with a test script
-let user_john_principal:Principal = await nft.init(NFTcanisterId);
+let user_john_principal:Principal = await nft.whoAmI();
+
+await nft.init(NFTcanisterId, user_john_principal);
 
 let user_john : Ext.User = #principal(user_john_principal);
 let user_peter_principal = Principal.fromText("ks5fw-csuji-57tsx-mqld6-bjip7-anp4q-pecol-5k6vo-vzcmw-3wuo2-qqe");
@@ -36,6 +38,12 @@ let user_john_sub2 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(use
 let token_one : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 0);
 let token_two : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 1);
 let token_three : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 2);
+let token_for_burning : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 3);
+
+let token_bad : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 99);
+
+let mint_one = Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
+let mint_two = Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
 
 Debug.print("john  & current script principal: " # Principal.toText(user_john_principal));
 Debug.print("NFTcanisterId: " # NFTcanisterId);
@@ -51,18 +59,22 @@ Debug.print("User john Account Identifier: " # Ext.User.toAccountIdentifier(user
 Result.assertErr(await nft.balance({ user  = user_john; token = token_one;}));
 
 // mint token with index 0
-assert((await nft.mintNFT({to = user_john; metadata = ?someMeta})) == #ok(0));
+assert((await nft.mintNFT({to = user_john; minter = mint_one; metadata = someMeta})) == #ok(0));
 
 // mint token with index 1
-assert((await nft.mintNFT({to = user_john; metadata = ?someMeta})) == #ok(1));
+assert((await nft.mintNFT({to = user_john; minter = mint_one; metadata = someMeta})) == #ok(1));
+
 
 // mint token with index 2 to peter
-switch(await nft.mintNFT({to = user_peter; metadata = ?someMeta})) {
+switch(await nft.mintNFT({to = user_john; minter = mint_one; metadata = someMeta})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
     case (#err(e)) Debug.print(debug_show(e));
 };
 
-// check balance of john for token one
+// mint token for burning later
+assert((await nft.mintNFT({to = user_john; minter = mint_one; metadata = someMeta})) == #ok(3));
+
+// check balance of john for token one 
 assert( (await nft.balance({ user  = user_john; token = token_one;})) == #ok(1));
 
 
@@ -192,8 +204,57 @@ await infu.run_three();
 // John finds the token in Peter's balance
 assert( (await nft.balance({ user  = user_peter; token = token_two;})) == #ok(1));
 
+// -- Bearer 
+// check token two it must be in peter
+assert( (await nft.bearer(token_two)) == #ok(Ext.User.toAccountIdentifier(user_peter)));
 
+// check token one it must be in peter too
+assert( (await nft.bearer(token_one)) == #ok(Ext.User.toAccountIdentifier(user_peter)));
+
+// check token one it must be in john
+assert( (await nft.bearer(token_three)) == #ok(Ext.User.toAccountIdentifier(user_john)));
+
+// check bearer of token index 99 which doesn't exist
+assert( (await nft.bearer(token_bad)) == #err(#InvalidToken(token_bad)));
+
+// check supply for  index 99 which doesn't exist
+assert( (await nft.supply(token_bad)) == #err(#InvalidToken(token_bad)));
+
+// check supply for token one, should be 1
+assert( (await nft.supply(token_one)) ==  #ok(1));
+
+// check supply for token two, should be 1
+assert( (await nft.supply(token_two)) ==  #ok(1));
+
+// - Metadata
+ 
+Debug.print(debug_show( (await nft.metadata(token_two)) )); 
 Debug.print("DONE");
+
+// - Owned
+Debug.print(debug_show( (await nft.owned(user_john)) ));
+
+// -- Burn & Stats
+var stats = await nft.stats();
+assert(stats.accounts == 2);
+assert(stats.burned == 0);
+assert(stats.minted == 4);
+assert(stats.transfers == 6);
+
+// burn the token
+assert( (await nft.burn({ user = user_john; token = token_for_burning; amount = 1; memo = someMemo; notify=true; subaccount = null })) == #ok(1));
+
+// get new stats
+stats := await nft.stats();
+assert(stats.burned == 1);
+
+// check token bearer
+assert( (await nft.bearer(token_for_burning)) == #err(#InvalidToken(token_for_burning)) );
+
+
+Debug.print(debug_show( (await nft.stats()) ));
+
+// - Transfer Notifications? (maybe later)
 
 // NOTE: when one needs to see output: Debug.print(debug_show( anything )); 
 
