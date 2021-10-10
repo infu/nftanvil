@@ -13,7 +13,6 @@ import Debug "mo:base/Debug";
 import Nat32 "mo:base/Nat32";
 import Cycles "mo:base/ExperimentalCycles";
 
-import SNFT "./store_nft";
 
 shared(install) actor class Token() : async Interface.NonFungibleToken = this {
 
@@ -268,6 +267,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
 
     private func SNFT_burn(aid: AccountIdentifier, tidx: TokenIndex) : () {
         SNFT_del(aid, tidx);
+        _meta.delete(tidx);
         _statsBurned := _statsBurned + 1;
     };
 
@@ -278,12 +278,19 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     };
 
 
-    public type OwnedResponse = [TokenIndex];
+    public type OwnedResponse = {idx:TokenIndex; metadata: ?Metadata};
     
     // returns all tokens the user owns
-    public query func owned(user : User) : async OwnedResponse {
+    public query func owned(user : User) : async [OwnedResponse] {
         let aid = Ext.User.toAccountIdentifier(user);
-        let some = switch(SNFT_aidGet(aid)) { case (?a) a; case _ []; };
+        let token_ids = switch(SNFT_aidGet(aid)) { case (?a) a; case _ []; };
+        Array.map<TokenIndex, OwnedResponse>(token_ids, func (tokenIndex) { 
+             switch( _meta.get(tokenIndex) ) {
+                    case (?a) 
+                    return {idx = tokenIndex; metadata = ?a}; 
+                    case _ {assert(false); {idx = tokenIndex; metadata = null}}; //we can't have token without _meta
+                    }
+                });
     };
 
    

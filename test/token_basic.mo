@@ -42,8 +42,8 @@ let token_for_burning : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Princip
 
 let token_bad : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 99);
 
-let mint_one = Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
-let mint_two = Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
+let minter_one = Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
+let minter_two = Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
 
 Debug.print("john  & current script principal: " # Principal.toText(user_john_principal));
 Debug.print("NFTcanisterId: " # NFTcanisterId);
@@ -59,20 +59,20 @@ Debug.print("User john Account Identifier: " # Ext.User.toAccountIdentifier(user
 Result.assertErr(await nft.balance({ user  = user_john; token = token_one;}));
 
 // mint token with index 0
-assert((await nft.mintNFT({to = user_john; minter = mint_one; metadata = someMeta})) == #ok(0));
+assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta})) == #ok(0));
 
 // mint token with index 1
-assert((await nft.mintNFT({to = user_john; minter = mint_one; metadata = someMeta})) == #ok(1));
+assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta})) == #ok(1));
 
 
 // mint token with index 2 to peter
-switch(await nft.mintNFT({to = user_john; minter = mint_one; metadata = someMeta})) {
+switch(await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
     case (#err(e)) Debug.print(debug_show(e));
 };
 
 // mint token for burning later
-assert((await nft.mintNFT({to = user_john; minter = mint_one; metadata = someMeta})) == #ok(3));
+assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta})) == #ok(3));
 
 // check balance of john for token one 
 assert( (await nft.balance({ user  = user_john; token = token_one;})) == #ok(1));
@@ -229,11 +229,14 @@ assert( (await nft.supply(token_two)) ==  #ok(1));
 // - Metadata
  
 Debug.print(debug_show( (await nft.metadata(token_two)) )); 
-Debug.print("DONE");
+
 
 // - Owned
-Debug.print(debug_show( (await nft.owned(user_john)) ));
+let owned = (await nft.owned(user_john));
+assert(owned[0].idx == 2);
+assert(owned[1].idx == 3);
 
+Debug.print(debug_show( owned ));
 // -- Burn & Stats
 var stats = await nft.stats();
 assert(stats.accounts == 2);
@@ -253,7 +256,7 @@ assert( (await nft.bearer(token_for_burning)) == #err(#InvalidToken(token_for_bu
 
 
 Debug.print(debug_show( (await nft.stats()) ));
-
+Debug.print("DONE");
 // - Transfer Notifications? (maybe later)
 
 // NOTE: when one needs to see output: Debug.print(debug_show( anything )); 

@@ -8,6 +8,11 @@ let additions = [
   , version = "v0.1.3"
   , dependencies = ["base", "principal"]
   },
+  { name = "vvv"
+  , repo = "https://github.com/vvv-interactive/vvv.mo"
+  , version = "v0.1.0"
+  , dependencies = ["base"]
+  },
    { name = "sha"
    , repo = "https://github.com/aviate-labs/sha.mo"
    , version = "v0.1.1"
