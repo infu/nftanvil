@@ -1,4 +1,5 @@
-import Blob_  "mo:vvv/Blob"
+import Blob_  "mo:vvv/Blob";
+import Debug  "mo:base/Debug";
 
 let txt_start = "something 😇 special";
 // Debug.print("START: " # txt_start);

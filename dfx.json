@@ -1,12 +1,8 @@
 {
   "canisters": { 
-    "dropship_test": {
-      "main": "src/dropship_test/main.mo",
-      "type": "motoko",
-	"dependencies": ["dropship"]
-    },
+  
     "dropship": {
-      "main": "src/dropship/main.mo",
+      "main": "ic/dropship/main.mo",
       "type": "motoko"
     },
     "dropship_assets": {

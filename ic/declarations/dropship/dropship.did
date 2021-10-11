@@ -1,3 +1,8 @@
+type User__1 = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
 type User = 
  variant {
    address: AccountIdentifier;
@@ -26,27 +31,43 @@ type TransferRequest =
    to: User;
    token: TokenIdentifier;
  };
+type TokenIndex__1 = nat32;
 type TokenIndex = nat32;
 type TokenIdentifier = text;
 type Token = 
  service {
    allowance: (Request) -> (Response) query;
-   approve: (ApproveRequest) -> ();
+   approve: (ApproveRequest) -> (ApproveResponse);
    balance: (BalanceRequest) -> (BalanceResponse) query;
    bearer: (TokenIdentifier) -> (BearerResponse) query;
+   burn: (BurnRequest) -> (BurnResponse);
+   cyclesAccept: () -> ();
+   cyclesBalance: () -> (nat) query;
    extensions: () -> (vec Extension) query;
-   greet: (text) -> (text) query;
+   init: (text, principal) -> ();
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
    mintNFT: (MintRequest) -> (MintResponse);
+   mintNFT_batch: (vec MintRequest) -> (MintBatchResponse);
+   owned: (User__1) -> (vec OwnedResponse) query;
+   stats: () -> (StatsResponse) query;
    supply: (TokenIdentifier) -> (SupplyResponse) query;
    transfer: (TransferRequest) -> (TransferResponse);
+   whoAmI: () -> (principal);
  };
+type Time = int;
 type SupplyResponse = 
  variant {
    err: CommonError;
    ok: Balance;
  };
 type SubAccount = vec nat8;
+type StatsResponse = 
+ record {
+   accounts: nat32;
+   burned: nat32;
+   minted: nat32;
+   transfers: nat32;
+ };
 type Response = 
  variant {
    err: CommonError;
@@ -58,20 +79,49 @@ type Request =
    spender: principal;
    token: TokenIdentifier;
  };
+type OwnedResponse = 
+ record {
+   idx: TokenIndex;
+   metadata: opt Metadata;
+ };
 type MintResponse = 
  variant {
    err: CommonError;
-   ok: TokenIndex;
+   ok: TokenIndex__1;
  };
 type MintRequest = 
  record {
-   metadata: opt blob;
+   TTL: opt nat32;
+   metadata: blob;
+   minter: AccountIdentifier;
    to: User;
+ };
+type MintBatchResponse = 
+ variant {
+   err: CommonError;
+   ok: vec TokenIndex__1;
+ };
+type Metadata__1 = 
+ variant {
+   fungible:
+    record {
+      decimals: nat8;
+      metadata: opt blob;
+      name: text;
+      symbol: text;
+    };
+   nonfungible:
+    record {
+      TTL: opt nat32;
+      created: Time;
+      metadata: blob;
+      minter: AccountIdentifier;
+    };
  };
 type MetadataResponse = 
  variant {
    err: CommonError;
-   ok: Metadata;
+   ok: Metadata__1;
  };
 type Metadata = 
  variant {
@@ -82,7 +132,13 @@ type Metadata =
       name: text;
       symbol: text;
     };
-   nonfungible: record {metadata: opt blob;};
+   nonfungible:
+    record {
+      TTL: opt nat32;
+      created: Time;
+      metadata: blob;
+      minter: AccountIdentifier;
+    };
  };
 type Memo = blob;
 type Extension = text;
@@ -90,6 +146,28 @@ type CommonError =
  variant {
    InvalidToken: TokenIdentifier;
    Other: text;
+ };
+type BurnResponse = 
+ variant {
+   err:
+    variant {
+      CannotNotify: AccountIdentifier;
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier;
+    };
+   ok: Balance;
+ };
+type BurnRequest = 
+ record {
+   amount: Balance;
+   memo: Memo;
+   notify: bool;
+   subaccount: opt SubAccount;
+   token: TokenIdentifier;
+   user: User;
  };
 type BearerResponse = 
  variant {
@@ -107,6 +185,17 @@ type BalanceRequest =
    user: User;
  };
 type Balance = nat;
+type ApproveResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Unauthorized: AccountIdentifier;
+    };
+   ok;
+ };
 type ApproveRequest = 
  record {
    allowance: Balance;

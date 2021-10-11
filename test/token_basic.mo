@@ -4,11 +4,12 @@ import Nat8 "mo:base/Nat8";
 import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
-
+import Iter "mo:base/Iter";
 import Ext "../lib/ext.std/src/Ext";
 import Interface "../lib/ext.std/src/Interface";
 
 import Dropship "../src/dropship/main";
+import Array_ "../../repos/vvv/src/Array"
 
 
 var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
@@ -33,7 +34,7 @@ let user_peter : Ext.User = #principal(user_peter_principal);
 
 
 let user_john_sub1 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]));
-let user_john_sub2 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]));
+let user_john_sub2 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,210]));
 
 let token_one : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 0);
 let token_two : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 1);
@@ -51,6 +52,7 @@ Debug.print("Token one: " # token_one);
 Debug.print("Token two: " # token_two);
 
 Debug.print("User john Account Identifier: " # Ext.User.toAccountIdentifier(user_john));
+Debug.print("User john Account Identifier sub2: " # Ext.User.toAccountIdentifier(user_john_sub2));
 
 
 // -- Check Minting & balances
@@ -59,20 +61,20 @@ Debug.print("User john Account Identifier: " # Ext.User.toAccountIdentifier(user
 Result.assertErr(await nft.balance({ user  = user_john; token = token_one;}));
 
 // mint token with index 0
-assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta})) == #ok(0));
+assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta; TTL=null})) == #ok(0));
 
 // mint token with index 1
-assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta})) == #ok(1));
+assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta; TTL=null})) == #ok(1));
 
 
 // mint token with index 2 to peter
-switch(await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta})) {
+switch(await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta; TTL=null})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
     case (#err(e)) Debug.print(debug_show(e));
 };
 
 // mint token for burning later
-assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta})) == #ok(3));
+assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta; TTL=null})) == #ok(3));
 
 // check balance of john for token one 
 assert( (await nft.balance({ user  = user_john; token = token_one;})) == #ok(1));
@@ -255,11 +257,51 @@ assert(stats.burned == 1);
 assert( (await nft.bearer(token_for_burning)) == #err(#InvalidToken(token_for_burning)) );
 
 
+// -- Batch mintNFT 
+// func iterate<A>(
+//     xs : Iter.Iter<A>,
+//     f : (A, Nat) -> ()
+//   ) {
+//     var i = 0;
+//     label l loop {
+//       switch (xs.next()) {
+//         case (?next) {
+//           f(next, i);
+//         };
+//         case (null) {
+//           break l;
+//         };
+//       };
+//       i += 1;
+//       continue l;
+//     };
+//   };
+
+
+// Debug.print(debug_show( amap<Nat>(10, func (x:Nat) :Nat {x *1 }) ))
+
+// let aaa = Iter.toArray(Iter.map(Iter.range(1, 3), func (x : Nat) : Nat { 
+// {to = user_john; minter = minter_one; metadata = someMeta; TTL = null}
+
+//  }));
+// Debug.print(debug_show(aaa));
+// let batch = Iter.map<Nat,Ext.NonFungible.MintRequest>( Iter.range(0,2), func (x : Nat) : Ext.NonFungible.MintRequest { 
+//      return {to = user_john; minter = minter_one; metadata = someMeta; TTL = null};
+   
+//     });
+
+let batch = Array_.amap<Ext.NonFungible.MintRequest>(50, func(x) { {to = user_john; minter = minter_one; metadata = someMeta; TTL = null}  });
+
+// Debug.print("\n\n"#debug_show(batch));
+
+
+
+let minted = await nft.mintNFT_batch(batch);
+ignore await nft.mintNFT_batch(batch);
+ignore await nft.mintNFT_batch(batch);
+
 Debug.print(debug_show( (await nft.stats()) ));
 Debug.print("DONE");
 // - Transfer Notifications? (maybe later)
 
 // NOTE: when one needs to see output: Debug.print(debug_show( anything )); 
-
- 
-

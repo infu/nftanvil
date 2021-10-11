@@ -9,6 +9,7 @@ import Array "mo:base/Array";
 import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Result "mo:base/Result";
+import Time "mo:base/Time";
 import Debug "mo:base/Debug";
 import Nat32 "mo:base/Nat32";
 import Cycles "mo:base/ExperimentalCycles";
@@ -62,9 +63,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     
     private stable var _tmpAccount : [(AccountIdentifier, [TokenIndex])] = [];
     private var _account : HashMap.HashMap<AccountIdentifier, [TokenIndex]> = HashMap.fromIter(_tmpAccount.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
-    
-    // private var _account : HashMap.HashMap<AccountIdentifier, [TokenIndex]> = List.nil<(AccountIdentifier, [TokenIndex] )>(); 
-    
+        
 
     private stable var _admin : Principal  = install.caller; 
     private stable var _minter : Principal  = install.caller; 
@@ -197,16 +196,30 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
                
     };
 
-    public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
-  
+    public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
         assert(caller == _minter);
+
+        let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
+                let tokenIndex = SNFT_mint(one_request);
+                return tokenIndex
+                });
+
+        #ok(tokens);
+    };
+
+    private func SNFT_mint(request: Ext.NonFungible.MintRequest) : TokenIndex {
+
         let receiver = Ext.User.toAccountIdentifier(request.to);
  
         let tokenIndex:TokenIndex = _nextTokenId;
 
+        let now = Time.now();
+
         let md : Metadata = #nonfungible({
             metadata = request.metadata;
             minter = request.minter;
+            created = now;
+            TTL = request.TTL;
         }); 
 
         SNFT_put(receiver, tokenIndex);
@@ -214,7 +227,34 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
         _meta.put(tokenIndex, md);
         _nextTokenId := _nextTokenId + 1;
 
-        #ok(tokenIndex);
+        tokenIndex
+
+    };
+
+    public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
+        assert(caller == _minter);
+
+        let tokenIndex = SNFT_mint(request);
+
+        // let receiver = Ext.User.toAccountIdentifier(request.to);
+ 
+        // let tokenIndex:TokenIndex = _nextTokenId;
+
+        // let now = Time.now();
+
+        // let md : Metadata = #nonfungible({
+        //     metadata = request.metadata;
+        //     minter = request.minter;
+        //     created = now;
+        //     TTL = request.TTL;
+        // }); 
+
+        // SNFT_put(receiver, tokenIndex);
+
+        // _meta.put(tokenIndex, md);
+        // _nextTokenId := _nextTokenId + 1;
+
+         #ok(tokenIndex);
     };
 
     // Storage related functions
@@ -373,7 +413,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
         }
     };
     // Internal functions which help for better code reusability
- 
+
     private func balGet(request : BalanceRequest) : BalanceInt {
        switch (Ext.TokenIdentifier.decode(request.token)) {
             case (#ok(cannisterId, tokenIndex)) {
