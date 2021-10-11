@@ -1,6 +1,5 @@
 {
   "canisters": { 
-  
     "dropship": {
       "main": "ic/dropship/main.mo",
       "type": "motoko"
@@ -13,7 +12,7 @@
         "entrypoint": "build/index.html"
       },
       "source": [
-        "build/",
+        "build/"
       ],
       "type": "assets"
     }
