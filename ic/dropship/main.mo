@@ -1,5 +1,5 @@
-import Ext "../../lib/ext.std/src/Ext";
-import Interface "../../lib/ext.std/src/Interface";
+import Ext "../lib/ext.std/src/Ext";
+import Interface "../lib/ext.std/src/Interface";
 import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import AssocList "mo:base/AssocList";

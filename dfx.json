@@ -10,11 +10,10 @@
         "dropship"
       ],
       "frontend": {
-        "entrypoint": "src/dropship_assets/src/index.html"
+        "entrypoint": "build/index.html"
       },
       "source": [
-        "src/dropship_assets/assets",
-        "dist/dropship_assets/"
+        "build/",
       ],
       "type": "assets"
     }
