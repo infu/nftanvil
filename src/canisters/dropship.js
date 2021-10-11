@@ -5,7 +5,6 @@ import { idlFactory } from '../ic/declarations/dropship/dropship.did.js';
 export { idlFactory } from '../ic/declarations/dropship/dropship.did.js';
 // CANISTER_ID is replaced by webpack based on node environment
 export const canisterId = process.env.REACT_APP_DROPSHIP_CANISTER_ID;
-console.log("CAN ID: "+canisterId);
 /**
  * 
  * @param {string | import("@dfinity/principal").Principal} canisterId Canister ID of Agent

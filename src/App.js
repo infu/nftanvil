@@ -4,7 +4,8 @@ import { AuthClient } from "@dfinity/auth-client";
 import { dropship, createActor } from "./canisters/dropship";
 import {principalToAccountIdentifier, encodeTokenId} from "./purefunc/token";
 
-
+import { useSelector, useDispatch } from 'react-redux'
+import { decrement, increment } from './reducers/user'
 
 const onAuthenticate = async () => {
 
@@ -51,6 +52,9 @@ const onAuthenticate = async () => {
 
 
 function App() {
+  const count = useSelector(state => state.user.value)
+  const dispatch = useDispatch()
+
   return (
     <div className="App">
       <header className="App-header">
@@ -59,6 +63,7 @@ function App() {
           Edit <code>src/App.js</code> and save to reload.
         </p>
         <button onClick={onAuthenticate} >Auth</button>
+        {count} <button onClick={() => dispatch(increment())}>+</button>
         <a
           className="App-link"
           href="https://reactjs.org"

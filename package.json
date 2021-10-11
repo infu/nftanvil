@@ -9,12 +9,15 @@
     "@dfinity/candid": "^0.10.1",
     "@dfinity/identity": "^0.10.1",
     "@dfinity/principal": "^0.10.1",
+    "@reduxjs/toolkit": "^1.6.2",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-redux": "^7.2.5",
     "react-scripts": "4.0.3",
+    "redux": "^4.1.1",
     "web-vitals": "^1.0.1"
   },
   "proxy": "http://localhost:8000",
@@ -41,5 +44,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "redux-devtools": "^3.7.0"
   }
 }
