@@ -6,18 +6,18 @@ import {principalToAccountIdentifier, encodeTokenId} from "./purefunc/token";
 
 
 
-function onAuthenticate() {
+const onAuthenticate = async () => {
 
      let authClient = await new Promise(async (resolve, reject) => {
 
-        let authClient = await AuthClient.create();
-        authClient.login({
+        let client = await AuthClient.create();
+        client.login({
           identityProvider: "http://localhost:8000?canisterId=rkp4c-7iaaa-aaaaa-aaaca-cai",
           onSuccess: async (e) => {
             // authClient now has an identity
             console.log("Success")
 
-            resolve(authClient)
+            resolve(client)
           },
           onError: reject
         })
@@ -58,6 +58,7 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
+        <button onClick={onAuthenticate} >Auth</button>
         <a
           className="App-link"
           href="https://reactjs.org"

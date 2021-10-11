@@ -1,7 +1,7 @@
 {
   "canisters": { 
     "dropship": {
-      "main": "ic/dropship/main.mo",
+      "main": "src/ic/dropship/main.mo",
       "type": "motoko"
     },
     "dropship_assets": {

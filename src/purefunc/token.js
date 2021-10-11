@@ -67,3 +67,11 @@ export const principalToAccountIdentifier = (p, s) => {
       };
     }
   };
+
+  const from32bits = ba => {
+    var value;
+    for (var i = 0; i < 4; i++) {
+      value = (value << 8) | ba[i];
+    }
+    return value;
+  }

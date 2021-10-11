@@ -1,16 +1,16 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 
 // Imports and re-exports candid interface
-import { idlFactory } from '../ic/declarations/dropship/dropship.did.js';
-export { idlFactory } from '../ic/declarations/dropship/dropship.did.js';
+import { idlFactory } from './dropship.did.js';
+export { idlFactory } from './dropship.did.js';
 // CANISTER_ID is replaced by webpack based on node environment
-export const canisterId = process.env.REACT_APP_DROPSHIP_CANISTER_ID;
-console.log("CAN ID: "+canisterId);
+export const canisterId = process.env.DROPSHIP_CANISTER_ID;
+
 /**
  * 
  * @param {string | import("@dfinity/principal").Principal} canisterId Canister ID of Agent
  * @param {{agentOptions?: import("@dfinity/agent").HttpAgentOptions; actorOptions?: import("@dfinity/agent").ActorConfig}} [options]
- * @return {import("@dfinity/agent").ActorSubclass<import("../../ic/declarations/dropship/dropship.did.js")._SERVICE>}
+ * @return {import("@dfinity/agent").ActorSubclass<import("./dropship.did.js")._SERVICE>}
  */
  export const createActor = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
@@ -33,6 +33,6 @@ console.log("CAN ID: "+canisterId);
   
 /**
  * A ready-to-use agent for the dropship canister
- * @type {import("@dfinity/agent").ActorSubclass<import("../../ic/declarations/dropship/dropship.did.js")._SERVICE>}
+ * @type {import("@dfinity/agent").ActorSubclass<import("./dropship.did.js")._SERVICE>}
  */
  export const dropship = createActor(canisterId);

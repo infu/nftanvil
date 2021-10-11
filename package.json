@@ -5,6 +5,9 @@
   "dependencies": {
     "@dfinity/agent": "^0.10.1",
     "@dfinity/auth-client": "^0.10.1",
+    "@dfinity/authentication": "^0.10.1",
+    "@dfinity/candid": "^0.10.1",
+    "@dfinity/identity": "^0.10.1",
     "@dfinity/principal": "^0.10.1",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
@@ -14,10 +17,11 @@
     "react-scripts": "4.0.3",
     "web-vitals": "^1.0.1"
   },
+  "proxy": "http://localhost:8000",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "node dfx.env.js && react-scripts start",
+    "build": "node dfx.env.js && react-scripts build",
+    "test": "node dfx.env.js && react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
