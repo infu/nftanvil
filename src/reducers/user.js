@@ -25,4 +25,12 @@ export const userSlice = createSlice({
 // Action creators are generated for each case reducer function
 export const { increment, decrement, incrementByAmount } = userSlice.actions
 
+export const dincr = () => (dispatch, getState) => {
+  const stateBefore = getState()
+  console.log(`Counter before: ${stateBefore.user}`)
+  dispatch(increment())
+  const stateAfter = getState()
+  console.log(`Counter after: ${stateAfter.user}`)
+}
+
 export default userSlice.reducer

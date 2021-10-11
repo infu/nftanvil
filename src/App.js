@@ -5,7 +5,7 @@ import { dropship, createActor } from "./canisters/dropship";
 import {principalToAccountIdentifier, encodeTokenId} from "./purefunc/token";
 
 import { useSelector, useDispatch } from 'react-redux'
-import { decrement, increment } from './reducers/user'
+import { decrement, increment, dincr } from './reducers/user'
 
 const onAuthenticate = async () => {
 
@@ -63,7 +63,7 @@ function App() {
           Edit <code>src/App.js</code> and save to reload.
         </p>
         <button onClick={onAuthenticate} >Auth</button>
-        {count} <button onClick={() => dispatch(increment())}>+</button>
+        {count} <button onClick={() => dispatch(dincr())}>+</button>
         <a
           className="App-link"
           href="https://reactjs.org"
