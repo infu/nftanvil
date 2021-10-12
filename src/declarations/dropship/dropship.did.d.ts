@@ -53,7 +53,7 @@ export type Metadata = {
       'TTL' : [] | [number],
       'created' : Time,
       'metadata' : Array<number>,
-      'minter' : AccountIdentifier,
+      'minter' : Principal,
     }
   };
 export type MetadataResponse = { 'ok' : Metadata__1 } |
@@ -71,17 +71,12 @@ export type Metadata__1 = {
       'TTL' : [] | [number],
       'created' : Time,
       'metadata' : Array<number>,
-      'minter' : AccountIdentifier,
+      'minter' : Principal,
     }
   };
 export type MintBatchResponse = { 'ok' : Array<TokenIndex__1> } |
   { 'err' : CommonError };
-export interface MintRequest {
-  'to' : User,
-  // 'TTL' : [] | [number],
-  'metadata' : Array<number>,
-  // 'minter' : AccountIdentifier,
-}
+export interface MintRequest { 'to' : User, 'metadata' : Array<number> }
 export type MintResponse = { 'ok' : TokenIndex__1 } |
   { 'err' : CommonError };
 export interface OwnedResponse {
@@ -113,8 +108,8 @@ export interface Token {
   'burn' : (arg_0: BurnRequest) => Promise<BurnResponse>,
   'cyclesAccept' : () => Promise<undefined>,
   'cyclesBalance' : () => Promise<bigint>,
+  'debugMode' : (arg_0: [] | [string]) => Promise<undefined>,
   'extensions' : () => Promise<Array<Extension>>,
-  'init' : (arg_0: string, arg_1: Principal) => Promise<undefined>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mintNFT' : (arg_0: MintRequest) => Promise<MintResponse>,
   'mintNFT_batch' : (arg_0: Array<MintRequest>) => Promise<MintBatchResponse>,

@@ -43,8 +43,8 @@ type Token =
    burn: (BurnRequest) -> (BurnResponse);
    cyclesAccept: () -> ();
    cyclesBalance: () -> (nat) query;
+   debugMode: (opt text) -> ();
    extensions: () -> (vec Extension) query;
-   init: (text, principal) -> ();
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
    mintNFT: (MintRequest) -> (MintResponse);
    mintNFT_batch: (vec MintRequest) -> (MintBatchResponse);
@@ -113,7 +113,7 @@ type Metadata__1 =
       TTL: opt nat32;
       created: Time;
       metadata: blob;
-      minter: AccountIdentifier;
+      minter: principal;
     };
  };
 type MetadataResponse = 
@@ -135,7 +135,7 @@ type Metadata =
       TTL: opt nat32;
       created: Time;
       metadata: blob;
-      minter: AccountIdentifier;
+      minter: principal;
     };
  };
 type Memo = blob;
