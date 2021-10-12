@@ -10,7 +10,7 @@ import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Result "mo:base/Result";
 import Time "mo:base/Time";
-import Debug "mo:base/Debug";
+// import Debug "mo:base/Debug";
 import Nat32 "mo:base/Nat32";
 import Cycles "mo:base/ExperimentalCycles";
 
@@ -66,9 +66,9 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
         
 
     private stable var _admin : Principal  = install.caller; 
-    private stable var _minter : Principal  = install.caller; 
+    // private stable var _minter : Principal  = install.caller; 
 
-    private stable var _cannisterId : Principal = install.caller;
+    private stable var _cannisterId : ?Principal = null;
 
     private stable var _nextTokenId : Nat32 = 0;
 
@@ -94,10 +94,14 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     };
 
 
-    public shared({caller}) func init (cannisterId : Text, minter: Principal) : async () {
+    public shared({caller}) func debugMode(cannisterId : ?Text) : async () {
         assert(caller == _admin);
-        _cannisterId := Principal.fromText(cannisterId);
-        _minter := minter;
+        switch(cannisterId) {
+            case (null) _cannisterId := null;
+
+            case (?a) _cannisterId := ?Principal.fromText(a);
+        }
+        
       
     };
 
@@ -159,7 +163,9 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     public query func metadata(token : Ext.TokenIdentifier) : async Ext.Common.MetadataResponse {
         switch (Ext.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
-                if (Principal.equal(cannisterId, _cannisterId) == false) return #err(#InvalidToken(token));
+               
+                if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
+
                
                 switch( _meta.get(tokenIndex) ) {
                     case (?meta) {
@@ -179,7 +185,8 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     public query func supply(token : Ext.TokenIdentifier) : async Ext.Common.SupplyResponse {
         switch (Ext.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
-                if (Principal.equal(cannisterId, _cannisterId) == false) return #err(#InvalidToken(token));
+                if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
+
                 switch(SNFT_tidxGet(tokenIndex)) {
                     case (?holder_stored) {
                         #ok(1);
@@ -197,7 +204,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     };
 
     public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
-        assert(caller == _minter);
+       // assert(caller == _minter);
 
         let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
                 let tokenIndex = SNFT_mint(one_request);
@@ -217,9 +224,9 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
 
         let md : Metadata = #nonfungible({
             metadata = request.metadata;
-            minter = request.minter;
+            minter = _admin; //request.minter;
             created = now;
-            TTL = request.TTL;
+            TTL = ?333; //request.TTL;
         }); 
 
         SNFT_put(receiver, tokenIndex);
@@ -232,7 +239,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     };
 
     public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
-        assert(caller == _minter);
+       // assert(caller == _minter);
 
         let tokenIndex = SNFT_mint(request);
 
@@ -317,6 +324,13 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
         _statsTransfers := _statsTransfers + 1;
     };
 
+    private func checkCorrectCannister(cannisterId:Principal) : Bool {
+        Principal.equal(cannisterId,  switch(_cannisterId) {
+            case(null) Principal.fromActor(this);
+            case(?a) a
+        })
+    };
+
 
     public type OwnedResponse = {idx:TokenIndex; metadata: ?Metadata};
     
@@ -338,7 +352,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     public query func bearer(token : Ext.TokenIdentifier) : async Ext.NonFungible.BearerResponse {
            switch (Ext.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
-                if (Principal.equal(cannisterId, _cannisterId) == false) return #err(#InvalidToken(token));
+                if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
                
                 switch(SNFT_tidxGet(tokenIndex)) {
                     case (?holder_stored) {
@@ -417,7 +431,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     private func balGet(request : BalanceRequest) : BalanceInt {
        switch (Ext.TokenIdentifier.decode(request.token)) {
             case (#ok(cannisterId, tokenIndex)) {
-                if (Principal.equal(cannisterId, _cannisterId) == false) return #err(#InvalidToken(request.token));
+                if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(request.token));
                 
                switch(SNFT_tidxGet(tokenIndex)) {
      

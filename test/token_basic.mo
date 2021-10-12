@@ -5,10 +5,10 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
-import Ext "../lib/ext.std/src/Ext";
-import Interface "../lib/ext.std/src/Interface";
+import Ext "../src/ic/lib/ext.std/src/Ext";
+import Interface "../src/ic/lib/ext.std/src/Interface";
 
-import Dropship "../src/dropship/main";
+import Dropship "../src/ic/dropship/main";
 import Array_ "../../repos/vvv/src/Array"
 
 
@@ -25,7 +25,7 @@ let nft = await Dropship.Token();
 // we have to initialize, because the object doesn't know its cannisterId when instantiated with a test script
 let user_john_principal:Principal = await nft.whoAmI();
 
-await nft.init(NFTcanisterId, user_john_principal);
+await nft.debugMode(?NFTcanisterId);
 
 let user_john : Ext.User = #principal(user_john_principal);
 let user_peter_principal = Principal.fromText("ks5fw-csuji-57tsx-mqld6-bjip7-anp4q-pecol-5k6vo-vzcmw-3wuo2-qqe");
@@ -43,8 +43,8 @@ let token_for_burning : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Princip
 
 let token_bad : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 99);
 
-let minter_one = Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
-let minter_two = Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
+let minter_one = user_john_principal; //Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
+let minter_two = user_john_principal; // Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
 
 Debug.print("john  & current script principal: " # Principal.toText(user_john_principal));
 Debug.print("NFTcanisterId: " # NFTcanisterId);

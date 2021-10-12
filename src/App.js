@@ -2,7 +2,7 @@ import logo from "./logo.svg";
 import "./App.css";
 
 import { useSelector, useDispatch } from "react-redux";
-import { login, logout } from "./reducers/user";
+import { login, logout, mint } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -23,6 +23,8 @@ import {
   PopoverCloseButton,
   Flex,
   Spacer,
+  Center,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useClipboard, useColorMode } from "@chakra-ui/react";
 import {
@@ -36,12 +38,26 @@ import {
 import Dfinity from "./assets/dfinity.svg";
 
 import { Zap } from "./icons";
+import { Switch, Route } from "react-router";
 
+import { Link } from "react-router-dom";
 function PageTabs() {
+  const address = useSelector((state) => state.user.address);
+
   return (
     <Box>
       <ButtonGroup variant="outline" spacing="3">
-        <Button colorScheme="gray">Owned</Button>
+        <Link to={"/address/" + address}>
+          <Button variant="solid" colorScheme="gray">
+            Items
+          </Button>
+        </Link>
+
+        <Link to="/mint">
+          <Button variant="solid" colorScheme="gray">
+            Mint
+          </Button>
+        </Link>
       </ButtonGroup>
     </Box>
   );
@@ -56,11 +72,12 @@ function LoginBox() {
 
   const dispatch = useDispatch();
   return (
-    <Box>
+    <Box w={250}>
       <ButtonGroup variant="outline" spacing="3">
         {anonymous ? (
           <>
             <Button
+              variant="solid"
               rightIcon={
                 <img src={Dfinity} style={{ width: "40px", height: "40px" }} />
               }
@@ -75,9 +92,11 @@ function LoginBox() {
             <Popover trigger={"hover"}>
               <PopoverTrigger>
                 <Button
+                  colorScheme="gray"
+                  variant="solid"
                   onClick={() => {
                     toast({
-                      title: "copied to clipboard",
+                      title: "Copied to clipboard",
                       position: "top",
                       isClosable: true,
                     });
@@ -118,9 +137,19 @@ function LoginBox() {
         )}
 
         {colorMode === "light" ? (
-          <IconButton icon={<SunIcon />} onClick={toggleColorMode} />
+          <IconButton
+            colorScheme="gray"
+            variant="solid"
+            icon={<SunIcon />}
+            onClick={toggleColorMode}
+          />
         ) : (
-          <IconButton icon={<MoonIcon />} onClick={toggleColorMode} />
+          <IconButton
+            colorScheme="gray"
+            variant="solid"
+            icon={<MoonIcon />}
+            onClick={toggleColorMode}
+          />
         )}
       </ButtonGroup>
     </Box>
@@ -135,18 +164,59 @@ function LoginBox() {
 // size="xl"
 // />
 function Logo() {
-  return <Box>NFTPKG</Box>;
+  return <Box w={250}>NFTPKG</Box>;
 }
 
 function App() {
   return (
-    <Flex>
-      <Logo />
-      <Spacer />
-      <PageTabs />
-      <Spacer />
-      <LoginBox />
-    </Flex>
+    <Box>
+      <Flex>
+        <Logo />
+        <Spacer />
+        <PageTabs />
+        <Spacer />
+        <LoginBox />
+      </Flex>
+      <Center>
+        <Switch>
+          <Route path="/mint" component={MintBox} />
+          <Route path="/address/:id" component={InventoryBox} />
+        </Switch>
+      </Center>
+    </Box>
+  );
+}
+
+function InventoryBox() {
+  return (
+    <Box
+      bg={useColorModeValue("white", "gray.600")}
+      borderRadius="md"
+      border={1}
+      mt={"80px"}
+      w={480}
+      h={400}
+    >
+      Mine
+    </Box>
+  );
+}
+
+function MintBox() {
+  const dispatch = useDispatch();
+
+  return (
+    <Box
+      bg={useColorModeValue("white", "gray.600")}
+      borderRadius="md"
+      border={1}
+      mt={"80px"}
+      w={480}
+      h={400}
+    >
+      Mint NFTS
+      <Button onClick={() => dispatch(mint())}>mint</Button>
+    </Box>
   );
 }
 

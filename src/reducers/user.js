@@ -3,7 +3,7 @@ import { AuthClient } from "@dfinity/auth-client";
 import { dropship } from "../canisters/dropship";
 import { principalToAccountIdentifier, encodeTokenId } from "../purefunc/token";
 import { WebAuthnIdentity } from "@dfinity/identity";
-
+import { encodeArrayBuffer, jsonToNat8 } from "../purefunc/data";
 import produce from "immer";
 
 export const userSlice = createSlice({
@@ -76,6 +76,25 @@ export const owned = () => async (dispatch, getState) => {
   let address = s.user.address;
   let tokens = await dropship.owned({ address });
   dispatch(ownedSet(tokens));
+};
+
+export const mint = () => async (dispatch, getState) => {
+  let s = getState();
+  let address = s.user.address;
+  let principal = s.user.principal;
+
+  let metadata = await jsonToNat8(
+    JSON.stringify({ name: "fun", desc: "Hoola" })
+  );
+
+  let mint = await dropship.mintNFT({
+    to: { address: "werwerwer" },
+    // minter: principal,
+    metadata,
+    // TTL: 3,
+  });
+
+  console.log("MINT", mint);
 };
 
 export default userSlice.reducer;

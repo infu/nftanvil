@@ -3,19 +3,25 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import store from "./store";
+import store, { history } from "./store";
 import { Provider } from "react-redux";
 import { auth } from "./reducers/user";
 import { ChakraProvider } from "@chakra-ui/react";
 import { theme } from "./theme.js";
 
-store.dispatch(auth());
+import { ConnectedRouter } from "connected-react-router";
+
+setTimeout(() => {
+  store.dispatch(auth());
+}, 100);
 
 ReactDOM.render(
   <React.StrictMode>
     <ChakraProvider theme={theme}>
       <Provider store={store}>
-        <App />
+        <ConnectedRouter history={history}>
+          <App />
+        </ConnectedRouter>
       </Provider>
     </ChakraProvider>
   </React.StrictMode>,

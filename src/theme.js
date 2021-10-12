@@ -3,8 +3,7 @@ import { mode } from "@chakra-ui/theme-tools";
 export const theme = extendTheme({
   colors: {
     brand: {
-      100: "#f7fafc",
-      //   900: "#1a202c",
+      100: "#eeeeee",
     },
   },
   config: {
@@ -16,7 +15,7 @@ export const theme = extendTheme({
       body: {
         fontFamily: "body",
         color: mode("gray.800", "whiteAlpha.900")(props),
-        bg: mode("white", "gray.800")(props),
+        bg: mode("gray.400", "gray.800")(props),
         lineHeight: "base",
       },
       "*::placeholder": {
