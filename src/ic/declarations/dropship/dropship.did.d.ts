@@ -78,9 +78,9 @@ export type MintBatchResponse = { 'ok' : Array<TokenIndex__1> } |
   { 'err' : CommonError };
 export interface MintRequest {
   'to' : User,
-  'TTL' : [] | [number],
+  // 'TTL' : [] | [number],
   'metadata' : Array<number>,
-  'minter' : AccountIdentifier,
+  // 'minter' : AccountIdentifier,
 }
 export type MintResponse = { 'ok' : TokenIndex__1 } |
   { 'err' : CommonError };

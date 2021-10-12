@@ -91,9 +91,7 @@ type MintResponse =
  };
 type MintRequest = 
  record {
-   TTL: opt nat32;
    metadata: blob;
-   minter: AccountIdentifier;
    to: User;
  };
 type MintBatchResponse = 

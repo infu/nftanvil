@@ -83,8 +83,8 @@ export const idlFactory = ({ IDL }) => {
   });
   const MintRequest = IDL.Record({
     to: User,
-    TTL: IDL.Opt(IDL.Nat32),
-    // 'metadata' : IDL.Vec(IDL.Nat8),
+    // TTL: IDL.Opt(IDL.Nat32),
+    metadata: IDL.Vec(IDL.Nat8),
     // 'minter' : AccountIdentifier,
   });
   const TokenIndex__1 = IDL.Nat32;
