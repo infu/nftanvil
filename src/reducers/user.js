@@ -1,36 +1,81 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from "@reduxjs/toolkit";
+import { AuthClient } from "@dfinity/auth-client";
+import { dropship } from "../canisters/dropship";
+import { principalToAccountIdentifier, encodeTokenId } from "../purefunc/token";
+import { WebAuthnIdentity } from "@dfinity/identity";
+
+import produce from "immer";
 
 export const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState: {
-    value: 0
+    address: null,
+    anonymous: true,
+    owned: [],
   },
   reducers: {
-    increment: state => {
-      // Redux Toolkit allows us to write "mutating" logic in reducers. It
-      // doesn't actually mutate the state because it uses the Immer library,
-      // which detects changes to a "draft state" and produces a brand new
-      // immutable state based off those changes
-      state.value += 1
+    ownedSet: (state, action) => {
+      return { ...state, owned: action.payload };
     },
-    decrement: state => {
-      state.value -= 1
+    authSet: (state, action) => {
+      const { address, principal, anonymous } = action.payload;
+      return { ...state, address, principal, anonymous };
     },
-    incrementByAmount: (state, action) => {
-      state.value += action.payload
-    }
-  }
-})
+  },
+});
 
 // Action creators are generated for each case reducer function
-export const { increment, decrement, incrementByAmount } = userSlice.actions
+export const { ownedSet, authSet } = userSlice.actions;
 
-export const dincr = () => (dispatch, getState) => {
-  const stateBefore = getState()
-  console.log(`Counter before: ${stateBefore.user}`)
-  dispatch(increment())
-  const stateAfter = getState()
-  console.log(`Counter after: ${stateAfter.user}`)
-}
+export const login = () => (dispatch) => {
+  dispatch(auth(false));
+};
 
-export default userSlice.reducer
+export const auth =
+  (allowAnonymous = true) =>
+  async (dispatch, getState) => {
+    let authClient = await AuthClient.create();
+
+    if (!allowAnonymous && !(await authClient.isAuthenticated())) {
+      await new Promise(async (resolve, reject) => {
+        authClient.login({
+          ...(process.env.REACT_APP_IDENTITY_PROVIDER
+            ? { identityProvider: process.env.REACT_APP_IDENTITY_PROVIDER }
+            : {}),
+          onSuccess: async (e) => {
+            resolve();
+          },
+          onError: reject,
+        });
+      });
+    }
+
+    const identity = await authClient.getIdentity();
+
+    let principal = identity.getPrincipal().toString();
+    let anonymous = !(await authClient.isAuthenticated());
+    let address = !anonymous && principalToAccountIdentifier(principal);
+    dropship.setOptions({ agentOptions: { identity } });
+    dispatch(authSet({ address, principal, anonymous }));
+  };
+
+export const logout = () => async (dispatch, getState) => {
+  var authClient = await AuthClient.create();
+
+  authClient.logout();
+
+  const identity = await authClient.getIdentity();
+  dropship.setOptions({ agentOptions: { identity } });
+  let principal = identity.getPrincipal().toString();
+  let anonymous = !(await authClient.isAuthenticated());
+  dispatch(authSet({ address: null, principal, anonymous }));
+};
+
+export const owned = () => async (dispatch, getState) => {
+  let s = getState();
+  let address = s.user.address;
+  let tokens = await dropship.owned({ address });
+  dispatch(ownedSet(tokens));
+};
+
+export default userSlice.reducer;

@@ -29,9 +29,22 @@ export const canisterId = process.env.REACT_APP_DROPSHIP_CANISTER_ID;
     ...options?.actorOptions,
   });
 };
-  
-/**
- * A ready-to-use agent for the dropship canister
- * @type {import("@dfinity/agent").ActorSubclass<import("../../ic/declarations/dropship/dropship.did.js")._SERVICE>}
- */
- export const dropship = createActor(canisterId);
+
+export const dropship = {
+  principal:canisterId,
+}
+dropship.setOptions = (options) => {
+  let actor = createActor(canisterId, options);
+
+  for (let key in actor) {
+    dropship[key] = (...arg) => actor[key](...arg);
+  }
+}
+
+dropship.setOptions();
+
+// /**
+//  * A ready-to-use agent for the dropship canister
+//  * @type {import("@dfinity/agent").ActorSubclass<import("../../ic/declarations/dropship/dropship.did.js")._SERVICE>}
+//  */
+//  export const dropship = createActor(canisterId);

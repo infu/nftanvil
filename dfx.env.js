@@ -24,4 +24,6 @@ for (const canister in canisters) {
 txt += "REACT_APP_" + canister.toUpperCase() + "_CANISTER_ID=" + canisters[canister][network] + "\n";
 }
 
+if (process.env.NODE_ENV !== "production") txt += "REACT_APP_IDENTITY_PROVIDER=http://localhost:8000?canisterId=rkp4c-7iaaa-aaaaa-aaaca-cai\n";
+
 fs.writeFileSync( ".env." + ((process.env.NODE_ENV === "production")?"production":"development") + ".local", txt );
