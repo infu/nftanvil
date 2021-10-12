@@ -9,7 +9,6 @@ export const principalToAccountIdentifier = (p, s) => {
         ...Principal.fromText(p).toUint8Array(),
         ...getSubAccountArray(s)
     ]);
-    console.log("XX "+getSubAccountArray(s));
     const hash = sha224(array);
     const checksum = to32bits(getCrc32(hash));
     const array2 = new Uint8Array([
