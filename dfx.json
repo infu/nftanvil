@@ -1,7 +1,17 @@
 {
   "canisters": {
     "dropship": {
-      "main": "src/ic/dropship/main.mo",
+      "main": "src/ic/dropship/router.mo",
+      "type": "motoko",
+      "dependencies": ["accesscontrol"]
+    }, 
+   "nft": {
+      "main": "src/ic/dropship/nft.mo",
+      "type": "motoko",
+      "dependencies": ["accesscontrol"]
+    },
+    "accesscontrol": {
+      "main": "src/ic/accesscontrol/access.mo",
       "type": "motoko"
     },
     "dropship_assets": {
@@ -19,7 +29,7 @@
       "packtool": "vessel sources"
     }
   },
-  "dfx": "0.8.1",
+  "dfx": "0.8.2",
   "networks": {
     "local": {
       "bind": "127.0.0.1:8000",

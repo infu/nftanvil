@@ -8,8 +8,8 @@ import Iter "mo:base/Iter";
 import Ext "../src/ic/lib/ext.std/src/Ext";
 import Interface "../src/ic/lib/ext.std/src/Interface";
 
-import Dropship "../src/ic/dropship/main";
-import Array_ "../../repos/vvv/src/Array"
+import Dropship "../src/ic/dropship/nft";
+import Array_ "../src/ic/lib/vvv/src/Array"
 
 
 var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
@@ -17,13 +17,19 @@ var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
 var someMeta = Blob.fromArray([116, 116, 105, 100]);
 var someMemo = Blob.fromArray([111, 111, 111, 111]);
 
-let nft = await Dropship.Token();
+let nft = await Dropship.NFT();
 
 
 // Debug.print(Principal.toText(Principal.fromActor(nft))); // BUG: this is not working when we run it from moc command line
+actor class WHOWHO() {
+    public shared({caller}) func whoAmI() : async Principal {
+        return caller;
+    };
+};
+let whoiswho = await WHOWHO();
 
 // we have to initialize, because the object doesn't know its cannisterId when instantiated with a test script
-let user_john_principal:Principal = await nft.whoAmI();
+let user_john_principal:Principal = await whoiswho.whoAmI();
 
 await nft.debugMode(?NFTcanisterId);
 
@@ -61,20 +67,20 @@ Debug.print("User john Account Identifier sub2: " # Ext.User.toAccountIdentifier
 Result.assertErr(await nft.balance({ user  = user_john; token = token_one;}));
 
 // mint token with index 0
-assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta; TTL=null})) == #ok(0));
+assert((await nft.mintNFT({to = user_john; media = ?#img("jowejrowjer"); thumb = ?"owiehriw"; classId=123; })) == #ok(0));
 
 // mint token with index 1
-assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta; TTL=null})) == #ok(1));
+assert((await nft.mintNFT({to = user_john;media = ?#img("jowejrowjer"); thumb = ?"owiehriw"; classId=123;})) == #ok(1));
 
 
 // mint token with index 2 to peter
-switch(await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta; TTL=null})) {
+switch(await nft.mintNFT({to = user_john; media = ?#img("jowejrowjer"); thumb = ?"owiehriw"; classId=123;})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
     case (#err(e)) Debug.print(debug_show(e));
 };
 
 // mint token for burning later
-assert((await nft.mintNFT({to = user_john; minter = minter_one; metadata = someMeta; TTL=null})) == #ok(3));
+assert((await nft.mintNFT({to = user_john; media = ?#img("jowejrowjer"); thumb = ?"owiehriw"; classId=123;})) == #ok(3));
 
 // check balance of john for token one 
 assert( (await nft.balance({ user  = user_john; token = token_one;})) == #ok(1));
@@ -161,7 +167,7 @@ var user_infu_principal : Principal = user_john_principal;
 actor class Infu() { // all methods in this actor will have their own principal dfferent from the main thread
 
     public shared({caller}) func run_one() : async () {
-        user_infu_principal := await nft.whoAmI();
+        user_infu_principal := await whoiswho.whoAmI();
         Debug.print("Infu's Principal: " # Principal.toText(user_infu_principal));
  
         user_infu := #address(Ext.AccountIdentifier.fromPrincipal(user_infu_principal, null));
@@ -290,18 +296,14 @@ assert( (await nft.bearer(token_for_burning)) == #err(#InvalidToken(token_for_bu
    
 //     });
 
-let batch = Array_.amap<Ext.NonFungible.MintRequest>(50, func(x) { {to = user_john; minter = minter_one; metadata = someMeta; TTL = null}  });
+// let batch = Array_.amap<Ext.NonFungible.MintRequest>(50, func(x) { {to = user_john; minter = minter_one; metadata = someMeta; TTL = null}  });
 
-// Debug.print("\n\n"#debug_show(batch));
-
-
-
-let minted = await nft.mintNFT_batch(batch);
-ignore await nft.mintNFT_batch(batch);
-ignore await nft.mintNFT_batch(batch);
+// let minted = await nft.mintNFT_batch(batch);
+// ignore await nft.mintNFT_batch(batch);
+// ignore await nft.mintNFT_batch(batch);
 
 Debug.print(debug_show( (await nft.stats()) ));
-Debug.print("DONE");
+Debug.print("DONE TOKEN BASICS");
 // - Transfer Notifications? (maybe later)
 
 // NOTE: when one needs to see output: Debug.print(debug_show( anything )); 

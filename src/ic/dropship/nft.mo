@@ -2,9 +2,10 @@ import Ext "../lib/ext.std/src/Ext";
 import Interface "../lib/ext.std/src/Interface";
 import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
-import AssocList "mo:base/AssocList";
 import List "mo:base/List";
 import Array "mo:base/Array";
+import Int "mo:base/Int";
+import Int32 "mo:base/Int32";
 
 import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
@@ -12,10 +13,17 @@ import Result "mo:base/Result";
 import Time "mo:base/Time";
 // import Debug "mo:base/Debug";
 import Nat32 "mo:base/Nat32";
+import Nat8 "mo:base/Nat8";
+
 import Cycles "mo:base/ExperimentalCycles";
 
+import PseudoRandom "../lib/vvv/src/PseudoRandom";
+import Blob "mo:base/Blob";
+import Array_ "../lib/vvv/src/Array";
 
-shared(install) actor class Token() : async Interface.NonFungibleToken = this {
+import Prim "mo:prim"; 
+
+shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Ext.AccountIdentifier;
@@ -24,7 +32,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     type TokenIndex = Ext.TokenIndex;
     type User = Ext.User;
     type CommonError = Ext.CommonError;
-    type Metadata = Ext.Common.Metadata;
+    type Metadata = Ext.Metadata;
 
     type BalanceRequest = Ext.Core.BalanceRequest;
     type BalanceResponse = Ext.Core.BalanceResponse;
@@ -39,13 +47,6 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
         #Rejected;
         #CannotNotify : AccountIdentifier;
         #Other        : Text;
-    };
-
-    public type StatsResponse = {
-        minted: Nat32;
-        accounts: Nat32;
-        transfers: Nat32;
-        burned: Nat32;
     };
 
 
@@ -65,7 +66,6 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     private var _account : HashMap.HashMap<AccountIdentifier, [TokenIndex]> = HashMap.fromIter(_tmpAccount.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
         
 
-    private stable var _admin : Principal  = install.caller; 
     // private stable var _minter : Principal  = install.caller; 
 
     private stable var _cannisterId : ?Principal = null;
@@ -77,16 +77,23 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     private stable var _statsTransfers : Nat32  = 0;
     private stable var _statsBurned : Nat32 = 0;
 
+    var rand = PseudoRandom.PseudoRandom();
+
+    private let thresholdMemory = 2147483648; //  ~2GB
+
     //Handle canister upgrades
     system func preupgrade() {
         _tmpBalance := Iter.toArray(_balance.entries());
         _tmpAllowance := Iter.toArray(_allowance.entries());
         _tmpMeta := Iter.toArray(_meta.entries());
+        _tmpAccount := Iter.toArray(_account.entries());
+
     };
     system func postupgrade() {
         _tmpBalance := [];
         _tmpAllowance := [];
         _tmpMeta := [];
+        _tmpAccount := [];
     };
     
     public query func extensions() : async [Ext.Extension] {
@@ -95,19 +102,15 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
 
 
     public shared({caller}) func debugMode(cannisterId : ?Text) : async () {
-        assert(caller == _admin);
+        assert(caller == _owner);
         switch(cannisterId) {
             case (null) _cannisterId := null;
 
             case (?a) _cannisterId := ?Principal.fromText(a);
         }
-        
       
     };
 
-    public shared({caller}) func whoAmI() : async Principal {
-        return caller;
-    };
 
     public query func balance(request : BalanceRequest) : async BalanceResponse {
          switch(balGet(request)) {
@@ -160,7 +163,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     };
 
 
-    public query func metadata(token : Ext.TokenIdentifier) : async Ext.Common.MetadataResponse {
+    public query func metadata(token : Ext.TokenIdentifier) : async Ext.MetadataResponse {
         switch (Ext.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
                
@@ -182,7 +185,7 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
         };
     };
  
-    public query func supply(token : Ext.TokenIdentifier) : async Ext.Common.SupplyResponse {
+    public query func supply(token : Ext.TokenIdentifier) : async Ext.SupplyResponse {
         switch (Ext.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
                 if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
@@ -203,16 +206,16 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
                
     };
 
-    public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
-       // assert(caller == _minter);
+    // public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
+    //    // assert(caller == _minter);
 
-        let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
-                let tokenIndex = SNFT_mint(one_request);
-                return tokenIndex
-                });
+    //     let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
+    //             let tokenIndex = SNFT_mint(one_request);
+    //             return tokenIndex
+    //             });
 
-        #ok(tokens);
-    };
+    //     #ok(tokens);
+    // };
 
     private func SNFT_mint(request: Ext.NonFungible.MintRequest) : TokenIndex {
 
@@ -221,13 +224,21 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
         let tokenIndex:TokenIndex = _nextTokenId;
 
         let now = Time.now();
+        let timestamp:Nat32 = Nat32.fromIntWrap(Int.div(now, 1000000000)/60);
 
-        let md : Metadata = #nonfungible({
-            metadata = request.metadata;
-            minter = _admin; //request.minter;
-            created = now;
-            TTL = ?333; //request.TTL;
-        }); 
+        // Get class info, check if principal is allowed to mint
+
+        let md : Metadata = {
+            media = request.media;
+            thumb = request.thumb;
+            created = timestamp;
+            classId = request.classId;
+            entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 {  Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
+            boundUntil = null;
+            cooldownUntil = null;
+        }; 
+
+        // Todo: check if class is bind on pickup and set boundUntil if so
 
         SNFT_put(receiver, tokenIndex);
 
@@ -239,10 +250,13 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
     };
 
     public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
-       // assert(caller == _minter);
+        assert(caller == _owner);
+
+        if (thresholdMemory <= Prim.rts_memory_size()) return #err(#OutOfMemory);
 
         let tokenIndex = SNFT_mint(request);
 
+        
         // let receiver = Ext.User.toAccountIdentifier(request.to);
  
         // let tokenIndex:TokenIndex = _nextTokenId;
@@ -418,12 +432,35 @@ shared(install) actor class Token() : async Interface.NonFungibleToken = this {
         return Cycles.balance();
     };
     
+
+    public type StatsResponse = {
+        minted: Nat32;
+        accounts: Nat32;
+        transfers: Nat32;
+        burned: Nat32;
+        cycles: Nat;
+        rts_version:Text ;
+        rts_memory_size:Nat;
+        rts_heap_size:Nat;
+        rts_total_allocation:Nat;
+        rts_reclaimed:Nat;
+        rts_max_live_size:Nat;
+    };
+
+
     public query func stats () : async StatsResponse {
         {
             minted =  _nextTokenId;
             burned = _statsBurned;
             accounts = _statsAccounts;
             transfers = _statsTransfers;
+            cycles = Cycles.balance();
+            rts_version = Prim.rts_version();
+            rts_memory_size = Prim.rts_memory_size();
+            rts_heap_size = Prim.rts_heap_size();
+            rts_total_allocation = Prim.rts_total_allocation();
+            rts_reclaimed = Prim.rts_reclaimed();
+            rts_max_live_size = Prim.rts_max_live_size();
         }
     };
     // Internal functions which help for better code reusability

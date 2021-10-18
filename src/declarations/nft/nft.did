@@ -1,0 +1,202 @@
+type User__1 = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
+type User = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
+type URL = text;
+type TransferResponse = 
+ variant {
+   err:
+    variant {
+      CannotNotify: AccountIdentifier;
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier;
+    };
+   ok: Balance;
+ };
+type TransferRequest = 
+ record {
+   amount: Balance;
+   from: User;
+   memo: Memo;
+   notify: bool;
+   subaccount: opt SubAccount;
+   to: User;
+   token: TokenIdentifier;
+ };
+type TokenIndex__1 = nat32;
+type TokenIndex = nat32;
+type TokenIdentifier = text;
+type SupplyResponse = 
+ variant {
+   err: CommonError;
+   ok: Balance;
+ };
+type SubAccount = vec nat8;
+type StatsResponse = 
+ record {
+   accounts: nat32;
+   burned: nat32;
+   cycles: nat;
+   minted: nat32;
+   rts_heap_size: nat;
+   rts_max_live_size: nat;
+   rts_memory_size: nat;
+   rts_reclaimed: nat;
+   rts_total_allocation: nat;
+   rts_version: text;
+   transfers: nat32;
+ };
+type Response = 
+ variant {
+   err: CommonError;
+   ok: Balance;
+ };
+type Request = 
+ record {
+   owner: User;
+   spender: principal;
+   token: TokenIdentifier;
+ };
+type OwnedResponse = 
+ record {
+   idx: TokenIndex;
+   metadata: opt Metadata;
+ };
+type NFT = 
+ service {
+   allowance: (Request) -> (Response) query;
+   approve: (ApproveRequest) -> (ApproveResponse);
+   balance: (BalanceRequest) -> (BalanceResponse) query;
+   bearer: (TokenIdentifier) -> (BearerResponse) query;
+   burn: (BurnRequest) -> (BurnResponse);
+   cyclesAccept: () -> ();
+   cyclesBalance: () -> (nat) query;
+   debugMode: (opt text) -> ();
+   extensions: () -> (vec Extension) query;
+   metadata: (TokenIdentifier) -> (MetadataResponse) query;
+   mintNFT: (MintRequest) -> (MintResponse);
+   owned: (User__1) -> (vec OwnedResponse) query;
+   stats: () -> (StatsResponse) query;
+   supply: (TokenIdentifier) -> (SupplyResponse) query;
+   transfer: (TransferRequest) -> (TransferResponse);
+ };
+type MintResponse = 
+ variant {
+   err: variant {
+          OutOfMemory;
+          Rejected;
+        };
+   ok: TokenIndex__1;
+ };
+type MintRequest = 
+ record {
+   classId: ItemClassId;
+   media: opt Media;
+   thumb: opt URL;
+   to: User;
+ };
+type Metadata__1 = 
+ record {
+   boundUntil: opt nat32;
+   classId: ItemClassId;
+   cooldownUntil: opt nat32;
+   created: nat32;
+   entropy: blob;
+   media: opt Media;
+   thumb: opt URL;
+ };
+type MetadataResponse = 
+ variant {
+   err: CommonError;
+   ok: Metadata__1;
+ };
+type Metadata = 
+ record {
+   boundUntil: opt nat32;
+   classId: ItemClassId;
+   cooldownUntil: opt nat32;
+   created: nat32;
+   entropy: blob;
+   media: opt Media;
+   thumb: opt URL;
+ };
+type Memo = blob;
+type Media = 
+ variant {
+   img: URL;
+   video: URL;
+ };
+type ItemClassId = nat;
+type Extension = text;
+type CommonError = 
+ variant {
+   InvalidToken: TokenIdentifier;
+   Other: text;
+ };
+type BurnResponse = 
+ variant {
+   err:
+    variant {
+      CannotNotify: AccountIdentifier;
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier;
+    };
+   ok: Balance;
+ };
+type BurnRequest = 
+ record {
+   amount: Balance;
+   memo: Memo;
+   notify: bool;
+   subaccount: opt SubAccount;
+   token: TokenIdentifier;
+   user: User;
+ };
+type BearerResponse = 
+ variant {
+   err: CommonError;
+   ok: AccountIdentifier;
+ };
+type BalanceResponse = 
+ variant {
+   err: CommonError;
+   ok: Balance;
+ };
+type BalanceRequest = 
+ record {
+   token: TokenIdentifier;
+   user: User;
+ };
+type Balance = nat;
+type ApproveResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Unauthorized: AccountIdentifier;
+    };
+   ok;
+ };
+type ApproveRequest = 
+ record {
+   allowance: Balance;
+   spender: principal;
+   subaccount: opt SubAccount;
+   token: TokenIdentifier;
+ };
+type AccountIdentifier = text;
+service : () -> NFT

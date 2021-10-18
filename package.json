@@ -18,6 +18,7 @@
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
     "connected-react-router": "^6.9.1",
+    "formik": "^2.2.9",
     "framer-motion": "^4",
     "history": "4.10.1",
     "immer": "^9.0.6",
@@ -36,7 +37,10 @@
     "start": "node dfx.env.js && react-scripts start",
     "build": "node dfx.env.js && react-scripts build",
     "test": "node dfx.env.js && react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "prebuild": "npm run copy:types",
+    "prestart": "npm run copy:types",
+    "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --delete src/declarations"
   },
   "eslintConfig": {
     "extends": [
@@ -46,9 +50,10 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
+      "last 2 chrome version",
+      "last 2 firefox version",
+      "last 2 safari version",
+      "last 2 edge version"
     ],
     "development": [
       "last 1 chrome version",

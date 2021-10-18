@@ -1,8 +1,9 @@
 import logo from "./logo.svg";
 import "./App.css";
+import { useEffect } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
-import { login, logout, mint } from "./reducers/user";
+import { login, logout, mint, owned, challenge, test } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -25,6 +26,7 @@ import {
   Spacer,
   Center,
   useColorModeValue,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useClipboard, useColorMode } from "@chakra-ui/react";
 import {
@@ -41,6 +43,9 @@ import { Zap } from "./icons";
 import { Switch, Route } from "react-router";
 
 import { Link } from "react-router-dom";
+import { Challenge } from "./components/Challenge";
+
+import { Mint } from "./components/Mint";
 function PageTabs() {
   const address = useSelector((state) => state.user.address);
 
@@ -66,6 +71,8 @@ function PageTabs() {
 function LoginBox() {
   const address = useSelector((state) => state.user.address);
   const anonymous = useSelector((state) => state.user.anonymous);
+  const accesstokens = useSelector((state) => state.user.accesstokens);
+
   const { onCopy } = useClipboard(address);
   const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
@@ -89,6 +96,12 @@ function LoginBox() {
           </>
         ) : (
           <>
+            <Tooltip
+              hasArrow
+              label="Temporary access tokens. Rewarded for solving captcha. Consumed when minting and transfering"
+            >
+              <Button>{accesstokens}</Button>
+            </Tooltip>
             <Popover trigger={"hover"}>
               <PopoverTrigger>
                 <Button
@@ -169,42 +182,35 @@ function Logo() {
 
 function App() {
   return (
-    <Box>
-      <Flex>
-        <Logo />
-        <Spacer />
-        <PageTabs />
-        <Spacer />
-        <LoginBox />
-      </Flex>
-      <Center>
-        <Switch>
-          <Route path="/mint" component={MintBox} />
-          <Route path="/address/:id" component={InventoryBox} />
-        </Switch>
-      </Center>
-    </Box>
+    <>
+      <Box>
+        <Flex>
+          <Logo />
+          <Spacer />
+          <PageTabs />
+          <Spacer />
+          <LoginBox />
+        </Flex>
+        <Center>
+          <Switch>
+            <Route path="/mint" component={Mint} />
+            <Route path="/address/:id" component={InventoryBox} />
+          </Switch>
+        </Center>
+      </Box>
+      <Challenge />
+    </>
   );
 }
 
 function InventoryBox() {
-  return (
-    <Box
-      bg={useColorModeValue("white", "gray.600")}
-      borderRadius="md"
-      border={1}
-      mt={"80px"}
-      w={480}
-      h={400}
-    >
-      Mine
-    </Box>
-  );
-}
-
-function MintBox() {
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    //componentDidMount like
+    dispatch(owned());
+  }, []);
+
   return (
     <Box
       bg={useColorModeValue("white", "gray.600")}
@@ -214,8 +220,7 @@ function MintBox() {
       w={480}
       h={400}
     >
-      Mint NFTS
-      <Button onClick={() => dispatch(mint())}>mint</Button>
+      <Button onClick={() => dispatch(test())}>Tst</Button>
     </Box>
   );
 }

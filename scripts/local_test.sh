@@ -2,7 +2,7 @@
 
 for file in test/*
 do
-  moc -wasi-system-api -r `vessel sources` "$file" 2>> tmp.err.log >> tmp.output.log
+  moc --check `vessel sources` "$file" 2>> tmp.err.log >> tmp.output.log
 done
 clear
 
