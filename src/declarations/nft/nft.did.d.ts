@@ -39,37 +39,39 @@ export type BurnResponse = { 'ok' : Balance } |
 export type CommonError = { 'InvalidToken' : TokenIdentifier } |
   { 'Other' : string };
 export type Extension = string;
+export interface FetchChunkRequest {
+  'tokenIndex' : TokenIndex,
+  'chunkIdx' : number,
+  'position' : { 'thumb' : null } |
+    { 'content' : null },
+}
 export type ItemClassId = bigint;
-export type Media = { 'img' : URL } |
-  { 'video' : URL };
+export type Media = string;
 export type Memo = Array<number>;
-export interface Metadata {
-  'media' : [] | [Media],
-  'thumb' : [] | [URL],
+export interface MetadataOut {
+  'thumb' : [] | [Media],
   'created' : number,
+  'content' : [] | [Media],
   'cooldownUntil' : [] | [number],
   'boundUntil' : [] | [number],
   'classId' : ItemClassId,
   'entropy' : Array<number>,
 }
-export type MetadataResponse = { 'ok' : Metadata__1 } |
+export interface MetadataOut__1 {
+  'thumb' : [] | [Media],
+  'created' : number,
+  'content' : [] | [Media],
+  'cooldownUntil' : [] | [number],
+  'boundUntil' : [] | [number],
+  'classId' : ItemClassId,
+  'entropy' : Array<number>,
+}
+export type MetadataResponse = { 'ok' : MetadataOut__1 } |
   { 'err' : CommonError };
-export interface Metadata__1 {
-  'media' : [] | [Media],
-  'thumb' : [] | [URL],
-  'created' : number,
-  'cooldownUntil' : [] | [number],
-  'boundUntil' : [] | [number],
-  'classId' : ItemClassId,
-  'entropy' : Array<number>,
-}
-export interface MintRequest {
-  'to' : User,
-  'media' : [] | [Media],
-  'thumb' : [] | [URL],
-  'classId' : ItemClassId,
-}
-export type MintResponse = { 'ok' : TokenIndex__1 } |
+export type MintBatchResponse = { 'ok' : Array<TokenIndex> } |
+  { 'err' : CommonError };
+export interface MintRequest { 'to' : User, 'classId' : ItemClassId }
+export type MintResponse = { 'ok' : TokenIndex } |
   { 'err' : { 'Rejected' : null } | { 'OutOfMemory' : null } };
 export interface NFT {
   'allowance' : (arg_0: Request) => Promise<Response>,
@@ -81,16 +83,19 @@ export interface NFT {
   'cyclesBalance' : () => Promise<bigint>,
   'debugMode' : (arg_0: [] | [string]) => Promise<undefined>,
   'extensions' : () => Promise<Array<Extension>>,
+  'fetchChunk' : (arg_0: FetchChunkRequest) => Promise<[] | [Array<number>]>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mintNFT' : (arg_0: MintRequest) => Promise<MintResponse>,
+  'mintNFT_batch' : (arg_0: Array<MintRequest>) => Promise<MintBatchResponse>,
   'owned' : (arg_0: User__1) => Promise<Array<OwnedResponse>>,
   'stats' : () => Promise<StatsResponse>,
   'supply' : (arg_0: TokenIdentifier) => Promise<SupplyResponse>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
+  'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
 }
 export interface OwnedResponse {
-  'idx' : TokenIndex,
-  'metadata' : [] | [Metadata],
+  'idx' : TokenIndex__1,
+  'metadata' : [] | [MetadataOut],
 }
 export interface Request {
   'token' : TokenIdentifier,
@@ -136,7 +141,13 @@ export type TransferResponse = { 'ok' : Balance } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'Other' : string }
   };
-export type URL = string;
+export interface UploadChunkRequest {
+  'tokenIndex' : TokenIndex,
+  'data' : Array<number>,
+  'chunkIdx' : number,
+  'position' : { 'thumb' : null } |
+    { 'content' : null },
+}
 export type User = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
 export type User__1 = { 'principal' : Principal } |

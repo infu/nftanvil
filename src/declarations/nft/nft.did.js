@@ -62,50 +62,53 @@ export const idlFactory = ({ IDL }) => {
     }),
   });
   const Extension = IDL.Text;
-  const URL = IDL.Text;
-  const Media = IDL.Variant({ 'img' : URL, 'video' : URL });
+  const TokenIndex = IDL.Nat32;
+  const FetchChunkRequest = IDL.Record({
+    'tokenIndex' : TokenIndex,
+    'chunkIdx' : IDL.Nat32,
+    'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
+  });
+  const Media = IDL.Text;
   const ItemClassId = IDL.Nat;
-  const Metadata__1 = IDL.Record({
-    'media' : IDL.Opt(Media),
-    'thumb' : IDL.Opt(URL),
+  const MetadataOut__1 = IDL.Record({
+    'thumb' : IDL.Opt(Media),
     'created' : IDL.Nat32,
+    'content' : IDL.Opt(Media),
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
     'classId' : ItemClassId,
     'entropy' : IDL.Vec(IDL.Nat8),
   });
   const MetadataResponse = IDL.Variant({
-    'ok' : Metadata__1,
+    'ok' : MetadataOut__1,
     'err' : CommonError,
   });
-  const MintRequest = IDL.Record({
-    'to' : User,
-    'media' : IDL.Opt(Media),
-    'thumb' : IDL.Opt(URL),
-    'classId' : ItemClassId,
-  });
-  const TokenIndex__1 = IDL.Nat32;
+  const MintRequest = IDL.Record({ 'to' : User, 'classId' : ItemClassId });
   const MintResponse = IDL.Variant({
-    'ok' : TokenIndex__1,
+    'ok' : TokenIndex,
     'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'OutOfMemory' : IDL.Null }),
+  });
+  const MintBatchResponse = IDL.Variant({
+    'ok' : IDL.Vec(TokenIndex),
+    'err' : CommonError,
   });
   const User__1 = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
   });
-  const TokenIndex = IDL.Nat32;
-  const Metadata = IDL.Record({
-    'media' : IDL.Opt(Media),
-    'thumb' : IDL.Opt(URL),
+  const TokenIndex__1 = IDL.Nat32;
+  const MetadataOut = IDL.Record({
+    'thumb' : IDL.Opt(Media),
     'created' : IDL.Nat32,
+    'content' : IDL.Opt(Media),
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
     'classId' : ItemClassId,
     'entropy' : IDL.Vec(IDL.Nat8),
   });
   const OwnedResponse = IDL.Record({
-    'idx' : TokenIndex,
-    'metadata' : IDL.Opt(Metadata),
+    'idx' : TokenIndex__1,
+    'metadata' : IDL.Opt(MetadataOut),
   });
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
@@ -141,6 +144,12 @@ export const idlFactory = ({ IDL }) => {
       'Other' : IDL.Text,
     }),
   });
+  const UploadChunkRequest = IDL.Record({
+    'tokenIndex' : TokenIndex,
+    'data' : IDL.Vec(IDL.Nat8),
+    'chunkIdx' : IDL.Nat32,
+    'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
+  });
   const NFT = IDL.Service({
     'allowance' : IDL.Func([Request], [Response], ['query']),
     'approve' : IDL.Func([ApproveRequest], [ApproveResponse], []),
@@ -151,12 +160,19 @@ export const idlFactory = ({ IDL }) => {
     'cyclesBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'debugMode' : IDL.Func([IDL.Opt(IDL.Text)], [], []),
     'extensions' : IDL.Func([], [IDL.Vec(Extension)], ['query']),
+    'fetchChunk' : IDL.Func(
+        [FetchChunkRequest],
+        [IDL.Opt(IDL.Vec(IDL.Nat8))],
+        [],
+      ),
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
     'mintNFT' : IDL.Func([MintRequest], [MintResponse], []),
+    'mintNFT_batch' : IDL.Func([IDL.Vec(MintRequest)], [MintBatchResponse], []),
     'owned' : IDL.Func([User__1], [IDL.Vec(OwnedResponse)], ['query']),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'supply' : IDL.Func([TokenIdentifier], [SupplyResponse], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
+    'uploadChunk' : IDL.Func([UploadChunkRequest], [], []),
   });
   return NFT;
 };

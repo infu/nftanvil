@@ -138,8 +138,53 @@ export const sendSolution = (code) => async (dispatch, getState) => {
 
   // challengeToImage(challenge);
 };
-
 export const mint = () => async (dispatch, getState) => {
+  let avail_canister_id = await dropship.getAvailable();
+  let identity = authentication.client.getIdentity();
+  let nft = nftCanister(avail_canister_id, { agentOptions: { identity } });
+
+  let somedata = await jsonToNat8(
+    JSON.stringify({
+      somefile: "oweirhwoierh woeihrwoierhwoeiwoeirhweoriwheorwheori",
+      name: "funwe rwer wr werw erwerw",
+      desc: "Hoola werw erwe werwer wrw rw rwre wrw erwe rwerwe rwer wrwe rw rwr ww r wrwer wrwerw rwer",
+    })
+  );
+  let s = getState();
+
+  let address = s.user.address;
+
+  let mint = await nft.mintNFT({
+    to: { address },
+    // minter: principal,
+    media: [{ img: "jowejrowjer" }],
+    thumb: ["sdfsfsdf"],
+    // media: null,
+    // thumb: null,
+    classId: 123,
+    // TTL: 3,
+  });
+  console.log("MINT", mint);
+
+  let tokenIndex = mint.ok;
+
+  await nft.uploadChunk({
+    tokenIndex,
+    position: { content: null },
+    chunkIdx: 0,
+    data: somedata,
+  });
+
+  let re = await nft.fetchChunk({
+    tokenIndex,
+    position: { content: null },
+    chunkIdx: 0,
+  });
+
+  console.log("RE", re[0], somedata);
+};
+
+export const mint2 = () => async (dispatch, getState) => {
   console.log("MINTING STARTED");
   let s = getState();
   let address = s.user.address;
@@ -152,53 +197,59 @@ export const mint = () => async (dispatch, getState) => {
   //     desc: "Hoola werw erwe werwer wrw rw rwre wrw erwe rwerwe rwer wrwe rw rwr ww r wrwer wrwerw rwer",
   //   })
   // );
+  let avail_canister_id = await dropship.getAvailable();
 
-  try {
-    let mint = await dropship.mintNFT({
-      to: { address },
-      // minter: principal,
-      media: [{ img: "jowejrowjer" }],
-      thumb: ["sdfsfsdf"],
-      // media: null,
-      // thumb: null,
-      classId: 123,
-      // TTL: 3,
-    });
-    console.log("MINT", mint);
-    dispatch(accessTokensAdd(-1));
-  } catch (e) {
-    console.log("ERR", e);
-    dispatch(challenge());
-  }
+  let identity = authentication.client.getIdentity();
+
+  let nft = nftCanister(avail_canister_id, { agentOptions: { identity } });
+
+  // try {
+  //   let mint = await nft.mintNFT({
+  //     to: { address },
+  //     // minter: principal,
+  //     media: [{ img: "jowejrowjer" }],
+  //     thumb: ["sdfsfsdf"],
+  //     // media: null,
+  //     // thumb: null,
+  //     classId: 123,
+  //     // TTL: 3,
+  //   });
+  //   console.log("MINT", mint);
+  //   dispatch(accessTokensAdd(-1));
+  // } catch (e) {
+  //   console.log("ERR", e);
+  //   dispatch(challenge());
+  // }
 
   //   console.log("MINT", mint);
   // } catch (e) {
   //   console.log("ca", e.getMessage());
   // }
 
-  // let arr = Array(20)
-  //   .fill(0)
-  //   .map((x) => {
-  //     let rand_address = principalToAccountIdentifier(
-  //       principal,
-  //       Math.round(Math.random() * 4294967295)
-  //     );
-  //     return {
-  //       to: { address: rand_address },
-  //       // minter: principal,
-  //       metadata,
-  //       // TTL: 3,
-  //     };
-  //   });
+  let arr = Array(20)
+    .fill(0)
+    .map((x) => {
+      let rand_address = principalToAccountIdentifier(
+        principal,
+        Math.round(Math.random() * 4294967295)
+      );
+      return {
+        to: { address: rand_address },
+        // minter: principal,
+        media: [{ img: "jowejrowjer" }],
+        thumb: ["sdfsfsdf"],
+        // media: null,
+        // thumb: null,
+        classId: 123,
+        // TTL: 3,
+      };
+    });
 
-  // setTimeout(() => {
-  //   console.log("queued");
-  //   dispatch(mint());
-  // }, 1000);
+  let minted2 = await nft.mintNFT_batch(arr);
+  console.log("MINT", minted2);
 
-  // let minted2 = await dropship.mintNFT_batch(arr);
-
-  // console.log("MINT", minted2);
+  let stats = await nft.stats();
+  console.log("NFT STATS", stats);
 };
 
 export const test = () => async (dispatch, getState) => {

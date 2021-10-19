@@ -92,7 +92,11 @@ export const MintForm = () => {
     <Formik
       initialValues={{ name: "" }}
       onSubmit={(values, actions) => {
+        // setInterval(() => {
         dispatch(mint());
+        // }, 1000);
+
+        // dispatch(mint());
         // dispatch(sendSolution(values.code));
         actions.setSubmitting(false);
       }}

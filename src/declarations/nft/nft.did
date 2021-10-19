@@ -8,7 +8,16 @@ type User =
    address: AccountIdentifier;
    "principal": principal;
  };
-type URL = text;
+type UploadChunkRequest = 
+ record {
+   chunkIdx: nat32;
+   data: blob;
+   position: variant {
+               content;
+               thumb;
+             };
+   tokenIndex: TokenIndex;
+ };
 type TransferResponse = 
  variant {
    err:
@@ -68,8 +77,8 @@ type Request =
  };
 type OwnedResponse = 
  record {
-   idx: TokenIndex;
-   metadata: opt Metadata;
+   idx: TokenIndex__1;
+   metadata: opt MetadataOut;
  };
 type NFT = 
  service {
@@ -82,12 +91,15 @@ type NFT =
    cyclesBalance: () -> (nat) query;
    debugMode: (opt text) -> ();
    extensions: () -> (vec Extension) query;
+   fetchChunk: (FetchChunkRequest) -> (opt blob);
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
    mintNFT: (MintRequest) -> (MintResponse);
+   mintNFT_batch: (vec MintRequest) -> (MintBatchResponse);
    owned: (User__1) -> (vec OwnedResponse) query;
    stats: () -> (StatsResponse) query;
    supply: (TokenIdentifier) -> (SupplyResponse) query;
    transfer: (TransferRequest) -> (TransferResponse);
+   uploadChunk: (UploadChunkRequest) -> ();
  };
 type MintResponse = 
  variant {
@@ -95,47 +107,55 @@ type MintResponse =
           OutOfMemory;
           Rejected;
         };
-   ok: TokenIndex__1;
+   ok: TokenIndex;
  };
 type MintRequest = 
  record {
    classId: ItemClassId;
-   media: opt Media;
-   thumb: opt URL;
    to: User;
  };
-type Metadata__1 = 
- record {
-   boundUntil: opt nat32;
-   classId: ItemClassId;
-   cooldownUntil: opt nat32;
-   created: nat32;
-   entropy: blob;
-   media: opt Media;
-   thumb: opt URL;
+type MintBatchResponse = 
+ variant {
+   err: CommonError;
+   ok: vec TokenIndex;
  };
 type MetadataResponse = 
  variant {
    err: CommonError;
-   ok: Metadata__1;
+   ok: MetadataOut__1;
  };
-type Metadata = 
+type MetadataOut__1 = 
  record {
    boundUntil: opt nat32;
    classId: ItemClassId;
+   content: opt Media;
    cooldownUntil: opt nat32;
    created: nat32;
    entropy: blob;
-   media: opt Media;
-   thumb: opt URL;
+   thumb: opt Media;
+ };
+type MetadataOut = 
+ record {
+   boundUntil: opt nat32;
+   classId: ItemClassId;
+   content: opt Media;
+   cooldownUntil: opt nat32;
+   created: nat32;
+   entropy: blob;
+   thumb: opt Media;
  };
 type Memo = blob;
-type Media = 
- variant {
-   img: URL;
-   video: URL;
- };
+type Media = text;
 type ItemClassId = nat;
+type FetchChunkRequest = 
+ record {
+   chunkIdx: nat32;
+   position: variant {
+               content;
+               thumb;
+             };
+   tokenIndex: TokenIndex;
+ };
 type Extension = text;
 type CommonError = 
  variant {

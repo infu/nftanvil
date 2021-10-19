@@ -1,36 +1,9 @@
-type User = 
- variant {
-   address: AccountIdentifier;
-   "principal": principal;
- };
-type URL = text;
-type TokenIndex = nat32;
 type Router = 
  service {
    debug_reset: () -> ();
-   getCanisters: () -> (record {nft: vec principal;}) query;
-   mintNFT: (MintRequest) -> (MintResponse);
+   getAvailable: () -> (principal) query;
+   getCanisters: () -> (record {nft: vec text;}) query;
+   init: () -> ();
+   reportOutOfMemory: () -> ();
  };
-type MintResponse = 
- variant {
-   err: variant {
-          OutOfMemory;
-          Rejected;
-        };
-   ok: TokenIndex;
- };
-type MintRequest = 
- record {
-   classId: ItemClassId;
-   media: opt Media;
-   thumb: opt URL;
-   to: User;
- };
-type Media = 
- variant {
-   img: URL;
-   video: URL;
- };
-type ItemClassId = nat;
-type AccountIdentifier = text;
 service : () -> Router

@@ -20,8 +20,8 @@ import Cycles "mo:base/ExperimentalCycles";
 import PseudoRandom "../lib/vvv/src/PseudoRandom";
 import Blob "mo:base/Blob";
 import Array_ "../lib/vvv/src/Array";
-
 import Prim "mo:prim"; 
+import AccessControl "../accesscontrol/access";
 
 shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken = this {
 
@@ -33,6 +33,8 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     type User = Ext.User;
     type CommonError = Ext.CommonError;
     type Metadata = Ext.Metadata;
+    type MetadataOut = Ext.MetadataOut;
+
 
     type BalanceRequest = Ext.Core.BalanceRequest;
     type BalanceResponse = Ext.Core.BalanceResponse;
@@ -49,6 +51,10 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         #Other        : Text;
     };
 
+    let ACCESSCONTROL = actor "r7inp-6aaaa-aaaaa-aaabq-cai" : AccessControl.AccessControl;
+    let ROUTER = actor "rkp4c-7iaaa-aaaaa-aaaca-cai" : actor {
+        reportOutOfMemory : shared () -> async ();
+    };
 
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
 
@@ -64,22 +70,28 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     
     private stable var _tmpAccount : [(AccountIdentifier, [TokenIndex])] = [];
     private var _account : HashMap.HashMap<AccountIdentifier, [TokenIndex]> = HashMap.fromIter(_tmpAccount.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
-        
+
+    private stable var _tmpChunk : [(Nat32, Blob)] = [];
+    private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
+     
 
     // private stable var _minter : Principal  = install.caller; 
 
     private stable var _cannisterId : ?Principal = null;
 
     private stable var _nextTokenId : Nat32 = 0;
+    private stable var _nextChunkId : Nat32 = 0;
 
     private stable var _statsCollections : Nat32  = 0;
     private stable var _statsAccounts : Nat32  = 0;
     private stable var _statsTransfers : Nat32  = 0;
     private stable var _statsBurned : Nat32 = 0;
 
+    private stable var _available : Bool = true;
+
     var rand = PseudoRandom.PseudoRandom();
 
-    private let thresholdMemory = 2147483648; //  ~2GB
+    private let thresholdMemory = 214748364; //8; //  ~2GB
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -87,6 +99,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         _tmpAllowance := Iter.toArray(_allowance.entries());
         _tmpMeta := Iter.toArray(_meta.entries());
         _tmpAccount := Iter.toArray(_account.entries());
+        _tmpChunk := Iter.toArray(_chunk.entries());
 
     };
     system func postupgrade() {
@@ -94,10 +107,12 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         _tmpAllowance := [];
         _tmpMeta := [];
         _tmpAccount := [];
+        _tmpChunk := [];
+
     };
     
     public query func extensions() : async [Ext.Extension] {
-        ["@ext:common", "@ext/allowance", "@ext/nonfungible"];
+        ["@ext:common", "@ext/allowance", "@ext/nonfungible", "nftanvil"];
     };
 
 
@@ -171,8 +186,8 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
 
                
                 switch( _meta.get(tokenIndex) ) {
-                    case (?meta) {
-                        #ok(meta);
+                    case (?m) {
+                        #ok(Ext.MetaToOut(m));
                     };
                     case (_) {
                         #err(#InvalidToken(token));
@@ -206,22 +221,58 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
                
     };
 
-    // public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
-    //    // assert(caller == _minter);
+    public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
+       // assert(caller == _minter);
 
-    //     let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
-    //             let tokenIndex = SNFT_mint(one_request);
-    //             return tokenIndex
-    //             });
+        let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
+                let tokenIndex = SNFT_mint(one_request);
+                return tokenIndex
+                });
 
-    //     #ok(tokens);
-    // };
+        #ok(tokens);
+    };
+
+    public shared({caller}) func uploadChunk(request: Ext.NonFungible.UploadChunkRequest) : async () {
+        //TODO: add security
+
+        let ctype: Nat32 = switch(request.position) {
+            case (#content) 0;
+            case (#thumb) 1;
+        };
+        
+        let maxChunks: Nat32 = switch(request.position) {
+            case (#content) 10;
+            case (#thumb) 1;
+        };
+
+        assert(request.chunkIdx < maxChunks);
+
+        let chunkId = (request.tokenIndex << 6) | ((request.chunkIdx & 15) << 2) | (ctype);
+
+        _chunk.put(chunkId, request.data);
+    };
+
+     public shared({caller}) func fetchChunk(request: Ext.NonFungible.FetchChunkRequest) : async ?Blob {
+
+        let ctype: Nat32 = switch(request.position) {
+            case (#content) 0;
+            case (#thumb) 1;
+        };
+        
+        assert(request.chunkIdx <= 15);
+        assert(ctype <= 3);
+
+        let chunkId = (request.tokenIndex << 6) | ((request.chunkIdx & 15) << 2) | (ctype);
+
+        _chunk.get(chunkId);
+    };
 
     private func SNFT_mint(request: Ext.NonFungible.MintRequest) : TokenIndex {
 
         let receiver = Ext.User.toAccountIdentifier(request.to);
  
         let tokenIndex:TokenIndex = _nextTokenId;
+        _nextTokenId := _nextTokenId + 1;
 
         let now = Time.now();
         let timestamp:Nat32 = Nat32.fromIntWrap(Int.div(now, 1000000000)/60);
@@ -229,30 +280,46 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         // Get class info, check if principal is allowed to mint
 
         let md : Metadata = {
-            media = request.media;
-            thumb = request.thumb;
+            content = null;//request.media;
+            thumb = null;//request.thumb;
             created = timestamp;
             classId = request.classId;
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 {  Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
-            boundUntil = null;
-            cooldownUntil = null;
+            var boundUntil = null;
+            var cooldownUntil = null;
         }; 
 
         // Todo: check if class is bind on pickup and set boundUntil if so
 
-        SNFT_put(receiver, tokenIndex);
+        assert(switch(_meta.get(tokenIndex)) { // shouldn't exist in db
+            case (?a) false;
+            case (_) true;
+        });
 
         _meta.put(tokenIndex, md);
-        _nextTokenId := _nextTokenId + 1;
+
+        SNFT_put(receiver, tokenIndex);
 
         tokenIndex
 
     };
 
     public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
-        assert(caller == _owner);
+        // assert(caller == _owner);
 
-        if (thresholdMemory <= Prim.rts_memory_size()) return #err(#OutOfMemory);
+        if (_available == false) { return #err(#OutOfMemory) };
+
+        if (thresholdMemory <= Prim.rts_memory_size()  ) { 
+            _available := false;
+            await ROUTER.reportOutOfMemory();
+            return #err(#OutOfMemory);
+            };
+
+        // let atokens = await ACCESSCONTROL.getBalance(caller);
+        // assert(atokens >= 1);
+        // assert((await ACCESSCONTROL.consumeAccess(caller, 1)) == #ok(true));
+    
+    
 
         let tokenIndex = SNFT_mint(request);
 
@@ -281,13 +348,15 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     // Storage related functions
     private func SNFT_put(aid: AccountIdentifier, tidx: TokenIndex) : () { 
 
+      
         _balance.put(tidx, aid);
-        let owned_tokens = switch(_account.get(aid)) { case (?a) a; case _ []; };
-        let new_owned_tokens = Array.append(owned_tokens, [tidx]);
 
-        if (Iter.size(new_owned_tokens.keys()) == 1)  _statsAccounts := _statsAccounts + 1;
+        // let owned_tokens = switch(_account.get(aid)) { case (?a) a; case _ []; };
+        // let new_owned_tokens = Array.append(owned_tokens, [tidx]);
 
-        _account.put(aid, new_owned_tokens);
+        // if (Iter.size(new_owned_tokens.keys()) == 1)  _statsAccounts := _statsAccounts + 1;
+
+        // _account.put(aid, new_owned_tokens);
         
     };
 
@@ -345,8 +414,8 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         })
     };
 
-
-    public type OwnedResponse = {idx:TokenIndex; metadata: ?Metadata};
+    
+    public type OwnedResponse = {idx:TokenIndex; metadata: ?MetadataOut};
     
     // returns all tokens the user owns
     public query func owned(user : User) : async [OwnedResponse] {
@@ -355,7 +424,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         Array.map<TokenIndex, OwnedResponse>(token_ids, func (tokenIndex) { 
              switch( _meta.get(tokenIndex) ) {
                     case (?a) 
-                    return {idx = tokenIndex; metadata = ?a}; 
+                    return {idx = tokenIndex; metadata = ?Ext.MetaToOut(a)}; 
                     case _ {assert(false); {idx = tokenIndex; metadata = null}}; //we can't have token without _meta
                     }
                 });
