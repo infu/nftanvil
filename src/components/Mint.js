@@ -1,13 +1,6 @@
 import React from "react";
 import moment from "moment";
-import {
-  login,
-  logout,
-  mint,
-  owned,
-  challenge,
-  sendSolution,
-} from "../reducers/user";
+import { mint } from "../reducers/nft";
 import { useSelector, useDispatch } from "react-redux";
 import _ from "lodash";
 import {

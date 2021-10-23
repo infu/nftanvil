@@ -119,7 +119,7 @@ export const idlFactory = ({ IDL }) => {
     'boundUntil' : IDL.Opt(IDL.Nat32),
   });
   const MetadataResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'metadata' : Metadata, 'metavars' : MetavarsFrozen }),
+    'ok' : IDL.Record({ 'data' : Metadata, 'vars' : MetavarsFrozen }),
     'err' : CommonError,
   });
   const MetadataInput = IDL.Record({
@@ -141,15 +141,6 @@ export const idlFactory = ({ IDL }) => {
     'ok' : TokenIndex,
     'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'OutOfMemory' : IDL.Null }),
   });
-  const MintBatchResponse = IDL.Variant({
-    'ok' : IDL.Vec(TokenIndex),
-    'err' : CommonError,
-  });
-  const User__1 = IDL.Variant({
-    'principal' : IDL.Principal,
-    'address' : AccountIdentifier,
-  });
-  const TokenIndex__1 = IDL.Nat32;
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
     'transfers' : IDL.Nat32,
@@ -207,8 +198,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
     'mintNFT' : IDL.Func([MintRequest], [MintResponse], []),
-    'mintNFT_batch' : IDL.Func([IDL.Vec(MintRequest)], [MintBatchResponse], []),
-    'owned' : IDL.Func([User__1], [IDL.Vec(TokenIndex__1)], ['query']),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'supply' : IDL.Func([TokenIdentifier], [SupplyResponse], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
@@ -216,4 +205,6 @@ export const idlFactory = ({ IDL }) => {
   });
   return NFT;
 };
-export const init = ({ IDL }) => { return []; };
+export const init = ({ IDL }) => {
+  return [IDL.Record({ 'acclist' : IDL.Vec(IDL.Text) })];
+};

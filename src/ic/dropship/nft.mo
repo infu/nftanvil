@@ -14,6 +14,7 @@ import Time "mo:base/Time";
 // import Debug "mo:base/Debug";
 import Nat32 "mo:base/Nat32";
 import Nat8 "mo:base/Nat8";
+import CRC32 "mo:hash/CRC32";
 
 import Cycles "mo:base/ExperimentalCycles";
 
@@ -23,7 +24,7 @@ import Array_ "../lib/vvv/src/Array";
 import Prim "mo:prim"; 
 import AccessControl "../accesscontrol/access";
 
-shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken = this {
+shared({caller = _owner}) actor class NFT({acclist: [Text]}) : async Interface.NonFungibleToken = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Ext.AccountIdentifier;
@@ -53,8 +54,20 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     };
 
     let ACCESSCONTROL = actor "r7inp-6aaaa-aaaaa-aaabq-cai" : AccessControl.AccessControl;
-    let ROUTER = actor "rkp4c-7iaaa-aaaaa-aaaca-cai" : actor {
+    let ROUTER = actor(Principal.toText(_owner)) : actor {
         reportOutOfMemory : shared () -> async ();
+    };
+    
+    private let _acclist_size = Iter.size(Iter.fromArray(acclist));
+
+    type accountInterface = actor {
+        add : shared (aid: AccountIdentifier, idx:TokenIndex) -> async ();
+        rem : shared (aid: AccountIdentifier, idx:TokenIndex) -> async ();
+    };
+
+    private func accountActor(aid: AccountIdentifier) : accountInterface {
+        let selected = acclist[ Nat32.toNat( Text.hash(aid) % Nat32.fromNat(_acclist_size) ) ];
+        actor(selected): accountInterface;
     };
 
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
@@ -72,8 +85,8 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     private stable var _tmpAllowance : [(TokenIndex, Principal)] = [];
     private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
     
-    private stable var _tmpAccount : [(AccountIdentifier, [TokenIndex])] = [];
-    private var _account : HashMap.HashMap<AccountIdentifier, [TokenIndex]> = HashMap.fromIter(_tmpAccount.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
+    // private stable var _tmpAccount : [(AccountIdentifier, [TokenIndex])] = [];
+    // private var _account : HashMap.HashMap<AccountIdentifier, [TokenIndex]> = HashMap.fromIter(_tmpAccount.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
 
     private stable var _tmpChunk : [(Nat32, Blob)] = [];
     private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
@@ -103,7 +116,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         _tmpMeta := Iter.toArray(_meta.entries());
         _tmpMetavars := Iter.toArray(_metavars.entries());
 
-        _tmpAccount := Iter.toArray(_account.entries());
+        // _tmpAccount := Iter.toArray(_account.entries());
         _tmpChunk := Iter.toArray(_chunk.entries());
 
     };
@@ -112,7 +125,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         _tmpAllowance := [];
         _tmpMeta := [];
         _tmpMetavars := [];
-        _tmpAccount := [];
+        // _tmpAccount := [];
         _tmpChunk := [];
 
     };
@@ -149,7 +162,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
  
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
-                SNFT_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
+                await SNFT_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
                 
                 return #ok(1);
             }; 
@@ -171,7 +184,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
             case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
                 // _allowance.delete(tokenIndex); // After changing owners, we have to remove allowance
                 // _balance.put(tokenIndex, Ext.User.toAccountIdentifier(request.to));
-                SNFT_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
+                await SNFT_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
                 
                 return #ok(1);
             }; 
@@ -197,8 +210,8 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
                               switch( _metavars.get(tokenIndex) ) {
                               case (?v) {
                                 #ok({
-                                    metadata = m; 
-                                    metavars = Ext.MetavarsFreeze(v)
+                                    data = m; 
+                                    vars = Ext.MetavarsFreeze(v)
                                     });
                               };
                               case (_) {
@@ -238,16 +251,16 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
                
     };
 
-    public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
-       // assert(caller == _minter);
+    // public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
+    //    // assert(caller == _minter);
 
-        let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
-                let tokenIndex = SNFT_mint(caller,one_request);
-                return tokenIndex
-                });
+    //     let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
+    //             let tokenIndex = await SNFT_mint(caller,one_request);
+    //             return tokenIndex
+    //             });
 
-        #ok(tokens);
-    };
+    //     #ok(tokens);
+    // };
 
     public shared({caller}) func uploadChunk(request: Ext.NonFungible.UploadChunkRequest) : async () {
         //TODO: add security
@@ -291,7 +304,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         _chunk.get(chunkId);
     };
 
-    private func SNFT_mint(caller:Principal, request: Ext.NonFungible.MintRequest) : TokenIndex {
+    private func SNFT_mint(caller:Principal, request: Ext.NonFungible.MintRequest) : async TokenIndex {
 
         let receiver = Ext.User.toAccountIdentifier(request.to);
  
@@ -341,43 +354,12 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         _meta.put(tokenIndex, md);
         _metavars.put(tokenIndex, mvar);
 
-        SNFT_put(receiver, tokenIndex);
+        await SNFT_put(receiver, tokenIndex);
 
         tokenIndex
 
     };
-    // public func tst() : async [Ext.MetadataInput] {
 
-    //     let x : Ext.MetadataInput = {
-    //         name= ?"Fun";
-    //         lore= ?"Some lore";
-    //         quality= ?3;
-    //         use= ? #consumable({desc = "Fun"; cannister= Principal.fromText("2vxsx-fae")});
-    //         hold= ?"Hold for fun";
-    //         transfer= ?#unrestricted;
-    //         attributes= [("Joo", 34), ("Boo",111), ("Goo",239)];
-    //         level= 4;
-    //         ttl = ?23423;
-    //         thumb = #internal({contentType= "image/jpeg"; size = 234234});
-    //         content = null;
-    //     };
-
-    //     let y : Ext.MetadataInput ={
-    //         name= ?"Fun";
-    //         lore= null;
-    //         quality= ?3;
-    //         use= ? #consumable({desc = "Fun"; cannister= Principal.fromText("2vxsx-fae")});
-    //         hold= ?"Hold for fun";
-    //         transfer= null;
-    //         attributes= [];
-    //         level= 4;
-    //         ttl = null;
-    //         thumb = #external({contentType= "image/jpeg"; cannister = Principal.fromText("2vxsx-fae")});
-    //         content = null;
-
-    //     };
-    //     return [x,y];
-    // };
 
     public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
         // assert(caller == _owner);
@@ -396,35 +378,19 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
 
 
 
-        let tokenIndex = SNFT_mint(caller,request);
+        let tokenIndex = await SNFT_mint(caller,request);
 
-        
-        // let receiver = Ext.User.toAccountIdentifier(request.to);
- 
-        // let tokenIndex:TokenIndex = _nextTokenId;
 
-        // let now = Time.now();
-
-        // let md : Metadata = #nonfungible({
-        //     metadata = request.metadata;
-        //     minter = request.minter;
-        //     created = now;
-        //     TTL = request.TTL;
-        // }); 
-
-        // SNFT_put(receiver, tokenIndex);
-
-        // _meta.put(tokenIndex, md);
-        // _nextTokenId := _nextTokenId + 1;
 
          #ok(tokenIndex);
     };
 
     // Storage related functions
-    private func SNFT_put(aid: AccountIdentifier, tidx: TokenIndex) : () { 
+    private func SNFT_put(aid: AccountIdentifier, tidx: TokenIndex) : async () { 
 
       
         _balance.put(tidx, aid);
+        await accountActor(aid).add(aid, tidx);
 
         // let owned_tokens = switch(_account.get(aid)) { case (?a) a; case _ []; };
         // let new_owned_tokens = Array.append(owned_tokens, [tidx]);
@@ -435,10 +401,10 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         
     };
 
-    private func SNFT_aidGet(aid: AccountIdentifier) : ?[TokenIndex] { 
-        _account.get(aid);
+    // private func SNFT_aidGet(aid: AccountIdentifier) : ?[TokenIndex] { 
+    //     _account.get(aid);
         
-    };
+    // };
 
     private func SNFT_tidxGet(tidx: TokenIndex) : ?AccountIdentifier { 
         _balance.get(tidx);
@@ -446,39 +412,42 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     
 
 
-    private func SNFT_del(aid: AccountIdentifier, tidx: TokenIndex) : () {
+    private func SNFT_del(aid: AccountIdentifier, tidx: TokenIndex) : async () {
         // storeage is a mish-mash if assertations fail
         let stored_aid = switch(SNFT_tidxGet(tidx)) { case (?a) a; case _ ""; };
         assert(Ext.AccountIdentifier.equal(stored_aid, aid)); 
-        let aid_tokens = switch(SNFT_aidGet(aid)) { case (?a) a; case _ []; };
-        let new_aid_tokens = Array.filter(aid_tokens, func (x:TokenIndex) :Bool { x != tidx });
 
-        // the new array has to be one element less than the old or the token was never there
-        let new_aid_tokens_length = Iter.size(new_aid_tokens.keys());
-        assert(new_aid_tokens_length + 1 == Iter.size(aid_tokens.keys()));
+        // let aid_tokens = switch(SNFT_aidGet(aid)) { case (?a) a; case _ []; };
+        // let new_aid_tokens = Array.filter(aid_tokens, func (x:TokenIndex) :Bool { x != tidx });
+
+        // // the new array has to be one element less than the old or the token was never there
+        // let new_aid_tokens_length = Iter.size(new_aid_tokens.keys());
+        // assert(new_aid_tokens_length + 1 == Iter.size(aid_tokens.keys()));
 
         _balance.delete(tidx);
         _allowance.delete(tidx);
 
-        switch (new_aid_tokens_length) { // free some memory
-            case (0) {
-                _account.delete(aid);
-                _statsAccounts := _statsAccounts - 1;
-            };
-            case _  _account.put(aid, new_aid_tokens);
-        };
+        await accountActor(aid).rem(aid, tidx);
+
+        // switch (new_aid_tokens_length) { // free some memory
+        //     case (0) {
+        //         _account.delete(aid);
+        //         _statsAccounts := _statsAccounts - 1;
+        //     };
+        //     case _  _account.put(aid, new_aid_tokens);
+        // };
        
     };
 
-    private func SNFT_burn(aid: AccountIdentifier, tidx: TokenIndex) : () {
-        SNFT_del(aid, tidx);
+    private func SNFT_burn(aid: AccountIdentifier, tidx: TokenIndex) : async () {
+        await SNFT_del(aid, tidx);
         _meta.delete(tidx);
         _statsBurned := _statsBurned + 1;
     };
 
-    private func SNFT_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : () {
-        SNFT_del(from, tidx);
-        SNFT_put(to, tidx);
+    private func SNFT_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : async () {
+        await SNFT_del(from, tidx);
+        await SNFT_put(to, tidx);
         _statsTransfers := _statsTransfers + 1;
     };
 
@@ -492,30 +461,30 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     
     // public type OwnedResponse = {idx:TokenIndex};
     
-    // returns all tokens the user owns
-    public query func owned(user : User) : async [TokenIndex] {
-        let aid = Ext.User.toAccountIdentifier(user);
-        let token_ids = switch(SNFT_aidGet(aid)) { case (?a) a; case _ []; };
-        // Array.map<TokenIndex, OwnedResponse>(token_ids, func (tokenIndex) { 
-        //      switch( _meta.get(tokenIndex) ) {
-        //             case (?a) {
-        //                 switch(_metavars.get(tokenIndex)) {
-        //                     case (?v) {
-        //                        return {idx = tokenIndex; metadata = ?a; metavars = ?v}; 
-        //                     };
-        //                     case (_) {
-        //                         assert(false); 
-        //                         {idx = tokenIndex; metadata = null; metavars = null}
-        //                     }
-        //                 }
-        //             };
-        //             case _ { 
-        //                 assert(false); 
-        //                 {idx = tokenIndex; metadata = null; metavars = null}
-        //             }; //we can't have token without _meta
-        //             }
-        //         });
-    };
+    // // returns all tokens the user owns
+    // public query func owned(user : User) : async [TokenIndex] {
+    //     let aid = Ext.User.toAccountIdentifier(user);
+    //     let token_ids = switch(SNFT_aidGet(aid)) { case (?a) a; case _ []; };
+    //     // Array.map<TokenIndex, OwnedResponse>(token_ids, func (tokenIndex) { 
+    //     //      switch( _meta.get(tokenIndex) ) {
+    //     //             case (?a) {
+    //     //                 switch(_metavars.get(tokenIndex)) {
+    //     //                     case (?v) {
+    //     //                        return {idx = tokenIndex; metadata = ?a; metavars = ?v}; 
+    //     //                     };
+    //     //                     case (_) {
+    //     //                         assert(false); 
+    //     //                         {idx = tokenIndex; metadata = null; metavars = null}
+    //     //                     }
+    //     //                 }
+    //     //             };
+    //     //             case _ { 
+    //     //                 assert(false); 
+    //     //                 {idx = tokenIndex; metadata = null; metavars = null}
+    //     //             }; //we can't have token without _meta
+    //     //             }
+    //     //         });
+    // };
 
    
 

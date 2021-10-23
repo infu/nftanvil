@@ -91,15 +91,13 @@ export interface MetadataInput {
   'transfer' : [] | [ItemTransfer],
 }
 export type MetadataResponse = {
-    'ok' : { 'metadata' : Metadata, 'metavars' : MetavarsFrozen }
+    'ok' : { 'data' : Metadata, 'vars' : MetavarsFrozen }
   } |
   { 'err' : CommonError };
 export interface MetavarsFrozen {
   'cooldownUntil' : [] | [number],
   'boundUntil' : [] | [number],
 }
-export type MintBatchResponse = { 'ok' : Array<TokenIndex> } |
-  { 'err' : CommonError };
 export interface MintRequest { 'to' : User, 'metadata' : MetadataInput }
 export type MintResponse = { 'ok' : TokenIndex } |
   { 'err' : { 'Rejected' : null } | { 'OutOfMemory' : null } };
@@ -116,8 +114,6 @@ export interface NFT {
   'fetchChunk' : (arg_0: FetchChunkRequest) => Promise<[] | [Array<number>]>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mintNFT' : (arg_0: MintRequest) => Promise<MintResponse>,
-  'mintNFT_batch' : (arg_0: Array<MintRequest>) => Promise<MintBatchResponse>,
-  'owned' : (arg_0: User__1) => Promise<Array<TokenIndex__1>>,
   'stats' : () => Promise<StatsResponse>,
   'supply' : (arg_0: TokenIdentifier) => Promise<SupplyResponse>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
@@ -148,7 +144,6 @@ export type SupplyResponse = { 'ok' : Balance } |
   { 'err' : CommonError };
 export type TokenIdentifier = string;
 export type TokenIndex = number;
-export type TokenIndex__1 = number;
 export interface TransferRequest {
   'to' : User,
   'token' : TokenIdentifier,
@@ -175,7 +170,5 @@ export interface UploadChunkRequest {
     { 'content' : null },
 }
 export type User = { 'principal' : Principal } |
-  { 'address' : AccountIdentifier };
-export type User__1 = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
 export interface _SERVICE extends NFT {}

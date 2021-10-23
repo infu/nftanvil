@@ -7,6 +7,7 @@ import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
 import Ext "../src/ic/lib/ext.std/src/Ext";
 import Interface "../src/ic/lib/ext.std/src/Interface";
+import Account "../src/ic/dropship/account";
 
 import Dropship "../src/ic/dropship/nft";
 import Array_ "../src/ic/lib/vvv/src/Array"
@@ -17,7 +18,7 @@ var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
 var someMeta = Blob.fromArray([116, 116, 105, 100]);
 var someMemo = Blob.fromArray([111, 111, 111, 111]);
 
-let nft = await Dropship.NFT();
+let nft = await Dropship.NFT({acclist = []});
 
 
 // Debug.print(Principal.toText(Principal.fromActor(nft))); // BUG: this is not working when we run it from moc command line
@@ -78,11 +79,11 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             transfer= null;
             ttl= null; // time to live
             content= null;
-            thumb= null; 
-            attributes=null;
-            parentId= null;
-            canParent= ?true;
-            maxChildren= ?100;
+            thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
+            attributes=[];
+            extensionCanister = null;
+            secret=false
+
             }})
             ) == #ok(0));
 
@@ -94,11 +95,12 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             use= null;
             hold= null;
             transfer= null;
-            attributes=null;
             ttl= null; // time to live
             content= null;
-            thumb= null; 
-  
+            thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
+            attributes=[];
+            extensionCanister = null;
+  secret=false
 }})) == #ok(1));
 
 
@@ -110,11 +112,12 @@ switch(await nft.mintNFT({to = user_john; metadata = {
             use= null;
             hold= null;
             transfer= null;
-            attributes=null;
             ttl= null; // time to live
             content= null;
-            thumb= null; 
-      
+            thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
+            attributes=[];
+            extensionCanister = null;
+      secret=false
             }})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
     case (#err(e)) Debug.print(debug_show(e));
@@ -122,17 +125,18 @@ switch(await nft.mintNFT({to = user_john; metadata = {
 
 // mint token for burning later
 assert((await nft.mintNFT({to = user_john; metadata = {
-            name = ?"Some";
+                    name = ?"Some";
             lore = ?"Other";
             quality= null;
             use= null;
             hold= null;
             transfer= null;
-            attributes=null;
             ttl= null; // time to live
             content= null;
-            thumb= null; 
-        
+            thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
+            attributes=[];
+            extensionCanister = null;
+        secret=false
 }})) == #ok(3));
 
 // check balance of john for token one 
@@ -293,10 +297,10 @@ Debug.print(debug_show( (await nft.metadata(token_two)) ));
 
 
 // - Owned
-let owned = (await nft.owned(user_john));
+// let owned = (await nft.owned(user_john));
 
 
-Debug.print(debug_show( owned ));
+// Debug.print(debug_show( owned ));
 // -- Burn & Stats
 var stats = await nft.stats();
 assert(stats.accounts == 2);

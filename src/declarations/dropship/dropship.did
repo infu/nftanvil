@@ -2,8 +2,6 @@ type Router =
  service {
    debug_reset: () -> ();
    getAvailable: () -> (principal) query;
-   getCanisters: () -> (record {nft: vec text;}) query;
-   init: () -> ();
    reportOutOfMemory: () -> ();
  };
 service : () -> Router
