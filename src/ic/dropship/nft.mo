@@ -33,7 +33,8 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     type User = Ext.User;
     type CommonError = Ext.CommonError;
     type Metadata = Ext.Metadata;
-    type MetadataOut = Ext.MetadataOut;
+    type Metavars = Ext.Metavars;
+    type MetavarsOut = Ext.MetavarsFrozen;
 
 
     type BalanceRequest = Ext.Core.BalanceRequest;
@@ -65,6 +66,9 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     private stable var _tmpMeta : [(TokenIndex, Metadata)] = [];
     private var _meta : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tmpMeta.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
     
+    private stable var _tmpMetavars : [(TokenIndex, Metavars)] = [];
+    private var _metavars : HashMap.HashMap<TokenIndex, Metavars> = HashMap.fromIter(_tmpMetavars.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
+    
     private stable var _tmpAllowance : [(TokenIndex, Principal)] = [];
     private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
     
@@ -73,7 +77,6 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
 
     private stable var _tmpChunk : [(Nat32, Blob)] = [];
     private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
-     
 
     // private stable var _minter : Principal  = install.caller; 
 
@@ -98,6 +101,8 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         _tmpBalance := Iter.toArray(_balance.entries());
         _tmpAllowance := Iter.toArray(_allowance.entries());
         _tmpMeta := Iter.toArray(_meta.entries());
+        _tmpMetavars := Iter.toArray(_metavars.entries());
+
         _tmpAccount := Iter.toArray(_account.entries());
         _tmpChunk := Iter.toArray(_chunk.entries());
 
@@ -106,6 +111,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         _tmpBalance := [];
         _tmpAllowance := [];
         _tmpMeta := [];
+        _tmpMetavars := [];
         _tmpAccount := [];
         _tmpChunk := [];
 
@@ -178,6 +184,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     };
 
 
+
     public query func metadata(token : Ext.TokenIdentifier) : async Ext.MetadataResponse {
         switch (Ext.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
@@ -187,7 +194,17 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
                
                 switch( _meta.get(tokenIndex) ) {
                     case (?m) {
-                        #ok(Ext.MetaToOut(m));
+                              switch( _metavars.get(tokenIndex) ) {
+                              case (?v) {
+                                #ok({
+                                    metadata = m; 
+                                    metavars = Ext.MetavarsFreeze(v)
+                                    });
+                              };
+                              case (_) {
+                                 #err(#InvalidToken(token));
+                              }
+                              };
                     };
                     case (_) {
                         #err(#InvalidToken(token));
@@ -225,7 +242,7 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
        // assert(caller == _minter);
 
         let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
-                let tokenIndex = SNFT_mint(one_request);
+                let tokenIndex = SNFT_mint(caller,one_request);
                 return tokenIndex
                 });
 
@@ -245,9 +262,16 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
             case (#thumb) 1;
         };
 
+        switch(request.position) {
+            case (#content) assert(request.data.size() <= 524288);//512kb
+            case (#thumb) assert(request.data.size() <= 131072); // 128kb
+        };
+
+        
+
         assert(request.chunkIdx < maxChunks);
 
-        let chunkId = (request.tokenIndex << 6) | ((request.chunkIdx & 15) << 2) | (ctype);
+        let chunkId = (request.tokenIndex << 16) | ((request.chunkIdx & 15) << 2) | (ctype);
 
         _chunk.put(chunkId, request.data);
     };
@@ -262,12 +286,12 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         assert(request.chunkIdx <= 15);
         assert(ctype <= 3);
 
-        let chunkId = (request.tokenIndex << 6) | ((request.chunkIdx & 15) << 2) | (ctype);
+        let chunkId = (request.tokenIndex << 16) | ((request.chunkIdx & 15) << 2) | (ctype);
 
         _chunk.get(chunkId);
     };
 
-    private func SNFT_mint(request: Ext.NonFungible.MintRequest) : TokenIndex {
+    private func SNFT_mint(caller:Principal, request: Ext.NonFungible.MintRequest) : TokenIndex {
 
         let receiver = Ext.User.toAccountIdentifier(request.to);
  
@@ -278,16 +302,34 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         let timestamp:Nat32 = Nat32.fromIntWrap(Int.div(now, 1000000000)/60);
 
         // Get class info, check if principal is allowed to mint
+        let m = request.metadata;
 
         let md : Metadata = {
-            content = null;//request.media;
-            thumb = null;//request.thumb;
+            name= m.name;
+            lore= m.lore;
+            quality= m.quality;
+            use= m.use;
+            hold= m.hold;
+            transfer= m.transfer;
+            ttl= m.ttl; // time to live
+            secret= m.secret;
+            // parentId= m.parentId;
+            // maxChildren= m.maxChildren;
+            attributes = m.attributes;
+            content = m.content;
+            thumb = m.thumb;
+            extensionCanister = m.extensionCanister;
+            minter= ?caller;
+            level= 1; //TODO: make it parent lvl + 1;  0,1,2; 0 lvl doesn't have parent. 1lvl has 0lvl parent; 2lvl has 1lvl parent;
             created = timestamp;
-            classId = request.classId;
-            entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 {  Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
-            var boundUntil = null;
-            var cooldownUntil = null;
-        }; 
+            entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
+        };
+
+        let mvar : Metavars = {
+            //  var totalChildren = 0;
+             var boundUntil = null; // in minutes
+             var cooldownUntil = null; // in minutes
+        };
 
         // Todo: check if class is bind on pickup and set boundUntil if so
 
@@ -297,12 +339,45 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         });
 
         _meta.put(tokenIndex, md);
+        _metavars.put(tokenIndex, mvar);
 
         SNFT_put(receiver, tokenIndex);
 
         tokenIndex
 
     };
+    // public func tst() : async [Ext.MetadataInput] {
+
+    //     let x : Ext.MetadataInput = {
+    //         name= ?"Fun";
+    //         lore= ?"Some lore";
+    //         quality= ?3;
+    //         use= ? #consumable({desc = "Fun"; cannister= Principal.fromText("2vxsx-fae")});
+    //         hold= ?"Hold for fun";
+    //         transfer= ?#unrestricted;
+    //         attributes= [("Joo", 34), ("Boo",111), ("Goo",239)];
+    //         level= 4;
+    //         ttl = ?23423;
+    //         thumb = #internal({contentType= "image/jpeg"; size = 234234});
+    //         content = null;
+    //     };
+
+    //     let y : Ext.MetadataInput ={
+    //         name= ?"Fun";
+    //         lore= null;
+    //         quality= ?3;
+    //         use= ? #consumable({desc = "Fun"; cannister= Principal.fromText("2vxsx-fae")});
+    //         hold= ?"Hold for fun";
+    //         transfer= null;
+    //         attributes= [];
+    //         level= 4;
+    //         ttl = null;
+    //         thumb = #external({contentType= "image/jpeg"; cannister = Principal.fromText("2vxsx-fae")});
+    //         content = null;
+
+    //     };
+    //     return [x,y];
+    // };
 
     public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
         // assert(caller == _owner);
@@ -318,10 +393,10 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
         // let atokens = await ACCESSCONTROL.getBalance(caller);
         // assert(atokens >= 1);
         // assert((await ACCESSCONTROL.consumeAccess(caller, 1)) == #ok(true));
-    
-    
 
-        let tokenIndex = SNFT_mint(request);
+
+
+        let tokenIndex = SNFT_mint(caller,request);
 
         
         // let receiver = Ext.User.toAccountIdentifier(request.to);
@@ -415,19 +490,31 @@ shared({caller = _owner}) actor class NFT() : async Interface.NonFungibleToken =
     };
 
     
-    public type OwnedResponse = {idx:TokenIndex; metadata: ?MetadataOut};
+    // public type OwnedResponse = {idx:TokenIndex};
     
     // returns all tokens the user owns
-    public query func owned(user : User) : async [OwnedResponse] {
+    public query func owned(user : User) : async [TokenIndex] {
         let aid = Ext.User.toAccountIdentifier(user);
         let token_ids = switch(SNFT_aidGet(aid)) { case (?a) a; case _ []; };
-        Array.map<TokenIndex, OwnedResponse>(token_ids, func (tokenIndex) { 
-             switch( _meta.get(tokenIndex) ) {
-                    case (?a) 
-                    return {idx = tokenIndex; metadata = ?Ext.MetaToOut(a)}; 
-                    case _ {assert(false); {idx = tokenIndex; metadata = null}}; //we can't have token without _meta
-                    }
-                });
+        // Array.map<TokenIndex, OwnedResponse>(token_ids, func (tokenIndex) { 
+        //      switch( _meta.get(tokenIndex) ) {
+        //             case (?a) {
+        //                 switch(_metavars.get(tokenIndex)) {
+        //                     case (?v) {
+        //                        return {idx = tokenIndex; metadata = ?a; metavars = ?v}; 
+        //                     };
+        //                     case (_) {
+        //                         assert(false); 
+        //                         {idx = tokenIndex; metadata = null; metavars = null}
+        //                     }
+        //                 }
+        //             };
+        //             case _ { 
+        //                 assert(false); 
+        //                 {idx = tokenIndex; metadata = null; metavars = null}
+        //             }; //we can't have token without _meta
+        //             }
+        //         });
     };
 
    

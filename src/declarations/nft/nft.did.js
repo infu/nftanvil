@@ -68,22 +68,75 @@ export const idlFactory = ({ IDL }) => {
     'chunkIdx' : IDL.Nat32,
     'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
   });
-  const Media = IDL.Text;
-  const ItemClassId = IDL.Nat;
-  const MetadataOut__1 = IDL.Record({
-    'thumb' : IDL.Opt(Media),
+  const ItemUse = IDL.Variant({
+    'consumable' : IDL.Record({ 'desc' : IDL.Text, 'useId' : IDL.Text }),
+    'cooldown' : IDL.Record({
+      'duration' : IDL.Nat32,
+      'desc' : IDL.Text,
+      'useId' : IDL.Text,
+    }),
+  });
+  const ContentType = IDL.Text;
+  const Content = IDL.Variant({
+    'internal' : IDL.Record({
+      'contentType' : ContentType,
+      'size' : IDL.Nat32,
+    }),
+    'external' : IDL.Record({
+      'idx' : IDL.Opt(IDL.Nat32),
+      'contentType' : ContentType,
+    }),
+  });
+  const ItemHold = IDL.Variant({
+    'external' : IDL.Record({ 'desc' : IDL.Text, 'holdId' : IDL.Text }),
+  });
+  const Attribute = IDL.Tuple(IDL.Text, IDL.Int16);
+  const ItemTransfer = IDL.Variant({
+    'unrestricted' : IDL.Null,
+    'bindsForever' : IDL.Null,
+    'bindsDuration' : IDL.Nat32,
+  });
+  const Metadata = IDL.Record({
+    'ttl' : IDL.Opt(IDL.Nat32),
+    'use' : IDL.Opt(ItemUse),
+    'thumb' : Content,
     'created' : IDL.Nat32,
-    'content' : IDL.Opt(Media),
+    'content' : IDL.Opt(Content),
+    'extensionCanister' : IDL.Opt(IDL.Principal),
+    'quality' : IDL.Opt(IDL.Nat8),
+    'hold' : IDL.Opt(ItemHold),
+    'lore' : IDL.Opt(IDL.Text),
+    'name' : IDL.Opt(IDL.Text),
+    'minter' : IDL.Opt(IDL.Principal),
+    'secret' : IDL.Bool,
+    'level' : IDL.Nat8,
+    'entropy' : IDL.Vec(IDL.Nat8),
+    'attributes' : IDL.Vec(Attribute),
+    'transfer' : IDL.Opt(ItemTransfer),
+  });
+  const MetavarsFrozen = IDL.Record({
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
-    'classId' : ItemClassId,
-    'entropy' : IDL.Vec(IDL.Nat8),
   });
   const MetadataResponse = IDL.Variant({
-    'ok' : MetadataOut__1,
+    'ok' : IDL.Record({ 'metadata' : Metadata, 'metavars' : MetavarsFrozen }),
     'err' : CommonError,
   });
-  const MintRequest = IDL.Record({ 'to' : User, 'classId' : ItemClassId });
+  const MetadataInput = IDL.Record({
+    'ttl' : IDL.Opt(IDL.Nat32),
+    'use' : IDL.Opt(ItemUse),
+    'thumb' : Content,
+    'content' : IDL.Opt(Content),
+    'extensionCanister' : IDL.Opt(IDL.Principal),
+    'quality' : IDL.Opt(IDL.Nat8),
+    'hold' : IDL.Opt(ItemHold),
+    'lore' : IDL.Opt(IDL.Text),
+    'name' : IDL.Opt(IDL.Text),
+    'secret' : IDL.Bool,
+    'attributes' : IDL.Vec(Attribute),
+    'transfer' : IDL.Opt(ItemTransfer),
+  });
+  const MintRequest = IDL.Record({ 'to' : User, 'metadata' : MetadataInput });
   const MintResponse = IDL.Variant({
     'ok' : TokenIndex,
     'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'OutOfMemory' : IDL.Null }),
@@ -97,19 +150,6 @@ export const idlFactory = ({ IDL }) => {
     'address' : AccountIdentifier,
   });
   const TokenIndex__1 = IDL.Nat32;
-  const MetadataOut = IDL.Record({
-    'thumb' : IDL.Opt(Media),
-    'created' : IDL.Nat32,
-    'content' : IDL.Opt(Media),
-    'cooldownUntil' : IDL.Opt(IDL.Nat32),
-    'boundUntil' : IDL.Opt(IDL.Nat32),
-    'classId' : ItemClassId,
-    'entropy' : IDL.Vec(IDL.Nat8),
-  });
-  const OwnedResponse = IDL.Record({
-    'idx' : TokenIndex__1,
-    'metadata' : IDL.Opt(MetadataOut),
-  });
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
     'transfers' : IDL.Nat32,
@@ -168,7 +208,7 @@ export const idlFactory = ({ IDL }) => {
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
     'mintNFT' : IDL.Func([MintRequest], [MintResponse], []),
     'mintNFT_batch' : IDL.Func([IDL.Vec(MintRequest)], [MintBatchResponse], []),
-    'owned' : IDL.Func([User__1], [IDL.Vec(OwnedResponse)], ['query']),
+    'owned' : IDL.Func([User__1], [IDL.Vec(TokenIndex__1)], ['query']),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'supply' : IDL.Func([TokenIdentifier], [SupplyResponse], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),

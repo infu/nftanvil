@@ -66,21 +66,74 @@ Debug.print("User john Account Identifier sub2: " # Ext.User.toAccountIdentifier
 // check johns balance for token 0, should return error, its not created yet
 Result.assertErr(await nft.balance({ user  = user_john; token = token_one;}));
 
+
+
 // mint token with index 0
-assert((await nft.mintNFT({to = user_john; media = ?#img("jowejrowjer"); thumb = ?"owiehriw"; classId=123; })) == #ok(0));
+assert((await nft.mintNFT({to = user_john; metadata = {
+            name = ?"Some";
+            lore = ?"Other";
+            quality= null;
+            use= null;
+            hold= null;
+            transfer= null;
+            ttl= null; // time to live
+            content= null;
+            thumb= null; 
+            attributes=null;
+            parentId= null;
+            canParent= ?true;
+            maxChildren= ?100;
+            }})
+            ) == #ok(0));
 
 // mint token with index 1
-assert((await nft.mintNFT({to = user_john;media = ?#img("jowejrowjer"); thumb = ?"owiehriw"; classId=123;})) == #ok(1));
+assert((await nft.mintNFT({to = user_john; metadata = {
+            name = ?"Some";
+            lore = ?"Other";
+            quality= null;
+            use= null;
+            hold= null;
+            transfer= null;
+            attributes=null;
+            ttl= null; // time to live
+            content= null;
+            thumb= null; 
+  
+}})) == #ok(1));
 
 
 // mint token with index 2 to peter
-switch(await nft.mintNFT({to = user_john; media = ?#img("jowejrowjer"); thumb = ?"owiehriw"; classId=123;})) {
+switch(await nft.mintNFT({to = user_john; metadata = {
+            name = ?"Some";
+            lore = ?"Other";
+            quality= null;
+            use= null;
+            hold= null;
+            transfer= null;
+            attributes=null;
+            ttl= null; // time to live
+            content= null;
+            thumb= null; 
+      
+            }})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
     case (#err(e)) Debug.print(debug_show(e));
 };
 
 // mint token for burning later
-assert((await nft.mintNFT({to = user_john; media = ?#img("jowejrowjer"); thumb = ?"owiehriw"; classId=123;})) == #ok(3));
+assert((await nft.mintNFT({to = user_john; metadata = {
+            name = ?"Some";
+            lore = ?"Other";
+            quality= null;
+            use= null;
+            hold= null;
+            transfer= null;
+            attributes=null;
+            ttl= null; // time to live
+            content= null;
+            thumb= null; 
+        
+}})) == #ok(3));
 
 // check balance of john for token one 
 assert( (await nft.balance({ user  = user_john; token = token_one;})) == #ok(1));
@@ -241,8 +294,7 @@ Debug.print(debug_show( (await nft.metadata(token_two)) ));
 
 // - Owned
 let owned = (await nft.owned(user_john));
-assert(owned[0].idx == 2);
-assert(owned[1].idx == 3);
+
 
 Debug.print(debug_show( owned ));
 // -- Burn & Stats

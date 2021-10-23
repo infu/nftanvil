@@ -75,11 +75,6 @@ type Request =
    spender: principal;
    token: TokenIdentifier;
  };
-type OwnedResponse = 
- record {
-   idx: TokenIndex__1;
-   metadata: opt MetadataOut;
- };
 type NFT = 
  service {
    allowance: (Request) -> (Response) query;
@@ -95,7 +90,7 @@ type NFT =
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
    mintNFT: (MintRequest) -> (MintResponse);
    mintNFT_batch: (vec MintRequest) -> (MintBatchResponse);
-   owned: (User__1) -> (vec OwnedResponse) query;
+   owned: (User__1) -> (vec TokenIndex__1) query;
    stats: () -> (StatsResponse) query;
    supply: (TokenIdentifier) -> (SupplyResponse) query;
    transfer: (TransferRequest) -> (TransferResponse);
@@ -111,7 +106,7 @@ type MintResponse =
  };
 type MintRequest = 
  record {
-   classId: ItemClassId;
+   metadata: MetadataInput;
    to: User;
  };
 type MintBatchResponse = 
@@ -119,34 +114,76 @@ type MintBatchResponse =
    err: CommonError;
    ok: vec TokenIndex;
  };
+type MetavarsFrozen = 
+ record {
+   boundUntil: opt nat32;
+   cooldownUntil: opt nat32;
+ };
 type MetadataResponse = 
  variant {
    err: CommonError;
-   ok: MetadataOut__1;
+   ok: record {
+         metadata: Metadata;
+         metavars: MetavarsFrozen;
+       };
  };
-type MetadataOut__1 = 
+type MetadataInput = 
  record {
-   boundUntil: opt nat32;
-   classId: ItemClassId;
-   content: opt Media;
-   cooldownUntil: opt nat32;
+   attributes: vec Attribute;
+   content: opt Content;
+   extensionCanister: opt principal;
+   hold: opt ItemHold;
+   lore: opt text;
+   name: opt text;
+   quality: opt nat8;
+   secret: bool;
+   thumb: Content;
+   transfer: opt ItemTransfer;
+   ttl: opt nat32;
+   use: opt ItemUse;
+ };
+type Metadata = 
+ record {
+   attributes: vec Attribute;
+   content: opt Content;
    created: nat32;
    entropy: blob;
-   thumb: opt Media;
- };
-type MetadataOut = 
- record {
-   boundUntil: opt nat32;
-   classId: ItemClassId;
-   content: opt Media;
-   cooldownUntil: opt nat32;
-   created: nat32;
-   entropy: blob;
-   thumb: opt Media;
+   extensionCanister: opt principal;
+   hold: opt ItemHold;
+   level: nat8;
+   lore: opt text;
+   minter: opt principal;
+   name: opt text;
+   quality: opt nat8;
+   secret: bool;
+   thumb: Content;
+   transfer: opt ItemTransfer;
+   ttl: opt nat32;
+   use: opt ItemUse;
  };
 type Memo = blob;
-type Media = text;
-type ItemClassId = nat;
+type ItemUse = 
+ variant {
+   consumable: record {
+                 desc: text;
+                 useId: text;
+               };
+   cooldown: record {
+               desc: text;
+               duration: nat32;
+               useId: text;
+             };
+ };
+type ItemTransfer = 
+ variant {
+   bindsDuration: nat32;
+   bindsForever;
+   unrestricted;
+ };
+type ItemHold = variant {external: record {
+                                     desc: text;
+                                     holdId: text;
+                                   };};
 type FetchChunkRequest = 
  record {
    chunkIdx: nat32;
@@ -157,6 +194,18 @@ type FetchChunkRequest =
    tokenIndex: TokenIndex;
  };
 type Extension = text;
+type ContentType = text;
+type Content = 
+ variant {
+   external: record {
+               contentType: ContentType;
+               idx: opt nat32;
+             };
+   internal: record {
+               contentType: ContentType;
+               size: nat32;
+             };
+ };
 type CommonError = 
  variant {
    InvalidToken: TokenIdentifier;
@@ -200,6 +249,11 @@ type BalanceRequest =
    user: User;
  };
 type Balance = nat;
+type Attribute = 
+ record {
+   text;
+   int16;
+ };
 type ApproveResponse = 
  variant {
    err:

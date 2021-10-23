@@ -13,6 +13,7 @@ export type ApproveResponse = { 'ok' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'Other' : string }
   };
+export type Attribute = [string, number];
 export type Balance = bigint;
 export interface BalanceRequest { 'token' : TokenIdentifier, 'user' : User }
 export type BalanceResponse = { 'ok' : Balance } |
@@ -38,6 +39,11 @@ export type BurnResponse = { 'ok' : Balance } |
   };
 export type CommonError = { 'InvalidToken' : TokenIdentifier } |
   { 'Other' : string };
+export type Content = {
+    'internal' : { 'contentType' : ContentType, 'size' : number }
+  } |
+  { 'external' : { 'idx' : [] | [number], 'contentType' : ContentType } };
+export type ContentType = string;
 export type Extension = string;
 export interface FetchChunkRequest {
   'tokenIndex' : TokenIndex,
@@ -45,32 +51,56 @@ export interface FetchChunkRequest {
   'position' : { 'thumb' : null } |
     { 'content' : null },
 }
-export type ItemClassId = bigint;
-export type Media = string;
+export type ItemHold = { 'external' : { 'desc' : string, 'holdId' : string } };
+export type ItemTransfer = { 'unrestricted' : null } |
+  { 'bindsForever' : null } |
+  { 'bindsDuration' : number };
+export type ItemUse = { 'consumable' : { 'desc' : string, 'useId' : string } } |
+  { 'cooldown' : { 'duration' : number, 'desc' : string, 'useId' : string } };
 export type Memo = Array<number>;
-export interface MetadataOut {
-  'thumb' : [] | [Media],
+export interface Metadata {
+  'ttl' : [] | [number],
+  'use' : [] | [ItemUse],
+  'thumb' : Content,
   'created' : number,
-  'content' : [] | [Media],
-  'cooldownUntil' : [] | [number],
-  'boundUntil' : [] | [number],
-  'classId' : ItemClassId,
+  'content' : [] | [Content],
+  'extensionCanister' : [] | [Principal],
+  'quality' : [] | [number],
+  'hold' : [] | [ItemHold],
+  'lore' : [] | [string],
+  'name' : [] | [string],
+  'minter' : [] | [Principal],
+  'secret' : boolean,
+  'level' : number,
   'entropy' : Array<number>,
+  'attributes' : Array<Attribute>,
+  'transfer' : [] | [ItemTransfer],
 }
-export interface MetadataOut__1 {
-  'thumb' : [] | [Media],
-  'created' : number,
-  'content' : [] | [Media],
-  'cooldownUntil' : [] | [number],
-  'boundUntil' : [] | [number],
-  'classId' : ItemClassId,
-  'entropy' : Array<number>,
+export interface MetadataInput {
+  'ttl' : [] | [number],
+  'use' : [] | [ItemUse],
+  'thumb' : Content,
+  'content' : [] | [Content],
+  'extensionCanister' : [] | [Principal],
+  'quality' : [] | [number],
+  'hold' : [] | [ItemHold],
+  'lore' : [] | [string],
+  'name' : [] | [string],
+  'secret' : boolean,
+  'attributes' : Array<Attribute>,
+  'transfer' : [] | [ItemTransfer],
 }
-export type MetadataResponse = { 'ok' : MetadataOut__1 } |
+export type MetadataResponse = {
+    'ok' : { 'metadata' : Metadata, 'metavars' : MetavarsFrozen }
+  } |
   { 'err' : CommonError };
+export interface MetavarsFrozen {
+  'cooldownUntil' : [] | [number],
+  'boundUntil' : [] | [number],
+}
 export type MintBatchResponse = { 'ok' : Array<TokenIndex> } |
   { 'err' : CommonError };
-export interface MintRequest { 'to' : User, 'classId' : ItemClassId }
+export interface MintRequest { 'to' : User, 'metadata' : MetadataInput }
 export type MintResponse = { 'ok' : TokenIndex } |
   { 'err' : { 'Rejected' : null } | { 'OutOfMemory' : null } };
 export interface NFT {
@@ -87,15 +117,11 @@ export interface NFT {
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mintNFT' : (arg_0: MintRequest) => Promise<MintResponse>,
   'mintNFT_batch' : (arg_0: Array<MintRequest>) => Promise<MintBatchResponse>,
-  'owned' : (arg_0: User__1) => Promise<Array<OwnedResponse>>,
+  'owned' : (arg_0: User__1) => Promise<Array<TokenIndex__1>>,
   'stats' : () => Promise<StatsResponse>,
   'supply' : (arg_0: TokenIdentifier) => Promise<SupplyResponse>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
   'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
-}
-export interface OwnedResponse {
-  'idx' : TokenIndex__1,
-  'metadata' : [] | [MetadataOut],
 }
 export interface Request {
   'token' : TokenIdentifier,

@@ -13,7 +13,7 @@ import { Principal } from "@dfinity/principal";
 import { nftCanister } from "../canisters/nft";
 import produce from "immer";
 import { NumberIncrementStepper } from "@chakra-ui/number-input";
-import { __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED } from "react-dom";
+import { chunkBlob, blobPrepare } from "../purefunc/data";
 
 export const userSlice = createSlice({
   name: "user",
@@ -138,50 +138,95 @@ export const sendSolution = (code) => async (dispatch, getState) => {
 
   // challengeToImage(challenge);
 };
-export const mint = () => async (dispatch, getState) => {
+
+const uploadFile = async (nft, tokenIndex, position, url) => {
+  let chunks = await chunkBlob(url);
+  await Promise.all(
+    chunks.map(async (chunk, idx) => {
+      return nft.uploadChunk({
+        position: { [position]: null },
+        chunkIdx: idx,
+        tokenIndex,
+        data: await blobPrepare(chunk),
+      });
+    })
+  ).then((re) => {
+    console.log("UPLOAD RESULT", re);
+  });
+};
+
+const fetchFile = async (nft, size, contentType, tokenIndex, position) => {
+  let chunkSize = 1024 * 512;
+  let chunks = Math.ceil(size / chunkSize);
+
+  return await Promise.all(
+    Array(chunks)
+      .fill(0)
+      .map((_, chunkIdx) => {
+        return nft.fetchChunk({
+          tokenIndex,
+          chunkIdx,
+          position: { [position]: null },
+        });
+      })
+  ).then((chunks) => {
+    console.log("BLOB RECIEVED", chunks);
+
+    const blob = new Blob(
+      chunks.map((chunk) => {
+        return new Uint8Array(chunk[0]).buffer;
+      }),
+      { type: contentType }
+    );
+
+    return URL.createObjectURL(blob);
+  });
+};
+
+export const mint = (vals) => async (dispatch, getState) => {
   let avail_canister_id = await dropship.getAvailable();
   let identity = authentication.client.getIdentity();
   let nft = nftCanister(avail_canister_id, { agentOptions: { identity } });
 
-  let somedata = await jsonToNat8(
-    JSON.stringify({
-      somefile: "oweirhwoierh woeihrwoierhwoeiwoeirhweoriwheorwheori",
-      name: "funwe rwer wr werw erwerw",
-      desc: "Hoola werw erwe werwer wrw rw rwre wrw erwe rwerwe rwer wrwe rw rwr ww r wrwer wrwerw rwer",
-    })
-  );
   let s = getState();
 
   let address = s.user.address;
+  let principal = s.user.principal;
 
   let mint = await nft.mintNFT({
-    to: { address },
-    // minter: principal,
-    media: [{ img: "jowejrowjer" }],
-    thumb: ["sdfsfsdf"],
-    // media: null,
-    // thumb: null,
-    classId: 123,
-    // TTL: 3,
+    to: { principal: Principal.fromText(principal) },
+    metadata: vals,
   });
-  console.log("MINT", mint);
 
   let tokenIndex = mint.ok;
 
-  await nft.uploadChunk({
-    tokenIndex,
-    position: { content: null },
-    chunkIdx: 0,
-    data: somedata,
-  });
+  if (vals?.content[0]?.internal?.url)
+    await uploadFile(nft, tokenIndex, "content", vals.content[0].internal.url);
+  if (vals?.thumb[0]?.internal?.url)
+    await uploadFile(nft, tokenIndex, "thumb", vals.thumb[0].internal.url);
 
-  let re = await nft.fetchChunk({
-    tokenIndex,
-    position: { content: null },
-    chunkIdx: 0,
-  });
+  console.log("MINT", mint);
 
-  console.log("RE", re[0], somedata);
+  let size = vals.content[0].internal.size;
+  let contentType = vals.content[0].internal.contentType;
+  let recieved = await fetchFile(nft, size, contentType, tokenIndex, "content");
+  console.log("RECIEVED FILE", recieved);
+  // let tokenIndex = mint.ok;
+
+  // await nft.uploadChunk({
+  //   tokenIndex,
+  //   position: { content: null },
+  //   chunkIdx: 0,
+  //   data: somedata,
+  // });
+
+  // let re = await nft.fetchChunk({
+  //   tokenIndex,
+  //   position: { content: null },
+  //   chunkIdx: 0,
+  // });
+
+  // console.log("RE", re[0], somedata);
 };
 
 export const mint2 = () => async (dispatch, getState) => {

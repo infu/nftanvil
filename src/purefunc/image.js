@@ -46,73 +46,72 @@ export const challengeDraw = (ctx, bitmap) => {
   ctx.putImageData(imd, 0, 0);
 };
 
-export const resizeImage = (
-  src,
-  MAX_WIDTH,
-  MAX_HEIGHT,
-  opts = { crop: false },
-  cb
-) => {
-  var img = new Image();
-  const already_url = typeof src !== "object" ? src.startsWith("blob:") : false;
+export const resizeImage = (src, MAX_WIDTH, MAX_HEIGHT, crop = false) => {
+  return new Promise((resolve) => {
+    var img = new Image();
+    const already_url =
+      typeof src !== "object" ? src.startsWith("blob:") : false;
 
-  img.onload = function () {
-    if (!already_url) URL.revokeObjectURL(tmpUrl);
-    var canvas = document.createElement("canvas");
+    img.onload = function () {
+      // if (!already_url) URL.revokeObjectURL(tmpUrl);
+      var canvas = document.createElement("canvas");
 
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
 
-    var width = img.width;
-    var height = img.height;
+      var width = img.width;
+      var height = img.height;
 
-    var ctx2 = canvas.getContext("2d");
+      var ctx2 = canvas.getContext("2d");
 
-    if (!opts.crop) {
-      if (width > height) {
-        if (width > MAX_WIDTH) {
-          height *= MAX_WIDTH / width;
-          width = MAX_WIDTH;
+      if (!crop) {
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
         }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx2.drawImage(img, 0, 0, width, height);
       } else {
-        if (height > MAX_HEIGHT) {
-          width *= MAX_HEIGHT / height;
-          height = MAX_HEIGHT;
-        }
+        let ratio = MAX_WIDTH / MAX_HEIGHT;
+        let scale = MAX_WIDTH / width;
+        if (height * scale < MAX_HEIGHT) scale = MAX_HEIGHT / height;
+        width *= scale;
+        height *= scale;
+
+        canvas.width = MAX_WIDTH;
+        canvas.height = MAX_HEIGHT;
+        ctx2.drawImage(
+          img,
+          (MAX_WIDTH - width) / 2,
+          (MAX_HEIGHT - height) / 2,
+          width,
+          height
+        );
       }
 
-      canvas.width = width;
-      canvas.height = height;
-
-      ctx2.drawImage(img, 0, 0, width, height);
-    } else {
-      let ratio = MAX_WIDTH / MAX_HEIGHT;
-      let scale = MAX_WIDTH / width;
-      if (height * scale < MAX_HEIGHT) scale = MAX_HEIGHT / height;
-      width *= scale;
-      height *= scale;
-
-      canvas.width = MAX_WIDTH;
-      canvas.height = MAX_HEIGHT;
-      ctx2.drawImage(
-        img,
-        (MAX_WIDTH - width) / 2,
-        (MAX_HEIGHT - height) / 2,
-        width,
-        height
+      canvas.toBlob(
+        function (blob) {
+          let url = URL.createObjectURL(blob);
+          // console.log("BLOB", blob);
+          resolve({ type: "image/jpeg", size: blob.size, url });
+        },
+        "image/jpeg",
+        0.95
       );
-    }
-
-    canvas.toBlob(
-      function (blob) {
-        cb(blob);
-      },
-      "image/jpeg",
-      0.95
-    );
-  };
-  let tmpUrl = already_url ? src : URL.createObjectURL(src);
-  img.src = tmpUrl;
+    };
+    let tmpUrl = already_url ? src : URL.createObjectURL(src);
+    img.src = tmpUrl;
+  });
 };
 
 export const resizeImageP = (src, max_w, max_h, opts = false) => {
