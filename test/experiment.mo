@@ -5,8 +5,17 @@ import Int "mo:base/Int";
 import Int64 "mo:base/Int64";
 import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat32";
+import Text "mo:base/Text";
 
 import Nat "mo:base/Nat";
+import Hash "../src/ic/lib/vvv/src/Hash";
+
+Debug.print("T1 " # Nat32.toText(Hash.djb2xor("qwe")));
+Debug.print("T2 " #  Nat32.toText(Hash.djb2xor("qwertyui")));
+Debug.print("T3 " #  Nat32.toText(Hash.djb2xor("qwertyui123")));
+Debug.print("T4 " #  Nat32.toText(Hash.djb2xor("504d8fbe45d3dc4ef0cf7f3bcfb0a5a5a80cb0f08e603a02a6f5282fe48e6adb")));
+
+
 
 type Some = {var name:Text; var age:Nat};
 

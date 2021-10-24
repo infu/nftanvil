@@ -4,11 +4,14 @@
       "main": "src/ic/dropship/router.mo",
       "type": "motoko",
       "dependencies": ["accesscontrol"]
-    }, 
-   "nft": {
+    },
+    "nft": {
       "main": "src/ic/dropship/nft.mo",
-      "type": "motoko",
-      "dependencies": ["accesscontrol"]
+      "type": "motoko"
+    },
+    "account": {
+      "main": "src/ic/dropship/account.mo",
+      "type": "motoko"
     },
     "accesscontrol": {
       "main": "src/ic/accesscontrol/access.mo",

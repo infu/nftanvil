@@ -2,6 +2,8 @@ import Array  "mo:base/Array";
 import Iter "mo:base/Iter";
 
 import Principal "mo:base/Principal";
+import Nat32 "mo:base/Nat32";
+
 // import Ext "../lib/ext.std/src/Ext";
 
 import ICType "./ictype";
@@ -22,8 +24,8 @@ shared({caller = owner}) actor class Router() = this {
 
     let IC = actor "aaaaa-aa" : ICType.interface;
 
-    private stable var _nft_canisters_count:Nat = 0;
-    private stable var _account_canisters_count:Nat = 0;
+    private stable var _nft_canisters_next_id:Nat32 = 0;
+    private stable var _account_canisters_next_id:Nat32 = 0;
 
 
     public shared({caller}) func debug_reset() : async () {
@@ -31,16 +33,17 @@ shared({caller = owner}) actor class Router() = this {
         //TODO: !!!! SECURE THIS
 
         _nft_canisters := [];
-        _nft_canisters_count := 0;
+        _nft_canisters_next_id := 0;
 
         _account_canisters := [];
-        _account_canisters_count := 0;
+        _account_canisters_next_id := 0;
 
         // create account canisters 
         var can =0; 
 
-        while(can <= 3) {
+        while(can < 2) {
             await addAccountCanister();
+            can := can + 1;
         };
 
         // create one NFT canister
@@ -54,12 +57,12 @@ shared({caller = owner}) actor class Router() = this {
     };
 
     public query func getAvailable() : async Principal {
-        Principal.fromActor(_nft_canisters[_nft_canisters_count - 1]);
+        Principal.fromActor(_nft_canisters[ Nat32.toNat(_nft_canisters_next_id) - 1]);
     };
 
     private func addNFTCanister() : async () {
             Cycles.add(cyclesForNewCanister);
-            let new = await NFT.NFT({acclist = getAccountCanisters() });
+            let new = await NFT.NFT({_acclist = getAccountCanisters(); _slot= _nft_canisters_next_id; _accesscontrol_can = "r7inp-6aaaa-aaaaa-aaabq-cai"; _debug_cannisterId=null});
             let principal = Principal.fromActor(new);
 
             await IC.update_settings({
@@ -74,7 +77,7 @@ shared({caller = owner}) actor class Router() = this {
             });
 
             _nft_canisters := Array.append<NFT.NFT>(_nft_canisters, [new]);
-            _nft_canisters_count := _nft_canisters_count + 1;
+            _nft_canisters_next_id := _nft_canisters_next_id + 1;
     };
 
     private func addAccountCanister() : async () {
@@ -96,7 +99,7 @@ shared({caller = owner}) actor class Router() = this {
             
 
             _account_canisters := Array.append<Account.Account>(_account_canisters, [new]);
-            _account_canisters_count := _account_canisters_count + 1;
+            _account_canisters_next_id := _account_canisters_next_id + 1;
     };
     
 
@@ -109,6 +112,9 @@ shared({caller = owner}) actor class Router() = this {
         Iter.toArray(Iter.map(Iter.fromArray(_account_canisters), func(x:Account.Account) : Text { Principal.toText(Principal.fromActor(x)); }));
     };
 
+    public query func fetchAcclist() : async [Text] {
+        getAccountCanisters();
+    };
 
 
 

@@ -109,7 +109,6 @@ export interface NFT {
   'burn' : (arg_0: BurnRequest) => Promise<BurnResponse>,
   'cyclesAccept' : () => Promise<undefined>,
   'cyclesBalance' : () => Promise<bigint>,
-  'debugMode' : (arg_0: [] | [string]) => Promise<undefined>,
   'extensions' : () => Promise<Array<Extension>>,
   'fetchChunk' : (arg_0: FetchChunkRequest) => Promise<[] | [Array<number>]>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,

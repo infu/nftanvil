@@ -189,7 +189,6 @@ export const idlFactory = ({ IDL }) => {
     'burn' : IDL.Func([BurnRequest], [BurnResponse], []),
     'cyclesAccept' : IDL.Func([], [], []),
     'cyclesBalance' : IDL.Func([], [IDL.Nat], ['query']),
-    'debugMode' : IDL.Func([IDL.Opt(IDL.Text)], [], []),
     'extensions' : IDL.Func([], [IDL.Vec(Extension)], ['query']),
     'fetchChunk' : IDL.Func(
         [FetchChunkRequest],
@@ -206,5 +205,12 @@ export const idlFactory = ({ IDL }) => {
   return NFT;
 };
 export const init = ({ IDL }) => {
-  return [IDL.Record({ 'acclist' : IDL.Vec(IDL.Text) })];
+  return [
+    IDL.Record({
+      '_debug_cannisterId' : IDL.Opt(IDL.Principal),
+      '_acclist' : IDL.Vec(IDL.Text),
+      '_accesscontrol_can' : IDL.Text,
+      '_slot' : IDL.Nat32,
+    }),
+  ];
 };

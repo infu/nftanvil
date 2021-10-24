@@ -13,7 +13,7 @@ import { Principal } from "@dfinity/principal";
 import { nftCanister } from "../canisters/nft";
 import produce from "immer";
 import { NumberIncrementStepper } from "@chakra-ui/number-input";
-import { chunkBlob, blobPrepare } from "../purefunc/data";
+import { aid2acccan, chunkBlob, blobPrepare } from "../purefunc/data";
 
 export const userSlice = createSlice({
   name: "user",
@@ -24,6 +24,8 @@ export const userSlice = createSlice({
     owned: [],
     challenge: null,
     accesstokens: 0,
+    acclist: [],
+    acccan: "",
   },
   reducers: {
     ownedSet: (state, action) => {
@@ -38,9 +40,18 @@ export const userSlice = createSlice({
     accessTokensSet: (state, action) => {
       return { ...state, accesstokens: action.payload };
     },
+    acclistSet: (state, action) => {
+      return { ...state, acclist: action.payload };
+    },
     authSet: (state, action) => {
-      const { address, principal, anonymous } = action.payload;
-      return { ...state, address, principal, anonymous };
+      const { address, principal, anonymous, acclist, acccan } = action.payload;
+      return {
+        ...state,
+        address,
+        principal,
+        anonymous,
+        ...(acclist ? { acclist, acccan } : {}),
+      };
     },
   },
 });
@@ -52,6 +63,7 @@ export const {
   challengeSet,
   accessTokensSet,
   accessTokensAdd,
+  acclistSet,
 } = userSlice.actions;
 
 export const login = () => (dispatch) => {
@@ -63,8 +75,6 @@ export const auth =
   async (dispatch, getState) => {
     await authentication.create();
     let authClient = authentication.client;
-
-    // await AuthClient.create();
 
     if (!allowAnonymous && !(await authClient.isAuthenticated())) {
       await new Promise(async (resolve, reject) => {
@@ -88,10 +98,14 @@ export const auth =
     dropship.setOptions({ agentOptions: { identity } });
     access.setOptions({ agentOptions: { identity } });
 
-    //WARNING FOR DEBUG PURPOSES ONLY
+    //WARNING FOR DEBUG PURPOSES ONLY //TODO: REMOVE it from window
     window.dropship = dropship;
 
-    dispatch(authSet({ address, principal, anonymous }));
+    let acclist = await dropship.fetchAcclist();
+    let acccan = aid2acccan(address, acclist);
+    console.log("ACCCAN", address, acccan);
+
+    dispatch(authSet({ address, principal, anonymous, acclist, acccan }));
     dispatch(getAccessTokenBalance());
   };
 

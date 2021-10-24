@@ -78,7 +78,6 @@ type NFT =
    burn: (BurnRequest) -> (BurnResponse);
    cyclesAccept: () -> ();
    cyclesBalance: () -> (nat) query;
-   debugMode: (opt text) -> ();
    extensions: () -> (vec Extension) query;
    fetchChunk: (FetchChunkRequest) -> (opt blob);
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
@@ -260,4 +259,9 @@ type ApproveRequest =
    token: TokenIdentifier;
  };
 type AccountIdentifier = text;
-service : (record {acclist: vec text;}) -> NFT
+service : (record {
+             _accesscontrol_can: text;
+             _acclist: vec text;
+             _debug_cannisterId: opt principal;
+             _slot: nat32;
+           }) -> NFT

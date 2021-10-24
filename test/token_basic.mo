@@ -18,7 +18,7 @@ var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
 var someMeta = Blob.fromArray([116, 116, 105, 100]);
 var someMemo = Blob.fromArray([111, 111, 111, 111]);
 
-let nft = await Dropship.NFT({acclist = []});
+let nft = await Dropship.NFT({_acclist = []; _slot=3; _accesscontrol_can=""; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
 
 
 // Debug.print(Principal.toText(Principal.fromActor(nft))); // BUG: this is not working when we run it from moc command line
@@ -32,7 +32,6 @@ let whoiswho = await WHOWHO();
 // we have to initialize, because the object doesn't know its cannisterId when instantiated with a test script
 let user_john_principal:Principal = await whoiswho.whoAmI();
 
-await nft.debugMode(?NFTcanisterId);
 
 let user_john : Ext.User = #principal(user_john_principal);
 let user_peter_principal = Principal.fromText("ks5fw-csuji-57tsx-mqld6-bjip7-anp4q-pecol-5k6vo-vzcmw-3wuo2-qqe");
@@ -125,7 +124,7 @@ switch(await nft.mintNFT({to = user_john; metadata = {
 
 // mint token for burning later
 assert((await nft.mintNFT({to = user_john; metadata = {
-                    name = ?"Some";
+            name = ?"Some";
             lore = ?"Other";
             quality= null;
             use= null;

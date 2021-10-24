@@ -24,3 +24,18 @@ export const chunkBlob = async (url) => {
 
 export const blobPrepare = async (chunk) =>
   Array.from(new Uint8Array(await chunk.arrayBuffer()));
+
+export const aid2acccan = (aid, acclist) => {
+  return acclist[djb2xor(aid) % acclist.length];
+};
+
+export const djb2xor = (str) => {
+  // The normal djb2 from Text.hash is hard to do in js because overflow looses precision
+  let len = str.length;
+  let h = 5381;
+
+  for (let i = 0; i < len; i++) {
+    h = (h * 33) ^ str.charCodeAt(i);
+  }
+  return h >>> 0;
+};
