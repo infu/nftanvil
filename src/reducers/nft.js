@@ -129,7 +129,7 @@ export const mint = (vals) => async (dispatch, getState) => {
   let tokenIndex = mint.ok;
   let tid = encodeTokenId(canisterId.toText(), tokenIndex);
 
-  console.log("Minted", { tokenIndex, tid });
+  console.log("Minted", { address, tokenIndex, tid });
   if (vals?.content[0]?.internal?.url)
     await uploadFile(nft, tokenIndex, "content", vals.content[0].internal.url);
   if (vals?.thumb[0]?.internal?.url)

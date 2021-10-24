@@ -2,7 +2,7 @@ import logo from "./logo.svg";
 import { useEffect } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
-import { login, logout, mint, owned, challenge, test } from "./reducers/user";
+import { login, logout, owned } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -45,6 +45,8 @@ import { Link } from "react-router-dom";
 import { Challenge } from "./components/Challenge";
 
 import { Mint } from "./components/Mint";
+import { Inventory } from "./components/Inventory";
+
 function PageTabs() {
   const address = useSelector((state) => state.user.address);
 
@@ -193,34 +195,12 @@ function App() {
         <Center>
           <Switch>
             <Route path="/mint" component={Mint} />
-            <Route path="/address/:id" component={InventoryBox} />
+            <Route path="/address/:id" component={Inventory} />
           </Switch>
         </Center>
       </Box>
       <Challenge />
     </>
-  );
-}
-
-function InventoryBox() {
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    //componentDidMount like
-    dispatch(owned());
-  }, []);
-
-  return (
-    <Box
-      bg={useColorModeValue("white", "gray.600")}
-      borderRadius="md"
-      border={1}
-      mt={"80px"}
-      w={480}
-      h={400}
-    >
-      <Button onClick={() => dispatch(test())}>Tst</Button>
-    </Box>
   );
 }
 

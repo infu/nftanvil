@@ -62,7 +62,10 @@ shared({caller = owner}) actor class Router() = this {
 
     private func addNFTCanister() : async () {
             Cycles.add(cyclesForNewCanister);
-            let new = await NFT.NFT({_acclist = getAccountCanisters(); _slot= _nft_canisters_next_id; _accesscontrol_can = "r7inp-6aaaa-aaaaa-aaabq-cai"; _debug_cannisterId=null});
+            let slot = _nft_canisters_next_id;
+            _nft_canisters_next_id := _nft_canisters_next_id + 1;
+
+            let new = await NFT.NFT({_acclist = getAccountCanisters(); _slot= slot; _accesscontrol_can = "r7inp-6aaaa-aaaaa-aaabq-cai"; _debug_cannisterId=null});
             let principal = Principal.fromActor(new);
 
             await IC.update_settings({
@@ -77,7 +80,12 @@ shared({caller = owner}) actor class Router() = this {
             });
 
             _nft_canisters := Array.append<NFT.NFT>(_nft_canisters, [new]);
-            _nft_canisters_next_id := _nft_canisters_next_id + 1;
+
+            // register it inside account canisters
+            let it = Iter.fromArray(_account_canisters);
+            for (x in it) {
+                await x.addAllowed(Principal.fromActor(new), slot);
+            }
     };
 
     private func addAccountCanister() : async () {

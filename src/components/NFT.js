@@ -51,7 +51,9 @@ const Thumb = styled.div`
   }
 `;
 
-export const NFT = ({ id }) => {};
+export const NFT = ({ id }) => {
+  return <Box>{id}</Box>;
+};
 
 export const NFTContent = (p) => {
   return (

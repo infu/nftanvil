@@ -1,11 +1,11 @@
 type TokenIndex = nat32;
+type TokenIdentifier = text;
 type AccountIdentifier = text;
 type Account = 
  service {
    add: (AccountIdentifier, TokenIndex) -> ();
-   addAllowed: (principal) -> ();
-   list: (AccountIdentifier) -> (vec TokenIndex);
+   addAllowed: (principal, nat32) -> ();
+   list: (AccountIdentifier, nat) -> (vec TokenIdentifier);
    rem: (AccountIdentifier, TokenIndex) -> ();
-   setup: (record {slot: nat32;}) -> ();
  };
 service : () -> Account
