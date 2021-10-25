@@ -1,5 +1,8 @@
 import { Text, Stack, Box, useColorModeValue } from "@chakra-ui/react";
 import { itemQuality, itemTransfer, itemUse } from "../item_config";
+import { useEffect } from "react";
+import { nftFetchMeta, nftMediaGet } from "../reducers/nft";
+import { useSelector, useDispatch } from "react-redux";
 
 import moment from "moment";
 import styled from "@emotion/styled";
@@ -51,8 +54,21 @@ const Thumb = styled.div`
   }
 `;
 
+const encodeChunkId = (tokenIndex, chunkIndex, ctype) => {
+  return (tokenIndex << 19) | ((chunkIndex & 255) << 2) | ctype;
+};
 export const NFT = ({ id }) => {
-  return <Box>{id}</Box>;
+  const meta = useSelector((state) => state.nft.meta[id]);
+  const dispatch = useDispatch();
+  console.log("meta", meta);
+  if (meta?.tokenIndex)
+    console.log("UUURL", encodeChunkId(meta.tokenIndex, 0, 0).toString(16));
+
+  useEffect(() => {
+    dispatch(nftFetchMeta(id));
+  }, [id]);
+
+  return <NFTThumb {...meta} />;
 };
 
 export const NFTContent = (p) => {

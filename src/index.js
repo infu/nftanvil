@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { auth } from "./reducers/user";
 import { ChakraProvider } from "@chakra-ui/react";
 import { theme } from "./theme.js";
+import { ColorModeScript } from "@chakra-ui/react";
 
 import { ConnectedRouter } from "connected-react-router";
 
@@ -16,15 +17,18 @@ setTimeout(() => {
 }, 100);
 
 ReactDOM.render(
-  <React.StrictMode>
-    <ChakraProvider theme={theme}>
-      <Provider store={store}>
-        <ConnectedRouter history={history}>
-          <App />
-        </ConnectedRouter>
-      </Provider>
-    </ChakraProvider>
-  </React.StrictMode>,
+  <>
+    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+    <React.StrictMode>
+      <ChakraProvider theme={theme}>
+        <Provider store={store}>
+          <ConnectedRouter history={history}>
+            <App />
+          </ConnectedRouter>
+        </Provider>
+      </ChakraProvider>
+    </React.StrictMode>
+  </>,
   document.getElementById("root")
 );
 

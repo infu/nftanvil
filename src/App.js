@@ -53,7 +53,7 @@ function PageTabs() {
   return (
     <Box>
       <ButtonGroup variant="outline" spacing="3">
-        <Link to={"/address/" + address}>
+        <Link to={"/address/0/" + address}>
           <Button variant="solid" colorScheme="gray">
             Items
           </Button>
@@ -195,7 +195,7 @@ function App() {
         <Center>
           <Switch>
             <Route path="/mint" component={Mint} />
-            <Route path="/address/:id" component={Inventory} />
+            <Route path="/address/:pageIdx/:address" component={Inventory} />
           </Switch>
         </Center>
       </Box>

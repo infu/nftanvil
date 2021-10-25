@@ -18,6 +18,11 @@ let additions = [
    , version = "v0.1.1"
    , dependencies = [ "base" ]
    },
+      { name = "asset-storage"
+   , repo = "https://github.com/aviate-labs/asset-storage.mo"
+   , version = "asset-storage-0.7.0"
+   , dependencies = [ "base" ]
+   },
   { name = "array"
   , repo = "https://github.com/aviate-labs/array.mo"
   , version = "v0.1.1"

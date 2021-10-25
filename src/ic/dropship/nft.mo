@@ -23,8 +23,11 @@ import Blob "mo:base/Blob";
 import Array_ "../lib/vvv/src/Array";
 import Prim "mo:prim"; 
 import AccessControl "../accesscontrol/access";
-
+import Hex "mo:encoding/Hex";
+import Blob_ "../lib/vvv/src/Blob";
 import Hash "../lib/vvv/src/Hash";
+import Painless "../lib/vvv/src/Painless";
+
 
 shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _accesscontrol_can:Text; _debug_cannisterId:?Principal}) : async Interface.NonFungibleToken = this {
 
@@ -273,9 +276,14 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
         assert(request.chunkIdx < maxChunks);
 
-        let chunkId = ((request.tokenIndex & thresholdNFTMask) << 19) | ((request.chunkIdx & 255) << 2) | (ctype);
+        let chunkId = chunkIdEncode(request.tokenIndex, request.chunkIdx, ctype);
+        // let chunkId = ((request.tokenIndex & thresholdNFTMask) << 19) | ((request.chunkIdx & 255) << 2) | (ctype);
 
         _chunk.put(chunkId, request.data);
+    };
+
+    private func chunkIdEncode(tokenIndex:Nat32, chunkIndex:Nat32, ctype:Nat32) : Nat32 {
+        ((tokenIndex & thresholdNFTMask) << 19) | ((chunkIndex & 255) << 2) | (ctype);
     };
 
      public shared({caller}) func fetchChunk(request: Ext.NonFungible.FetchChunkRequest) : async ?Blob {
@@ -288,10 +296,57 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         assert(request.chunkIdx <= 15);
         assert(ctype <= 3);
 
-        let chunkId = ((request.tokenIndex & thresholdNFTMask) << 19) | ((request.chunkIdx & 255) << 2) | (ctype);
+        let chunkId = chunkIdEncode(request.tokenIndex, request.chunkIdx, ctype);  //((request.tokenIndex & thresholdNFTMask) << 19) | ((request.chunkIdx & 255) << 2) | (ctype);
 
         _chunk.get(chunkId);
     };
+    
+    // Painless HTTP response - Start
+    private func getChunk(key:Text, index:Nat) : Painless.Chunk {
+        switch(Hex.decode(Text.trimStart(key, #text("/")))) {
+            case (#ok(hex)) {
+                let n:Nat32 = Blob_.bytesToNat32(hex);
+                let thisChunk:Nat32 = n | (Nat32.fromNat(index) << 2);
+                let nextChunk:Nat32 = n | ((Nat32.fromNat(index)+1) << 2);
+
+                switch(_chunk.get(thisChunk)) {
+                                case (?a) {
+                                    switch(_chunk.get(nextChunk)) {
+                                        case (?b) {
+                                            #more(a);
+                                        };
+                                        case (null) {
+                                            #end(a);
+                                        }
+                                    }
+                                };
+                                case(null) {
+                                    assert(false);
+                                    #none();
+                                };
+                            };
+                
+            };
+            case (#err(e)) {
+                #none;
+            }
+        };
+    };
+
+    public query func http_request(request : Painless.Request) : async Painless.Response {
+      Painless.Request(request, {
+          chunkFunc = getChunk;
+          cbFunc = http_request_streaming_callback;
+          });
+    };
+    
+    public query func http_request_streaming_callback(token : Painless.Token) : async Painless.Callback {
+      Painless.Callback(token, {
+          chunkFunc = getChunk;
+      });
+    };
+    // Painless HTTP response - End
+
 
     private func SNFT_mint(caller:Principal, request: Ext.NonFungible.MintRequest) : async TokenIndex {
 
@@ -337,7 +392,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
              var cooldownUntil = null; // in minutes
         };
 
-        // Todo: check if class is bind on pickup and set boundUntil if so
+        // TODO: check if class is bind on pickup and set boundUntil if so
 
         assert(switch(_meta.get(tokenIndex)) { // shouldn't exist in db
             case (?a) false;

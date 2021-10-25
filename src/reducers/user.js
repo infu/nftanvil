@@ -14,8 +14,7 @@ import { nftCanister } from "../canisters/nft";
 import { accountCanister } from "../canisters/account";
 
 import produce from "immer";
-import { NumberIncrementStepper } from "@chakra-ui/number-input";
-import { aid2acccan, chunkBlob, blobPrepare } from "../purefunc/data";
+import { aid2acccan } from "../purefunc/data";
 
 export const userSlice = createSlice({
   name: "user",

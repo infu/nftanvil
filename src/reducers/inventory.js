@@ -1,16 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { accountCanister } from "../canisters/account";
 import authentication from "../auth";
+import { produce } from "immer";
+import { aid2acccan } from "../purefunc/data";
 
 export const inventorySlice = createSlice({
   name: "inventory",
   initialState: {},
   reducers: {
     pageSet: (state, action) => {
-      return {
-        ...state,
-        [action.payload.aid]: {},
-      };
+      return produce(state, (draft) => {
+        if (!draft[action.payload.aid]) draft[action.payload.aid] = [];
+        draft[action.payload.aid][action.payload.pageIdx] = action.payload.list;
+        return draft;
+      });
     },
   },
 });
@@ -18,16 +21,19 @@ export const inventorySlice = createSlice({
 export const { pageSet } = inventorySlice.actions;
 
 export const loadInventory = (aid) => async (dispatch, getState) => {
-  console.log("FETCHING INVENTORY");
-  let identity = authentication.client.getIdentity();
+  console.log("FETCHING INVENTORY", aid);
+  let identity = authentication.client
+    ? authentication.client.getIdentity()
+    : null;
   let s = getState();
-  let can = s.user.acccan;
-  let address = s.user.address;
+  if (!s.user.acclist?.length) return null;
+  let can = aid2acccan(aid, s.user.acclist);
   let acc = accountCanister(can, { agentOptions: { identity } });
   // console.log("LISTING", can, address);
-  let owned = await acc.list(address, 0);
-  owned = owned.filter((x) => x !== "");
-  console.log("OWNED", owned);
+  let pageIdx = 0;
+  let list = await acc.list(aid, pageIdx);
+  list = list.filter((x) => x !== "");
+  dispatch(pageSet({ aid, pageIdx, list }));
 };
 
 export default inventorySlice.reducer;

@@ -5,6 +5,7 @@ import { nftCanister } from "../canisters/nft";
 import { chunkBlob, blobPrepare } from "../purefunc/data";
 import { dropship } from "../canisters/dropship";
 import { Principal } from "@dfinity/principal";
+import { produce } from "immer";
 
 export const nftSlice = createSlice({
   name: "nft",
@@ -39,28 +40,28 @@ export const nftFetchMeta = (id) => async (dispatch, getState) => {
   if (data.extensionCanister[0])
     data.extensionCanister[0] = data.extensionCanister[0].toText();
 
-  console.log("METADATA RESP", resp);
-  let meta = { tokenIndex: index, ...data, ...vars };
+  let meta = { tokenIndex: index, canister, ...data, ...vars };
+
+  if (meta.thumb.internal)
+    meta.thumb.internal.url = await nftMediaGet({
+      ...meta.thumb.internal,
+      id,
+      position: "thumb",
+    });
+  console.log("METADATA RESP", meta);
+
   dispatch(nftSet({ id, meta }));
   return meta;
 };
 
-export const nftMediaGet = (id, type) => async (dispatch, getState) => {
+export const nftMediaGet = async ({ id, contentType, size, position }) => {
   let identity = authentication.client.getIdentity();
 
-  let s = getState();
-  let meta = s.nft.meta[id];
-  if (!meta) return null;
   let { index, canister, token } = decodeTokenId(id);
-
-  if (!meta[type] || !meta[type][0].internal) return null;
 
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
-  let size = meta[type][0].internal.size;
-  let contentType = meta[type][0].internal.contentType;
-  let src = await fetchFile(nftcan, size, contentType, index, "content");
-  console.log("RECIEVED FILE", src);
+  let src = await fetchFile(nftcan, size, contentType, index, position);
 
   return src;
 };
@@ -132,11 +133,11 @@ export const mint = (vals) => async (dispatch, getState) => {
   console.log("Minted", { address, tokenIndex, tid });
   if (vals?.content[0]?.internal?.url)
     await uploadFile(nft, tokenIndex, "content", vals.content[0].internal.url);
-  if (vals?.thumb[0]?.internal?.url)
-    await uploadFile(nft, tokenIndex, "thumb", vals.thumb[0].internal.url);
+  if (vals?.thumb?.internal?.url)
+    await uploadFile(nft, tokenIndex, "thumb", vals.thumb.internal.url);
 
-  await dispatch(nftFetchMeta(tid));
-  await dispatch(nftMediaGet(tid, "content"));
+  // await dispatch(nftFetchMeta(tid));
+  // await dispatch(nftMediaGet(tid, "content"));
 };
 
 export default nftSlice.reducer;
