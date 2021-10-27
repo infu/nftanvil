@@ -4,10 +4,7 @@ import { Actor, HttpAgent } from "@dfinity/agent";
 import { idlFactory } from "../declarations/accesscontrol/accesscontrol.did.js";
 export { idlFactory } from "../declarations/accesscontrol/accesscontrol.did.js";
 
-// CANISTER_ID is replaced by webpack based on node environment
-export const canisterId = process.env.REACT_APP_ACCESSCONTROL_CANISTER_ID;
-
-export const createActor = (canisterId, options) => {
+export const accessCanister = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
 
   // Fetch root key for certificate validation during development
@@ -27,16 +24,3 @@ export const createActor = (canisterId, options) => {
     ...options?.actorOptions,
   });
 };
-
-export const access = {
-  principal: canisterId,
-};
-access.setOptions = (options) => {
-  let actor = createActor(canisterId, options);
-
-  for (let key in actor) {
-    access[key] = (...arg) => actor[key](...arg);
-  }
-};
-
-access.setOptions();

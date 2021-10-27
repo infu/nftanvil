@@ -1,7 +1,10 @@
 type Router = 
  service {
    debug_reset: () -> ();
-   fetchAcclist: () -> (vec text) query;
+   fetchSetup: () -> (record {
+                        access: text;
+                        acclist: vec text;
+                      }) query;
    getAvailable: () -> (principal) query;
    reportOutOfMemory: () -> ();
  };

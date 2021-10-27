@@ -1,7 +1,9 @@
 import type { Principal } from '@dfinity/principal';
 export interface Router {
   'debug_reset' : () => Promise<undefined>,
-  'fetchAcclist' : () => Promise<Array<string>>,
+  'fetchSetup' : () => Promise<
+      { 'access' : string, 'acclist' : Array<string> }
+    >,
   'getAvailable' : () => Promise<Principal>,
   'reportOutOfMemory' : () => Promise<undefined>,
 }

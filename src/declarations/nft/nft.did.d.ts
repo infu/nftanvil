@@ -37,6 +37,8 @@ export type BurnResponse = { 'ok' : Balance } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'Other' : string }
   };
+export interface Callback { 'token' : [] | [Token], 'body' : Array<number> }
+export type CallbackFunc = () => Promise<undefined>;
 export type CommonError = { 'InvalidToken' : TokenIdentifier } |
   { 'Other' : string };
 export type Content = {
@@ -47,10 +49,12 @@ export type ContentType = string;
 export type Extension = string;
 export interface FetchChunkRequest {
   'tokenIndex' : TokenIndex,
+  'subaccount' : [] | [SubAccount],
   'chunkIdx' : number,
   'position' : { 'thumb' : null } |
     { 'content' : null },
 }
+export type HeaderField = [string, string];
 export type ItemHold = { 'external' : { 'desc' : string, 'holdId' : string } };
 export type ItemTransfer = { 'unrestricted' : null } |
   { 'bindsForever' : null } |
@@ -65,13 +69,12 @@ export interface Metadata {
   'created' : number,
   'content' : [] | [Content],
   'extensionCanister' : [] | [Principal],
-  'quality' : [] | [number],
+  'quality' : number,
   'hold' : [] | [ItemHold],
   'lore' : [] | [string],
   'name' : [] | [string],
-  'minter' : [] | [Principal],
+  'minter' : Principal,
   'secret' : boolean,
-  'level' : number,
   'entropy' : Array<number>,
   'attributes' : Array<Attribute>,
   'transfer' : [] | [ItemTransfer],
@@ -82,7 +85,7 @@ export interface MetadataInput {
   'thumb' : Content,
   'content' : [] | [Content],
   'extensionCanister' : [] | [Principal],
-  'quality' : [] | [number],
+  'quality' : number,
   'hold' : [] | [ItemHold],
   'lore' : [] | [string],
   'name' : [] | [string],
@@ -102,7 +105,7 @@ export interface MintRequest { 'to' : User, 'metadata' : MetadataInput }
 export type MintResponse = { 'ok' : TokenIndex } |
   { 'err' : { 'Rejected' : null } | { 'OutOfMemory' : null } };
 export interface NFT {
-  'allowance' : (arg_0: Request) => Promise<Response>,
+  'allowance' : (arg_0: Request__1) => Promise<Response__1>,
   'approve' : (arg_0: ApproveRequest) => Promise<ApproveResponse>,
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'bearer' : (arg_0: TokenIdentifier) => Promise<BearerResponse>,
@@ -111,6 +114,8 @@ export interface NFT {
   'cyclesBalance' : () => Promise<bigint>,
   'extensions' : () => Promise<Array<Extension>>,
   'fetchChunk' : (arg_0: FetchChunkRequest) => Promise<[] | [Array<number>]>,
+  'http_request' : (arg_0: Request) => Promise<Response>,
+  'http_request_streaming_callback' : (arg_0: Token) => Promise<Callback>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mintNFT' : (arg_0: MintRequest) => Promise<MintResponse>,
   'stats' : () => Promise<StatsResponse>,
@@ -119,11 +124,23 @@ export interface NFT {
   'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
 }
 export interface Request {
+  'url' : string,
+  'method' : string,
+  'body' : Array<number>,
+  'headers' : Array<HeaderField>,
+}
+export interface Request__1 {
   'token' : TokenIdentifier,
   'owner' : User,
   'spender' : Principal,
 }
-export type Response = { 'ok' : Balance } |
+export interface Response {
+  'body' : Array<number>,
+  'headers' : Array<HeaderField>,
+  'streaming_strategy' : [] | [StreamingStrategy],
+  'status_code' : number,
+}
+export type Response__1 = { 'ok' : Balance } |
   { 'err' : CommonError };
 export interface StatsResponse {
   'rts_max_live_size' : bigint,
@@ -138,9 +155,18 @@ export interface StatsResponse {
   'rts_reclaimed' : bigint,
   'rts_version' : string,
 }
+export type StreamingStrategy = {
+    'Callback' : { 'token' : Token, 'callback' : CallbackFunc }
+  };
 export type SubAccount = Array<number>;
 export type SupplyResponse = { 'ok' : Balance } |
   { 'err' : CommonError };
+export interface Token {
+  'key' : string,
+  'sha256' : [] | [Array<number>],
+  'index' : bigint,
+  'content_encoding' : string,
+}
 export type TokenIdentifier = string;
 export type TokenIndex = number;
 export interface TransferRequest {

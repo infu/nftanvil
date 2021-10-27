@@ -72,7 +72,7 @@ Result.assertErr(await nft.balance({ user  = user_john; token = token_one;}));
 assert((await nft.mintNFT({to = user_john; metadata = {
             name = ?"Some";
             lore = ?"Other";
-            quality= null;
+            quality= 1;
             use= null;
             hold= null;
             transfer= null;
@@ -90,7 +90,7 @@ assert((await nft.mintNFT({to = user_john; metadata = {
 assert((await nft.mintNFT({to = user_john; metadata = {
             name = ?"Some";
             lore = ?"Other";
-            quality= null;
+            quality= 1;
             use= null;
             hold= null;
             transfer= null;
@@ -107,7 +107,7 @@ assert((await nft.mintNFT({to = user_john; metadata = {
 switch(await nft.mintNFT({to = user_john; metadata = {
             name = ?"Some";
             lore = ?"Other";
-            quality= null;
+            quality= 1;
             use= null;
             hold= null;
             transfer= null;
@@ -126,7 +126,7 @@ switch(await nft.mintNFT({to = user_john; metadata = {
 assert((await nft.mintNFT({to = user_john; metadata = {
             name = ?"Some";
             lore = ?"Other";
-            quality= null;
+            quality= 1;
             use= null;
             hold= null;
             transfer= null;

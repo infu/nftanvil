@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { AuthClient } from "@dfinity/auth-client";
 import { dropship } from "../canisters/dropship";
-import { access } from "../canisters/accesscontrol";
+import { accessCanister } from "../canisters/accesscontrol";
 
 import authentication from "../auth";
 
@@ -20,18 +20,17 @@ export const userSlice = createSlice({
   name: "user",
   initialState: {
     address: null,
+    subaccount: null,
     principal: null,
     anonymous: true,
-    owned: [],
     challenge: null,
     accesstokens: 0,
     acclist: [],
     acccan: "",
+    access: "",
+    pro: false,
   },
   reducers: {
-    ownedSet: (state, action) => {
-      return { ...state, owned: action.payload };
-    },
     challengeSet: (state, action) => {
       return { ...state, challenge: action.payload };
     },
@@ -44,14 +43,21 @@ export const userSlice = createSlice({
     acclistSet: (state, action) => {
       return { ...state, acclist: action.payload };
     },
+    proSet: (state, action) => {
+      return {
+        ...state,
+        pro: action.payload,
+      };
+    },
     authSet: (state, action) => {
-      const { address, principal, anonymous, acclist, acccan } = action.payload;
+      const { address, principal, anonymous, acclist, acccan, access } =
+        action.payload;
       return {
         ...state,
         address,
         principal,
         anonymous,
-        ...(acclist ? { acclist, acccan } : {}),
+        ...(acclist ? { acclist, acccan, access } : {}),
       };
     },
   },
@@ -59,7 +65,7 @@ export const userSlice = createSlice({
 
 // Action creators are generated for each case reducer function
 export const {
-  ownedSet,
+  proSet,
   authSet,
   challengeSet,
   accessTokensSet,
@@ -97,16 +103,18 @@ export const auth =
     let anonymous = !(await authClient.isAuthenticated());
     let address = !anonymous && principalToAccountIdentifier(principal);
     dropship.setOptions({ agentOptions: { identity } });
-    access.setOptions({ agentOptions: { identity } });
 
     //WARNING FOR DEBUG PURPOSES ONLY //TODO: REMOVE it from window
     window.dropship = dropship;
 
-    let acclist = await dropship.fetchAcclist();
+    let { access, acclist } = await dropship.fetchSetup();
     let acccan = aid2acccan(address, acclist);
     console.log("ACCCAN", address, acccan);
 
-    dispatch(authSet({ address, principal, anonymous, acclist, acccan }));
+    dispatch(
+      authSet({ address, principal, anonymous, acclist, acccan, access })
+    );
+
     dispatch(getAccessTokenBalance());
   };
 
@@ -117,7 +125,7 @@ export const logout = () => async (dispatch, getState) => {
 
   const identity = await authClient.getIdentity();
   dropship.setOptions({ agentOptions: { identity } });
-  access.setOptions({ agentOptions: { identity } });
+  // access.setOptions({ agentOptions: { identity } });
 
   let principal = identity.getPrincipal().toString();
   let anonymous = !(await authClient.isAuthenticated());
@@ -125,6 +133,12 @@ export const logout = () => async (dispatch, getState) => {
 };
 
 export const challenge = () => async (dispatch, getState) => {
+  let s = getState();
+  if (s.user.anonymous) return;
+
+  let identity = authentication.client.getIdentity();
+  let access = accessCanister(s.user.access, { agentOptions: { identity } });
+
   let challenge = await access.getChallenge();
   // challengeToImage(challenge);
   dispatch(challengeSet(challenge));
@@ -133,12 +147,21 @@ export const challenge = () => async (dispatch, getState) => {
 export const getAccessTokenBalance = () => async (dispatch, getState) => {
   let s = getState();
   if (s.user.anonymous) return;
+
+  let identity = authentication.client.getIdentity();
+  let access = accessCanister(s.user.access, { agentOptions: { identity } });
+
   let balance = await access.getBalance(Principal.fromText(s.user.principal));
   dispatch(accessTokensSet(parseInt(balance, 10)));
 };
 
 export const sendSolution = (code) => async (dispatch, getState) => {
   dispatch(challengeSet(null));
+  let s = getState();
+  if (s.user.anonymous) return;
+
+  let identity = authentication.client.getIdentity();
+  let access = accessCanister(s.user.access, { agentOptions: { identity } });
 
   let result = await access.sendSolution(code);
   if (result.ok) dispatch(accessTokensSet(parseInt(result.ok, 10)));

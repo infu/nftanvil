@@ -3,21 +3,34 @@ import { itemQuality, itemTransfer, itemUse } from "../item_config";
 import { useEffect } from "react";
 import { nftFetchMeta, nftMediaGet } from "../reducers/nft";
 import { useSelector, useDispatch } from "react-redux";
-
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
+  PopoverArrow,
+  PopoverCloseButton,
+} from "@chakra-ui/react";
 import moment from "moment";
 import styled from "@emotion/styled";
 import thumb_bg from "../assets/default.png";
 import thumb_over from "../assets/over.png";
 
 const ContentBox = styled.div`
-  position: relative;
-  height: 400px;
-  max-width: 500px;
+  // position: relative;
+  // height: 300px;
+  margin: 12px 0px;
+  // max-width: 500px;
+  // max-height: 500px;
   img {
-    max-height: 100%;
+    max-width: 600px;
+    max-height: 500px;
+    // max-height: 100%;
     border-radius: 6px;
   }
-  overflow: hidden;
+  // overflow: hidden;
 `;
 
 const Thumb = styled.div`
@@ -25,8 +38,6 @@ const Thumb = styled.div`
   height: 56px;
   border-radius: 6px;
   position: relative;
-  left: -4px;
-  top: -4px;
   box-overflow: hidden;
 
   .border {
@@ -54,27 +65,53 @@ const Thumb = styled.div`
   }
 `;
 
-const encodeChunkId = (tokenIndex, chunkIndex, ctype) => {
-  return (tokenIndex << 19) | ((chunkIndex & 255) << 2) | ctype;
-};
 export const NFT = ({ id }) => {
   const meta = useSelector((state) => state.nft.meta[id]);
   const dispatch = useDispatch();
-  console.log("meta", meta);
-  if (meta?.tokenIndex)
-    console.log("UUURL", encodeChunkId(meta.tokenIndex, 0, 0).toString(16));
 
   useEffect(() => {
     dispatch(nftFetchMeta(id));
   }, [id]);
 
-  return <NFTThumb {...meta} />;
+  return (
+    <Popover
+      placement="top-start"
+      trigger="hover"
+      isLazy={true}
+      matchWidth={true}
+    >
+      <PopoverTrigger>
+        <Thumb>
+          {meta?.thumb?.internal?.url ? (
+            <img className="custom" src={meta.thumb.internal.url} />
+          ) : (
+            ""
+          )}
+          <div className="border" />
+        </Thumb>
+        {/* <NFTThumb meta={meta} /> */}
+      </PopoverTrigger>
+      <PopoverContent
+        w={"600px"}
+        bg={"transparent"}
+        border={"0"}
+        //    sx={{ outline: "none" }}
+      >
+        <NFTContent meta={meta} />
+        <NFTInfo meta={meta} />
+      </PopoverContent>
+    </Popover>
+  );
 };
 
 export const NFTContent = (p) => {
   return (
     <ContentBox>
-      {p.content?.internal?.url ? <img src={p.content.internal.url} /> : ""}
+      {p.meta?.content?.internal?.url ? (
+        <img src={p.meta.content.internal.url} />
+      ) : (
+        ""
+      )}
     </ContentBox>
   );
 };
@@ -82,18 +119,19 @@ export const NFTContent = (p) => {
 export const NFTPreview = (p) => {
   return (
     <Stack spacing="5" ml={"20px"} mt={"80px"}>
-      <NFTContent {...p} />
-      <NFTInfo {...p} />
-      <NFTThumb {...p} />
+      <NFTContent meta={p} />
+      <NFTInfo meta={p} />
+      <NFTThumb meta={p} />
     </Stack>
   );
 };
 
 export const NFTThumb = (p) => {
+  if (!p.meta?.thumb?.internal && !p.meta?.thumb?.external) return null;
   return (
-    <Thumb>
-      {p.thumb?.internal?.url ? (
-        <img className="custom" src={p.thumb.internal.url} />
+    <Thumb {...p}>
+      {p.meta?.thumb?.internal?.url ? (
+        <img className="custom" src={p.meta.thumb.internal.url} />
       ) : (
         ""
       )}
@@ -102,71 +140,64 @@ export const NFTThumb = (p) => {
   );
 };
 
-export const NFTInfo = (p) => {
+export const NFTInfo = ({ meta }) => {
   const bg = useColorModeValue("white", "gray.700");
-  const qcolor = itemQuality[p.quality].color;
-
+  const qcolor = itemQuality[meta.quality].color;
+  if (!meta.name) return null;
   return (
-    <Box
-      bg={bg}
-      borderRadius="md"
-      borderWidth={"2px"}
-      ml={"28px"}
-      mt={"480px"}
-      w={350}
-      p={2}
-    >
-      {p.content?.thumb?.url ? <img src={p.content.thumb.url} /> : ""}
+    <Box bg={bg} borderRadius="md" borderWidth={"2px"} w={350} p={2}>
+      {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
 
       <Stack spacing={0}>
-        {p.name ? (
+        {meta.name ? (
           <Text color={qcolor} fontSize="16px">
-            {p.name.capitalize()}
+            {meta.name.capitalize()}
           </Text>
         ) : null}
-        {"bindsForever" in p.transfer ? (
+        {"bindsForever" in meta.transfer ? (
           <Text fontSize="14px">Binds on transfer</Text>
         ) : null}
-        {"bindsDuration" in p.transfer ? (
+        {"bindsDuration" in meta.transfer ? (
           <Text fontSize="14px">
             Binds on transfer for{" "}
-            {moment.duration(p.transfer.bindsDuration, "minutes").humanize()}
+            {moment.duration(meta.transfer.bindsDuration, "minutes").humanize()}
           </Text>
         ) : null}
-        {p.use && p.use.consumable && p.use.consumable.desc ? (
+        {meta?.use?.consumable?.desc ? (
           <Text fontSize="14px" color={"green"} as="i">
-            Use: {p.use.consumable.desc.capitalize()} (Consumed in the process)
+            Use: {meta.use.consumable.desc.capitalize()} (Consumed in the
+            process)
           </Text>
         ) : null}
 
-        {p.use && p.use.cooldown && p.use.cooldown.desc ? (
+        {meta?.use?.cooldown?.desc ? (
           <Text fontSize="14px" color={"green.300"}>
-            Use: {p.use.cooldown.desc.capitalize()} (
-            {moment.duration(p.use.cooldown.duration, "minutes").humanize()}{" "}
+            Use: {meta.use.cooldown.desc.capitalize()} (
+            {moment.duration(meta.use.cooldown.duration, "minutes").humanize()}{" "}
             cooldown)
           </Text>
         ) : null}
-        {p.hold?.external?.desc ? (
+        {meta.hold?.external?.desc ? (
           <Text fontSize="14px" color={"green.300"}>
-            Hold: {p.hold.external.desc.capitalize()}
+            Hold: {meta.hold.external.desc.capitalize()}
           </Text>
         ) : null}
-        {p.attributes && p.attributes.length
-          ? p.attributes.map((a, idx) => (
+        {meta.attributes && meta.attributes.length
+          ? meta.attributes.map((a, idx) => (
               <Text key={idx} fontSize="14px">
                 {a[1] >= 0 ? "+" : ""}
                 {a[1]} {a[0].capitalize()}
               </Text>
             ))
           : null}
-        {p.lore ? (
+        {meta.lore ? (
           <Text fontSize="14px" pt="14px" color={"yellow"}>
-            "{p.lore.capitalize()}"
+            "{meta.lore.capitalize()}"
           </Text>
         ) : null}
-        {p.ttl && p.ttl > 0 ? (
+        {meta.ttl && meta.ttl > 0 ? (
           <Text fontSize="14px" pt="14px" color={"red"}>
-            Lasts {moment.duration(p.ttl, "minutes").humanize()}
+            Lasts {moment.duration(meta.ttl, "minutes").humanize()}
           </Text>
         ) : null}
       </Stack>

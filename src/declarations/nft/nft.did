@@ -38,12 +38,25 @@ type TransferRequest =
  };
 type TokenIndex = nat32;
 type TokenIdentifier = text;
+type Token = 
+ record {
+   content_encoding: text;
+   index: nat;
+   key: text;
+   sha256: opt vec nat8;
+ };
 type SupplyResponse = 
  variant {
    err: CommonError;
    ok: Balance;
  };
 type SubAccount = vec nat8;
+type StreamingStrategy = variant {
+                           Callback:
+                            record {
+                              callback: CallbackFunc;
+                              token: Token;
+                            };};
 type StatsResponse = 
  record {
    accounts: nat32;
@@ -58,20 +71,34 @@ type StatsResponse =
    rts_version: text;
    transfers: nat32;
  };
-type Response = 
+type Response__1 = 
  variant {
    err: CommonError;
    ok: Balance;
  };
-type Request = 
+type Response = 
+ record {
+   body: blob;
+   headers: vec HeaderField;
+   status_code: nat16;
+   streaming_strategy: opt StreamingStrategy;
+ };
+type Request__1 = 
  record {
    owner: User;
    spender: principal;
    token: TokenIdentifier;
  };
+type Request = 
+ record {
+   body: blob;
+   headers: vec HeaderField;
+   method: text;
+   url: text;
+ };
 type NFT = 
  service {
-   allowance: (Request) -> (Response) query;
+   allowance: (Request__1) -> (Response__1) query;
    approve: (ApproveRequest) -> (ApproveResponse);
    balance: (BalanceRequest) -> (BalanceResponse) query;
    bearer: (TokenIdentifier) -> (BearerResponse) query;
@@ -80,6 +107,8 @@ type NFT =
    cyclesBalance: () -> (nat) query;
    extensions: () -> (vec Extension) query;
    fetchChunk: (FetchChunkRequest) -> (opt blob);
+   http_request: (Request) -> (Response) query;
+   http_request_streaming_callback: (Token) -> (Callback) query;
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
    mintNFT: (MintRequest) -> (MintResponse);
    stats: () -> (StatsResponse) query;
@@ -121,7 +150,7 @@ type MetadataInput =
    hold: opt ItemHold;
    lore: opt text;
    name: opt text;
-   quality: opt nat8;
+   quality: nat8;
    secret: bool;
    thumb: Content;
    transfer: opt ItemTransfer;
@@ -136,11 +165,10 @@ type Metadata =
    entropy: blob;
    extensionCanister: opt principal;
    hold: opt ItemHold;
-   level: nat8;
    lore: opt text;
-   minter: opt principal;
+   minter: principal;
    name: opt text;
-   quality: opt nat8;
+   quality: nat8;
    secret: bool;
    thumb: Content;
    transfer: opt ItemTransfer;
@@ -170,6 +198,11 @@ type ItemHold = variant {external: record {
                                      desc: text;
                                      holdId: text;
                                    };};
+type HeaderField = 
+ record {
+   text;
+   text;
+ };
 type FetchChunkRequest = 
  record {
    chunkIdx: nat32;
@@ -177,6 +210,7 @@ type FetchChunkRequest =
                content;
                thumb;
              };
+   subaccount: opt SubAccount;
    tokenIndex: TokenIndex;
  };
 type Extension = text;
@@ -196,6 +230,12 @@ type CommonError =
  variant {
    InvalidToken: TokenIdentifier;
    Other: text;
+ };
+type CallbackFunc = func () -> ();
+type Callback = 
+ record {
+   body: blob;
+   token: opt Token;
  };
 type BurnResponse = 
  variant {

@@ -5,7 +5,7 @@ export const idlFactory = ({ IDL }) => {
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
   });
-  const Request = IDL.Record({
+  const Request__1 = IDL.Record({
     'token' : TokenIdentifier,
     'owner' : User,
     'spender' : IDL.Principal,
@@ -15,7 +15,7 @@ export const idlFactory = ({ IDL }) => {
     'InvalidToken' : TokenIdentifier,
     'Other' : IDL.Text,
   });
-  const Response = IDL.Variant({ 'ok' : Balance, 'err' : CommonError });
+  const Response__1 = IDL.Variant({ 'ok' : Balance, 'err' : CommonError });
   const SubAccount = IDL.Vec(IDL.Nat8);
   const ApproveRequest = IDL.Record({
     'token' : TokenIdentifier,
@@ -65,8 +65,36 @@ export const idlFactory = ({ IDL }) => {
   const TokenIndex = IDL.Nat32;
   const FetchChunkRequest = IDL.Record({
     'tokenIndex' : TokenIndex,
+    'subaccount' : IDL.Opt(SubAccount),
     'chunkIdx' : IDL.Nat32,
     'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
+  });
+  const HeaderField = IDL.Tuple(IDL.Text, IDL.Text);
+  const Request = IDL.Record({
+    'url' : IDL.Text,
+    'method' : IDL.Text,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(HeaderField),
+  });
+  const Token = IDL.Record({
+    'key' : IDL.Text,
+    'sha256' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'index' : IDL.Nat,
+    'content_encoding' : IDL.Text,
+  });
+  const CallbackFunc = IDL.Func([], [], []);
+  const StreamingStrategy = IDL.Variant({
+    'Callback' : IDL.Record({ 'token' : Token, 'callback' : CallbackFunc }),
+  });
+  const Response = IDL.Record({
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(HeaderField),
+    'streaming_strategy' : IDL.Opt(StreamingStrategy),
+    'status_code' : IDL.Nat16,
+  });
+  const Callback = IDL.Record({
+    'token' : IDL.Opt(Token),
+    'body' : IDL.Vec(IDL.Nat8),
   });
   const ItemUse = IDL.Variant({
     'consumable' : IDL.Record({ 'desc' : IDL.Text, 'useId' : IDL.Text }),
@@ -103,13 +131,12 @@ export const idlFactory = ({ IDL }) => {
     'created' : IDL.Nat32,
     'content' : IDL.Opt(Content),
     'extensionCanister' : IDL.Opt(IDL.Principal),
-    'quality' : IDL.Opt(IDL.Nat8),
+    'quality' : IDL.Nat8,
     'hold' : IDL.Opt(ItemHold),
     'lore' : IDL.Opt(IDL.Text),
     'name' : IDL.Opt(IDL.Text),
-    'minter' : IDL.Opt(IDL.Principal),
+    'minter' : IDL.Principal,
     'secret' : IDL.Bool,
-    'level' : IDL.Nat8,
     'entropy' : IDL.Vec(IDL.Nat8),
     'attributes' : IDL.Vec(Attribute),
     'transfer' : IDL.Opt(ItemTransfer),
@@ -128,7 +155,7 @@ export const idlFactory = ({ IDL }) => {
     'thumb' : Content,
     'content' : IDL.Opt(Content),
     'extensionCanister' : IDL.Opt(IDL.Principal),
-    'quality' : IDL.Opt(IDL.Nat8),
+    'quality' : IDL.Nat8,
     'hold' : IDL.Opt(ItemHold),
     'lore' : IDL.Opt(IDL.Text),
     'name' : IDL.Opt(IDL.Text),
@@ -182,7 +209,7 @@ export const idlFactory = ({ IDL }) => {
     'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
   });
   const NFT = IDL.Service({
-    'allowance' : IDL.Func([Request], [Response], ['query']),
+    'allowance' : IDL.Func([Request__1], [Response__1], ['query']),
     'approve' : IDL.Func([ApproveRequest], [ApproveResponse], []),
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
     'bearer' : IDL.Func([TokenIdentifier], [BearerResponse], ['query']),
@@ -194,6 +221,12 @@ export const idlFactory = ({ IDL }) => {
         [FetchChunkRequest],
         [IDL.Opt(IDL.Vec(IDL.Nat8))],
         [],
+      ),
+    'http_request' : IDL.Func([Request], [Response], ['query']),
+    'http_request_streaming_callback' : IDL.Func(
+        [Token],
+        [Callback],
+        ['query'],
       ),
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
     'mintNFT' : IDL.Func([MintRequest], [MintResponse], []),

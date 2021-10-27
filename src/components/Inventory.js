@@ -36,15 +36,14 @@ export const Inventory = (p) => {
 
   return (
     <Box
-      bg={useColorModeValue("white", "gray.600")}
+      bg={useColorModeValue("white", "gray.900")}
       borderRadius="md"
       border={1}
-      mt={"80px"}
-      w={480}
-      h={400}
+      sx={{ position: "fixed", bottom: "100px" }}
+      w={648}
       p="2"
     >
-      <Wrap direction={"horizontal"} spacing="1">
+      <Wrap direction={"horizontal"}>
         {items && items.map((id) => <NFT id={id} key={id} />)}
       </Wrap>
     </Box>

@@ -73,3 +73,24 @@ const from32bits = (ba) => {
   }
   return value;
 };
+
+export const encodeChunkId = (tokenIndex, chunkIndex, ctype) => {
+  return (tokenIndex << 19) | ((chunkIndex & 255) << 2) | ctype; // 0 - content , 1 - thumb
+};
+
+export const tokenUrl = (tid, type) => {
+  let { index, canister } = decodeTokenId(tid);
+  if (process.env.NODE_ENV === "production") {
+    return (
+      "https://" +
+      canister +
+      ".raw.ic0.app/" +
+      encodeChunkId(index, 0, type === "content" ? 0 : 1).toString(16)
+    );
+  } else {
+    return (
+      "http://127.0.0.1:8453/" +
+      encodeChunkId(index, 0, type === "content" ? 0 : 1).toString(16)
+    );
+  }
+};

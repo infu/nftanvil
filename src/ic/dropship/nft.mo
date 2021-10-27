@@ -190,7 +190,23 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         
     };
 
-
+    private func getMeta(tokenIndex: TokenIndex) : Result.Result<(Metadata, Metavars), ()> {
+        switch( _meta.get(tokenIndex) ) {
+            case (?m) {
+                switch( _metavars.get(tokenIndex) ) {
+                    case (?v) {
+                        #ok((m,v));
+                    };
+                    case (_) {
+                        #err();
+                    }
+                };
+            };
+            case (_) {
+                #err();
+            };
+        }
+    };
 
     public query func metadata(token : Ext.TokenIdentifier) : async Ext.MetadataResponse {
         switch (Ext.TokenIdentifier.decode(token)) {
@@ -198,25 +214,19 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
                
                 if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
 
-               
-                switch( _meta.get(tokenIndex) ) {
-                    case (?m) {
-                              switch( _metavars.get(tokenIndex) ) {
-                              case (?v) {
-                                #ok({
-                                    data = m; 
-                                    vars = Ext.MetavarsFreeze(v)
-                                    });
-                              };
-                              case (_) {
-                                 #err(#InvalidToken(token));
-                              }
-                              };
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((m,v))) {
+                            #ok({
+                            data = m; 
+                            vars = Ext.MetavarsFreeze(v)
+                            });
                     };
-                    case (_) {
-                        #err(#InvalidToken(token));
-                    };
-                }
+                    case (#err()) {
+                         #err(#InvalidToken(token));
+                    }
+
+                };
+                
             };
             case (#err(e)) {
               #err(#InvalidToken(token));
@@ -286,7 +296,15 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         ((tokenIndex & thresholdNFTMask) << 19) | ((chunkIndex & 255) << 2) | (ctype);
     };
 
-     public shared({caller}) func fetchChunk(request: Ext.NonFungible.FetchChunkRequest) : async ?Blob {
+    private func chunkIdDecode(x:Nat32) : (tokenIndex:Nat32, chunkIndex:Nat32, ctype:Nat32) {
+        (
+            (x >> 19 ) & thresholdNFTMask,
+            (x >> 2) & 255,
+            (x & 3)
+        )
+    };
+
+    public shared({caller}) func fetchChunk(request: Ext.NonFungible.FetchChunkRequest) : async ?Blob {
 
         let ctype: Nat32 = switch(request.position) {
             case (#content) 0;
@@ -298,14 +316,41 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
         let chunkId = chunkIdEncode(request.tokenIndex, request.chunkIdx, ctype);  //((request.tokenIndex & thresholdNFTMask) << 19) | ((request.chunkIdx & 255) << 2) | (ctype);
 
-        _chunk.get(chunkId);
+
+        switch(getMeta(request.tokenIndex)) {
+            case (#ok((meta,vars))) {
+                
+                 let allowed:Bool = switch(meta.secret and ctype == 0) {
+                     case (false) true;
+                     case (true) {
+                            switch(SNFT_tidxGet(request.tokenIndex)) {
+                                case (?ownerAid) {
+                                     let callerAid = Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount);
+                                     Ext.AccountIdentifier.equal(ownerAid,callerAid);
+                                };
+                                case (_) {
+                                    // shouldn't be possible if db is correct
+                                    false;
+                                }
+                            }
+                     }
+                 };
+
+                 if (allowed == false) return null;
+                 _chunk.get(chunkId);
+            };
+            case (#err()) {
+                null
+            }
+        }
+       
     };
     
     // Painless HTTP response - Start
     private func getChunk(key:Text, index:Nat) : Painless.Chunk {
         switch(Hex.decode(Text.trimStart(key, #text("/")))) {
-            case (#ok(hex)) {
-                let n:Nat32 = Blob_.bytesToNat32(hex);
+            case (#ok(bytes)) {
+                let n:Nat32 = Blob_.bytesToNat32(bytes);
                 let thisChunk:Nat32 = n | (Nat32.fromNat(index) << 2);
                 let nextChunk:Nat32 = n | ((Nat32.fromNat(index)+1) << 2);
 
@@ -332,12 +377,83 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
             }
         };
     };
+    
+    //Explained here: https://forum.dfinity.org/t/cryptic-error-from-icx-proxy/6944/15
+    let _workaround = actor(Principal.toText(switch(_debug_cannisterId) {
+            case(null) Principal.fromActor(this);
+            case(?a) a
+        })) : actor { http_request_streaming_callback : shared () -> async () };
+
+
+    private func httpKeyDecode(key: Text) : Result.Result<(tokenIndex:TokenIndex, chunkIndex:Nat32, ctype:Nat32), Text> {
+            switch(Hex.decode(Text.trimStart(key, #text("/")))) {
+                    case (#ok(bytes)) {
+                        #ok( chunkIdDecode(Blob_.bytesToNat32(bytes)));
+                    };
+                    case (#err(e)) {
+                    #err("Hex decode error " # e);
+                    }
+            }
+    };
 
     public query func http_request(request : Painless.Request) : async Painless.Response {
-      Painless.Request(request, {
-          chunkFunc = getChunk;
-          cbFunc = http_request_streaming_callback;
-          });
+     
+
+        switch(httpKeyDecode(request.url)) {
+            case (#ok((tokenIndex, chunkIndex, ctype))) {
+
+
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+                           
+                             if (ctype == 0 and meta.secret) return Painless.NotFound("Secret content can't be retrieved with http request");
+
+                            let target : ? Ext.Content = switch(ctype) {
+                                case (0) meta.content;
+                                case (1) ?meta.thumb;
+                                case (_) null
+                            };
+
+                            switch(target) {
+                                case (?ct) {
+
+                                    switch(ct) {
+                                        case (#internal({contentType; size})) {
+                                         
+                                            Painless.Request(request, {
+                                                chunkFunc = getChunk;
+                                                cbFunc = _workaround.http_request_streaming_callback;
+                                                headers = [("Content-size", Nat32.toText(size)), ("Content-type", contentType), ("Cache-control", "public,max-age=31536000,immutable") ]
+                                                });
+                                        };
+                                        case (#external(_)) {
+                                            Painless.NotFound("Token points to external data");
+                                        };
+                                    }
+                                
+                                };
+                                case (null) Painless.NotFound("Data not found in token");
+                            }
+
+                           
+
+                    };
+                    case (#err()) {
+                        Painless.NotFound("Token not found");
+                    }
+
+                };
+
+
+                
+                
+
+            };
+            case (#err(e)) {
+                Painless.NotFound("Invalid resource id (" # e # ")");
+            }
+        }
+
     };
     
     public query func http_request_streaming_callback(token : Painless.Token) : async Painless.Callback {
@@ -381,8 +497,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
             content = m.content;
             thumb = m.thumb;
             extensionCanister = m.extensionCanister;
-            minter= ?caller;
-            level= 1; //TODO: make it parent lvl + 1;  0,1,2; 0 lvl doesn't have parent. 1lvl has 0lvl parent; 2lvl has 1lvl parent;
+            minter= caller;
             created = timestamp;
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
         };

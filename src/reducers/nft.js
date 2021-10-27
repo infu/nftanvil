@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import authentication from "../auth";
-import { encodeTokenId, decodeTokenId } from "../purefunc/token";
+import { encodeTokenId, decodeTokenId, tokenUrl } from "../purefunc/token";
 import { nftCanister } from "../canisters/nft";
 import { chunkBlob, blobPrepare } from "../purefunc/data";
 import { dropship } from "../canisters/dropship";
@@ -36,37 +36,94 @@ export const nftFetchMeta = (id) => async (dispatch, getState) => {
   let resp = await nftcan.metadata(id);
   let { data, vars } = resp.ok;
 
-  data.minter[0] = data.minter[0].toText();
-  if (data.extensionCanister[0])
-    data.extensionCanister[0] = data.extensionCanister[0].toText();
+  let meta = {
+    // inherant
+    tokenIndex: index,
+    canister,
 
-  let meta = { tokenIndex: index, canister, ...data, ...vars };
+    // data
+    ttl: data.ttl[0],
+    use: data.use[0],
+    thumb: data.thumb,
+    content: data.content[0],
+    created: data.created,
+    extensionCanister:
+      data.extensionCanister[0] && data.extensionCanister[0].toText(),
+    quality: data.quality,
+    hold: data.hold[0],
+    lore: data.lore[0],
+    name: data.name[0],
+    minter: data.minter.toText(),
+    secret: data.secret,
+    entropy: data.entropy,
+    attributes: data.attributes,
+    transfer: data.transfer[0],
 
-  if (meta.thumb.internal)
-    meta.thumb.internal.url = await nftMediaGet({
-      ...meta.thumb.internal,
-      id,
-      position: "thumb",
-    });
-  console.log("METADATA RESP", meta);
+    //vars
+    cooldownUntil: vars.cooldownUntil[0],
+    boundUntil: vars.boundUntil[0],
+  };
+
+  if (meta.thumb.internal) meta.thumb.internal.url = tokenUrl(id, "thumb");
+
+  if (meta.content?.internal) {
+    if (meta.secret)
+      meta.content.internal.url = await nftMediaGet({
+        id,
+        contentType: meta.content.internal.contentType,
+        size: meta.content.internal.size,
+        position: "content",
+        subaccount: s.user.subaccount,
+      });
+    else meta.content.internal.url = tokenUrl(id, "content");
+  }
+
+  // if (meta.content[0].internal)
+  //   meta.content[0].internal.url = await nftMediaGet({
+  //     ...meta.content[0].internal,
+  //     id,
+  //     position: "content",
+  //   });
+
+  // console.log("METADATA RESP", meta);
 
   dispatch(nftSet({ id, meta }));
   return meta;
 };
 
-export const nftMediaGet = async ({ id, contentType, size, position }) => {
+export const nftMediaGet = async ({
+  id,
+  contentType,
+  size,
+  position,
+  subaccount = false,
+}) => {
   let identity = authentication.client.getIdentity();
 
   let { index, canister, token } = decodeTokenId(id);
 
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
-  let src = await fetchFile(nftcan, size, contentType, index, position);
+  let src = await fetchFile(
+    nftcan,
+    size,
+    contentType,
+    index,
+    position,
+    subaccount
+  );
 
   return src;
 };
 
-const fetchFile = async (nft, size, contentType, tokenIndex, position) => {
+const fetchFile = async (
+  nft,
+  size,
+  contentType,
+  tokenIndex,
+  position,
+  subaccount = false
+) => {
   let chunkSize = 1024 * 512;
   let chunks = Math.ceil(size / chunkSize);
 
@@ -78,6 +135,7 @@ const fetchFile = async (nft, size, contentType, tokenIndex, position) => {
           tokenIndex,
           chunkIdx,
           position: { [position]: null },
+          subaccount: subaccount ? [subaccount] : [],
         });
       })
   ).then((chunks) => {

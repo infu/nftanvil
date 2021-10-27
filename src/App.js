@@ -1,4 +1,6 @@
-import logo from "./logo.svg";
+import anvillogo from "./assets/anvillogo.svg";
+import anvillogowhite from "./assets/anvillogowhite.svg";
+
 import { useEffect } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
@@ -11,6 +13,8 @@ import {
   toast,
   useToast,
   IconButton,
+  Stack,
+  Text,
 } from "@chakra-ui/react";
 import {
   Popover,
@@ -178,13 +182,35 @@ function LoginBox() {
 // size="xl"
 // />
 function Logo() {
-  return <Box w={250}>NFTPKG</Box>;
+  return (
+    <Box w={250}>
+      <Stack direction="horizontal" ml="6px">
+        <img src={anvillogo} width="30px" />
+        <Text mt="7px" ml="10px">
+          NFT<b>ANVIL</b>
+        </Text>
+      </Stack>
+    </Box>
+  );
 }
 
 function App() {
   return (
     <>
       <Box>
+        <img
+          src={anvillogowhite}
+          alt=""
+          style={{
+            position: "fixed",
+            width: "600px",
+            bottom: "-60px",
+            left: "50%",
+            marginLeft: "-300px",
+            opacity: "0.1",
+            zIndex: "-1",
+          }}
+        />
         <Flex>
           <Logo />
           <Spacer />

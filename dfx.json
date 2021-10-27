@@ -2,8 +2,7 @@
   "canisters": {
     "dropship": {
       "main": "src/ic/dropship/router.mo",
-      "type": "motoko",
-      "dependencies": ["accesscontrol"]
+      "type": "motoko"
     },
     "nft": {
       "main": "src/ic/dropship/nft.mo",
