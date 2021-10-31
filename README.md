@@ -16,6 +16,7 @@ Motoko written for the hackathon and NFTANVIL:
 
 [access.mo](https://github.com/infu/nftanvil/blob/main/src/ic/accesscontrol/access.mo) Challenges with captcha.
 
+[test.mo](https://github.com/infu/nftanvil/blob/main/test/token_basic.mo) Test written in Motoko
 
 [HashSmash.mo](https://github.com/vvv-interactive/vvv.mo/blob/main/src/HashSmash.mo) A Hash of Hashes with easy upgrade
 
