@@ -8,13 +8,13 @@ Powered by the Internet Computer https://dfinity.org/
 
 Motoko written for the hackathon and NFTANVIL:
 
-[nft.mo](https://github.com/infu/nftpkg/blob/main/src/ic/dropship/nft.mo) NFT implementation. Holds assets. Serves assets trough HTTP.
+[nft.mo](https://github.com/infu/nftanvil/blob/main/src/ic/dropship/nft.mo) NFT implementation. Holds assets. Serves assets trough HTTP.
 
-[router.mo](https://github.com/infu/nftpkg/blob/main/src/ic/dropship/router.mo) Manages the canister cluster. Adds new canisters on demand.
+[router.mo](https://github.com/infu/nftanvil/blob/main/src/ic/dropship/router.mo) Manages the canister cluster. Adds new canisters on demand.
 
-[account.mo](https://github.com/infu/nftpkg/blob/main/src/ic/dropship/account.mo) Holds list of all tokens each account holds.
+[account.mo](https://github.com/infu/nftanvil/blob/main/src/ic/dropship/account.mo) Holds list of all tokens each account holds.
 
-[access.mo](https://github.com/infu/nftpkg/blob/main/src/ic/accesscontrol/access.mo) Challenges with captcha.
+[access.mo](https://github.com/infu/nftanvil/blob/main/src/ic/accesscontrol/access.mo) Challenges with captcha.
 
 
 [HashSmash.mo](https://github.com/vvv-interactive/vvv.mo/blob/main/src/HashSmash.mo) A Hash of Hashes with easy upgrade
