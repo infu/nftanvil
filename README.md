@@ -4,7 +4,7 @@ Made by VVV Interactive
 
 Powered by the Internet Computer https://dfinity.org/
 
-## Hackathon
+## Hackathon related
 
 Motoko written for the hackathon and NFTANVIL:
 
@@ -25,3 +25,9 @@ Motoko written for the hackathon and NFTANVIL:
 [PseudoRandom.mo](https://github.com/vvv-interactive/vvv.mo/blob/main/src/PseudoRandom.mo) Pseudo random for cheap random
 
 [Captcha.mo](https://github.com/vvv-interactive/vvv.mo/blob/main/src/Captcha.mo) Captcha
+
+Additionally: 
+
+[Web frontent](https://github.com/infu/nftanvil/tree/main/src) React + Redux + Chakra UI.
+
+[Node client](https://github.com/infu/nftanvil_demo_minter) Demonstrating how minting will work with node.js script.
