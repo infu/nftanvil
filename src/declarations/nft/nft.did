@@ -3,6 +3,30 @@ type User =
    address: AccountIdentifier;
    "principal": principal;
  };
+type UseResponse = 
+ variant {
+   err:
+    variant {
+      ExtensionError: text;
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      OnCooldown;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier;
+    };
+   ok: variant {
+         consumed;
+         cooldown: nat32;
+       };
+ };
+type UseRequest = 
+ record {
+   memo: Memo;
+   subaccount: opt SubAccount;
+   token: TokenIdentifier;
+   user: User;
+ };
 type UploadChunkRequest = 
  record {
    chunkIdx: nat32;
@@ -34,6 +58,26 @@ type TransferRequest =
    notify: bool;
    subaccount: opt SubAccount;
    to: User;
+   token: TokenIdentifier;
+ };
+type TransferLinkResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier;
+    };
+   ok: nat32;
+ };
+type TransferLinkRequest = 
+ record {
+   amount: Balance;
+   from: User;
+   hash: blob;
+   subaccount: opt SubAccount;
    token: TokenIdentifier;
  };
 type TokenIndex = nat32;
@@ -103,6 +147,7 @@ type NFT =
    balance: (BalanceRequest) -> (BalanceResponse) query;
    bearer: (TokenIdentifier) -> (BearerResponse) query;
    burn: (BurnRequest) -> (BurnResponse);
+   claim_link: (ClaimLinkRequest) -> (ClaimLinkResponse);
    cyclesAccept: () -> ();
    cyclesBalance: () -> (nat) query;
    extensions: () -> (vec Extension) query;
@@ -114,11 +159,15 @@ type NFT =
    stats: () -> (StatsResponse) query;
    supply: (TokenIdentifier) -> (SupplyResponse) query;
    transfer: (TransferRequest) -> (TransferResponse);
+   transfer_link: (TransferLinkRequest) -> (TransferLinkResponse);
    uploadChunk: (UploadChunkRequest) -> ();
+   use: (UseRequest) -> (UseResponse);
  };
 type MintResponse = 
  variant {
    err: variant {
+          InsufficientBalance;
+          Invalid: text;
           OutOfMemory;
           Rejected;
         };
@@ -137,10 +186,12 @@ type MetavarsFrozen =
 type MetadataResponse = 
  variant {
    err: CommonError;
-   ok: record {
-         data: Metadata;
-         vars: MetavarsFrozen;
-       };
+   ok:
+    record {
+      bearer: AccountIdentifier;
+      data: Metadata;
+      vars: MetavarsFrozen;
+    };
  };
 type MetadataInput = 
  record {
@@ -153,7 +204,7 @@ type MetadataInput =
    quality: nat8;
    secret: bool;
    thumb: Content;
-   transfer: opt ItemTransfer;
+   transfer: ItemTransfer;
    ttl: opt nat32;
    use: opt ItemUse;
  };
@@ -171,7 +222,7 @@ type Metadata =
    quality: nat8;
    secret: bool;
    thumb: Content;
-   transfer: opt ItemTransfer;
+   transfer: ItemTransfer;
    ttl: opt nat32;
    use: opt ItemUse;
  };
@@ -219,7 +270,7 @@ type Content =
  variant {
    external: record {
                contentType: ContentType;
-               idx: opt nat32;
+               idx: nat32;
              };
    internal: record {
                contentType: ContentType;
@@ -230,6 +281,17 @@ type CommonError =
  variant {
    InvalidToken: TokenIdentifier;
    Other: text;
+ };
+type ClaimLinkResponse = 
+ variant {
+   err: variant {Rejected;};
+   ok;
+ };
+type ClaimLinkRequest = 
+ record {
+   key: blob;
+   to: User;
+   token: TokenIdentifier;
  };
 type CallbackFunc = func () -> ();
 type Callback = 

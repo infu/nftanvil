@@ -86,7 +86,7 @@ shared({ caller = _owner }) actor class Account() = this {
         }
     };
 
-    public shared ({caller}) func list(aid: AccountIdentifier, page:Nat) : async [TokenIdentifier] {
+    public query func list(aid: AccountIdentifier, page:Nat) : async [TokenIdentifier] {
         let rez:[var TokenIdentifier] = Array.init<TokenIdentifier>(100,"");
         let it = HashSmash.list<AccountIdentifier>(_account, aid);
 

@@ -8,14 +8,28 @@ import {
   IconButton,
   Wrap,
   useColorModeValue,
+  Center,
 } from "@chakra-ui/react";
-import { itemQuality, itemTransfer, itemUse } from "../item_config";
+import { useEffect, useState } from "react";
 
+import { itemQuality, itemTransfer, itemUse } from "../item_config";
 import { NFT } from "./NFT";
+import itemgrid from "../assets/itemgrid.png";
+import itemgrid_light from "../assets/itemgrid_light.png";
 
 import { useSelector, useDispatch } from "react-redux";
 import { loadInventory } from "../reducers/inventory";
-import { useEffect } from "react";
+import styled from "@emotion/styled";
+
+const InventoryBox = styled.div`
+  background: url(${(props) => props.bg});
+  background-size: 56px 56px;
+  width: 616px;
+  padding: 0px;
+  position: fixed;
+  border-radius: 8px;
+  top: 800px;
+`;
 
 export const Inventory = (p) => {
   const address = p.match.params.address;
@@ -23,11 +37,18 @@ export const Inventory = (p) => {
 
   const acclist = useSelector((state) => state.user.acclist);
 
+  const [isLoading, setLoading] = useState(true);
+
   const dispatch = useDispatch();
+
+  const load = async () => {
+    await dispatch(loadInventory(address));
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!acclist?.length) return null;
-    dispatch(loadInventory(address));
+    load();
   }, [address, acclist]);
 
   const items = useSelector(
@@ -35,17 +56,18 @@ export const Inventory = (p) => {
   );
 
   return (
-    <Box
-      bg={useColorModeValue("white", "gray.900")}
-      borderRadius="md"
-      border={1}
-      sx={{ position: "fixed", bottom: "100px" }}
-      w={648}
-      p="2"
-    >
-      <Wrap direction={"horizontal"}>
-        {items && items.map((id) => <NFT id={id} key={id} />)}
-      </Wrap>
-    </Box>
+    <InventoryBox bg={useColorModeValue(itemgrid_light, itemgrid)}>
+      {isLoading ? (
+        <Box h="56px">
+          <Center>
+            <Spinner size="lg" mt="11px" />
+          </Center>
+        </Box>
+      ) : (
+        <Wrap direction={"horizontal"} spacing="0">
+          {items && items.map((id) => <NFT id={id} key={id} />)}
+        </Wrap>
+      )}
+    </InventoryBox>
   );
 };

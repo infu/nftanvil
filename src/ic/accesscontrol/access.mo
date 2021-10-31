@@ -7,13 +7,12 @@ import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
 
-// import Random "mo:base/Random";
 
 import PseudoRandom "../lib/vvv/src/PseudoRandom";
 import Captcha "../lib/vvv/src/Captcha";
 
  
-shared(install) actor class AccessControl() {
+shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
     
     public type User = {
           solution  : Text; 
@@ -23,6 +22,7 @@ shared(install) actor class AccessControl() {
     public type CommonError = {
         #NotEnough;
         #WrongSolution;
+        #Unauthorized;
     };
 
     var rand = PseudoRandom.PseudoRandom();
@@ -30,24 +30,25 @@ shared(install) actor class AccessControl() {
     private stable var _tmpAccount : [(Principal, User)] = [];
     private var _account : HashMap.HashMap<Principal, User> = HashMap.fromIter(_tmpAccount.vals(), 0, Principal.equal, Principal.hash);
     
-    private stable var _admin : Principal = install.caller; 
-
-    private stable var _consumers: [Principal] = [Principal.fromText("rkp4c-7iaaa-aaaaa-aaaca-cai")];
+    private stable var _tmpConsumers : [(Principal, Bool)] = [];
+    private var _consumers : HashMap.HashMap<Principal, Bool> = HashMap.fromIter(_tmpConsumers.vals(), 0, Principal.equal, Principal.hash );
+   
 
     private stable var _reward:Nat = 10;
 
     //Handle canister upgrades
     system func preupgrade() {
+        _tmpConsumers := Iter.toArray(_consumers.entries());
         _tmpAccount := Iter.toArray(_account.entries());
     };
 
     system func postupgrade() {
+        _tmpConsumers := [];
         _tmpAccount := [];
     };
 
     // This function is called by the canister which requires access tokens
     public query func getBalance(acc:Principal): async (Nat) {
-      //  if (balances[principal] < count ) return false; else return true;
      switch(_account.get(acc)) {
         case (?a) {
           a.balance;
@@ -59,26 +60,35 @@ shared(install) actor class AccessControl() {
 
     };
 
+    // list of allowed nft canisters which can add/rem to account                                     
+    public shared ({caller}) func addAllowed(p: Principal) : async () {
+        assert(caller == intaller);
+        _consumers.put(p, true);
+
+    };
 
     // If the principal has enough, then this function is called to remove access tokens from their balance
     public shared({caller}) func consumeAccess(acc:Principal, count:Nat): async Result.Result<Bool, CommonError> {
       
-      // WARNING UNCOMMENT THAT
-      // assert((caller == _admin) or (switch( Array.find(_consumers, func(x:Principal) : Bool { x == caller } ) ) { case (?a) true; case (_) false; }) );
-
-      switch(_account.get(acc)) {
-        case (?a) {
-          if (a.balance < count) return #err(#NotEnough);
-          let newData : User = {
-            balance = a.balance - count;
-            solution = a.solution;
+      switch (_consumers.get(caller)) {
+        case (?found) {
+           switch(_account.get(acc)) {
+            case (?a) {
+              if (a.balance < count) return #err(#NotEnough);
+              let newData : User = {
+                balance = a.balance - count;
+                solution = a.solution;
+              };
+              _account.put(acc, newData);
+              #ok(true);
+            };
+            case (_) #err(#NotEnough)
           };
-          _account.put(acc, newData);
-          #ok(true);
         };
-        case (_) #err(#NotEnough)
-      };
-
+        case (_) {
+          #err(#Unauthorized);
+        }
+      }
     };
 
     // When a principal wants to earn access tokens, they get a challege, which they need to solve and return to sendChallenge
@@ -120,8 +130,7 @@ shared(install) actor class AccessControl() {
         case (_) #err(#NotEnough)
       };
 
-       //if (solutions[principal] == correct) add_tokens(principal,3);
-       //delete solutions[principal]
+  
      
     };
 

@@ -14,12 +14,9 @@ import Array_ "../src/ic/lib/vvv/src/Array";
 import AccessControl "../src/ic/accesscontrol/access";
 import PseudoRandom "../src/ic/lib/vvv/src/PseudoRandom";
 
-// let aaa :Nat32 = 136;
-// let xxx :Nat32 = aaa/32;
 
 
-
-let access = await AccessControl.AccessControl();
+let access = await AccessControl.AccessControl({_admin = Principal.fromText("aaaaa-aa") });
 
 let x = PseudoRandom.PseudoRandom();
 

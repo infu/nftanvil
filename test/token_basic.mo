@@ -75,7 +75,7 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             quality= 1;
             use= null;
             hold= null;
-            transfer= null;
+            transfer= #unrestricted;
             ttl= null; // time to live
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
@@ -93,7 +93,7 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             quality= 1;
             use= null;
             hold= null;
-            transfer= null;
+            transfer= #unrestricted;
             ttl= null; // time to live
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
@@ -110,7 +110,7 @@ switch(await nft.mintNFT({to = user_john; metadata = {
             quality= 1;
             use= null;
             hold= null;
-            transfer= null;
+            transfer= #unrestricted;
             ttl= null; // time to live
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
@@ -129,7 +129,7 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             quality= 1;
             use= null;
             hold= null;
-            transfer= null;
+            transfer= #unrestricted;
             ttl= null; // time to live
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 

@@ -39,12 +39,19 @@ export type BurnResponse = { 'ok' : Balance } |
   };
 export interface Callback { 'token' : [] | [Token], 'body' : Array<number> }
 export type CallbackFunc = () => Promise<undefined>;
+export interface ClaimLinkRequest {
+  'to' : User,
+  'key' : Array<number>,
+  'token' : TokenIdentifier,
+}
+export type ClaimLinkResponse = { 'ok' : null } |
+  { 'err' : { 'Rejected' : null } };
 export type CommonError = { 'InvalidToken' : TokenIdentifier } |
   { 'Other' : string };
 export type Content = {
     'internal' : { 'contentType' : ContentType, 'size' : number }
   } |
-  { 'external' : { 'idx' : [] | [number], 'contentType' : ContentType } };
+  { 'external' : { 'idx' : number, 'contentType' : ContentType } };
 export type ContentType = string;
 export type Extension = string;
 export interface FetchChunkRequest {
@@ -77,7 +84,7 @@ export interface Metadata {
   'secret' : boolean,
   'entropy' : Array<number>,
   'attributes' : Array<Attribute>,
-  'transfer' : [] | [ItemTransfer],
+  'transfer' : ItemTransfer,
 }
 export interface MetadataInput {
   'ttl' : [] | [number],
@@ -91,10 +98,14 @@ export interface MetadataInput {
   'name' : [] | [string],
   'secret' : boolean,
   'attributes' : Array<Attribute>,
-  'transfer' : [] | [ItemTransfer],
+  'transfer' : ItemTransfer,
 }
 export type MetadataResponse = {
-    'ok' : { 'data' : Metadata, 'vars' : MetavarsFrozen }
+    'ok' : {
+      'data' : Metadata,
+      'vars' : MetavarsFrozen,
+      'bearer' : AccountIdentifier,
+    }
   } |
   { 'err' : CommonError };
 export interface MetavarsFrozen {
@@ -103,13 +114,19 @@ export interface MetavarsFrozen {
 }
 export interface MintRequest { 'to' : User, 'metadata' : MetadataInput }
 export type MintResponse = { 'ok' : TokenIndex } |
-  { 'err' : { 'Rejected' : null } | { 'OutOfMemory' : null } };
+  {
+    'err' : { 'Invalid' : string } |
+      { 'InsufficientBalance' : null } |
+      { 'Rejected' : null } |
+      { 'OutOfMemory' : null }
+  };
 export interface NFT {
   'allowance' : (arg_0: Request__1) => Promise<Response__1>,
   'approve' : (arg_0: ApproveRequest) => Promise<ApproveResponse>,
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'bearer' : (arg_0: TokenIdentifier) => Promise<BearerResponse>,
   'burn' : (arg_0: BurnRequest) => Promise<BurnResponse>,
+  'claim_link' : (arg_0: ClaimLinkRequest) => Promise<ClaimLinkResponse>,
   'cyclesAccept' : () => Promise<undefined>,
   'cyclesBalance' : () => Promise<bigint>,
   'extensions' : () => Promise<Array<Extension>>,
@@ -121,7 +138,11 @@ export interface NFT {
   'stats' : () => Promise<StatsResponse>,
   'supply' : (arg_0: TokenIdentifier) => Promise<SupplyResponse>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
+  'transfer_link' : (arg_0: TransferLinkRequest) => Promise<
+      TransferLinkResponse
+    >,
   'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
+  'use' : (arg_0: UseRequest) => Promise<UseResponse>,
 }
 export interface Request {
   'url' : string,
@@ -169,6 +190,21 @@ export interface Token {
 }
 export type TokenIdentifier = string;
 export type TokenIndex = number;
+export interface TransferLinkRequest {
+  'token' : TokenIdentifier,
+  'from' : User,
+  'hash' : Array<number>,
+  'subaccount' : [] | [SubAccount],
+  'amount' : Balance,
+}
+export type TransferLinkResponse = { 'ok' : number } |
+  {
+    'err' : { 'InsufficientBalance' : null } |
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : AccountIdentifier } |
+      { 'Other' : string }
+  };
 export interface TransferRequest {
   'to' : User,
   'token' : TokenIdentifier,
@@ -194,6 +230,25 @@ export interface UploadChunkRequest {
   'position' : { 'thumb' : null } |
     { 'content' : null },
 }
+export interface UseRequest {
+  'token' : TokenIdentifier,
+  'memo' : Memo,
+  'user' : User,
+  'subaccount' : [] | [SubAccount],
+}
+export type UseResponse = {
+    'ok' : { 'consumed' : null } |
+      { 'cooldown' : number }
+  } |
+  {
+    'err' : { 'InsufficientBalance' : null } |
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : AccountIdentifier } |
+      { 'ExtensionError' : string } |
+      { 'Other' : string } |
+      { 'OnCooldown' : null }
+  };
 export type User = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
 export interface _SERVICE extends NFT {}

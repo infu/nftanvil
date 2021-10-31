@@ -1,6 +1,7 @@
 type Router = 
  service {
    debug_reset: () -> ();
+   fetchNFTCan: (nat) -> (text) query;
    fetchSetup: () -> (record {
                         access: text;
                         acclist: vec text;

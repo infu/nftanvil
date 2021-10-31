@@ -6,6 +6,7 @@ import {
   owned,
   challenge,
   sendSolution,
+  challengeSet,
 } from "../reducers/user";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -43,6 +44,7 @@ import {
   ModalContent,
   ModalHeader,
   FormErrorMessage,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { useClipboard, useColorMode } from "@chakra-ui/react";
 import {
@@ -79,13 +81,15 @@ const Captcha = ({ challenge }) => {
 export const Challenge = () => {
   const initialRef = React.useRef();
   const challenge = useSelector((state) => state.user.challenge);
+  const dispatch = useDispatch();
 
   return (
     <Modal
       initialFocusRef={initialRef}
-      //   finalFocusRef={finalRef}
       isOpen={challenge !== null}
-      //   onClose={onClose}
+      onClose={() => {
+        dispatch(challengeSet(null));
+      }}
     >
       <ModalOverlay />
       <ModalContent>
@@ -97,12 +101,7 @@ export const Challenge = () => {
           <CaptchaForm />
         </ModalBody>
 
-        <ModalFooter>
-          {/* <Button colorScheme="blue" mr={3}>
-        Save
-      </Button>
-      <Button onClick={onClose}>Cancel</Button> */}
-        </ModalFooter>
+        <ModalFooter></ModalFooter>
       </ModalContent>
     </Modal>
   );

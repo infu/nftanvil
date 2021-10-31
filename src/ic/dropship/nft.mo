@@ -11,7 +11,7 @@ import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Result "mo:base/Result";
 import Time "mo:base/Time";
-// import Debug "mo:base/Debug";
+
 import Nat32 "mo:base/Nat32";
 import Nat8 "mo:base/Nat8";
 import CRC32 "mo:hash/CRC32";
@@ -27,6 +27,7 @@ import Hex "mo:encoding/Hex";
 import Blob_ "../lib/vvv/src/Blob";
 import Hash "../lib/vvv/src/Hash";
 import Painless "../lib/vvv/src/Painless";
+import SHA256 "mo:sha/SHA256";
 
 
 shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _accesscontrol_can:Text; _debug_cannisterId:?Principal}) : async Interface.NonFungibleToken = this {
@@ -90,13 +91,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
     private stable var _tmpAllowance : [(TokenIndex, Principal)] = [];
     private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
     
-    // private stable var _tmpAccount : [(AccountIdentifier, [TokenIndex])] = [];
-    // private var _account : HashMap.HashMap<AccountIdentifier, [TokenIndex]> = HashMap.fromIter(_tmpAccount.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
+    private stable var _tmpToken2Link: [(TokenIndex, Blob)] = [];
+    private var _token2link : HashMap.HashMap<TokenIndex, Blob> = HashMap.fromIter(_tmpToken2Link.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
 
     private stable var _tmpChunk : [(Nat32, Blob)] = [];
     private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
-
-    // private stable var _minter : Principal  = install.caller; 
 
 
     private stable var _nextTokenId : Nat32 = 0;
@@ -111,8 +110,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
     var rand = PseudoRandom.PseudoRandom();
 
-    private let thresholdMemory = 214748364; //8; //  ~2GB
-    private let thresholdNFTMask:Nat32 = 8191; // 13 bit Nat
+    private let thresholdMemory = 1147483648; //  ~1GB
+    private let thresholdNFTMask:Nat32 = 8191; // Dont touch. 13 bit Nat
+    private let thresholdNFTCount:Nat32 = 4000; // can go up to 8191
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -121,7 +121,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         _tmpMeta := Iter.toArray(_meta.entries());
         _tmpMetavars := Iter.toArray(_metavars.entries());
 
-        // _tmpAccount := Iter.toArray(_account.entries());
+        _tmpToken2Link := Iter.toArray(_token2link.entries());
         _tmpChunk := Iter.toArray(_chunk.entries());
 
     };
@@ -130,7 +130,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         _tmpAllowance := [];
         _tmpMeta := [];
         _tmpMetavars := [];
-        // _tmpAccount := [];
         _tmpChunk := [];
 
     };
@@ -168,6 +167,119 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         
     };
 
+    private func isTransferBound(caller: Principal, meta :Metadata, vars: Metavars) : Bool {
+            switch( caller == meta.minter ) { 
+                case (false) {
+                    switch(meta.transfer) {
+                        case (#unrestricted) { false };
+                        case (#bindsForever) {
+                            true;
+                        };
+                        case (#bindsDuration(setupDuration)) {
+                            switch(vars.boundUntil) {
+                                case (?duration) {
+                                    if (duration < timeInMinutes() ) return true;
+                                    false
+                                };
+                                case (null) {
+                                    false
+                                };
+                            };
+                        };
+                    };
+                };
+                case (true) { // Minter can always move his own tokens
+                    false
+                }
+            };
+    };
+
+    private func resetTransferBindings( meta :Metadata, vars: Metavars) : () {
+        switch (meta.transfer) {
+            case (#unrestricted) { (); };
+            case (#bindsForever) { (); };
+            case (#bindsDuration(setupDuration)) {
+                vars.boundUntil := ?(timeInMinutes() + setupDuration);
+            }
+        }
+    };
+
+    public shared({caller}) func transfer_link(request : Ext.Core.TransferLinkRequest) : async Ext.Core.TransferLinkResponse {
+        
+        if (request.amount != 1) return #err(#Other("Must use amount of 1"));
+
+        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+ 
+        switch ( balRequireOwner(balRequireMinimum(balGet({token = request.token; user = request.from}),1),caller_user)) {
+            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+                 
+                   switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+
+                            if (isTransferBound(caller, meta, vars) == true) return #err(#Rejected);
+                            
+                            _token2link.put(tokenIndex, request.hash);
+
+                            #ok(_slot);
+                    };
+                    case (#err()) {
+                         #err(#InvalidToken(request.token));
+                    }
+                }
+
+                
+                 }; 
+            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
+            case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
+            case (#err(e)) return #err(#Other("Something went wrong"));
+        };
+    };
+
+    public shared({caller}) func claim_link(request : Ext.Core.ClaimLinkRequest) : async Ext.Core.ClaimLinkResponse {
+    
+        let keyHash = Blob.fromArray(SHA256.sum224(Blob.toArray(request.key)));
+
+        switch (Ext.TokenIdentifier.decode(request.token)) {
+                case (#ok(cannisterId, tokenIndex)) {
+
+                    if (checkCorrectCannister(cannisterId) == false) return #err(#Rejected);
+
+                    switch(_token2link.get(tokenIndex)) {
+                        case (?hash) {
+                            if (keyHash != hash) return #err(#Rejected);   
+
+                            switch(_balance.get(tokenIndex)) {
+                                case (?from) {
+                                    switch(getMeta(tokenIndex)) {
+                                            case (#ok((meta,vars))) {
+                                                    await SNFT_move(from,Ext.User.toAccountIdentifier(request.to), tokenIndex);
+
+                                                    resetTransferBindings(meta, vars);
+
+                                                    return #ok();
+                                            };
+                                            case (#err()) {
+                                                #err(#Rejected);
+                                            }
+                                        }
+                                };
+                                case (_) {
+                                    #err(#Rejected)
+                                }
+                            };
+                        };
+                        case (_) {
+                            #err(#Rejected)
+                        };
+                    }
+                  };
+                case (#err(e)) {
+                    #err(#Rejected)
+                }
+            }
+    };
+    
     public shared({caller}) func transfer(request : TransferRequest) : async TransferResponse {
 
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
@@ -176,11 +288,119 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
  
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.from}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
-                // _allowance.delete(tokenIndex); // After changing owners, we have to remove allowance
-                // _balance.put(tokenIndex, Ext.User.toAccountIdentifier(request.to));
-                await SNFT_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
-                
-                return #ok(1);
+     
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+
+                            if (isTransferBound(caller, meta, vars) == true) return #err(#Rejected);
+                            
+                            await SNFT_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
+                            
+                            resetTransferBindings(meta, vars);
+
+                            return #ok(1);
+                    };
+                    case (#err()) {
+                         #err(#InvalidToken(request.token));
+                    }
+                }
+           
+            }; 
+            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
+            case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
+            case (#err(e)) return #err(#Other("Something went wrong"));
+        };
+        
+    };
+
+      
+    public type ExtensionCanister = actor {
+        nftanvil_use: shared ({
+            token:TokenIdentifier;
+            aid:AccountIdentifier;
+            memo:Ext.Memo;
+            useId: Text;
+        }) -> async Result.Result<(), Text>
+    };
+
+
+
+
+    public shared({caller}) func use(request : Ext.Core.UseRequest) : async Ext.Core.UseResponse {
+
+        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+ 
+        switch (balRequireOwner(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user)) {
+            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+     
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+                        
+                        switch(meta.extensionCanister) {
+                            case (?canPrincipal) {
+                                let can = actor(Principal.toText(canPrincipal)): ExtensionCanister;
+                                let aid = Ext.User.toAccountIdentifier(holder);
+
+                                switch(meta.use) {
+                                    case (?#cooldown(use)) {
+                                        let isOnCooldown = switch(vars.cooldownUntil) {
+                                            case (?a) timeInMinutes() <= a;
+                                            case (null) false;
+                                        };
+                                        if (isOnCooldown) return #err(#OnCooldown);
+                                        
+                                        switch(await can.nftanvil_use({
+                                            aid = aid;
+                                            token = request.token;
+                                            memo = request.memo;
+                                            useId = use.useId;
+                                            })) {
+                                                case (#ok()) {
+                                                    let cooldown = (timeInMinutes() + use.duration);
+                                                    vars.cooldownUntil := ?cooldown;
+                                                    return #ok(#cooldown(cooldown));
+                                                };
+                                                case (#err(e)) {
+                                                    #err(#ExtensionError(e));
+                                                }
+                                            };
+                                                
+                                    };
+                                    case(?#consumable(use)) {
+                                        switch(await can.nftanvil_use({
+                                            aid = aid;
+                                            token = request.token;
+                                            memo = request.memo;
+                                            useId = use.useId;
+                                            })) {
+                                                case (#ok()) {
+                                                    await SNFT_burn(aid, tokenIndex);
+                                                    return #ok(#consumed);
+                                                };
+                                                case (#err(e)) {
+                                                    #err(#ExtensionError(e));
+                                                }
+                                            };
+                                    };
+                                    case(null) {
+                                        #err(#Other("Spec not specifying any use"));
+                                    }
+                                }
+
+                    
+                            };
+                            case (null) {
+                                #err(#Other("No extension canister specified"));
+                            }
+                        }
+                           
+                    };
+                    case (#err()) {
+                         #err(#InvalidToken(request.token));
+                    }
+                }
+           
             }; 
             case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
@@ -214,19 +434,29 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
                
                 if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
 
-                switch(getMeta(tokenIndex)) {
-                    case (#ok((m,v))) {
-                            #ok({
-                            data = m; 
-                            vars = Ext.MetavarsFreeze(v)
-                            });
-                    };
-                    case (#err()) {
-                         #err(#InvalidToken(token));
-                    }
+                switch(SNFT_tidxGet(tokenIndex)) {
+                    case (?bearer) {
 
-                };
-                
+                       switch(getMeta(tokenIndex)) {
+                            case (#ok((m,v))) {
+                                    #ok({
+                                    bearer = bearer;
+                                    data = m; 
+                                    vars = Ext.MetavarsFreeze(v)
+                                    });
+                            };
+                            case (#err()) {
+                                #err(#InvalidToken(token));
+                            }
+
+                        };
+
+                    };
+                    case (_) {
+                        #err(#InvalidToken(token));
+                    };
+                }
+
             };
             case (#err(e)) {
               #err(#InvalidToken(token));
@@ -254,20 +484,19 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         };         
     };
 
-    // public shared({caller}) func mintNFT_batch(request: [Ext.NonFungible.MintRequest] ) : async Ext.NonFungible.MintBatchResponse {
-    //    // assert(caller == _minter);
 
-    //     let tokens = Array.map<Ext.NonFungible.MintRequest, TokenIndex>(request, func (one_request) {
-    //             let tokenIndex = await SNFT_mint(caller,one_request);
-    //             return tokenIndex
-    //             });
-
-    //     #ok(tokens);
-    // };
 
     public shared({caller}) func uploadChunk(request: Ext.NonFungible.UploadChunkRequest) : async () {
 
-        //TODO: add security
+        assert((switch(getMeta(request.tokenIndex)) {
+                    case (#ok((meta,vars))) {
+                          (meta.minter == caller) and ((meta.created + 10) > timeInMinutes()); // allows upload of assets up to 10min after minting
+                    };
+                    case (#err()) {
+                       false
+                    }
+                }
+            ));
 
         let ctype: Nat32 = switch(request.position) {
             case (#content) 0;
@@ -275,7 +504,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         };
         
         let maxChunks: Nat32 = switch(request.position) { // Don't go over the bitmask maximum which is 255
-            case (#content) 10; 
+            case (#content) 2; 
             case (#thumb) 1;
         };
 
@@ -287,7 +516,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         assert(request.chunkIdx < maxChunks);
 
         let chunkId = chunkIdEncode(request.tokenIndex, request.chunkIdx, ctype);
-        // let chunkId = ((request.tokenIndex & thresholdNFTMask) << 19) | ((request.chunkIdx & 255) << 2) | (ctype);
 
         _chunk.put(chunkId, request.data);
     };
@@ -435,18 +663,12 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
                                 case (null) Painless.NotFound("Data not found in token");
                             }
 
-                           
-
                     };
                     case (#err()) {
                         Painless.NotFound("Token not found");
                     }
 
                 };
-
-
-                
-                
 
             };
             case (#err(e)) {
@@ -463,8 +685,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
     };
     // Painless HTTP response - End
 
+    private func timeInMinutes() : Nat32 {
+        return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)/60);
+    };
 
-    private func SNFT_mint(caller:Principal, request: Ext.NonFungible.MintRequest) : async TokenIndex {
+    private func SNFT_mint(caller:Principal, request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
 
         let receiver = Ext.User.toAccountIdentifier(request.to);
 
@@ -478,11 +703,12 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         let tokenIndex:TokenIndex = (_slot<<13) | _nextTokenId;
         _nextTokenId := _nextTokenId + 1;
 
-        let now = Time.now();
-        let timestamp:Nat32 = Nat32.fromIntWrap(Int.div(now, 1000000000)/60);
+         let timestamp:Nat32 = timeInMinutes();
 
         // Get class info, check if principal is allowed to mint
         let m = request.metadata;
+
+        if (m.quality > 1) return #err(#Invalid("Higher than 1 quality not implemented"));
 
         let md : Metadata = {
             name= m.name;
@@ -490,7 +716,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
             quality= m.quality;
             use= m.use;
             hold= m.hold;
-            transfer= m.transfer;
+            transfer = m.transfer;
             ttl= m.ttl; // time to live
             secret= m.secret;
             attributes = m.attributes;
@@ -502,14 +728,47 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
         };
 
+        // validity checks
+        if (md.secret == true) switch (md.content) {
+            case (?#external(_)) {
+                return #err(#Invalid("Can't have secret external content"));
+            };
+            case (_) ();
+        };
+
+        switch(md.extensionCanister) {
+            case (?can) {
+                ()
+            };
+            case (null) {
+                 switch(md.use) {
+                    case(?use) return #err(#Invalid("extensionCanister required if use is specified"));
+                    case (null) ()
+                 };
+                 switch(md.content) {
+                    case(?#external(_)) return #err(#Invalid("extensionCanister required if external content is specified"));
+                    case (_) ()
+                 };
+                 switch(md.thumb) {
+                    case(#external(_)) return #err(#Invalid("extensionCanister required if external thumb is specified"));
+                    case (_) ()
+                 };
+            };
+        };
+        
+
         let mvar : Metavars = {
-             var boundUntil = null; // in minutes
+             var boundUntil = switch (md.transfer) {
+                    case (#unrestricted) { null };
+                    case (#bindsForever) { null };
+                    case (#bindsDuration(setupDuration)) {
+                        ?(timeInMinutes() + setupDuration);
+                    }
+                }; 
              var cooldownUntil = null; // in minutes
         };
 
-        // TODO: check if class is bind on pickup and set boundUntil if so
-
-        assert(switch(_meta.get(tokenIndex)) { // shouldn't exist in db
+        assert(switch(_meta.get(tokenIndex)) { // make some memory integrity checks
             case (?a) false;
             case (_) true;
         });
@@ -519,7 +778,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
         await SNFT_put(receiver, tokenIndex);
 
-        return tokenIndex
+        return #ok(tokenIndex);
 
     };
 
@@ -529,17 +788,16 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
         if (_available == false) { return #err(#OutOfMemory) };
 
-        if ((thresholdNFTMask <= _nextTokenId) or (thresholdMemory <= Prim.rts_memory_size() )) {
+        if ((thresholdNFTCount  <= _nextTokenId) or (thresholdMemory <= Prim.rts_memory_size() )) {
             _available := false;
             await ROUTER.reportOutOfMemory();
             return #err(#OutOfMemory);
             };
 
-        //await consumeAccessTokens(caller, 1);
+        if ((await consumeAccessTokens(caller, 1)) == false) return #err(#InsufficientBalance);
 
-        let tokenIndex = await SNFT_mint(caller, request);
+        await SNFT_mint(caller, request);
 
-        #ok(tokenIndex);
     };
 
     
@@ -647,10 +905,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
     // Internal functions which help for better code reusability
 
-    private func consumeAccessTokens(caller:Principal, count:Nat) : async () {
+    private func consumeAccessTokens(caller:Principal, count:Nat) : async Bool {
         let atokens = await ACCESSCONTROL.getBalance(caller);
-        assert(atokens >= count);
-        assert((await ACCESSCONTROL.consumeAccess(caller, count)) == #ok(true));
+        if (atokens < count) return false;
+        if ((await ACCESSCONTROL.consumeAccess(caller, count)) == #ok(true)) return true;
+        return false;
     };
 
     // ***** Storage layer
@@ -670,6 +929,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
         _balance.delete(tidx);
         _allowance.delete(tidx);
+        _token2link.delete(tidx);
 
         await accountActor(aid).rem(aid, tidx);   
     };

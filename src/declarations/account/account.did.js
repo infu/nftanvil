@@ -8,7 +8,7 @@ export const idlFactory = ({ IDL }) => {
     'list' : IDL.Func(
         [AccountIdentifier, IDL.Nat],
         [IDL.Vec(TokenIdentifier)],
-        [],
+        ['query'],
       ),
     'rem' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
   });

@@ -2,6 +2,7 @@ import React from "react";
 import moment from "moment";
 import { mint } from "../reducers/nft";
 import { proSet } from "../reducers/user";
+import { LoginRequired } from "./LoginRequired";
 
 import { useSelector, useDispatch } from "react-redux";
 import _ from "lodash";
@@ -15,6 +16,7 @@ import {
   IconButton,
   Radio,
   RadioGroup,
+  Tooltip,
 } from "@chakra-ui/react";
 import {
   Popover,
@@ -62,6 +64,7 @@ import {
   CopyIcon,
   AddIcon,
   WarningIcon,
+  InfoOutlineIcon,
 } from "@chakra-ui/icons";
 import {
   Slider,
@@ -79,7 +82,22 @@ import { FileInput } from "./FileInput";
 import { NFTPreview } from "./NFT";
 import { resizeImage } from "../purefunc/image";
 import { Principal } from "@dfinity/principal";
-
+import {
+  validateName,
+  validateExtensionCanister,
+  validateHoldId,
+  validateUseId,
+  validateQuality,
+  validateDescription,
+  validateThumbInternal,
+  validateContentInternal,
+  validateExternal,
+  validateExternalType,
+  validateDescriptionOrNone,
+  validateCooldown,
+  validateAttributeName,
+  validateAttributeChange,
+} from "../purefunc/mint_validate";
 export const Mint = () => {
   const dispatch = useDispatch();
 
@@ -108,59 +126,6 @@ export const MintForm = () => {
   const dispatch = useDispatch();
   const pro = useSelector((state) => state.user.pro);
 
-  function validateName(value) {
-    if (!value) return null;
-    return !(value.length > 2 && value.length < 128)
-      ? "Must be between 2 and 128 characters"
-      : null;
-  }
-
-  function validateQuality(val) {
-    if (val > 1) return "Currently 'common' is the maximum quality allowed";
-    return null;
-  }
-
-  function validateDescription(val) {
-    if (typeof val !== "string") return null;
-    if (val.length < 10 || val.length > 256)
-      return "Must be between 10 and 256 characters";
-  }
-  function validateThumbInternal(val) {
-    if (!val) return;
-    if (val.size > 1024 * 512) return "Maximum file size is 512 KB";
-  }
-
-  function validateContentInternal(val) {
-    if (!val) return;
-    if (val.size > 1024 * 1024 * 5) return "Maximum file size is 5 MB";
-  }
-  function validateExternal(val) {
-    if (!val) return;
-    if (isNaN(val)) return "If specified, it must be 32 bit natural number";
-  }
-  function validateExternalType(val) {
-    if (!val) return "Must be specified";
-    if (val.length < 3) return "Not a valid content type";
-  }
-  function validateDescriptionOrNone(val) {
-    if (typeof val !== "string") return null;
-    if (val.trim().length === 0) return null;
-    if (val.length < 10 || val.length > 256)
-      return "Must be none or between 10 and 256 characters";
-  }
-
-  function validateCooldown(val) {
-    if (val < 1) return "Has to be at least one minute";
-  }
-  function validateAttributeName(val) {
-    if (typeof val !== "string") return null;
-    if (val.length < 3) return "Too short";
-  }
-
-  function validateAttributeChange(val) {
-    if (parseInt(val, 10) === 0) return "Can't be zero";
-  }
-
   const form2record = (v) => {
     let a = {
       name: v.name,
@@ -169,14 +134,16 @@ export const MintForm = () => {
         ? {
             [v.use]: {
               desc: v.use_desc,
-              duration: v.use_duration,
+              duration: parseInt(v.use_duration, 10),
               useId: v.use_id,
             },
           }
         : null,
       transfer: {
         [v.transfer]:
-          v.transfer === "bindsDuration" ? v.transfer_bind_duration : null,
+          v.transfer === "bindsDuration"
+            ? parseInt(v.transfer_bind_duration, 10)
+            : null,
       },
       hold: v.hold
         ? {
@@ -186,7 +153,7 @@ export const MintForm = () => {
             },
           }
         : null,
-      quality: v.quality,
+      quality: parseInt(v.quality, 10),
       ttl: parseInt(v.ttl, 10),
       attributes: v.attributes.map((x) => [
         x.name.toLowerCase(),
@@ -202,12 +169,14 @@ export const MintForm = () => {
                 size: v.content_internal.size,
               },
             }
-          : {
+          : v.content_storage === "external"
+          ? {
               external: {
                 idx: parseInt(v.content_external_idx, 10),
                 contentType: v.content_external_type,
               },
-            },
+            }
+          : null,
 
       thumb:
         v.thumb_storage === "internal" && v.thumb_internal?.url
@@ -218,11 +187,11 @@ export const MintForm = () => {
                 size: v.thumb_internal.size,
               },
             }
-          : v.thumb_storage === "external" && v.thumb_internal?.url
+          : v.thumb_storage === "external"
           ? {
               external: {
-                idx: parseInt(v.content_external_idx, 10),
-                contentType: v.content_external_type,
+                idx: parseInt(v.thumb_external_idx, 10),
+                contentType: v.thumb_external_type,
               },
             }
           : null,
@@ -233,16 +202,11 @@ export const MintForm = () => {
   };
 
   const record2request = (v) => {
-    if (v?.content?.external)
-      v.content.external.idx = [v.content.external.idx].filter(Boolean);
-    if (v?.thumb?.external)
-      v.thumb.external.idx = [v.thumb.external.idx].filter(Boolean);
-
     let a = {
       name: [v.name].filter(Boolean),
       lore: [v.lore].filter(Boolean),
       use: [v.use].filter(Boolean),
-      transfer: [v.transfer].filter(Boolean),
+      transfer: v.transfer,
       hold: [v.hold].filter(Boolean),
       quality: v.quality,
       ttl: [v.ttl].filter(Boolean),
@@ -257,6 +221,11 @@ export const MintForm = () => {
 
     return a;
   };
+
+  const devGetRecord = (values) => {
+    console.log(record2request(form2record(values)));
+  };
+
   const boxColor = useColorModeValue("white", "gray.600");
   return (
     <Formik
@@ -273,12 +242,18 @@ export const MintForm = () => {
         maxChildren: 0,
         attributes: [],
         content_storage: "internal",
+        content_external_idx: 0,
         thumb_storage: "internal",
+        thumb_external_idx: 0,
         secret: false,
       }}
       onSubmit={(values, actions) => {
         // setInterval(() => {
-        actions.setSubmitting(false);
+     
+
+        setTimeout(() => {
+          actions.setSubmitting(false);
+        }, 500);
 
         // console.log("FORM VALUES", values);
         // dispatch(mint());
@@ -331,7 +306,6 @@ export const MintForm = () => {
                   buttonLabel="Upload content image or video"
                   onChange={async (info) => {
                     let f = await resizeImage(info.url, 96, 96, true);
-                    // props.setFieldValue("thumb_storage", "internal");
                     props.setFieldValue("thumb_internal", f);
                   }}
                   accept="image/*,video/*"
@@ -344,7 +318,9 @@ export const MintForm = () => {
                   {({ field, form }) => (
                     <FormControl display="flex" alignItems="center">
                       <FormLabel htmlFor="secret" mb="0">
-                        Secret
+                        <FormTip text="Content will be visible only to the owner. It's stored inside IC's private canister memory">
+                          Secret
+                        </FormTip>
                       </FormLabel>
                       <Switch {...field} id="secret" />
                     </FormControl>
@@ -408,7 +384,11 @@ export const MintForm = () => {
                           <FormControl
                             isInvalid={form.errors.hold && form.touched.hold}
                           >
-                            <FormLabel htmlFor="hold">Hold</FormLabel>
+                            <FormLabel htmlFor="hold">
+                              <FormTip text="External system or canister can check who is the holder at any moment and reward them">
+                                Hold
+                              </FormTip>
+                            </FormLabel>
 
                             <Select {...field} placeholder="None">
                               {itemHold.map((x) => (
@@ -454,14 +434,18 @@ export const MintForm = () => {
                       ) : null}
 
                       {props.values.hold ? (
-                        <Field name="hold_id">
+                        <Field name="hold_id" validate={validateHoldId}>
                           {({ field, form }) => (
                             <FormControl
                               isInvalid={
                                 form.errors.hold_id && form.touched.hold_id
                               }
                             >
-                              <FormLabel htmlFor="hold_id">Hold Id</FormLabel>
+                              <FormLabel htmlFor="hold_id">
+                                <FormTip text="Custom id used by the Extension canister">
+                                  Hold Id
+                                </FormTip>
+                              </FormLabel>
                               <Input
                                 {...field}
                                 id="hold_id"
@@ -494,7 +478,11 @@ export const MintForm = () => {
                           <FormControl
                             isInvalid={form.errors.use && form.touched.use}
                           >
-                            <FormLabel htmlFor="use">Use</FormLabel>
+                            <FormLabel htmlFor="use">
+                              <FormTip text="When used, the item will send message to the Extension canister">
+                                Use
+                              </FormTip>
+                            </FormLabel>
 
                             <Select {...field} placeholder="None">
                               {itemUse.map((x) => (
@@ -568,7 +556,7 @@ export const MintForm = () => {
                       ) : null}
 
                       {props.values.use ? (
-                        <Field name="use_id">
+                        <Field name="use_id" validate={validateUseId}>
                           {({ field, form }) => (
                             <FormControl
                               isInvalid={
@@ -593,7 +581,10 @@ export const MintForm = () => {
                 ) : null}
 
                 {pro ? (
-                  <Field name="extensionCanister">
+                  <Field
+                    name="extensionCanister"
+                    validate={validateExtensionCanister}
+                  >
                     {({ field, form }) => (
                       <FormControl
                         isInvalid={
@@ -602,7 +593,9 @@ export const MintForm = () => {
                         }
                       >
                         <FormLabel htmlFor="extensionCanister">
-                          Extension Canister
+                          <FormTip text="Used by developers to extend the functionality and customize their tokens">
+                            Extension canister
+                          </FormTip>
                         </FormLabel>
                         <Input
                           {...field}
@@ -636,7 +629,11 @@ export const MintForm = () => {
                               form.errors.transfer && form.touched.transfer
                             }
                           >
-                            <FormLabel htmlFor="transfer">Transfer</FormLabel>
+                            <FormLabel htmlFor="transfer">
+                              <FormTip text="Note - the minter can always transfer their tokens">
+                                Transfer
+                              </FormTip>
+                            </FormLabel>
 
                             <Select {...field} placeholder="Select option">
                               {itemTransfer.map((x) => (
@@ -809,7 +806,9 @@ export const MintForm = () => {
                         isInvalid={form.errors.ttl && form.touched.ttl}
                       >
                         <FormLabel htmlFor="ttl">
-                          Time to live in minutes
+                          <FormTip text="Once a token passes TTL it will be burned. 0 means forever">
+                            Time to live in minutes
+                          </FormTip>
                         </FormLabel>
 
                         <NumberInput
@@ -861,15 +860,25 @@ export const MintForm = () => {
                   )}
                 </Field> */}
               </Stack>
-              <Button
+
+              <LoginRequired label="Authenticate to mint">
+                <Button
+                  mt={4}
+                  w={"100%"}
+                  colorScheme="teal"
+                  isLoading={props.isSubmitting}
+                  type="submit"
+                >
+                  Mint
+                </Button>
+              </LoginRequired>
+              {/* <Button
                 mt={4}
-                w={"100%"}
-                colorScheme="teal"
-                isLoading={props.isSubmitting}
-                type="submit"
+                size="sm"
+                onClick={() => devGetRecord(props.values)}
               >
-                Mint
-              </Button>
+                &lt;&gt;
+              </Button> */}
             </Form>
           </Box>
           <Box>
@@ -882,6 +891,16 @@ export const MintForm = () => {
         </Flex>
       )}
     </Formik>
+  );
+};
+const FormTip = ({ children, text }) => {
+  return (
+    <Tooltip placement="top-start" label={text}>
+      <Text>
+        {children}{" "}
+        <InfoOutlineIcon color={"gray.500"} w={3} h={3} mt={"-3px"} />
+      </Text>
+    </Tooltip>
   );
 };
 
@@ -925,10 +944,14 @@ const File = ({
               >
                 <Stack spacing={1} direction="row">
                   <Radio size="sm" mr={"10px"} value={"internal"}>
-                    Internal
+                    <FormTip text="NFTAnvil will store all data">
+                      Internal
+                    </FormTip>
                   </Radio>
                   <Radio size="sm" value={"external"}>
-                    External
+                    <FormTip text="Extension canister is responsible for providing data">
+                      External
+                    </FormTip>
                   </Radio>
                 </Stack>
               </RadioGroup>
@@ -984,7 +1007,6 @@ const File = ({
                   form.touched[keyExternal + "_type"]
                 }
               >
-                {" "}
                 <FormLabel htmlFor={keyExternal + "_type"}>
                   Content type
                 </FormLabel>

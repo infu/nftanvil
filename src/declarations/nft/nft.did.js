@@ -61,6 +61,15 @@ export const idlFactory = ({ IDL }) => {
       'Other' : IDL.Text,
     }),
   });
+  const ClaimLinkRequest = IDL.Record({
+    'to' : User,
+    'key' : IDL.Vec(IDL.Nat8),
+    'token' : TokenIdentifier,
+  });
+  const ClaimLinkResponse = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Variant({ 'Rejected' : IDL.Null }),
+  });
   const Extension = IDL.Text;
   const TokenIndex = IDL.Nat32;
   const FetchChunkRequest = IDL.Record({
@@ -110,10 +119,7 @@ export const idlFactory = ({ IDL }) => {
       'contentType' : ContentType,
       'size' : IDL.Nat32,
     }),
-    'external' : IDL.Record({
-      'idx' : IDL.Opt(IDL.Nat32),
-      'contentType' : ContentType,
-    }),
+    'external' : IDL.Record({ 'idx' : IDL.Nat32, 'contentType' : ContentType }),
   });
   const ItemHold = IDL.Variant({
     'external' : IDL.Record({ 'desc' : IDL.Text, 'holdId' : IDL.Text }),
@@ -139,14 +145,18 @@ export const idlFactory = ({ IDL }) => {
     'secret' : IDL.Bool,
     'entropy' : IDL.Vec(IDL.Nat8),
     'attributes' : IDL.Vec(Attribute),
-    'transfer' : IDL.Opt(ItemTransfer),
+    'transfer' : ItemTransfer,
   });
   const MetavarsFrozen = IDL.Record({
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
   });
   const MetadataResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'data' : Metadata, 'vars' : MetavarsFrozen }),
+    'ok' : IDL.Record({
+      'data' : Metadata,
+      'vars' : MetavarsFrozen,
+      'bearer' : AccountIdentifier,
+    }),
     'err' : CommonError,
   });
   const MetadataInput = IDL.Record({
@@ -161,12 +171,17 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Opt(IDL.Text),
     'secret' : IDL.Bool,
     'attributes' : IDL.Vec(Attribute),
-    'transfer' : IDL.Opt(ItemTransfer),
+    'transfer' : ItemTransfer,
   });
   const MintRequest = IDL.Record({ 'to' : User, 'metadata' : MetadataInput });
   const MintResponse = IDL.Variant({
     'ok' : TokenIndex,
-    'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'OutOfMemory' : IDL.Null }),
+    'err' : IDL.Variant({
+      'Invalid' : IDL.Text,
+      'InsufficientBalance' : IDL.Null,
+      'Rejected' : IDL.Null,
+      'OutOfMemory' : IDL.Null,
+    }),
   });
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
@@ -202,11 +217,46 @@ export const idlFactory = ({ IDL }) => {
       'Other' : IDL.Text,
     }),
   });
+  const TransferLinkRequest = IDL.Record({
+    'token' : TokenIdentifier,
+    'from' : User,
+    'hash' : IDL.Vec(IDL.Nat8),
+    'subaccount' : IDL.Opt(SubAccount),
+    'amount' : Balance,
+  });
+  const TransferLinkResponse = IDL.Variant({
+    'ok' : IDL.Nat32,
+    'err' : IDL.Variant({
+      'InsufficientBalance' : IDL.Null,
+      'InvalidToken' : TokenIdentifier,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : AccountIdentifier,
+      'Other' : IDL.Text,
+    }),
+  });
   const UploadChunkRequest = IDL.Record({
     'tokenIndex' : TokenIndex,
     'data' : IDL.Vec(IDL.Nat8),
     'chunkIdx' : IDL.Nat32,
     'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
+  });
+  const UseRequest = IDL.Record({
+    'token' : TokenIdentifier,
+    'memo' : Memo,
+    'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
+  });
+  const UseResponse = IDL.Variant({
+    'ok' : IDL.Variant({ 'consumed' : IDL.Null, 'cooldown' : IDL.Nat32 }),
+    'err' : IDL.Variant({
+      'InsufficientBalance' : IDL.Null,
+      'InvalidToken' : TokenIdentifier,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : AccountIdentifier,
+      'ExtensionError' : IDL.Text,
+      'Other' : IDL.Text,
+      'OnCooldown' : IDL.Null,
+    }),
   });
   const NFT = IDL.Service({
     'allowance' : IDL.Func([Request__1], [Response__1], ['query']),
@@ -214,6 +264,7 @@ export const idlFactory = ({ IDL }) => {
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
     'bearer' : IDL.Func([TokenIdentifier], [BearerResponse], ['query']),
     'burn' : IDL.Func([BurnRequest], [BurnResponse], []),
+    'claim_link' : IDL.Func([ClaimLinkRequest], [ClaimLinkResponse], []),
     'cyclesAccept' : IDL.Func([], [], []),
     'cyclesBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'extensions' : IDL.Func([], [IDL.Vec(Extension)], ['query']),
@@ -233,7 +284,13 @@ export const idlFactory = ({ IDL }) => {
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'supply' : IDL.Func([TokenIdentifier], [SupplyResponse], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
+    'transfer_link' : IDL.Func(
+        [TransferLinkRequest],
+        [TransferLinkResponse],
+        [],
+      ),
     'uploadChunk' : IDL.Func([UploadChunkRequest], [], []),
+    'use' : IDL.Func([UseRequest], [UseResponse], []),
   });
   return NFT;
 };

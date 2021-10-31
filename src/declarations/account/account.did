@@ -5,7 +5,7 @@ type Account =
  service {
    add: (AccountIdentifier, TokenIndex) -> ();
    addAllowed: (principal, nat32) -> ();
-   list: (AccountIdentifier, nat) -> (vec TokenIdentifier);
+   list: (AccountIdentifier, nat) -> (vec TokenIdentifier) query;
    rem: (AccountIdentifier, TokenIndex) -> ();
  };
 service : () -> Account

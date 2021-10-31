@@ -2,21 +2,30 @@ import { createSlice } from "@reduxjs/toolkit";
 import authentication from "../auth";
 import { encodeTokenId, decodeTokenId, tokenUrl } from "../purefunc/token";
 import { nftCanister } from "../canisters/nft";
-import { chunkBlob, blobPrepare } from "../purefunc/data";
+import {
+  chunkBlob,
+  blobPrepare,
+  encodeLink,
+  decodeLink,
+  generateKeyHashPair,
+} from "../purefunc/data";
 import { dropship } from "../canisters/dropship";
 import { Principal } from "@dfinity/principal";
 import { produce } from "immer";
+import { Spinner } from "@chakra-ui/react";
+import { push } from "connected-react-router";
+import { challenge } from "./user";
+import { createStandaloneToast } from "@chakra-ui/react";
+import { theme } from "../theme.js";
 
 export const nftSlice = createSlice({
   name: "nft",
-  initialState: {
-    meta: {},
-  },
+  initialState: {},
   reducers: {
     nftSet: (state, action) => {
       return {
         ...state,
-        meta: { ...state.meta, [action.payload.id]: action.payload.meta },
+        [action.payload.id]: action.payload.meta,
       };
     },
   },
@@ -25,7 +34,7 @@ export const nftSlice = createSlice({
 // Action creators are generated for each case reducer function
 export const { nftSet } = nftSlice.actions;
 
-export const nftFetchMeta = (id) => async (dispatch, getState) => {
+export const nftFetch = (id) => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
   let s = getState();
 
@@ -34,9 +43,11 @@ export const nftFetchMeta = (id) => async (dispatch, getState) => {
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
   let resp = await nftcan.metadata(id);
-  let { data, vars } = resp.ok;
+  let { bearer, data, vars } = resp.ok;
 
   let meta = {
+    bearer,
+
     // inherant
     tokenIndex: index,
     canister,
@@ -57,7 +68,7 @@ export const nftFetchMeta = (id) => async (dispatch, getState) => {
     secret: data.secret,
     entropy: data.entropy,
     attributes: data.attributes,
-    transfer: data.transfer[0],
+    transfer: data.transfer,
 
     //vars
     cooldownUntil: vars.cooldownUntil[0],
@@ -77,15 +88,6 @@ export const nftFetchMeta = (id) => async (dispatch, getState) => {
       });
     else meta.content.internal.url = tokenUrl(id, "content");
   }
-
-  // if (meta.content[0].internal)
-  //   meta.content[0].internal.url = await nftMediaGet({
-  //     ...meta.content[0].internal,
-  //     id,
-  //     position: "content",
-  //   });
-
-  // console.log("METADATA RESP", meta);
 
   dispatch(nftSet({ id, meta }));
   return meta;
@@ -139,7 +141,7 @@ const fetchFile = async (
         });
       })
   ).then((chunks) => {
-    console.log("BLOB RECIEVED", chunks);
+    //console.log("BLOB RECIEVED", chunks);
 
     const blob = new Blob(
       chunks.map((chunk) => {
@@ -164,8 +166,132 @@ const uploadFile = async (nft, tokenIndex, position, url) => {
       });
     })
   ).then((re) => {
-    console.log("UPLOAD RESULT", re);
+    //console.log("UPLOAD RESULT", re);
   });
+};
+
+export const transfer =
+  ({ id, toAddress }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { index, canister, token } = decodeTokenId(id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    let t = await nftcan.transfer({
+      from: { address },
+      to: { address: toAddress },
+      token: id,
+      amount: 1,
+      memo: [],
+      notify: false,
+      subaccount: [],
+    });
+    if (!t.ok) throw t;
+  };
+
+export const burn =
+  ({ id }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { index, canister, token } = decodeTokenId(id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    await nftcan.burn({
+      user: { address },
+      token: id,
+      amount: 1,
+      memo: [],
+      notify: false,
+      subaccount: [],
+    });
+  };
+
+export const use =
+  ({ id }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { index, canister, token } = decodeTokenId(id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    await nftcan.use({
+      user: { address },
+      token: id,
+      memo: [],
+      subaccount: [],
+    });
+  };
+
+export const transfer_link =
+  ({ id }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { index, canister, token } = decodeTokenId(id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    let { key, hash } = generateKeyHashPair();
+
+    let slot = await nftcan.transfer_link({
+      from: { address },
+      hash: Array.from(hash),
+      token: id,
+      amount: 1,
+      subaccount: [],
+    });
+
+    let code = encodeLink(slot, index, key);
+
+    return code;
+  };
+
+export const claim_link =
+  ({ code }) =>
+  async (dispatch, getState) => {
+    let { slot, tokenIndex, key } = decodeLink(code);
+    let canister = await dropship.fetchNFTCan(slot);
+
+    let identity = authentication.client.getIdentity();
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    let id = encodeTokenId(canister, tokenIndex);
+
+    let resp = await nftcan.claim_link({
+      to: { address },
+      key: Array.from(key),
+      token: id,
+    });
+
+    return resp;
+  };
+
+export const nftEnterCode = (code) => async (dispatch, getState) => {
+  let { slot, tokenIndex, key } = decodeLink(code);
+  let canister = await dropship.fetchNFTCan(slot);
+  let id = encodeTokenId(canister, tokenIndex);
+  dispatch(push("/nft/" + id + "/" + code));
 };
 
 export const mint = (vals) => async (dispatch, getState) => {
@@ -180,19 +306,59 @@ export const mint = (vals) => async (dispatch, getState) => {
 
   if (!address) throw Error("Annonymous cant mint"); // Wont let annonymous mint
 
-  let mint = await nft.mintNFT({
-    to: { address },
-    metadata: vals,
+  const toast = createStandaloneToast({ theme });
+
+  toast({
+    title: "Sent for minting",
+    status: "info",
+    duration: 2000,
+    isClosable: true,
   });
 
-  let tokenIndex = mint.ok;
-  let tid = encodeTokenId(canisterId.toText(), tokenIndex);
+  try {
+    let mint = await nft.mintNFT({
+      to: { address },
+      metadata: vals,
+    });
 
-  console.log("Minted", { address, tokenIndex, tid });
-  if (vals?.content[0]?.internal?.url)
-    await uploadFile(nft, tokenIndex, "content", vals.content[0].internal.url);
-  if (vals?.thumb?.internal?.url)
-    await uploadFile(nft, tokenIndex, "thumb", vals.thumb.internal.url);
+    if (mint?.err?.InsufficientBalance === null) {
+      dispatch(challenge());
+      return;
+    }
+    if (!("ok" in mint)) throw Error(JSON.stringify(mint.err));
+
+    let tokenIndex = mint.ok;
+    let tid = encodeTokenId(canisterId.toText(), tokenIndex);
+
+    // console.log("Minted", { address, tokenIndex, tid });
+
+    if (vals?.content[0]?.internal?.url)
+      await uploadFile(
+        nft,
+        tokenIndex,
+        "content",
+        vals.content[0].internal.url
+      );
+    if (vals?.thumb?.internal?.url)
+      await uploadFile(nft, tokenIndex, "thumb", vals.thumb.internal.url);
+
+    toast({
+      title: "Minting successfull",
+      description: "Token id " + tid,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  } catch (e) {
+    toast({
+      title: "Minting failed",
+      description: e.message,
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+    console.error(e);
+  }
 
   // await dispatch(nftFetchMeta(tid));
   // await dispatch(nftMediaGet(tid, "content"));

@@ -16,21 +16,23 @@ setTimeout(() => {
   store.dispatch(auth());
 }, 100);
 
-ReactDOM.render(
-  <>
-    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-    <React.StrictMode>
-      <ChakraProvider theme={theme}>
-        <Provider store={store}>
-          <ConnectedRouter history={history}>
-            <App />
-          </ConnectedRouter>
-        </Provider>
-      </ChakraProvider>
-    </React.StrictMode>
-  </>,
-  document.getElementById("root")
-);
+setTimeout(() => {
+  ReactDOM.render(
+    <>
+      <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+      <React.StrictMode>
+        <ChakraProvider theme={theme}>
+          <Provider store={store}>
+            <ConnectedRouter history={history}>
+              <App />
+            </ConnectedRouter>
+          </Provider>
+        </ChakraProvider>
+      </React.StrictMode>
+    </>,
+    document.getElementById("root")
+  );
+}, 200);
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

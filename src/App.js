@@ -1,10 +1,10 @@
 import anvillogo from "./assets/anvillogo.svg";
 import anvillogowhite from "./assets/anvillogowhite.svg";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
-import { login, logout, owned } from "./reducers/user";
+import { login, logout, owned, challenge } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -30,6 +30,7 @@ import {
   Center,
   useColorModeValue,
   Tooltip,
+  CloseButton,
 } from "@chakra-ui/react";
 import { useClipboard, useColorMode } from "@chakra-ui/react";
 import {
@@ -40,17 +41,24 @@ import {
   WarningIcon,
 } from "@chakra-ui/icons";
 
+import {
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+} from "@chakra-ui/react";
+
 import Dfinity from "./assets/dfinity.svg";
 
 import { Zap } from "./icons";
-import { Switch, Route } from "react-router";
+import { Switch, Route, Redirect } from "react-router";
 
 import { Link } from "react-router-dom";
 import { Challenge } from "./components/Challenge";
 
 import { Mint } from "./components/Mint";
 import { Inventory } from "./components/Inventory";
-
+import { NFTPage, NFTClaim } from "./components/NFT";
 function PageTabs() {
   const address = useSelector((state) => state.user.address);
 
@@ -59,7 +67,7 @@ function PageTabs() {
       <ButtonGroup variant="outline" spacing="3">
         <Link to={"/address/0/" + address}>
           <Button variant="solid" colorScheme="gray">
-            Items
+            Inventory
           </Button>
         </Link>
 
@@ -70,6 +78,32 @@ function PageTabs() {
         </Link>
       </ButtonGroup>
     </Box>
+  );
+}
+
+function AlertTestNet() {
+  const [alertVisible, setAlertVisible] = useState(true);
+  if (!alertVisible) return null;
+  return (
+    <Center>
+      <Alert status="error" mt={"20px"} w={"480px"}>
+        <AlertIcon />
+        <Box flex="1">
+          <AlertTitle>Testnet! Warning!</AlertTitle>
+          <AlertDescription display="block">
+            All minted tokens will be periodically wiped out.
+          </AlertDescription>
+        </Box>
+        <CloseButton
+          position="absolute"
+          right="8px"
+          top="8px"
+          onClick={() => {
+            setAlertVisible(false);
+          }}
+        />
+      </Alert>
+    </Center>
   );
 }
 
@@ -84,7 +118,7 @@ function LoginBox() {
 
   const dispatch = useDispatch();
   return (
-    <Box w={250}>
+    <Box w={270}>
       <ButtonGroup variant="outline" spacing="3">
         {anonymous ? (
           <>
@@ -103,9 +137,15 @@ function LoginBox() {
           <>
             <Tooltip
               hasArrow
-              label="Temporary access tokens. Rewarded for solving captcha. Consumed when minting and transfering"
+              label="Temporary access tokens. Rewarded for proving personhood"
             >
-              <Button>{accesstokens}</Button>
+              <Button
+                onClick={() => {
+                  dispatch(challenge());
+                }}
+              >
+                {accesstokens}
+              </Button>
             </Tooltip>
             <Popover trigger={"hover"}>
               <PopoverTrigger>
@@ -218,10 +258,18 @@ function App() {
           <Spacer />
           <LoginBox />
         </Flex>
+        <AlertTestNet />
         <Center>
           <Switch>
             <Route path="/mint" component={Mint} />
+            <Route path="/nft/:id/:code" component={NFTPage} />
+            <Route path="/nft/:id" component={NFTPage} />
             <Route path="/address/:pageIdx/:address" component={Inventory} />
+            <Route path="/:code" component={NFTClaim} />
+
+            <Route exact path="/">
+              <Redirect to="/mint" />
+            </Route>
           </Switch>
         </Center>
       </Box>

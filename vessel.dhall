@@ -1,4 +1,4 @@
 {
-  dependencies = [ "vvv","base","std","encoding","asset-storage","principal","sha","matchers","hash","array","json","parser-combinators"],
+  dependencies = [ "vvv","base","std","encoding","principal","sha","matchers","hash","array","json","parser-combinators"],
   compiler = Some "0.6.11"
 }
