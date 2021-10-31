@@ -6,6 +6,8 @@ Made by VVV Interactive
 
 Powered by the Internet Computer https://dfinity.org/
 
+Explained in 2min https://www.youtube.com/watch?v=hGL5xtV7jIU
+
 ## Hackathon related
 
 Motoko written for the hackathon and NFTANVIL:
