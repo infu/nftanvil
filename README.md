@@ -29,6 +29,8 @@ Motoko written for the hackathon and NFTANVIL:
 
 [Captcha.mo](https://github.com/vvv-interactive/vvv.mo/blob/main/src/Captcha.mo) Captcha
 
+[Ext.mo](https://github.com/infu/ext.std/blob/main/src/Ext.mo) Changes of the spec in a fork. To be separated in own repo.
+
 Additionally: 
 
 [Web frontent](https://github.com/infu/nftanvil/tree/main/src) React + Redux + Chakra UI.
