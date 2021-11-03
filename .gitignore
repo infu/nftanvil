@@ -15,7 +15,7 @@ node_modules
 build
 cjs
 .vessel
-
+src/declarations
 # testing
 /coverage
 
