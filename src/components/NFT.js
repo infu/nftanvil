@@ -69,7 +69,7 @@ import thumb_bg from "../assets/default.png";
 import thumb_over from "../assets/over.png";
 const NFTCenter = styled.div`
   position: absolute;
-  top: 200px;
+  top: 100px;
   height: 600px;
   width: 600px;
   left: 50%;
@@ -535,7 +535,6 @@ export const NFTPage = (p) => {
 export const NFTContent = (p) => {
   if (!p.meta?.content?.internal) return null;
   const c = p.meta.content.internal;
-
   const ctype =
     c.contentType.indexOf("image/") !== -1
       ? "image"
@@ -546,7 +545,7 @@ export const NFTContent = (p) => {
 
   return (
     <ContentBox>
-      {ctype === "image" && c.url ? <img src={c.url} /> : null}
+      {ctype === "image" && c.url ? <img src={c.url} width="100%" /> : null}
       {ctype === "video" && c.url ? (
         <video controls loop muted autoPlay>
           <source src={c.url} type={c.contentType} />

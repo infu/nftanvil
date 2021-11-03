@@ -28,7 +28,8 @@ const InventoryBox = styled.div`
   padding: 0px;
   position: fixed;
   border-radius: 8px;
-  top: 800px;
+  bottom: 20px;
+  z-index: 100000;
 `;
 
 export const Inventory = (p) => {
