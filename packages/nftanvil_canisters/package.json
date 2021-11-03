@@ -1,0 +1,30 @@
+{
+  "name": "@vvv-interactive/nftanvil-canisters",
+  "version": "1.0.0",
+  "scripts": {
+    "watch": "babel -d cjs src --copy-files --watch",
+    "build": "babel -d cjs src --copy-files",
+    "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --delete src/declarations"
+  },
+  "browserslist": {
+    "production": [
+      "last 2 chrome version",
+      "last 2 firefox version",
+      "last 2 safari version",
+      "last 2 edge version"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@dfinity/agent": "^0.10.1",
+    "@dfinity/auth-client": "^0.10.1",
+    "@dfinity/authentication": "^0.10.1",
+    "@dfinity/candid": "^0.10.1",
+    "@dfinity/identity": "^0.10.1",
+    "@dfinity/principal": "^0.10.1"
+  }
+}

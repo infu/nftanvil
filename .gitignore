@@ -11,15 +11,14 @@
 .dfx/
 
 # dependencies
-/node_modules
-/.pnp
-.pnp.js
+node_modules
+build
+cjs
+.vessel
 
 # testing
 /coverage
 
-# production
-/build
 
 # misc
 .DS_Store

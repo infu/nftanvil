@@ -1,0 +1,27 @@
+type Result_1 = 
+ variant {
+   err: CommonError;
+   ok: bool;
+ };
+type Result = 
+ variant {
+   err: CommonError;
+   ok: nat;
+ };
+type CommonError = 
+ variant {
+   NotEnough;
+   Unauthorized;
+   WrongSolution;
+ };
+type AccessControl = 
+ service {
+   addAllowed: (principal) -> ();
+   addTokens: (principal, nat) -> ();
+   consumeAccess: (principal, nat) -> (Result_1);
+   getBalance: (principal) -> (nat) query;
+   getChallenge: () -> (vec nat32);
+   reset: () -> ();
+   sendSolution: (text) -> (Result);
+ };
+service : (record {_admin: principal;}) -> AccessControl
