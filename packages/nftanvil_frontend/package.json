@@ -43,7 +43,8 @@
   "proxy": "http://localhost:8000",
   "scripts": {
     "start": "node dfx.env.js && react-scripts start",
-    "build": "node dfx.env.js && react-scripts build"
+    "build": "node dfx.env.js && react-scripts build",
+    "deploy": "dfx deploy --network ic frontend"
   },
   "eslintConfig": {
     "extends": [

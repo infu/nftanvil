@@ -480,7 +480,7 @@ export const NFTPage = (p) => {
 
   if (!meta) return null;
   return (
-    <Stack mt={"80px"}>
+    <Stack ml={"10px"} mr={"10px"} mt={"80px"}>
       <Center>
         <NFTContent meta={meta} />
       </Center>

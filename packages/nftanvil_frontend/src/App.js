@@ -4,6 +4,7 @@ import anvillogowhite from "./assets/anvillogowhite.svg";
 import { useEffect, useState } from "react";
 
 import { useSelector, useDispatch } from "react-redux";
+import { push } from "connected-react-router";
 import { login, logout, owned, challenge } from "./reducers/user";
 import {
   ButtonGroup,
@@ -41,6 +42,7 @@ import {
   AddIcon,
   HamburgerIcon,
   WarningIcon,
+  ArrowBackIcon,
 } from "@chakra-ui/icons";
 
 import {
@@ -56,6 +58,7 @@ import { Zap } from "./icons";
 import { Switch, Route, Redirect } from "react-router";
 
 import { Link } from "react-router-dom";
+import { goBack } from "connected-react-router";
 import { Challenge } from "./components/Challenge";
 
 import { Mint } from "./components/Mint";
@@ -80,8 +83,8 @@ function PageTabs() {
   return (
     <Box>
       <ButtonGroup variant="outline" spacing="3">
-        <Link to={"/address/0/" + address}>
-          <Button variant="solid" colorScheme="gray">
+        <Link disabled={!address} to={"/address/0/" + address}>
+          <Button disabled={!address} variant="solid" colorScheme="gray">
             Inventory
           </Button>
         </Link>
@@ -160,7 +163,7 @@ function LoginBox() {
 
   const dispatch = useDispatch();
   return (
-    <Box w={270}>
+    <Box w={270} sx={{ textAlign: "right" }}>
       <ButtonGroup variant="outline" spacing="3">
         {anonymous ? (
           <>
@@ -235,7 +238,6 @@ function LoginBox() {
             </Popover>
           </>
         )}
-
         {colorMode === "light" ? (
           <IconButton
             colorScheme="gray"
@@ -263,9 +265,9 @@ function LoginBox() {
 // color="blue.500"
 // size="xl"
 // />
-function Logo() {
+function Logo(props) {
   return (
-    <Box w={250}>
+    <Box {...props}>
       <Stack direction="horizontal" ml="6px">
         <img src={anvillogo} width="30px" />
         <Text mt="7px" ml="10px">
@@ -279,7 +281,7 @@ function Logo() {
 function DesktopMenu() {
   return (
     <Flex>
-      <Logo />
+      <Logo w={250} />
       <Spacer />
       <PageTabs />
       <Spacer />
@@ -292,6 +294,8 @@ function MobileMenu() {
   const address = useSelector((state) => state.user.address);
   const anonymous = useSelector((state) => state.user.anonymous);
   const accesstokens = useSelector((state) => state.user.accesstokens);
+  const pathname = useSelector((state) => state.router.location.pathname);
+  const myroot = "/address/0/" + address;
 
   const { onCopy } = useClipboard(address);
   const toast = useToast();
@@ -300,73 +304,103 @@ function MobileMenu() {
   const dispatch = useDispatch();
 
   return (
-    <Flex>
-      <Logo />
-      <Spacer />
-      <Menu>
-        <MenuButton
-          as={IconButton}
-          aria-label="Options"
-          icon={<HamburgerIcon />}
+    <>
+      <Logo
+        w={250}
+        sx={{
+          position: "absolute",
+          top: "13px",
+          left: "50%",
+          width: "114px",
+          marginLeft: "-62px",
+        }}
+      />
+      <Flex>
+        <IconButton
+          icon={<ArrowBackIcon />}
           variant="outline"
+          disabled={!address || myroot === pathname}
+          onClick={() => {
+            dispatch(push(myroot));
+          }}
         />
-        <MenuList>
-          <Link to={"/address/0/" + address}>
-            <MenuItem>Inventory</MenuItem>
-          </Link>
 
-          <Link to="/mint">
-            <MenuItem>Mint</MenuItem>
-          </Link>
+        <Spacer />
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label="Options"
+            icon={<HamburgerIcon />}
+            variant="outline"
+          />
+          <MenuList>
+            {address ? (
+              <Link to={"/address/0/" + address}>
+                <MenuItem>Inventory</MenuItem>
+              </Link>
+            ) : null}
 
-          {anonymous ? (
-            <MenuItem onClick={() => dispatch(login())}>
-              Authenticate
-              <img
-                src={Dfinity}
-                alt=""
-                style={{ width: "40px", height: "23px" }}
-              />
-            </MenuItem>
-          ) : (
-            <>
-              <MenuItem
-                onClick={() => {
-                  dispatch(challenge());
-                }}
-              >
-                You have {accesstokens} tokens
+            <Link to="/mint">
+              <MenuItem>Mint</MenuItem>
+            </Link>
+
+            {anonymous ? (
+              <MenuItem onClick={() => dispatch(login())}>
+                Authenticate
+                <img
+                  src={Dfinity}
+                  alt=""
+                  style={{ width: "40px", height: "23px" }}
+                />
               </MenuItem>
+            ) : (
+              <>
+                <MenuItem
+                  onClick={() => {
+                    dispatch(challenge());
+                  }}
+                >
+                  You have {accesstokens} tokens
+                </MenuItem>
 
-              <MenuItem
-                onClick={() => {
-                  toast({
-                    title: "Copied to clipboard",
-                    position: "top",
-                    isClosable: true,
-                  });
-                  onCopy();
-                }}
-                icon={<CopyIcon />}
-              >
-                Your address{" "}
-                {address.substring(0, 4) + "..." + address.slice(-4)}
+                <MenuItem
+                  onClick={() => {
+                    toast({
+                      title: "Copied to clipboard",
+                      position: "top",
+                      isClosable: true,
+                    });
+                    onCopy();
+                  }}
+                  icon={<CopyIcon />}
+                >
+                  Your address{" "}
+                  {address.substring(0, 4) + "..." + address.slice(-4)}
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {
+                    dispatch(logout());
+                  }}
+                >
+                  Logout
+                </MenuItem>
+              </>
+            )}
+
+            {colorMode === "light" ? (
+              <MenuItem icon={<SunIcon />} onClick={toggleColorMode}>
+                Light
               </MenuItem>
-            </>
-          )}
-
-          {colorMode === "light" ? (
-            <MenuItem icon={<SunIcon />} onClick={toggleColorMode}>
-              Light
-            </MenuItem>
-          ) : (
-            <MenuItem icon={<MoonIcon />} onClick={toggleColorMode}>
-              Dark
-            </MenuItem>
-          )}
-        </MenuList>
-      </Menu>
-    </Flex>
+            ) : (
+              <MenuItem icon={<MoonIcon />} onClick={toggleColorMode}>
+                Dark
+              </MenuItem>
+            )}
+          </MenuList>
+        </Menu>
+      </Flex>
+    </>
   );
 }
 

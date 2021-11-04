@@ -11,6 +11,7 @@ import {
   Center,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { LoginRequired } from "./LoginRequired";
 
 import {
   itemQuality,
@@ -63,6 +64,7 @@ export const Inventory = (p) => {
 
   const cols = Math.min(Math.floor((width - 30) / 56), 10);
   const rows = Math.ceil(120 / cols);
+
   return (
     <InventoryBox
       width={cols * 56}

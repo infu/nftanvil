@@ -81,7 +81,8 @@ import { Select } from "@chakra-ui/react";
 import { Formik, Field, Form, FieldArray } from "formik";
 import { Switch } from "@chakra-ui/react";
 import { challengeDraw } from "@vvv-interactive/nftanvil-tools/cjs/image.js";
-
+import { createStandaloneToast } from "@chakra-ui/react";
+import { theme } from "../theme.js";
 import {
   itemQuality,
   itemTransfer,
@@ -316,8 +317,22 @@ export const MintForm = () => {
                     label="Content"
                     buttonLabel="Upload content image or video"
                     onChange={async (info) => {
-                      let f = await resizeImage(info.url, 96, 96, true);
-                      props.setFieldValue("thumb_internal", f);
+                      if (info.type.indexOf("image/") !== -1) {
+                        if (info.size > 1024 * 1024) {
+                          let x = await resizeImage(info.url, 1280, 1280);
+                          props.setFieldValue("content_internal", x);
+                          const toast = createStandaloneToast({ theme });
+                          toast({
+                            title: "Image was too big",
+                            description: "It was automatically resized",
+                            status: "info",
+                            duration: 3000,
+                            isClosable: true,
+                          });
+                        }
+                        let f = await resizeImage(info.url, 96, 96, true);
+                        props.setFieldValue("thumb_internal", f);
+                      }
                     }}
                     accept="image/*,video/*"
                     validateInternal={validateContentInternal}
