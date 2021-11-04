@@ -112,12 +112,8 @@ export const auth =
     let address = !anonymous && principalToAccountIdentifier(principal);
     router.setOptions({ agentOptions: { identity } });
 
-    //WARNING FOR DEBUG PURPOSES ONLY //TODO: REMOVE it from window
-    window.router = router;
-
     let { access, acclist } = await router.fetchSetup();
     let acccan = aid2acccan(address, acclist);
-    //console.log("ACCCAN", address, acccan);
 
     dispatch(
       authSet({ address, principal, anonymous, acclist, acccan, access })
@@ -133,7 +129,6 @@ export const logout = () => async (dispatch, getState) => {
 
   const identity = await authClient.getIdentity();
   router.setOptions({ agentOptions: { identity } });
-  // access.setOptions({ agentOptions: { identity } });
 
   let principal = identity.getPrincipal().toString();
   let anonymous = !(await authClient.isAuthenticated());
@@ -148,7 +143,6 @@ export const challenge = () => async (dispatch, getState) => {
   let access = accessCanister(s.user.access, { agentOptions: { identity } });
 
   let challenge = await access.getChallenge();
-  // challengeToImage(challenge);
   dispatch(challengeSet(challenge));
 };
 
@@ -193,92 +187,6 @@ export const sendSolution = (code) => async (dispatch, getState) => {
       isClosable: true,
     });
   }
-
-  // challengeToImage(challenge);
 };
-
-// export const mint2 = () => async (dispatch, getState) => {
-//   console.log("MINTING STARTED");
-//   let s = getState();
-//   let address = s.user.address;
-//   let principal = s.user.principal;
-
-//   // let metadata = await jsonToNat8(
-//   //   JSON.stringify({
-//   //     somefile: "oweirhwoierh woeihrwoierhwoeiwoeirhweoriwheorwheori",
-//   //     name: "funwe rwer wr werw erwerw",
-//   //     desc: "Hoola werw erwe werwer wrw rw rwre wrw erwe rwerwe rwer wrwe rw rwr ww r wrwer wrwerw rwer",
-//   //   })
-//   // );
-//   let avail_canister_id = await router.getAvailable();
-
-//   let identity = authentication.client.getIdentity();
-
-//   let nft = nftCanister(avail_canister_id, { agentOptions: { identity } });
-
-//   // try {
-//   //   let mint = await nft.mintNFT({
-//   //     to: { address },
-//   //     // minter: principal,
-//   //     media: [{ img: "jowejrowjer" }],
-//   //     thumb: ["sdfsfsdf"],
-//   //     // media: null,
-//   //     // thumb: null,
-//   //     classId: 123,
-//   //     // TTL: 3,
-//   //   });
-//   //   console.log("MINT", mint);
-//   //   dispatch(accessTokensAdd(-1));
-//   // } catch (e) {
-//   //   console.log("ERR", e);
-//   //   dispatch(challenge());
-//   // }
-
-//   //   console.log("MINT", mint);
-//   // } catch (e) {
-//   //   console.log("ca", e.getMessage());
-//   // }
-
-//   let arr = Array(20)
-//     .fill(0)
-//     .map((x) => {
-//       let rand_address = principalToAccountIdentifier(
-//         principal,
-//         Math.round(Math.random() * 4294967295)
-//       );
-//       return {
-//         to: { address: rand_address },
-//         // minter: principal,
-//         media: [{ img: "jowejrowjer" }],
-//         thumb: ["sdfsfsdf"],
-//         // media: null,
-//         // thumb: null,
-//         classId: 123,
-//         // TTL: 3,
-//       };
-//     });
-
-//   let minted2 = await nft.mintNFT_batch(arr);
-//   console.log("MINT", minted2);
-
-//   let stats = await nft.stats();
-//   console.log("NFT STATS", stats);
-// };
-
-// export const test = () => async (dispatch, getState) => {
-//   // let ids = await router.getCanisters();
-//   // console.log(ids.map((x) => x.toText()));
-//   // let identity = authentication.client.getIdentity();
-//   // for (let id of ids) {
-//   //   console.log("ID", id.toText());
-//   //   let nft = nftCanister(id, { agentOptions: { identity } });
-//   //   console.log(id.toText(), await nft.stats());
-//   // }
-//   // let canister_id = await router.newNFTContainer();
-//   // console.log("NEW canister id", canister_id.toText());
-//   // let nft = nftCanister(canister_id, { agentOptions: { identity } });
-//   // let stats = await nft.stats();
-//   // console.log("NFT STATS", stats);
-// };
 
 export default userSlice.reducer;

@@ -145,8 +145,6 @@ const fetchFile = async (
         });
       })
   ).then((chunks) => {
-    //console.log("BLOB RECIEVED", chunks);
-
     const blob = new Blob(
       chunks.map((chunk) => {
         return new Uint8Array(chunk[0]).buffer;
@@ -334,8 +332,6 @@ export const mint = (vals) => async (dispatch, getState) => {
     let tokenIndex = mint.ok;
     let tid = encodeTokenId(canisterId.toText(), tokenIndex);
 
-    // console.log("Minted", { address, tokenIndex, tid });
-
     if (vals?.content[0]?.internal?.url)
       await uploadFile(
         nft,
@@ -363,9 +359,6 @@ export const mint = (vals) => async (dispatch, getState) => {
     });
     console.error(e);
   }
-
-  // await dispatch(nftFetchMeta(tid));
-  // await dispatch(nftMediaGet(tid, "content"));
 };
 
 export default nftSlice.reducer;

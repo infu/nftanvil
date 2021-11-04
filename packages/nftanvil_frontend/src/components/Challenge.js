@@ -134,7 +134,6 @@ function CaptchaForm() {
       initialValues={{ code: "" }}
       onSubmit={(values, actions) => {
         dispatch(sendSolution(values.code));
-        //   actions.setSubmitting(false);
       }}
     >
       {(props) => (

@@ -31,6 +31,7 @@ export const createActor = (canisterId, options) => {
 export const router = {
   principal: canisterId,
 };
+
 router.setOptions = (options) => {
   let actor = createActor(canisterId, options);
 

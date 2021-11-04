@@ -31,6 +31,7 @@ import {
   useColorModeValue,
   Tooltip,
   CloseButton,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import { useClipboard, useColorMode } from "@chakra-ui/react";
 import {
@@ -38,6 +39,7 @@ import {
   MoonIcon,
   CopyIcon,
   AddIcon,
+  HamburgerIcon,
   WarningIcon,
 } from "@chakra-ui/icons";
 
@@ -59,6 +61,19 @@ import { Challenge } from "./components/Challenge";
 import { Mint } from "./components/Mint";
 import { Inventory } from "./components/Inventory";
 import { NFTPage, NFTClaim } from "./components/NFT";
+import { useWindowSize } from "react-use";
+import {
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuItemOption,
+  MenuGroup,
+  MenuOptionGroup,
+  MenuIcon,
+  MenuCommand,
+  MenuDivider,
+} from "@chakra-ui/react";
 function PageTabs() {
   const address = useSelector((state) => state.user.address);
 
@@ -261,6 +276,112 @@ function Logo() {
   );
 }
 
+function DesktopMenu() {
+  return (
+    <Flex>
+      <Logo />
+      <Spacer />
+      <PageTabs />
+      <Spacer />
+      <LoginBox />
+    </Flex>
+  );
+}
+
+function MobileMenu() {
+  const address = useSelector((state) => state.user.address);
+  const anonymous = useSelector((state) => state.user.anonymous);
+  const accesstokens = useSelector((state) => state.user.accesstokens);
+
+  const { onCopy } = useClipboard(address);
+  const toast = useToast();
+  const { colorMode, toggleColorMode } = useColorMode();
+
+  const dispatch = useDispatch();
+
+  return (
+    <Flex>
+      <Logo />
+      <Spacer />
+      <Menu>
+        <MenuButton
+          as={IconButton}
+          aria-label="Options"
+          icon={<HamburgerIcon />}
+          variant="outline"
+        />
+        <MenuList>
+          <Link to={"/address/0/" + address}>
+            <MenuItem>Inventory</MenuItem>
+          </Link>
+
+          <Link to="/mint">
+            <MenuItem>Mint</MenuItem>
+          </Link>
+
+          {anonymous ? (
+            <MenuItem colorScheme="gray" onClick={() => dispatch(login())}>
+              Authenticate
+              <img src={Dfinity} style={{ width: "40px", height: "23px" }} />
+            </MenuItem>
+          ) : (
+            <>
+              <MenuItem
+                onClick={() => {
+                  dispatch(challenge());
+                }}
+              >
+                {accesstokens}
+              </MenuItem>
+
+              <MenuItem
+                colorScheme="gray"
+                variant="solid"
+                onClick={() => {
+                  toast({
+                    title: "Copied to clipboard",
+                    position: "top",
+                    isClosable: true,
+                  });
+                  onCopy();
+                }}
+                rightIcon={<CopyIcon />}
+              >
+                {address.substring(0, 4) + "..." + address.slice(-4)}
+              </MenuItem>
+            </>
+          )}
+
+          {colorMode === "light" ? (
+            <MenuItem
+              colorScheme="gray"
+              variant="solid"
+              icon={<SunIcon />}
+              onClick={toggleColorMode}
+            >
+              Light
+            </MenuItem>
+          ) : (
+            <MenuItem
+              colorScheme="gray"
+              variant="solid"
+              icon={<MoonIcon />}
+              onClick={toggleColorMode}
+            >
+              Dark
+            </MenuItem>
+          )}
+        </MenuList>
+      </Menu>
+    </Flex>
+  );
+}
+
+function MainMenu() {
+  const [isDesktop] = useMediaQuery("(min-width: 480px)");
+
+  return isDesktop ? <DesktopMenu /> : <MobileMenu />;
+}
 function App() {
   return (
     <>
@@ -270,7 +391,7 @@ function App() {
           alt=""
           style={{
             position: "fixed",
-            width: "600px",
+            maxWidth: "600px",
             bottom: "-60px",
             left: "50%",
             marginLeft: "-300px",
@@ -278,13 +399,8 @@ function App() {
             zIndex: "-1",
           }}
         />
-        <Flex>
-          <Logo />
-          <Spacer />
-          <PageTabs />
-          <Spacer />
-          <LoginBox />
-        </Flex>
+
+        <MainMenu />
         <AlertTestNet />
         <Center>
           <Switch>

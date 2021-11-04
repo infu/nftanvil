@@ -28,7 +28,7 @@ import styled from "@emotion/styled";
 const InventoryBox = styled.div`
   background: url(${(props) => props.bg});
   background-size: 56px 56px;
-  width: 616px;
+  max-width: 616px;
   padding: 0px;
   position: fixed;
   border-radius: 8px;
