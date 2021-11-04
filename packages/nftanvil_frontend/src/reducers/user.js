@@ -110,8 +110,9 @@ export const auth =
     let principal = identity.getPrincipal().toString();
     let anonymous = !(await authClient.isAuthenticated());
     let address = !anonymous && principalToAccountIdentifier(principal);
-    router.setOptions({ agentOptions: { identity } });
-
+    router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
+      agentOptions: { identity },
+    });
     let { access, acclist } = await router.fetchSetup();
     let acccan = aid2acccan(address, acclist);
 
@@ -128,7 +129,9 @@ export const logout = () => async (dispatch, getState) => {
   authClient.logout();
 
   const identity = await authClient.getIdentity();
-  router.setOptions({ agentOptions: { identity } });
+  router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
+    agentOptions: { identity },
+  });
 
   let principal = identity.getPrincipal().toString();
   let anonymous = !(await authClient.isAuthenticated());

@@ -1,0 +1,13 @@
+{
+  "name": "@vvv-interactive/nftanvil",
+  "version": "1.0.0",
+  "main": "cjs/index.js",
+  "license": "MIT",
+  "scripts": {
+    "watch": "babel -d cjs src --copy-files --watch",
+    "build": "babel -d cjs src --copy-files"
+  },
+  "dependencies": {
+    "get-random-values": "^1.2.2"
+  }
+}

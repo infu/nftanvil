@@ -1,5 +1,5 @@
-import { getCrc32 } from "@dfinity/principal/lib/esm/utils/getCrc";
-import { sha224 } from "@dfinity/principal/lib/esm/utils/sha224";
+import { getCrc32 } from "@dfinity/principal/lib/cjs/utils/getCrc";
+import { sha224 } from "@dfinity/principal/lib/cjs/utils/sha224";
 import { Principal } from "@dfinity/principal";
 
 export const principalToAccountIdentifier = (p, s) => {

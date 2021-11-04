@@ -5,9 +5,7 @@ import { idlFactory } from "./declarations/router/router.did.js";
 export { idlFactory } from "./declarations/router/router.did.js";
 
 // CANISTER_ID is replaced by webpack based on node environment
-export const canisterId = process.env.REACT_APP_ROUTER_CANISTER_ID;
-console.log("ROUTER CANISTER", canisterId);
-export const createActor = (canisterId, options) => {
+export const routerCanister = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
 
   // Fetch root key for certificate validation during development
@@ -21,23 +19,20 @@ export const createActor = (canisterId, options) => {
   }
 
   // Creates an actor with using the candid interface and the HttpAgent
-  return Actor.createActor(idlFactory, {
+  let actor = Actor.createActor(idlFactory, {
     agent,
-    canisterId,
+    canisterId: canisterId.toText ? canisterId.toText() : canisterId,
     ...options?.actorOptions,
   });
+  return { router: actor, agent };
 };
 
-export const router = {
-  principal: canisterId,
-};
+export const router = {};
 
-router.setOptions = (options) => {
-  let actor = createActor(canisterId, options);
+router.setOptions = (canisterId, options) => {
+  let x = routerCanister(canisterId, options);
 
-  for (let key in actor) {
-    router[key] = (...arg) => actor[key](...arg);
+  for (let key in x.router) {
+    router[key] = (...arg) => x.router[key](...arg);
   }
 };
-
-router.setOptions();

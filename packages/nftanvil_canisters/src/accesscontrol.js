@@ -20,7 +20,7 @@ export const accessCanister = (canisterId, options) => {
   // Creates an actor with using the candid interface and the HttpAgent
   return Actor.createActor(idlFactory, {
     agent,
-    canisterId,
+    canisterId: canisterId.toText ? canisterId.toText() : canisterId,
     ...options?.actorOptions,
   });
 };
