@@ -320,9 +320,13 @@ function MobileMenu() {
           </Link>
 
           {anonymous ? (
-            <MenuItem colorScheme="gray" onClick={() => dispatch(login())}>
+            <MenuItem onClick={() => dispatch(login())}>
               Authenticate
-              <img src={Dfinity} style={{ width: "40px", height: "23px" }} />
+              <img
+                src={Dfinity}
+                alt=""
+                style={{ width: "40px", height: "23px" }}
+              />
             </MenuItem>
           ) : (
             <>
@@ -331,12 +335,10 @@ function MobileMenu() {
                   dispatch(challenge());
                 }}
               >
-                {accesstokens}
+                You have {accesstokens} tokens
               </MenuItem>
 
               <MenuItem
-                colorScheme="gray"
-                variant="solid"
                 onClick={() => {
                   toast({
                     title: "Copied to clipboard",
@@ -345,29 +347,20 @@ function MobileMenu() {
                   });
                   onCopy();
                 }}
-                rightIcon={<CopyIcon />}
+                icon={<CopyIcon />}
               >
+                Your address{" "}
                 {address.substring(0, 4) + "..." + address.slice(-4)}
               </MenuItem>
             </>
           )}
 
           {colorMode === "light" ? (
-            <MenuItem
-              colorScheme="gray"
-              variant="solid"
-              icon={<SunIcon />}
-              onClick={toggleColorMode}
-            >
+            <MenuItem icon={<SunIcon />} onClick={toggleColorMode}>
               Light
             </MenuItem>
           ) : (
-            <MenuItem
-              colorScheme="gray"
-              variant="solid"
-              icon={<MoonIcon />}
-              onClick={toggleColorMode}
-            >
+            <MenuItem icon={<MoonIcon />} onClick={toggleColorMode}>
               Dark
             </MenuItem>
           )}

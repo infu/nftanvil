@@ -4,13 +4,23 @@ const fs = require("fs");
 let localCanisters, prodCanisters;
 
 try {
-  localCanisters = require(path.resolve(".dfx", "local", "canister_ids.json"));
+  localCanisters = require(path.resolve(
+    "..",
+    "nftanvil_canisters",
+    ".dfx",
+    "local",
+    "canister_ids.json"
+  ));
 } catch (error) {
   console.log("No local canister_ids.json found. Continuing production");
 }
 
 try {
-  prodCanisters = require(path.resolve("canister_ids.json"));
+  prodCanisters = require(path.resolve(
+    "..",
+    "nftanvil_canisters",
+    "canister_ids.json"
+  ));
 } catch (error) {
   console.log("No production canister_ids.json found. Continuing with local");
 }

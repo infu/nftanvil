@@ -4,6 +4,7 @@ import {
   itemTransfer,
   itemUse,
 } from "@vvv-interactive/nftanvil-tools/cjs/items.js";
+import { Fade, ScaleFade, Slide, SlideFade } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import {
   nftFetch,
@@ -71,17 +72,6 @@ import moment from "moment";
 import styled from "@emotion/styled";
 import thumb_bg from "../assets/default.png";
 import thumb_over from "../assets/over.png";
-const NFTCenter = styled.div`
-  position: absolute;
-  top: 100px;
-  height: 600px;
-  width: 600px;
-  left: 50%;
-  margin-left: -300px;
-  vertical-align: bottom;
-  display: table-cell;
-  vertical-align: bottom;
-`;
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -389,18 +379,14 @@ export const BurnButton = ({ id }) => {
 
 export const NFTPopover = ({ meta }) => {
   return (
-    <Portal>
-      <NFTCenter>
-        <Stack>
-          <Center>
-            <NFTContent meta={meta} />
-          </Center>
-          <Center>
-            <NFTInfo meta={meta} />
-          </Center>
-        </Stack>
-      </NFTCenter>
-    </Portal>
+    <Stack>
+      <Center>
+        <NFTContent meta={meta} />
+      </Center>
+      <Center>
+        <NFTInfo meta={meta} />
+      </Center>
+    </Stack>
   );
 };
 
@@ -408,8 +394,6 @@ export const NFT = ({ id }) => {
   const meta = useSelector((state) => state.nft[id]);
 
   const dispatch = useDispatch();
-
-  const thumbRef = React.createRef();
 
   const [popoverOpen, setPopover] = useState(false);
 
@@ -420,9 +404,12 @@ export const NFT = ({ id }) => {
   return (
     <Link to={"/nft/" + id}>
       <Thumb
-        ref={thumbRef}
-        onMouseOut={() => setPopover(false)}
-        onMouseOver={() => setPopover(true)}
+        onMouseOver={() => {
+          setPopover(true);
+        }}
+        onMouseOut={() => {
+          setPopover(false);
+        }}
       >
         {meta?.thumb?.internal?.url ? (
           <img className="custom" src={meta.thumb.internal.url} />
@@ -430,7 +417,20 @@ export const NFT = ({ id }) => {
           ""
         )}
         <div className="border" />
-        {popoverOpen ? <NFTPopover meta={meta} /> : null}
+
+        {popoverOpen ? (
+          <Box
+            sx={{
+              pointerEvents: "none",
+              position: "absolute",
+              top: "56px",
+              left: "56px",
+              width: "400px",
+            }}
+          >
+            <NFTPopover meta={meta} />
+          </Box>
+        ) : null}
       </Thumb>
     </Link>
   );
@@ -561,7 +561,7 @@ export const NFTContent = (p) => {
 
 export const NFTPreview = (p) => {
   return (
-    <Stack spacing="5" ml={"20px"} mt={"80px"}>
+    <Stack spacing="5">
       <NFTContent meta={p} />
       <NFTInfo meta={p} />
       <NFTThumb meta={p} />

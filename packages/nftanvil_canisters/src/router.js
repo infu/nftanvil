@@ -6,7 +6,7 @@ export { idlFactory } from "./declarations/router/router.did.js";
 
 // CANISTER_ID is replaced by webpack based on node environment
 export const canisterId = process.env.REACT_APP_ROUTER_CANISTER_ID;
-
+console.log("ROUTER CANISTER", canisterId);
 export const createActor = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
 

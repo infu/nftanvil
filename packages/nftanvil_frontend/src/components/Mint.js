@@ -21,6 +21,8 @@ import {
   WrapItem,
   useMediaQuery,
 } from "@chakra-ui/react";
+import { useWindowSize } from "react-use";
+
 import {
   Popover,
   PopoverTrigger,
@@ -129,7 +131,8 @@ export const ProToggle = () => {
 };
 
 export const MintForm = () => {
-  const [isDesktop] = useMediaQuery("(min-width: 480px)");
+  const { width, height } = useWindowSize();
+  const isDesktop = width > 480;
 
   const dispatch = useDispatch();
   const pro = useSelector((state) => state.user.pro);
@@ -272,14 +275,13 @@ export const MintForm = () => {
     >
       {(props) => (
         <>
-          <Stack direction={isDesktop ? "row" : "column"}>
+          <Stack mt="80px" direction={isDesktop ? "row" : "column"}>
             <Box
               bg={boxColor}
               borderRadius={"md"}
               border={1}
-              mt={"80px"}
-              w={"100%"}
               maxW={480}
+              w={isDesktop ? 480 : width - 32}
               p={5}
             >
               <Form>
