@@ -2,12 +2,10 @@ import {
   Principal,
   routerConnect,
   nftCanister,
-  fileIdentity,
   encodeTokenId,
 } from "@vvv-interactive/nftanvil";
 
 const main = async () => {
-  let identity = fileIdentity();
   let { principal, address, router } = await routerConnect();
 
   console.log("Principal: ", principal.toText());

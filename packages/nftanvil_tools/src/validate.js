@@ -1,5 +1,26 @@
 import { Principal } from "@dfinity/principal";
 
+export const mintFormValidate = (values) => {
+  console.log("FORM VALIDATION", values);
+  const errors = {};
+
+  if (!values.extensionCanister)
+    if (
+      values.content_storage == "external" ||
+      values.thumb_storage == "external" ||
+      values.use ||
+      values.hold
+    )
+      errors.extensionCanister =
+        "Required if using external content and effects";
+  if (values.secret)
+    if (values.content_storage == "external")
+      errors.secret = "Can't be secret if content is external";
+
+  console.log("ERR", errors);
+  return errors;
+};
+
 export function validateName(value) {
   if (!value) return null;
   return !(value.length > 2 && value.length < 128)
@@ -40,7 +61,7 @@ export function validateDescription(val) {
     return "Must be between 10 and 256 characters";
 }
 export function validateThumbInternal(val) {
-  if (!val) return;
+  if (!val) return "Thumbnail is required";
   if (val.size > 1024 * 128) return "Maximum file size is 128 KB";
 }
 

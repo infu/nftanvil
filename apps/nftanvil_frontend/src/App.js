@@ -1,5 +1,6 @@
 import anvillogo from "./assets/anvillogo.svg";
 import anvillogowhite from "./assets/anvillogowhite.svg";
+import blueflame from "./assets/blueflame.svg";
 
 import { useEffect, useState } from "react";
 
@@ -154,6 +155,8 @@ function AlertTestNet() {
 
 function LoginBox() {
   const address = useSelector((state) => state.user.address);
+  const principal = useSelector((state) => state.user.principal);
+
   const anonymous = useSelector((state) => state.user.anonymous);
   const accesstokens = useSelector((state) => state.user.accesstokens);
 
@@ -189,7 +192,11 @@ function LoginBox() {
                   dispatch(challenge());
                 }}
               >
-                {accesstokens}
+                {accesstokens}{" "}
+                <img
+                  src={blueflame}
+                  style={{ marginLeft: "4px", width: "13px", height: "13px" }}
+                />
               </Button>
             </Tooltip>
             <Popover trigger={"hover"}>
@@ -210,11 +217,28 @@ function LoginBox() {
                   {address.substring(0, 4) + "..." + address.slice(-4)}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent w={350}>
+              <PopoverContent w={350} sx={{ textAlign: "left" }}>
                 <PopoverArrow />
-                <PopoverCloseButton />
-                <PopoverHeader>Your address</PopoverHeader>
-                <PopoverBody>{address}</PopoverBody>
+                <PopoverBody>
+                  <Text
+                    casing="uppercase"
+                    fontSize="xs"
+                    mt="10px"
+                    color="gray.500"
+                  >
+                    Your address:
+                  </Text>
+                  <Text>{address}</Text>
+                  <Text
+                    casing="uppercase"
+                    fontSize="xs"
+                    mt="10px"
+                    color="gray.500"
+                  >
+                    Your principal:
+                  </Text>
+                  <Text>{principal}</Text>
+                </PopoverBody>
                 <PopoverFooter
                   border="0"
                   d="flex"

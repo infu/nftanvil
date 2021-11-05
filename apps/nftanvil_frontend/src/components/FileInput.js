@@ -1,4 +1,5 @@
 import React from "react";
+import media_upload from "../assets/media_upload.svg";
 
 import {
   ButtonGroup,
@@ -8,8 +9,11 @@ import {
   toast,
   useToast,
   IconButton,
+  Center,
+  Text,
+  Stack,
 } from "@chakra-ui/react";
-
+import { UploadIcon } from "../icons";
 export const FileInput = (props) => {
   const inputRef = React.createRef();
   return (
@@ -26,7 +30,9 @@ export const FileInput = (props) => {
           props.onChange({ size, type, url });
         }}
       />
+
       <Button
+        height={"120px"}
         {...props.button}
         onClick={() => {
           if (inputRef?.current) {
@@ -35,7 +41,14 @@ export const FileInput = (props) => {
           }
         }}
       >
-        {props.label || "Upload"}
+        <Stack spacing="3">
+          <Box>
+            <Center>
+              <UploadIcon color="white" w={"56px"} h={"56px"} />
+            </Center>
+          </Box>
+          <Box>{props.label || "Upload"}</Box>
+        </Stack>
       </Button>
     </>
   );
