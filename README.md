@@ -10,6 +10,10 @@ Powered by the Internet Computer https://dfinity.org/
 
 Explained in 2min https://www.youtube.com/watch?v=hGL5xtV7jIU
 
+
+**Current network (production will have a lot more nft and account canisters) Access canister id deprecated and its functionality will go to account**
+![image](https://user-images.githubusercontent.com/24810/140567962-9fa57616-084c-4662-8a21-cc8e185c23b7.png)
+
 ## Hackathon related
 
 Latest branch is 'lerna'. Branch 'main' is left alone the way it was when contest ended.
