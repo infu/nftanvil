@@ -12,6 +12,8 @@ Explained in 2min https://www.youtube.com/watch?v=hGL5xtV7jIU
 
 ## Hackathon related
 
+Latest branch is 'lerna'. Branch 'main' is left alone the way it was when contest ended.
+
 Motoko written for the hackathon and NFTANVIL:
 
 [nft.mo](https://github.com/infu/nftanvil/blob/main/src/ic/dropship/nft.mo) NFT implementation. Holds assets. Serves assets trough HTTP.
