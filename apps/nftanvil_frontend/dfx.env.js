@@ -6,6 +6,8 @@ let localCanisters, prodCanisters;
 try {
   localCanisters = require(path.resolve(
     "..",
+    "..",
+    "packages",
     "nftanvil_canisters",
     ".dfx",
     "local",
@@ -18,6 +20,8 @@ try {
 try {
   prodCanisters = require(path.resolve(
     "..",
+    "..",
+    "packages",
     "nftanvil_canisters",
     "canister_ids.json"
   ));
