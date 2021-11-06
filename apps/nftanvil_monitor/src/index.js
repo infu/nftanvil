@@ -29,7 +29,6 @@ const main = async () => {
   );
 
   let setup = await router.fetchSetup();
-  console.log("S", setup);
   rez.account = setup.acclist;
 
   let accStats = await Promise.all(

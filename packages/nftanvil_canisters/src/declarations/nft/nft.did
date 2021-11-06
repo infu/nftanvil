@@ -196,6 +196,7 @@ type MetadataInput =
  record {
    attributes: vec Attribute;
    content: opt Content;
+   domain: opt text;
    extensionCanister: opt principal;
    hold: opt ItemHold;
    lore: opt text;
@@ -212,6 +213,7 @@ type Metadata =
    attributes: vec Attribute;
    content: opt Content;
    created: nat32;
+   domain: opt text;
    entropy: blob;
    extensionCanister: opt principal;
    hold: opt ItemHold;

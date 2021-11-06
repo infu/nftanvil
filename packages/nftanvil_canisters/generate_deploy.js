@@ -3,7 +3,7 @@ const path = require("path");
 
 let clusterFile = path.resolve("..", "..", "cluster.json");
 let cluster = JSON.parse(fs.readFileSync(clusterFile));
-let dfxd = "";
+let dfxd = "cp dfx_deploy.json dfx.json\n";
 
 let r = {
   canisters: {},

@@ -142,6 +142,7 @@ export const MintForm = () => {
   const form2record = (v) => {
     let a = {
       name: v.name,
+      domain: v.domain,
       lore: v.lore,
       use: v.use
         ? {
@@ -216,6 +217,7 @@ export const MintForm = () => {
 
   const record2request = (v) => {
     let a = {
+      domain: [v.domain].filter(Boolean),
       name: [v.name].filter(Boolean),
       lore: [v.lore].filter(Boolean),
       use: [v.use].filter(Boolean),
@@ -246,6 +248,8 @@ export const MintForm = () => {
     <Formik
       validate={mintFormValidate}
       initialValues={{
+        domain: "",
+        extensionCanister: "",
         name: "",
         quality: 1,
         transfer: "unrestricted",
@@ -433,7 +437,6 @@ export const MintForm = () => {
                     validateExternalType={validateExternalType}
                     pro={pro}
                     onChange={async (info) => {
-                      console.log("III", info);
                       if (info.type.indexOf("image/") !== -1) {
                         if (info.size > 1024 * 128) {
                           let x = await resizeImage(info.url, 96, 96);

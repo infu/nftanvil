@@ -98,12 +98,12 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
     private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
 
 
-    private stable var _nextTokenId : Nat32 = 0;
-    private stable var _nextChunkId : Nat32 = 0;
-
     private stable var _statsCollections : Nat32  = 0;
     private stable var _statsTransfers : Nat32  = 0;
     private stable var _statsBurned : Nat32 = 0;
+
+    private stable var _nextTokenId : Nat32 = 0;
+    private stable var _nextChunkId : Nat32 = 0;
 
     private stable var _available : Bool = true;
 

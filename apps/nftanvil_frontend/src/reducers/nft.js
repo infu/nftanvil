@@ -73,7 +73,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     entropy: data.entropy,
     attributes: data.attributes,
     transfer: data.transfer,
-
+    domain: data.domain[0],
     //vars
     cooldownUntil: vars.cooldownUntil[0],
     boundUntil: vars.boundUntil[0],
