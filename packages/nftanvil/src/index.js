@@ -28,7 +28,7 @@ export const routerConnect = async () => {
 
   let address = principalToAccountIdentifier(principal.toText());
 
-  return { router, principal, address };
+  return { router, principal, address, id };
 };
 
 export const nftCanister = (id) => {

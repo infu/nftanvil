@@ -102,7 +102,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
     private stable var _nextChunkId : Nat32 = 0;
 
     private stable var _statsCollections : Nat32  = 0;
-    private stable var _statsAccounts : Nat32  = 0;
     private stable var _statsTransfers : Nat32  = 0;
     private stable var _statsBurned : Nat32 = 0;
 
@@ -711,6 +710,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         if (m.quality > 1) return #err(#Invalid("Higher than 1 quality not implemented"));
 
         let md : Metadata = {
+            domain=m.domain;
             name= m.name;
             lore= m.lore;
             quality= m.quality;
@@ -874,7 +874,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
     public type StatsResponse = {
         minted: Nat32;
-        accounts: Nat32;
         transfers: Nat32;
         burned: Nat32;
         cycles: Nat;
@@ -891,7 +890,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         {
             minted =  _nextTokenId;
             burned = _statsBurned;
-            accounts = _statsAccounts;
             transfers = _statsTransfers;
             cycles = Cycles.balance();
             rts_version = Prim.rts_version();

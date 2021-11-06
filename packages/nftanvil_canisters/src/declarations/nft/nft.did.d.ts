@@ -170,7 +170,6 @@ export interface StatsResponse {
   'cycles' : bigint,
   'rts_memory_size' : bigint,
   'rts_total_allocation' : bigint,
-  'accounts' : number,
   'burned' : number,
   'rts_heap_size' : bigint,
   'rts_reclaimed' : bigint,

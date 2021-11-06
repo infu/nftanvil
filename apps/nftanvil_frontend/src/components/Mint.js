@@ -108,6 +108,7 @@ import {
   validateAttributeName,
   validateAttributeChange,
   mintFormValidate,
+  validateDomain,
 } from "@vvv-interactive/nftanvil-tools/cjs/validate.js";
 export const Mint = () => {
   return <MintForm />;
@@ -324,6 +325,30 @@ export const MintForm = () => {
                 ) : (
                   ""
                 )} */}
+
+                  {pro ? (
+                    <Field name="domain" validate={validateDomain}>
+                      {({ field, form }) => (
+                        <FormControl
+                          isInvalid={form.errors.domain && form.touched.domain}
+                        >
+                          <FormLabel htmlFor="domain">
+                            <FormTip text="Verify domain by placing /.well-known/nftanvil.json with [allowed minter principal ids]">
+                              Verified domain
+                            </FormTip>
+                          </FormLabel>
+                          <Input
+                            {...field}
+                            id="domain"
+                            placeholder="yourdomain.com"
+                          />
+                          <FormErrorMessage>
+                            {form.errors.domain}
+                          </FormErrorMessage>
+                        </FormControl>
+                      )}
+                    </Field>
+                  ) : null}
                   {pro ? (
                     <Field
                       name="extensionCanister"
@@ -407,6 +432,23 @@ export const MintForm = () => {
                     validateExternal={validateExternal}
                     validateExternalType={validateExternalType}
                     pro={pro}
+                    onChange={async (info) => {
+                      console.log("III", info);
+                      if (info.type.indexOf("image/") !== -1) {
+                        if (info.size > 1024 * 128) {
+                          let x = await resizeImage(info.url, 96, 96);
+                          props.setFieldValue("thumb_internal", x);
+                          const toast = createStandaloneToast({ theme });
+                          toast({
+                            title: "Thumb image was too big",
+                            description: "It was automatically resized",
+                            status: "info",
+                            duration: 3000,
+                            isClosable: true,
+                          });
+                        }
+                      }
+                    }}
                   />
 
                   <Field name="name" validate={validateName}>

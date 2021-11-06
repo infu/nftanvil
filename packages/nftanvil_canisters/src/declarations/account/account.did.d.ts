@@ -6,8 +6,18 @@ export interface Account {
       Array<TokenIdentifier>
     >,
   'rem' : (arg_0: AccountIdentifier, arg_1: TokenIndex) => Promise<undefined>,
+  'stats' : () => Promise<StatsResponse>,
 }
 export type AccountIdentifier = string;
+export interface StatsResponse {
+  'rts_max_live_size' : bigint,
+  'cycles' : bigint,
+  'rts_memory_size' : bigint,
+  'rts_total_allocation' : bigint,
+  'rts_heap_size' : bigint,
+  'rts_reclaimed' : bigint,
+  'rts_version' : string,
+}
 export type TokenIdentifier = string;
 export type TokenIndex = number;
 export interface _SERVICE extends Account {}

@@ -190,7 +190,6 @@ export const idlFactory = ({ IDL }) => {
     'cycles' : IDL.Nat,
     'rts_memory_size' : IDL.Nat,
     'rts_total_allocation' : IDL.Nat,
-    'accounts' : IDL.Nat32,
     'burned' : IDL.Nat32,
     'rts_heap_size' : IDL.Nat,
     'rts_reclaimed' : IDL.Nat,

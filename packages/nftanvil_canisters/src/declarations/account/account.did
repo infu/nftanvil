@@ -1,5 +1,15 @@
 type TokenIndex = nat32;
 type TokenIdentifier = text;
+type StatsResponse = 
+ record {
+   cycles: nat;
+   rts_heap_size: nat;
+   rts_max_live_size: nat;
+   rts_memory_size: nat;
+   rts_reclaimed: nat;
+   rts_total_allocation: nat;
+   rts_version: text;
+ };
 type AccountIdentifier = text;
 type Account = 
  service {
@@ -7,5 +17,6 @@ type Account =
    addAllowed: (principal, nat32) -> ();
    list: (AccountIdentifier, nat) -> (vec TokenIdentifier) query;
    rem: (AccountIdentifier, TokenIndex) -> ();
+   stats: () -> (StatsResponse) query;
  };
 service : () -> Account

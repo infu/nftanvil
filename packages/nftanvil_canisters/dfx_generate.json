@@ -1,0 +1,34 @@
+{
+  "canisters": {
+    "router": {
+      "main": "mo/router.mo",
+      "type": "motoko"
+    },
+    "nft": {
+      "main": "mo/nft.mo",
+      "type": "motoko"
+    },
+    "account": {
+      "main": "mo/account.mo",
+      "type": "motoko"
+    },
+    "accesscontrol": {
+      "main": "mo/access.mo",
+      "type": "motoko"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": "vessel sources"
+    }
+  },
+  "dfx": "0.8.2",
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    }
+  },
+  "version": 1
+}

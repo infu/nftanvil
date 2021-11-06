@@ -1,7 +1,6 @@
 import { Principal } from "@dfinity/principal";
 
 export const mintFormValidate = (values) => {
-  console.log("FORM VALIDATION", values);
   const errors = {};
 
   if (!values.extensionCanister)
@@ -17,9 +16,11 @@ export const mintFormValidate = (values) => {
     if (values.content_storage == "external")
       errors.secret = "Can't be secret if content is external";
 
-  console.log("ERR", errors);
   return errors;
 };
+export function validateDomain(value) {
+  return null;
+}
 
 export function validateName(value) {
   if (!value) return null;

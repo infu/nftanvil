@@ -12,6 +12,7 @@ import AccessControl "./access";
 import Account "./account";
 
 import Cycles "mo:base/ExperimentalCycles";
+import Prim "mo:prim"; 
 
 
 shared({caller = owner}) actor class Router() = this {
@@ -64,7 +65,7 @@ shared({caller = owner}) actor class Router() = this {
     };
 
     public query func getAvailable() : async Principal {
-        Principal.fromActor(_nft_canisters[ Nat32.toNat(_nft_canisters_next_id) - 1]);
+            Principal.fromActor(_nft_canisters[ Nat32.toNat(_nft_canisters_next_id) - 1]);
     };
 
     private func addNFTCanister() : async () {
@@ -140,8 +141,7 @@ shared({caller = owner}) actor class Router() = this {
 
     };
 
-
-    private func getNFTCanisters() : [Text] {
+    public query func fetchNFTCanisters() : async [Text] {
         Iter.toArray(Iter.map(Iter.fromArray(_nft_canisters), func(x:NFT.NFT) : Text { Principal.toText(Principal.fromActor(x)); }));
     };
 
@@ -160,6 +160,30 @@ shared({caller = owner}) actor class Router() = this {
          }
     };
 
+
+
+    public type StatsResponse = {
+        cycles: Nat;
+        rts_version:Text;
+        rts_memory_size:Nat;
+        rts_heap_size:Nat;
+        rts_total_allocation:Nat;
+        rts_reclaimed:Nat;
+        rts_max_live_size:Nat;
+    };
+
+
+    public query func stats() : async StatsResponse {
+        {
+            cycles = Cycles.balance();
+            rts_version = Prim.rts_version();
+            rts_memory_size = Prim.rts_memory_size();
+            rts_heap_size = Prim.rts_heap_size();
+            rts_total_allocation = Prim.rts_total_allocation();
+            rts_reclaimed = Prim.rts_reclaimed();
+            rts_max_live_size = Prim.rts_max_live_size();
+        }
+    };
 
 
 }

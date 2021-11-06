@@ -2,6 +2,15 @@ export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Text;
   const TokenIndex = IDL.Nat32;
   const TokenIdentifier = IDL.Text;
+  const StatsResponse = IDL.Record({
+    'rts_max_live_size' : IDL.Nat,
+    'cycles' : IDL.Nat,
+    'rts_memory_size' : IDL.Nat,
+    'rts_total_allocation' : IDL.Nat,
+    'rts_heap_size' : IDL.Nat,
+    'rts_reclaimed' : IDL.Nat,
+    'rts_version' : IDL.Text,
+  });
   const Account = IDL.Service({
     'add' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
     'addAllowed' : IDL.Func([IDL.Principal, IDL.Nat32], [], []),
@@ -11,6 +20,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'rem' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
+    'stats' : IDL.Func([], [StatsResponse], ['query']),
   });
   return Account;
 };

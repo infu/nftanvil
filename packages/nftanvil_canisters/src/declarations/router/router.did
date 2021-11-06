@@ -1,12 +1,24 @@
+type StatsResponse = 
+ record {
+   cycles: nat;
+   rts_heap_size: nat;
+   rts_max_live_size: nat;
+   rts_memory_size: nat;
+   rts_reclaimed: nat;
+   rts_total_allocation: nat;
+   rts_version: text;
+ };
 type Router = 
  service {
    debug_reset: () -> ();
    fetchNFTCan: (nat) -> (text) query;
+   fetchNFTCanisters: () -> (vec text) query;
    fetchSetup: () -> (record {
                         access: text;
                         acclist: vec text;
                       }) query;
    getAvailable: () -> (principal) query;
    reportOutOfMemory: () -> ();
+   stats: () -> (StatsResponse) query;
  };
 service : () -> Router

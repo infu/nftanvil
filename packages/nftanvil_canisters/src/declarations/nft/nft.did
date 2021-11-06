@@ -103,7 +103,6 @@ type StreamingStrategy = variant {
                             };};
 type StatsResponse = 
  record {
-   accounts: nat32;
    burned: nat32;
    cycles: nat;
    minted: nat32;

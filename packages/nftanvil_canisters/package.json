@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "watch": "babel -d cjs src --copy-files --watch",
-    "build": "babel -d cjs src --copy-files",
-    "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --delete src/declarations"
+    "build": "node generate_deploy.js && ./dfx_generate.sh && babel -d cjs src --copy-files",
+    "deploy": "node generate_deploy.js && ./dfx_deploy.sh",
+    "generate": "./dfx_generate.sh"
   },
   "browserslist": {
     "production": [
