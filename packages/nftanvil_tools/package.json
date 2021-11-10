@@ -25,7 +25,8 @@
     "@dfinity/authentication": "^0.10.1",
     "@dfinity/candid": "^0.10.1",
     "@dfinity/identity": "^0.10.1",
-    "@dfinity/principal": "^0.10.1"
+    "@dfinity/principal": "^0.10.1",
+    "base-x": "^3.0.9"
   },
   "gitHead": "8cf865c85844de41d6f25bbba38cdf6cfd069f06"
 }
