@@ -1,12 +1,12 @@
 {
   "name": "@vvv-interactive/nftanvil",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "src/index.js",
   "type": "module",
   "license": "MIT",
   "dependencies": {
-    "@vvv-interactive/nftanvil-canisters": "^0.0.5",
-    "@vvv-interactive/nftanvil-tools": "^0.0.5",
+    "@vvv-interactive/nftanvil-canisters": "^0.0.6",
+    "@vvv-interactive/nftanvil-tools": "^0.0.6",
     "fetch-blob": "^3.1.3",
     "get-random-values": "^1.2.2",
     "node-fetch": "^3.1.0",
