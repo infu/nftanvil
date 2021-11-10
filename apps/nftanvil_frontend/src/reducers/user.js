@@ -21,9 +21,8 @@ import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account
 
 import produce from "immer";
 import { aid2acccan } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
-import { createStandaloneToast } from "@chakra-ui/react";
-import { theme } from "../theme.js";
 
+import { toast } from "react-toastify";
 export const userSlice = createSlice({
   name: "user",
   initialState: {
@@ -163,7 +162,6 @@ export const getAccessTokenBalance = () => async (dispatch, getState) => {
 export const sendSolution = (code) => async (dispatch, getState) => {
   dispatch(challengeSet(null));
   let s = getState();
-  const toast = createStandaloneToast({ theme });
 
   if (s.user.anonymous) return;
 
@@ -173,22 +171,25 @@ export const sendSolution = (code) => async (dispatch, getState) => {
   let result = await access.sendSolution(code);
   if (result.ok) {
     dispatch(accessTokensSet(parseInt(result.ok, 10)));
-    toast({
-      title: "Captcha success",
-      description: "You have earned 10 temporary access tokens",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+    toast.success(
+      <div>
+        <div>Captcha success</div>
+        <div>You have earned 10 temporary access tokens</div>
+      </div>,
+      {
+        position: "bottom-right",
+      }
+    );
   } else {
     dispatch(challenge());
-    toast({
-      title: "Captcha failed",
-      description: "It's case sensitive. Try again",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
+    toast.error(
+      <div>
+        <div>Captcha failed</div>
+      </div>,
+      {
+        position: "bottom-right",
+      }
+    );
   }
 };
 

@@ -3,6 +3,8 @@ import anvillogowhite from "./assets/anvillogowhite.svg";
 import blueflame from "./assets/blueflame.svg";
 
 import { useEffect, useState } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
@@ -12,8 +14,6 @@ import {
   Button,
   Box,
   Spinner,
-  toast,
-  useToast,
   IconButton,
   Stack,
   Text,
@@ -45,6 +45,7 @@ import {
   WarningIcon,
   ArrowBackIcon,
 } from "@chakra-ui/icons";
+import { toast } from "react-toastify";
 
 import {
   Alert,
@@ -161,7 +162,7 @@ function LoginBox() {
   const accesstokens = useSelector((state) => state.user.accesstokens);
 
   const { onCopy } = useClipboard(address);
-  const toast = useToast();
+
   const { colorMode, toggleColorMode } = useColorMode();
 
   const dispatch = useDispatch();
@@ -205,10 +206,8 @@ function LoginBox() {
                   colorScheme="gray"
                   variant="solid"
                   onClick={() => {
-                    toast({
-                      title: "Copied to clipboard",
-                      position: "top",
-                      isClosable: true,
+                    toast.info("Copied to clipboard", {
+                      position: "bottom-right",
                     });
                     onCopy();
                   }}
@@ -294,7 +293,7 @@ function Logo(props) {
     <Box {...props}>
       <Stack direction="horizontal" ml="6px">
         <img src={anvillogo} width="30px" />
-        <Text mt="7px" ml="10px">
+        <Text mt="7px" ml="10px" sx={{ fontFamily: "Greycliff" }}>
           NFT<b>ANVIL</b>
         </Text>
       </Stack>
@@ -322,7 +321,6 @@ function MobileMenu() {
   const myroot = "/address/0/" + address;
 
   const { onCopy } = useClipboard(address);
-  const toast = useToast();
   const { colorMode, toggleColorMode } = useColorMode();
 
   const dispatch = useDispatch();
@@ -389,10 +387,8 @@ function MobileMenu() {
 
                 <MenuItem
                   onClick={() => {
-                    toast({
-                      title: "Copied to clipboard",
-                      position: "top",
-                      isClosable: true,
+                    toast.info("Copied to clipboard", {
+                      position: "bottom-right",
                     });
                     onCopy();
                   }}
@@ -429,7 +425,10 @@ function MobileMenu() {
 }
 
 function MainMenu() {
-  const [isDesktop] = useMediaQuery("(min-width: 480px)");
+  const { width, height } = useWindowSize();
+
+  const isDesktop = width > 480;
+  // const [isDesktop] = useMediaQuery("(min-width: 480px)");
 
   return isDesktop ? <DesktopMenu /> : <MobileMenu />;
 }
@@ -448,6 +447,7 @@ function App() {
             marginLeft: "-300px",
             opacity: "0.1",
             zIndex: "-1",
+            pointerEvents: "none",
           }}
         />
 
@@ -468,6 +468,7 @@ function App() {
         </Center>
       </Box>
       <Challenge />
+      <ToastContainer theme={useColorModeValue("light", "dark")} />
     </>
   );
 }

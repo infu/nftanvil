@@ -12,6 +12,7 @@ import {
   encodeLink,
   decodeLink,
   generateKeyHashPair,
+  uploadFile,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { Principal } from "@dfinity/principal";
@@ -19,8 +20,8 @@ import { produce } from "immer";
 import { Spinner } from "@chakra-ui/react";
 import { push } from "connected-react-router";
 import { challenge } from "./user";
-import { createStandaloneToast } from "@chakra-ui/react";
-import { theme } from "../theme.js";
+
+import { toast } from "react-toastify";
 
 export const nftSlice = createSlice({
   name: "nft",
@@ -47,6 +48,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
   let resp = await nftcan.metadata(id);
+  if (!resp) throw Error("Can't fetch NFT meta");
   let { bearer, data, vars } = resp.ok;
 
   let meta = {
@@ -153,22 +155,6 @@ const fetchFile = async (
     );
 
     return URL.createObjectURL(blob);
-  });
-};
-
-const uploadFile = async (nft, tokenIndex, position, url) => {
-  let chunks = await chunkBlob(url);
-  await Promise.all(
-    chunks.map(async (chunk, idx) => {
-      return nft.uploadChunk({
-        position: { [position]: null },
-        chunkIdx: idx,
-        tokenIndex,
-        data: await blobPrepare(chunk),
-      });
-    })
-  ).then((re) => {
-    //console.log("UPLOAD RESULT", re);
   });
 };
 
@@ -308,14 +294,22 @@ export const mint = (vals) => async (dispatch, getState) => {
 
   if (!address) throw Error("Annonymous cant mint"); // Wont let annonymous mint
 
-  const toast = createStandaloneToast({ theme });
-
-  toast({
-    title: "Sent for minting",
-    status: "info",
-    duration: 2000,
-    isClosable: true,
-  });
+  let toastId = toast(
+    <div>
+      <div>Minting request sent.</div>
+      <div style={{ fontSize: "10px" }}>Waiting for response...</div>
+    </div>,
+    {
+      isLoading: true,
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    }
+  );
 
   try {
     let mint = await nft.mintNFT({
@@ -325,38 +319,64 @@ export const mint = (vals) => async (dispatch, getState) => {
 
     if (mint?.err?.InsufficientBalance === null) {
       dispatch(challenge());
-      return;
+      throw Error("Insufficient Balance");
     }
     if (!("ok" in mint)) throw Error(JSON.stringify(mint.err));
 
     let tokenIndex = mint.ok;
     let tid = encodeTokenId(canisterId.toText(), tokenIndex);
 
+    toast.update(toastId, {
+      render: "Uploading files...",
+    });
+
     if (vals?.content[0]?.internal?.url)
       await uploadFile(
         nft,
         tokenIndex,
         "content",
-        vals.content[0].internal.url
+        await chunkBlob(vals.content[0].internal.url)
       );
     if (vals?.thumb?.internal?.url)
-      await uploadFile(nft, tokenIndex, "thumb", vals.thumb.internal.url);
+      await uploadFile(
+        nft,
+        tokenIndex,
+        "thumb",
+        await chunkBlob(vals.thumb.internal.url)
+      );
 
-    toast({
-      title: "Minting successfull",
-      description: "Token id " + tid,
-      status: "success",
-      duration: 3000,
-      isClosable: true,
+    toast.update(toastId, {
+      type: toast.TYPE.SUCCESS,
+      isLoading: false,
+      render: (
+        <div
+          onClick={() => {
+            dispatch(push("/nft/" + tid));
+          }}
+        >
+          <div>Minting successfull.</div>
+          <div style={{ fontSize: "10px" }}>{tid}</div>
+        </div>
+      ),
+      autoClose: 9000,
+      pauseOnHover: true,
     });
   } catch (e) {
-    toast({
-      title: "Minting failed",
-      description: e.message,
-      status: "error",
-      duration: 3000,
-      isClosable: true,
+    toast.update(toastId, {
+      type: toast.TYPE.ERROR,
+      isLoading: false,
+
+      closeOnClick: true,
+
+      render: (
+        <div>
+          <div>Minting failed</div>
+          <div style={{ fontSize: "10px" }}>{e.message}</div>
+        </div>
+      ),
+      // autoClose: 9000,
     });
+
     console.error(e);
   }
 };

@@ -15,8 +15,6 @@ import {
   Button,
   Box,
   Spinner,
-  toast,
-  useToast,
   IconButton,
 } from "@chakra-ui/react";
 import {
@@ -73,6 +71,7 @@ const Captcha = ({ challenge }) => {
         width: "100%",
         imageRendering: "pixelated",
         backgroundColor: "#fff",
+        marginBottom: "10px",
       }}
     />
   );
@@ -141,12 +140,13 @@ function CaptchaForm() {
           <Field name="code" validate={validateName}>
             {({ field, form }) => (
               <FormControl isInvalid={form.errors.code && form.touched.code}>
-                <FormLabel htmlFor="code">Code</FormLabel>
+                <FormLabel htmlFor="code">Code (case sensitive)</FormLabel>
                 <Input {...field} id="code" placeholder="code" />
                 <FormErrorMessage>{form.errors.code}</FormErrorMessage>
               </FormControl>
             )}
           </Field>
+
           <Button
             mt={4}
             colorScheme="teal"

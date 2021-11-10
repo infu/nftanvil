@@ -16,9 +16,12 @@ import {
   transfer_link,
   claim_link,
 } from "../reducers/nft";
+import { Spinner } from "@chakra-ui/react";
+
 import Confetti from "./Confetti";
 import { LoginRequired } from "./LoginRequired";
-
+import { toast } from "react-toastify";
+import lodash from "lodash";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Popover,
@@ -41,7 +44,6 @@ import {
   FormLabel,
   FormControl,
   Input,
-  useToast,
 } from "@chakra-ui/react";
 import {
   Modal,
@@ -67,7 +69,7 @@ import {
   AlertDescription,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-
+import { VerifiedIcon } from "../icons";
 import moment from "moment";
 import styled from "@emotion/styled";
 import thumb_bg from "../assets/default.png";
@@ -85,8 +87,8 @@ const ContentBox = styled.div`
 `;
 
 const Thumb = styled.div`
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   border-radius: 6px;
   position: relative;
   box-overflow: hidden;
@@ -96,9 +98,9 @@ const Thumb = styled.div`
     left: 0px;
     position: absolute;
     background: url(${thumb_bg});
-    background-size: 56px 56px;
-    width: 56px;
-    height: 56px;
+    background-size: 72px 72px;
+    width: 72px;
+    height: 72px;
 
     &:hover {
       background-image: url(${thumb_over});
@@ -111,8 +113,8 @@ const Thumb = styled.div`
     margin: 4px 4px;
     object-fit: cover;
     object-position: center center;
-    height: 48px;
-    width: 48px;
+    height: 64px;
+    width: 64px;
     border-radius: 5px;
   }
 `;
@@ -135,37 +137,46 @@ function TransferButton({ id }) {
   const dispatch = useDispatch();
   const initialRef = React.useRef();
 
-  const toast = useToast();
-  const toastIdRef = React.useRef();
-
   const transferOk = async () => {
     let toAddress = initialRef.current.value;
     onClose();
-    toastIdRef.current = toast({
-      title: "Sending...",
-      description: `${id}`,
-      status: "info",
-      duration: null,
+    let toastId = toast("Sending...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
     });
     try {
       await dispatch(transfer({ id, toAddress }));
-      if (toastIdRef.current) {
-        toast.update(toastIdRef.current, {
-          title: "Sent",
-          status: "success",
-          isClosable: true,
-          duration: 5000,
-        });
-      }
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div>
+            <div>Transfer successfull.</div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
     } catch (e) {
       console.error("Transfer error", e);
-      if (toastIdRef.current) {
-        toast.update(toastIdRef.current, {
-          title: "Transfer failed",
-          status: "error",
-          duration: 9000,
-        });
-      }
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <div>
+            <div>Transfer failed.</div>
+            <div style={{ fontSize: "10px" }}>{e.message}</div>
+          </div>
+        ),
+      });
     }
   };
   return (
@@ -404,6 +415,7 @@ export const NFT = ({ id }) => {
   return (
     <Link to={"/nft/" + id}>
       <Thumb
+        style={{ zIndex: popoverOpen ? 10 : 0 }}
         onMouseOver={() => {
           setPopover(true);
         }}
@@ -583,6 +595,58 @@ export const NFTThumb = (p) => {
   );
 };
 
+const verifyDomain = lodash.debounce((meta, cb) => {
+  fetch("https://" + meta.domain + "/.well-known/nftanvil.json")
+    .then((response) => response.json())
+    .then((data) => {
+      try {
+        if (data.allowed.indexOf(meta.minter) !== -1) {
+          cb(true);
+        }
+      } catch (e) {
+        console.log(e);
+        cb(false);
+      }
+    })
+    .catch((e) => {
+      console.log(e);
+      cb(false);
+    });
+}, 1000);
+
+const MetaDomain = ({ meta }) => {
+  const [isLoading, setLoading] = useState(true);
+  const [verified, setVerified] = useState(false);
+
+  useEffect(() => {
+    setVerified(false);
+    setLoading(true);
+
+    verifyDomain(meta, (verified) => {
+      if (verified) {
+        setVerified(true);
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
+    });
+  }, [meta.domain]);
+
+  return (
+    <Text
+      color={verified ? "green.300" : isLoading ? null : "red.300"}
+      as={verified ? null : isLoading ? null : "s"}
+    >
+      {meta.domain}{" "}
+      {isLoading ? (
+        <Spinner size="xs" />
+      ) : verified ? (
+        <VerifiedIcon w={"16px"} h={"16px"} />
+      ) : null}
+    </Text>
+  );
+};
+
 export const NFTInfo = ({ meta }) => {
   const bg = useColorModeValue("gray.500", "gray.700");
   if (!meta || !meta.quality) return null;
@@ -598,6 +662,7 @@ export const NFTInfo = ({ meta }) => {
             {meta.name.capitalize()}
           </Text>
         ) : null}
+        {meta.domain ? <MetaDomain meta={meta} /> : null}
         {"bindsForever" in meta.transfer ? (
           <Text fontSize="14px">Binds on transfer</Text>
         ) : null}

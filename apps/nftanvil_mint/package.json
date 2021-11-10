@@ -2,9 +2,11 @@
   "name": "nftanvil_mint",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "license": "MIT",
   "scripts": {
-    "start": "NODE_ENV=production node dfx.env.js && ../../node_modules/.bin/babel-node --no-deprecation src/index.js",
+    "start": "NODE_ENV=production node dfx.env.js && node --no-deprecation src/index.js",
+    "xstart": "NODE_ENV=production node dfx.env.js && ../../node_modules/.bin/babel-node --no-deprecation src/index.js",
     "dev": "NODE_ENV=development node dfx.env.js && ../../node_modules/.bin/babel-node --no-deprecation src/index.js"
   },
   "dependencies": {

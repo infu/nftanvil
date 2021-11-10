@@ -55,8 +55,12 @@ export const jsonToNat8 = async (json) => {
   return arr;
 };
 
-export const chunkBlob = async (url) => {
-  let blob = await fetch(url).then((x) => x.blob());
+export const chunkBlob = async (url_or_blob, fetch = fetch) => {
+  let blob;
+  if (typeof url_or_blob === "string")
+    blob = await fetch(url_or_blob).then((r) => r.blob());
+  else blob = url_or_blob;
+
   let size = blob.size;
   let chunkSize = 1024 * 512;
   let chunks = Math.ceil(size / chunkSize);
@@ -83,4 +87,17 @@ export const djb2xor = (str) => {
     h = (h * 33) ^ str.charCodeAt(i);
   }
   return h >>> 0;
+};
+
+export const uploadFile = async (nft, tokenIndex, position, chunks) => {
+  await Promise.all(
+    chunks.map(async (chunk, idx) => {
+      return nft.uploadChunk({
+        position: { [position]: null },
+        chunkIdx: idx,
+        tokenIndex,
+        data: await blobPrepare(chunk),
+      });
+    })
+  ).then((re) => {});
 };

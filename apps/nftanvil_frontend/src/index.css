@@ -18,6 +18,12 @@ code {
   font-family: "Greycliff";
   src: local("Greycliff"),
     url(./assets/greycliff/GreycliffCF-Heavy.woff2) format("woff2");
-  /* other formats include: 'woff2', 'truetype, 'opentype',
-                            'embedded-opentype', and 'svg' */
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: "Greycliff";
+  src: local("Greycliff"),
+    url(./assets/greycliff/GreycliffCF-ExtraLight.woff2) format("woff2");
+  font-weight: normal;
 }

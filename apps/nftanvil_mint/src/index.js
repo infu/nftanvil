@@ -1,20 +1,18 @@
-import {
-  Principal,
-  routerConnect,
-  nftCanister,
-  encodeTokenId,
-} from "@vvv-interactive/nftanvil";
+import { easyMint, routerCanister } from "@vvv-interactive/nftanvil";
 
 const main = async () => {
-  let { principal, address, router } = await routerConnect();
+  let { principal, address } = await routerCanister();
+  console.log("Script address ", address);
+  console.log("Script principal ", principal.toText());
 
-  console.log("Principal: ", principal.toText());
-  console.log("Address: ", address);
+  let myaddress =
+    "9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32";
 
-  let nft = nftCanister(await router.getAvailable());
-
+  // Currently agent-js candid implementation doesn't supply the user with very informative errors,
+  // so a creating correct metadata record will be hard. Add one change at a time and test.
   let metadata = {
     name: ["Excalibur"],
+    domain: [],
     lore: [],
     use: [],
     transfer: { unrestricted: null },
@@ -23,21 +21,23 @@ const main = async () => {
     ttl: [],
     attributes: [],
     content: [],
-    thumb: { external: { idx: 1, contentType: "image/jpeg" } },
+    thumb: {
+      internal: { contentType: "image/jpeg", path: "./some.jpg" },
+    },
     secret: false,
-    extensionCanister: [Principal.fromText("aaaaa-aa")],
+    extensionCanister: [],
   };
 
   try {
-    let s = await nft.mintNFT({ to: { address }, metadata });
-    if (s.ok) {
-      let tid = encodeTokenId(nftcan.toText(), s.ok);
-      console.log("Minted Token Id: ", tid);
-    } else {
-      console.log(s);
-    }
+    let resp = await easyMint([
+      {
+        to: { address: myaddress },
+        metadata,
+      },
+    ]);
+    console.log("resp", resp);
   } catch (e) {
-    console.log("Error minting: ", e.message);
+    console.log(e);
   }
 };
 

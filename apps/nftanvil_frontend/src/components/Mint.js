@@ -10,8 +10,6 @@ import {
   Button,
   Box,
   Spinner,
-  toast,
-  useToast,
   IconButton,
   Radio,
   RadioGroup,
@@ -69,7 +67,10 @@ import {
   AddIcon,
   WarningIcon,
   InfoOutlineIcon,
+  ArrowForwardIcon,
 } from "@chakra-ui/icons";
+
+import { AnvilIcon } from "../icons";
 import {
   Slider,
   SliderTrack,
@@ -80,7 +81,8 @@ import { Select } from "@chakra-ui/react";
 import { Formik, Field, Form, FieldArray } from "formik";
 import { Switch } from "@chakra-ui/react";
 import { challengeDraw } from "@vvv-interactive/nftanvil-tools/cjs/image.js";
-import { createStandaloneToast } from "@chakra-ui/react";
+import { toast } from "react-toastify";
+
 import { theme } from "../theme.js";
 import {
   itemQuality,
@@ -119,9 +121,9 @@ export const ProToggle = () => {
   const pro = useSelector((state) => state.user.pro);
 
   return (
-    <FormControl w={"80px"} display="flex" alignItems="center">
+    <FormControl w={"110px"} ml="2px" display="inline-flex" alignItems="center">
       <FormLabel htmlFor="pro" mb="0">
-        <Text fontSize="13px">PRO</Text>
+        <Text fontSize="11px">ADVANCED</Text>
       </FormLabel>
       <Switch
         id="pro"
@@ -135,12 +137,15 @@ export const ProToggle = () => {
 export const MintForm = () => {
   const { width, height } = useWindowSize();
   const isDesktop = width > 480;
+  const principal = useSelector((state) => state.user.principal);
 
   const dispatch = useDispatch();
   const pro = useSelector((state) => state.user.pro);
 
   const form2record = (v) => {
     let a = {
+      minter: principal, // not sent to minting, temporary here for the preview
+
       name: v.name,
       domain: v.domain,
       lore: v.lore,
@@ -304,7 +309,10 @@ export const MintForm = () => {
                   borderTopLeftRadius="md"
                   borderTopRightRadius="md"
                 >
-                  <Text fontSize="28px" sx={{ fontFamily: "Greycliff" }}>
+                  <Text
+                    fontSize="28px"
+                    sx={{ fontWeight: "bold", fontFamily: "Greycliff" }}
+                  >
                     Mint
                   </Text>
                   <Spacer />
@@ -337,7 +345,7 @@ export const MintForm = () => {
                           isInvalid={form.errors.domain && form.touched.domain}
                         >
                           <FormLabel htmlFor="domain">
-                            <FormTip text="Verify domain by placing /.well-known/nftanvil.json with [allowed minter principal ids]">
+                            <FormTip text="Verify domain by placing /.well-known/nftanvil.json with {allowed:[allowed minter principal ids]}">
                               Verified domain
                             </FormTip>
                           </FormLabel>
@@ -345,6 +353,7 @@ export const MintForm = () => {
                             {...field}
                             id="domain"
                             placeholder="yourdomain.com"
+                            variant="filled"
                           />
                           <FormErrorMessage>
                             {form.errors.domain}
@@ -369,6 +378,7 @@ export const MintForm = () => {
                             {...field}
                             id="extensionCanister"
                             placeholder="acvs-efwe..."
+                            variant="filled"
                           />
                           <FormErrorMessage>
                             {form.errors.extensionCanister}
@@ -387,16 +397,13 @@ export const MintForm = () => {
                         if (info.size > 1024 * 1024) {
                           let x = await resizeImage(info.url, 1280, 1280);
                           props.setFieldValue("content_internal", x);
-                          const toast = createStandaloneToast({ theme });
-                          toast({
-                            title: "Image was too big",
-                            description: "It was automatically resized",
-                            status: "info",
-                            duration: 3000,
-                            isClosable: true,
-                          });
+
+                          toast.info(
+                            "Image was too big. Resizing automatically",
+                            { position: "bottom-center" }
+                          );
                         }
-                        let f = await resizeImage(info.url, 96, 96, true);
+                        let f = await resizeImage(info.url, 124, 124, true);
                         props.setFieldValue("thumb_internal", f);
                       }
                     }}
@@ -439,16 +446,12 @@ export const MintForm = () => {
                     onChange={async (info) => {
                       if (info.type.indexOf("image/") !== -1) {
                         if (info.size > 1024 * 128) {
-                          let x = await resizeImage(info.url, 96, 96);
+                          let x = await resizeImage(info.url, 124, 124);
                           props.setFieldValue("thumb_internal", x);
-                          const toast = createStandaloneToast({ theme });
-                          toast({
-                            title: "Thumb image was too big",
-                            description: "It was automatically resized",
-                            status: "info",
-                            duration: 3000,
-                            isClosable: true,
-                          });
+                          toast.info(
+                            "Image was too big. Resizing automatically",
+                            { position: "bottom-center" }
+                          );
                         }
                       }
                     }}
@@ -460,7 +463,12 @@ export const MintForm = () => {
                         isInvalid={form.errors.name && form.touched.name}
                       >
                         <FormLabel htmlFor="name">Name</FormLabel>
-                        <Input {...field} id="name" placeholder="Excalibur" />
+                        <Input
+                          {...field}
+                          id="name"
+                          placeholder="Excalibur"
+                          variant="filled"
+                        />
                         <FormErrorMessage>{form.errors.name}</FormErrorMessage>
                       </FormControl>
                     )}
@@ -477,6 +485,7 @@ export const MintForm = () => {
                           maxLength={256}
                           id="lore"
                           placeholder="Forged in a dragon's breath"
+                          variant="filled"
                         />
                         <FormErrorMessage>{form.errors.lore}</FormErrorMessage>
                       </FormControl>
@@ -512,6 +521,7 @@ export const MintForm = () => {
                                               num
                                             );
                                           }}
+                                          variant="filled"
                                         >
                                           <NumberInputField />
                                           <NumberInputStepper>
@@ -547,6 +557,7 @@ export const MintForm = () => {
                                           {...field}
                                           id={`attributes.${index}.name`}
                                           placeholder="Intellect"
+                                          variant="filled"
                                         />
                                         <FormErrorMessage>
                                           {errText}
@@ -582,7 +593,11 @@ export const MintForm = () => {
                         >
                           <FormLabel htmlFor="quality">Quality</FormLabel>
 
-                          <Select {...field} placeholder="Select option">
+                          <Select
+                            {...field}
+                            placeholder="Select option"
+                            variant="filled"
+                          >
                             {itemQuality.map((x, idx) => (
                               <option key={idx} value={idx}>
                                 {x.label}
@@ -599,7 +614,11 @@ export const MintForm = () => {
                   {pro ? (
                     <Text
                       fontSize="28px"
-                      sx={{ paddingTop: "35px", fontFamily: "Greycliff" }}
+                      sx={{
+                        fontWeight: "bold",
+                        paddingTop: "35px",
+                        fontFamily: "Greycliff",
+                      }}
                     >
                       Effects
                     </Text>
@@ -627,7 +646,11 @@ export const MintForm = () => {
                                 </FormTip>
                               </FormLabel>
 
-                              <Select {...field} placeholder="None">
+                              <Select
+                                {...field}
+                                placeholder="None"
+                                variant="filled"
+                              >
                                 {itemHold.map((x) => (
                                   <option key={x.val} value={x.val}>
                                     {x.label}
@@ -657,6 +680,7 @@ export const MintForm = () => {
                                   Description
                                 </FormLabel>
                                 <Textarea
+                                  variant="filled"
                                   {...field}
                                   resize="none"
                                   maxLength={256}
@@ -688,6 +712,7 @@ export const MintForm = () => {
                                   {...field}
                                   id="hold_id"
                                   placeholder="myholdbonus"
+                                  variant="filled"
                                 />
                                 <FormErrorMessage>
                                   {form.errors.hold_id}
@@ -723,7 +748,11 @@ export const MintForm = () => {
                                 </FormTip>
                               </FormLabel>
 
-                              <Select {...field} placeholder="None">
+                              <Select
+                                {...field}
+                                placeholder="None"
+                                variant="filled"
+                              >
                                 {itemUse.map((x) => (
                                   <option key={x.val} value={x.val}>
                                     {x.label}
@@ -748,6 +777,7 @@ export const MintForm = () => {
                                   Effect description
                                 </FormLabel>
                                 <Textarea
+                                  variant="filled"
                                   {...field}
                                   resize="none"
                                   maxLength={256}
@@ -778,6 +808,7 @@ export const MintForm = () => {
                                 </FormLabel>
 
                                 <NumberInput
+                                  variant="filled"
                                   {...field}
                                   onChange={(num) => {
                                     props.setFieldValue("use_duration", num);
@@ -807,6 +838,7 @@ export const MintForm = () => {
                               >
                                 <FormLabel htmlFor="use_id">Use Id</FormLabel>
                                 <Input
+                                  variant="filled"
                                   {...field}
                                   id="use_id"
                                   placeholder="myeffect"
@@ -825,7 +857,11 @@ export const MintForm = () => {
                   {pro ? (
                     <Text
                       fontSize="28px"
-                      sx={{ paddingTop: "35px", fontFamily: "Greycliff" }}
+                      sx={{
+                        fontWeight: "bold",
+                        paddingTop: "35px",
+                        fontFamily: "Greycliff",
+                      }}
                     >
                       Flow
                     </Text>
@@ -854,7 +890,11 @@ export const MintForm = () => {
                               </FormTip>
                             </FormLabel>
 
-                            <Select {...field} placeholder="Select option">
+                            <Select
+                              {...field}
+                              placeholder="Select option"
+                              variant="filled"
+                            >
                               {itemTransfer.map((x) => (
                                 <option key={x.val} value={x.val}>
                                   {x.label}
@@ -922,6 +962,7 @@ export const MintForm = () => {
                           </FormLabel>
 
                           <NumberInput
+                            variant="filled"
                             {...field}
                             onChange={(num) => {
                               props.setFieldValue("ttl", num);
@@ -947,10 +988,18 @@ export const MintForm = () => {
                     colorScheme="teal"
                     isLoading={props.isSubmitting}
                     type="submit"
+                    size="lg"
+                    sx={{ fontFamily: "Greycliff", fontSize: "160%" }}
+                    rightIcon={<AnvilIcon />}
                   >
                     Mint
                   </Button>
                 </LoginRequired>
+                {!pro ? (
+                  <Text fontSize="11px" align="center" mt="16px">
+                    For more options turn on <ProToggle />
+                  </Text>
+                ) : null}
                 {/* <Button
                 mt={4}
                 size="sm"
@@ -1069,7 +1118,12 @@ const File = ({
                 }
               >
                 <FormLabel htmlFor={keyExternal + "_idx"}>Index</FormLabel>
-                <Input {...field} placeholder="5" id={keyExternal + "_idx"} />
+                <Input
+                  {...field}
+                  placeholder="5"
+                  id={keyExternal + "_idx"}
+                  variant="filled"
+                />
                 <FormErrorMessage>
                   {form.errors[keyExternal + "_idx"]}
                 </FormErrorMessage>
@@ -1094,6 +1148,7 @@ const File = ({
                   {...field}
                   id={keyExternal + "_type"}
                   placeholder="image/jpeg"
+                  variant="filled"
                 />
                 <FormErrorMessage>
                   {form.errors[keyExternal + "_type"]}

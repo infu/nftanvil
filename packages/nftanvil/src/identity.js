@@ -1,7 +1,7 @@
-const path = require("path");
-const dfidentity = require("@dfinity/identity");
-const fs = require("fs");
-const getRandomValues = require("get-random-values");
+import path from "path";
+import dfidentity from "@dfinity/identity";
+import fs from "fs";
+import getRandomValues from "get-random-values";
 
 const newIdentity = () => {
   const entropy = getRandomValues(new Uint8Array(32));
@@ -13,8 +13,11 @@ export const fileIdentity = () => {
   let identity;
 
   try {
-    const identityJson = require(path.resolve("identity.json"));
+    const identityJson = JSON.parse(
+      fs.readFileSync(path.resolve("identity.json"))
+    );
     identity = dfidentity.Ed25519KeyIdentity.fromParsedJson(identityJson);
+
     return identity;
   } catch (e) {
     console.log("Creating new identity and saving it in identity.json");

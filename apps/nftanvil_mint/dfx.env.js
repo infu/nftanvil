@@ -1,46 +1,54 @@
-const path = require("path");
-const fs = require("fs");
+import path from "path";
+import fs from "fs";
 
 let localCanisters, prodCanisters, frontendCanisters, frontendProdCanisters;
 
+const rfile = (fn) => {
+  return JSON.parse(fs.readFileSync(fn));
+};
+
 try {
-  localCanisters = require(path.resolve(
-    "..",
-    "..",
-    "packages",
-    "nftanvil_canisters",
-    ".dfx",
-    "local",
-    "canister_ids.json"
-  ));
+  localCanisters = rfile(
+    path.resolve(
+      "..",
+      "..",
+      "packages",
+      "nftanvil_canisters",
+      ".dfx",
+      "local",
+      "canister_ids.json"
+    )
+  );
 } catch (error) {}
 
 try {
-  frontendCanisters = require(path.resolve(
-    "..",
-    "nftanvil_frontend",
-    ".dfx",
-    "local",
-    "canister_ids.json"
-  ));
+  frontendCanisters = rfile(
+    path.resolve(
+      "..",
+      "nftanvil_frontend",
+      ".dfx",
+      "local",
+      "canister_ids.json"
+    )
+  );
 } catch (error) {}
 
 try {
-  prodCanisters = require(path.resolve(
-    "..",
-    "..",
-    "packages",
-    "nftanvil_canisters",
-    "canister_ids.json"
-  ));
+  prodCanisters = rfile(
+    path.resolve(
+      "..",
+      "..",
+      "packages",
+      "nftanvil_canisters",
+      "canister_ids.json"
+    )
+  );
 } catch (error) {}
 
 try {
-  frontendProdCanisters = require(path.resolve(
-    "..",
-    "nftanvil_frontend",
-    "canister_ids.json"
-  ));
+  frontendProdCanisters = rfile(
+    path.resolve("..", "nftanvil_frontend", "canister_ids.json")
+  );
 } catch (error) {}
 
 const network =
@@ -65,5 +73,7 @@ for (const canister in canistersFrontend) {
     canistersFrontend[canister][network] +
     "\n";
 }
+txt += "FRONTEND_CANISTER=5rttq-yqaaa-aaaai-qa2ea-cai\n";
 txt += "NODE_ENV=" + process.env.NODE_ENV + "\n";
+
 fs.writeFileSync(".env", txt);
