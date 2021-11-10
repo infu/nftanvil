@@ -1,6 +1,6 @@
 {
   "name": "@vvv-interactive/nftanvil-canisters",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "watch": "babel -d cjs src --copy-files --watch",
     "build": "node generate_deploy.js && ./dfx_generate.sh && babel -d cjs src --copy-files",
@@ -28,5 +28,5 @@
     "@dfinity/identity": "^0.10.1",
     "@dfinity/principal": "^0.10.1"
   },
-  "gitHead": "58d7c682936acc7d9bb2501db8a06789cddf7a6c"
+  "gitHead": "8cf865c85844de41d6f25bbba38cdf6cfd069f06"
 }
