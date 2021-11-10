@@ -15,10 +15,12 @@ node_modules
 build
 cjs
 .vessel
+.env
 src/declarations
 # testing
 /coverage
 
+identity.json
 
 # misc
 .DS_Store
