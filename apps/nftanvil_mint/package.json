@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+  "private": true,
   "license": "MIT",
   "scripts": {
     "start": "NODE_ENV=production node dfx.env.js && node --no-deprecation src/index.js",
