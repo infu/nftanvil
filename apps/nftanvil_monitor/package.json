@@ -1,6 +1,6 @@
 {
   "name": "nftanvil_monitor",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "index.js",
   "license": "MIT",
   "private": true,
@@ -9,7 +9,7 @@
     "dev": "NODE_ENV=development node dfx.env.js && ../../node_modules/.bin/babel-node --no-deprecation src/index.js"
   },
   "dependencies": {
-    "@vvv-interactive/nftanvil": "^1.0.0",
+    "@vvv-interactive/nftanvil": "^0.0.1",
     "cli-table": "^0.3.6",
     "dotenv": "^10.0.0"
   }
