@@ -30,7 +30,7 @@ import Painless "../lib/vvv/src/Painless";
 import SHA256 "mo:sha/SHA256";
 
 
-shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _accesscontrol_can:Text; _debug_cannisterId:?Principal}) : async Interface.NonFungibleToken = this {
+shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text]; _slot:Nat32; _debug_cannisterId:?Principal}) : async Interface.NonFungibleToken = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Ext.AccountIdentifier;
@@ -59,12 +59,12 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
         #Other        : Text;
     };
 
-    let ACCESSCONTROL = actor(_accesscontrol_can) : AccessControl.AccessControl;
     let ROUTER = actor(Principal.toText(_owner)) : actor {
         reportOutOfMemory : shared () -> async ();
     };
     
     private let _acclist_size = Iter.size(Iter.fromArray(_acclist));
+    private let _accesslist_size = Iter.size(Iter.fromArray(_accesslist));
 
     type accountInterface = actor {
         add : shared (aid: AccountIdentifier, idx:TokenIndex) -> async ();
@@ -74,6 +74,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
     private func accountActor(aid: AccountIdentifier) : accountInterface {
         let selected = _acclist[ Nat32.toNat( Hash.djb2xor(aid) % Nat32.fromNat(_acclist_size) ) ];
         actor(selected): accountInterface;
+    };
+
+    private func accessActor(p: Principal) : AccessControl.AccessControl {
+        let selected = _accesslist[ Nat32.toNat( Hash.djb2xor(Principal.toText(p)) % Nat32.fromNat(_accesslist_size) ) ];
+        actor(selected): AccessControl.AccessControl ;
     };
 
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
@@ -122,15 +127,14 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
 
         _tmpToken2Link := Iter.toArray(_token2link.entries());
         _tmpChunk := Iter.toArray(_chunk.entries());
-
     };
+
     system func postupgrade() {
         _tmpBalance := [];
         _tmpAllowance := [];
         _tmpMeta := [];
         _tmpMetavars := [];
         _tmpChunk := [];
-
     };
     
     public query func extensions() : async [Ext.Extension] {
@@ -143,7 +147,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
              case (#ok(holder,tokenIndex, bal, allowance)) #ok(bal);
              case (#err(e)) #err(#InvalidToken(request.token));
          }
- 
     };
     
     public shared({caller}) func burn(request : Ext.Core.BurnRequest) : async Ext.Core.BurnResponse {
@@ -904,9 +907,10 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _slot:Nat32; _acces
     // Internal functions which help for better code reusability
 
     private func consumeAccessTokens(caller:Principal, count:Nat) : async Bool {
-        let atokens = await ACCESSCONTROL.getBalance(caller);
+        let accessControl = accessActor(caller);
+        let atokens = await accessControl.getBalance(caller);
         if (atokens < count) return false;
-        if ((await ACCESSCONTROL.consumeAccess(caller, count)) == #ok(true)) return true;
+        if ((await accessControl.consumeAccess(caller, count)) == #ok(true)) return true;
         return false;
     };
 

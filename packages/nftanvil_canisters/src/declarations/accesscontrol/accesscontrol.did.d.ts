@@ -7,6 +7,7 @@ export interface AccessControl {
   'getChallenge' : () => Promise<Array<number>>,
   'reset' : () => Promise<undefined>,
   'sendSolution' : (arg_0: string) => Promise<Result>,
+  'stats' : () => Promise<StatsResponse>,
 }
 export type CommonError = { 'NotEnough' : null } |
   { 'Unauthorized' : null } |
@@ -15,4 +16,13 @@ export type Result = { 'ok' : bigint } |
   { 'err' : CommonError };
 export type Result_1 = { 'ok' : boolean } |
   { 'err' : CommonError };
+export interface StatsResponse {
+  'rts_max_live_size' : bigint,
+  'cycles' : bigint,
+  'rts_memory_size' : bigint,
+  'rts_total_allocation' : bigint,
+  'rts_heap_size' : bigint,
+  'rts_reclaimed' : bigint,
+  'rts_version' : string,
+}
 export interface _SERVICE extends AccessControl {}

@@ -34,7 +34,7 @@ export const userSlice = createSlice({
     accesstokens: 0,
     acclist: [],
     acccan: "",
-    access: "",
+    accesslist: [],
     pro: false,
   },
   reducers: {
@@ -57,14 +57,14 @@ export const userSlice = createSlice({
       };
     },
     authSet: (state, action) => {
-      const { address, principal, anonymous, acclist, acccan, access } =
+      const { address, principal, anonymous, acclist, acccan, accesslist } =
         action.payload;
       return {
         ...state,
         address,
         principal,
         anonymous,
-        ...(acclist ? { acclist, acccan, access } : {}),
+        ...(acclist ? { acclist, acccan, accesslist } : {}),
       };
     },
   },
@@ -112,11 +112,11 @@ export const auth =
     router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
       agentOptions: { identity },
     });
-    let { access, acclist } = await router.fetchSetup();
+    let { accesslist, acclist } = await router.fetchSetup();
     let acccan = aid2acccan(address, acclist);
 
     dispatch(
-      authSet({ address, principal, anonymous, acclist, acccan, access })
+      authSet({ address, principal, anonymous, acclist, acccan, accesslist })
     );
 
     dispatch(getAccessTokenBalance());
@@ -142,7 +142,10 @@ export const challenge = () => async (dispatch, getState) => {
   if (s.user.anonymous) return;
 
   let identity = authentication.client.getIdentity();
-  let access = accessCanister(s.user.access, { agentOptions: { identity } });
+
+  let accesscan = aid2acccan(s.user.principal, s.user.accesslist);
+
+  let access = accessCanister(accesscan, { agentOptions: { identity } });
 
   let challenge = await access.getChallenge();
   dispatch(challengeSet(challenge));
@@ -153,7 +156,10 @@ export const getAccessTokenBalance = () => async (dispatch, getState) => {
   if (s.user.anonymous) return;
 
   let identity = authentication.client.getIdentity();
-  let access = accessCanister(s.user.access, { agentOptions: { identity } });
+
+  let accesscan = aid2acccan(s.user.principal, s.user.accesslist);
+
+  let access = accessCanister(accesscan, { agentOptions: { identity } });
 
   let balance = await access.getBalance(Principal.fromText(s.user.principal));
   dispatch(accessTokensSet(parseInt(balance, 10)));
@@ -166,7 +172,10 @@ export const sendSolution = (code) => async (dispatch, getState) => {
   if (s.user.anonymous) return;
 
   let identity = authentication.client.getIdentity();
-  let access = accessCanister(s.user.access, { agentOptions: { identity } });
+
+  let accesscan = aid2acccan(s.user.principal, s.user.accesslist);
+
+  let access = accessCanister(accesscan, { agentOptions: { identity } });
 
   let result = await access.sendSolution(code);
   if (result.ok) {

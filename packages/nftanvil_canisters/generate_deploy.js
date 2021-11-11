@@ -41,7 +41,9 @@ cluster.nft.forEach((x, idx) => {
   ci["nft_" + idx] = { ic: x };
   dfxd += `dfx deploy --network ic nft_${idx} --argument 'record {_acclist= vec {"${cluster.account.join(
     '";"'
-  )}"}; _slot=${idx}; _accesscontrol_can="${"zhhlp-riaaa-aaaai-qa24q-cai"}"; _debug_cannisterId=null}'\n`;
+  )}"}; _accesslist= vec {"${cluster.access.join(
+    '";"'
+  )}"}; _slot=${idx}; _debug_cannisterId=null}'\n`;
 });
 
 cluster.account.forEach((x, idx) => {
@@ -51,6 +53,15 @@ cluster.account.forEach((x, idx) => {
   };
   ci["account_" + idx] = { ic: x };
   dfxd += `dfx deploy --network ic account_${idx}\n`;
+});
+
+cluster.access.forEach((x, idx) => {
+  r.canisters["access_" + idx] = {
+    main: "mo/access.mo",
+    type: "motoko",
+  };
+  ci["access_" + idx] = { ic: x };
+  dfxd += `dfx deploy --network ic access_${idx} --argument 'record{_admin = principal "vlgg5-pyaaa-aaaai-qaqba-cai"}' \n`;
 });
 
 fs.writeFileSync("./dfx_deploy.json", JSON.stringify(r));

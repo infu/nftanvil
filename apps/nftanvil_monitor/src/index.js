@@ -1,17 +1,18 @@
 import {
   Principal,
-  routerConnect,
+  routerCanister,
   nftCanister,
   accountCanister,
+  accessCanister,
   encodeTokenId,
 } from "@vvv-interactive/nftanvil";
-var Table = require("cli-table");
-const fs = require("fs");
-const path = require("path");
+import Table from "cli-table";
+import fs from "fs";
+import path from "path";
 
 const main = async () => {
   let rez = {};
-  let { principal, address, router, id: routerId } = await routerConnect();
+  let { principal, address, router, id: routerId } = await routerCanister();
 
   let rs = await router.stats();
   rs.id = routerId;
@@ -30,7 +31,6 @@ const main = async () => {
 
   let setup = await router.fetchSetup();
   rez.account = setup.acclist;
-
   let accStats = await Promise.all(
     setup.acclist.map(async (can) => {
       let acc = accountCanister(can);
@@ -40,6 +40,14 @@ const main = async () => {
     })
   );
 
+  let accessStats = await Promise.all(
+    setup.accesslist.map(async (can) => {
+      let acc = accessCanister(can);
+      let s = await acc.stats();
+      s.id = can;
+      return s;
+    })
+  );
   // instantiate
   var table = new Table({
     head: ["Type", "Canister Id", "Cycles", "Memory"],
@@ -69,6 +77,14 @@ const main = async () => {
     ...accStats.map((s, idx) => {
       return [
         "account",
+        s.id,
+        formatN((100n * s.cycles) / T) + " T",
+        formatN((100n * s.rts_total_allocation) / GB) + " GB",
+      ];
+    }),
+    ...accessStats.map((s, idx) => {
+      return [
+        "access",
         s.id,
         formatN((100n * s.cycles) / T) + " T",
         formatN((100n * s.rts_total_allocation) / GB) + " GB",

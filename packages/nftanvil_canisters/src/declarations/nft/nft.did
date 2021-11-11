@@ -363,7 +363,7 @@ type ApproveRequest =
  };
 type AccountIdentifier = text;
 service : (record {
-             _accesscontrol_can: text;
+             _accesslist: vec text;
              _acclist: vec text;
              _debug_cannisterId: opt principal;
              _slot: nat32;

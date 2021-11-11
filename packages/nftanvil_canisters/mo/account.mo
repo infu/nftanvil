@@ -94,7 +94,7 @@ shared({ caller = _owner }) actor class Account() = this {
         let pstart = page*100;
         let pend = (page+1)*100;
         label l for (gid:Nat32 in it) {
-            if (index > pend) break l;
+            if (index >= pend) break l;
 
             if ((index >= pstart)) {
                   rez[index - pstart] := gid2tid(gid);

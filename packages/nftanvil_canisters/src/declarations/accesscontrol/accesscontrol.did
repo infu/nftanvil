@@ -1,3 +1,13 @@
+type StatsResponse = 
+ record {
+   cycles: nat;
+   rts_heap_size: nat;
+   rts_max_live_size: nat;
+   rts_memory_size: nat;
+   rts_reclaimed: nat;
+   rts_total_allocation: nat;
+   rts_version: text;
+ };
 type Result_1 = 
  variant {
    err: CommonError;
@@ -23,5 +33,6 @@ type AccessControl =
    getChallenge: () -> (vec nat32);
    reset: () -> ();
    sendSolution: (text) -> (Result);
+   stats: () -> (StatsResponse) query;
  };
 service : (record {_admin: principal;}) -> AccessControl

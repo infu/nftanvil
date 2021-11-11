@@ -7,12 +7,12 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
-import Ext "../src/ic/lib/ext.std/src/Ext";
-import Interface "../src/ic/lib/ext.std/src/Interface";
-import Array_ "../src/ic/lib/vvv/src/Array";
+import Ext "../lib/ext.std/src/Ext";
+import Interface "../lib/ext.std/src/Interface";
+import Array_ "../lib/vvv/src/Array";
 
-import AccessControl "../src/ic/accesscontrol/access";
-import PseudoRandom "../src/ic/lib/vvv/src/PseudoRandom";
+import AccessControl "../mo/access";
+import PseudoRandom "../lib/vvv/src/PseudoRandom";
 
 
 

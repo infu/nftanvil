@@ -4,7 +4,7 @@ export interface Router {
   'fetchNFTCan' : (arg_0: bigint) => Promise<string>,
   'fetchNFTCanisters' : () => Promise<Array<string>>,
   'fetchSetup' : () => Promise<
-      { 'access' : string, 'acclist' : Array<string> }
+      { 'accesslist' : Array<string>, 'acclist' : Array<string> }
     >,
   'getAvailable' : () => Promise<Principal>,
   'reportOutOfMemory' : () => Promise<undefined>,

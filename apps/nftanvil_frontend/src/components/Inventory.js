@@ -49,7 +49,7 @@ export const Inventory = (p) => {
   const dispatch = useDispatch();
 
   const load = async () => {
-    await dispatch(loadInventory(address));
+    await dispatch(loadInventory(address, pageIdx));
     setLoading(false);
   };
 

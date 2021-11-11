@@ -299,8 +299,8 @@ export const init = ({ IDL }) => {
   return [
     IDL.Record({
       '_debug_cannisterId' : IDL.Opt(IDL.Principal),
+      '_accesslist' : IDL.Vec(IDL.Text),
       '_acclist' : IDL.Vec(IDL.Text),
-      '_accesscontrol_can' : IDL.Text,
       '_slot' : IDL.Nat32,
     }),
   ];

@@ -138,6 +138,14 @@ function AlertTestNet() {
                 twitter
               </a>
               . Airdrops soon!
+              <div>
+                <Link
+                  to="/address/9/9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"
+                  style={{ color: "#e67", borderBottom: "1px dotted" }}
+                >
+                  Take a look at some of the upcoming items
+                </Link>
+              </div>
             </Text>
           </AlertDescription>
         </Box>

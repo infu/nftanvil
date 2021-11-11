@@ -8,7 +8,7 @@ import Nat64 "mo:base/Nat32";
 import Text "mo:base/Text";
 
 import Nat "mo:base/Nat";
-import Hash "../src/ic/lib/vvv/src/Hash";
+import Hash "../lib/vvv/src/Hash";
 
 Debug.print("T1 " # Nat32.toText(Hash.djb2xor("qwe")));
 Debug.print("T2 " #  Nat32.toText(Hash.djb2xor("qwertyui")));

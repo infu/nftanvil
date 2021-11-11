@@ -10,6 +10,9 @@ import Result "mo:base/Result";
 
 import PseudoRandom "../lib/vvv/src/PseudoRandom";
 import Captcha "../lib/vvv/src/Captcha";
+import Cycles "mo:base/ExperimentalCycles";
+
+import Prim "mo:prim"; 
 
  
 shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
@@ -33,7 +36,6 @@ shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
     private stable var _tmpConsumers : [(Principal, Bool)] = [];
     private var _consumers : HashMap.HashMap<Principal, Bool> = HashMap.fromIter(_tmpConsumers.vals(), 0, Principal.equal, Principal.hash );
    
-
     private stable var _reward:Nat = 10;
 
     //Handle canister upgrades
@@ -57,14 +59,12 @@ shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
           0
         };
      }
-
     };
 
     // list of allowed nft canisters which can add/rem to account                                     
     public shared ({caller}) func addAllowed(p: Principal) : async () {
         assert(caller == intaller);
         _consumers.put(p, true);
-
     };
 
     // If the principal has enough, then this function is called to remove access tokens from their balance
@@ -130,8 +130,6 @@ shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
         case (_) #err(#NotEnough)
       };
 
-  
-     
     };
 
     // The adminitrator can add access tokens to principal manually
@@ -156,4 +154,26 @@ shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
     };
 
   
+    public type StatsResponse = {
+        cycles: Nat;
+        rts_version:Text;
+        rts_memory_size:Nat;
+        rts_heap_size:Nat;
+        rts_total_allocation:Nat;
+        rts_reclaimed:Nat;
+        rts_max_live_size:Nat;
+    };
+
+
+    public query func stats() : async StatsResponse {
+        {
+            cycles = Cycles.balance();
+            rts_version = Prim.rts_version();
+            rts_memory_size = Prim.rts_memory_size();
+            rts_heap_size = Prim.rts_heap_size();
+            rts_total_allocation = Prim.rts_total_allocation();
+            rts_reclaimed = Prim.rts_reclaimed();
+            rts_max_live_size = Prim.rts_max_live_size();
+        }
+    };
 }
