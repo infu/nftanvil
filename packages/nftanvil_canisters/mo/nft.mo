@@ -119,7 +119,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     private let thresholdMemory = 1147483648; //  ~1GB
     private let thresholdNFTMask:Nat32 = 8191; // Dont touch. 13 bit Nat
-    private let thresholdNFTCount:Nat32 = 4000; // can go up to 8191
+    private let thresholdNFTCount:Nat32 = 4001; // can go up to 8191
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -159,7 +159,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user, caller)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+            case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
                 await SNFT_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
                 
                 return #ok(1);
@@ -208,6 +208,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
             }
         }
     };
+    // public query func debug_getNFTS() : async [(TokenIndex, Metadata)] {
+    //         Iter.toArray(_meta.entries())
+    // };
 
     public shared({caller}) func transfer_link(request : Ext.Core.TransferLinkRequest) : async Ext.Core.TransferLinkResponse {
         
@@ -531,7 +534,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     private func chunkIdDecode(x:Nat32) : (tokenIndex:Nat32, chunkIndex:Nat32, ctype:Nat32) {
         (
-            (x >> 19 ) & thresholdNFTMask,
+            ((x >> 19 ) & thresholdNFTMask) | (_slot<<13) ,
             (x >> 2) & 255,
             (x & 3)
         )

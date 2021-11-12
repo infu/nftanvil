@@ -23,7 +23,7 @@ import HashSmash "../lib/vvv/src/HashSmash";
 import Prim "mo:prim"; 
 
 
-shared({ caller = _owner }) actor class Account() = this {
+shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
      // TYPE ALIASES
     type AccountIdentifier = Ext.AccountIdentifier;
     type TokenIdentifier = Ext.TokenIdentifier;
@@ -60,7 +60,7 @@ shared({ caller = _owner }) actor class Account() = this {
   
     // list of allowed nft canisters which can add/rem to account                                     
     public shared ({caller}) func addAllowed(p: Principal, slot:Nat32) : async () {
-        assert(caller == _owner);
+        assert(caller == _router);
 
         _can2idx.put(p, slot);
         _idx2can.put(slot, p);
@@ -107,7 +107,7 @@ shared({ caller = _owner }) actor class Account() = this {
 
     private func gid2tid(gid:Nat32) : TokenIdentifier {
             let slot:Nat32 = gid >> 13;
-            let idx:Nat32 = gid & 8191;
+            let idx:Nat32 = gid; 
             switch(_idx2can.get(slot)) {
                 case (?nftcan) {
                     Ext.TokenIdentifier.encode(nftcan, idx);

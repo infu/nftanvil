@@ -41,7 +41,6 @@ shared({caller = owner}) actor class Router() = this {
     system func postupgrade() {
         _tmpNftAvailability := [];
         
-        _nft_availability := HashMap.fromIter(Iter.fromArray([(Principal.fromText("z4cxk-lqaaa-aaaai-qa26a-cai"), true)]), 0, Principal.equal, Principal.hash);
     };
 
  
@@ -78,6 +77,25 @@ shared({caller = owner}) actor class Router() = this {
         };
 
     };
+
+    
+    public shared({caller}) func setNFTOut(can : Principal) : async () {
+        assert(caller == owner);
+        switch(_nft_availability.get(can)) {
+            case (?a) {
+                _nft_availability.put(can, false);
+            };
+            case (_) {
+                ()
+            }
+        }    
+    };
+
+    public shared({caller}) func addNFT() : async () {
+        assert(caller == owner);
+        await addNFTCanister();
+    };
+
 
     public shared({caller}) func reportOutOfMemory() : async () {
         switch(_nft_availability.get(caller)) {
@@ -139,7 +157,7 @@ shared({caller = owner}) actor class Router() = this {
 
     private func addAccountCanister() : async () {
             Cycles.add(cyclesForNewCanister);
-            let new = await Account.Account();
+            let new = await Account.Account({_router = Principal.fromActor(this)});
             let principal = Principal.fromActor(new);
 
             await IC.update_settings({
@@ -160,7 +178,7 @@ shared({caller = owner}) actor class Router() = this {
 
     private func addAccessCanister() : async () {
             Cycles.add(cyclesForNewCanister);
-            let new = await AccessControl.AccessControl({_admin = owner});
+            let new = await AccessControl.AccessControl({_admin = owner; _router = Principal.fromActor(this)});
             let principal = Principal.fromActor(new);
 
             await IC.update_settings({

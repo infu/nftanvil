@@ -42,6 +42,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
   let s = getState();
 
   let { index, canister } = decodeTokenId(id);
+  console.log("FETCHING", { canister, index, id });
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
   let resp = await nftcan.metadata(id);

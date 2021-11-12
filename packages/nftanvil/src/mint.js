@@ -29,7 +29,12 @@ export const easyMint = async (arr) => {
 
 export const easyMintOne = async ({ to, metadata }) => {
   let { router } = await routerCanister();
-  let nftcan = await router.getAvailable();
+
+  let available = await router.getAvailable();
+  let nftcan = Principal.fromText(
+    available[Math.floor(Math.random() * available.length)]
+  );
+
   let nft = nftCanister(nftcan);
 
   if (

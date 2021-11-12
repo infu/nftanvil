@@ -52,7 +52,7 @@ cluster.account.forEach((x, idx) => {
     type: "motoko",
   };
   ci["account_" + idx] = { ic: x };
-  dfxd += `dfx deploy --network ic account_${idx}\n`;
+  dfxd += `dfx deploy --network ic account_${idx} --argument 'record {_router= principal "${cluster.router[0]}"}'\n`;
 });
 
 cluster.access.forEach((x, idx) => {
@@ -61,7 +61,7 @@ cluster.access.forEach((x, idx) => {
     type: "motoko",
   };
   ci["access_" + idx] = { ic: x };
-  dfxd += `dfx deploy --network ic access_${idx} --argument 'record{_admin = principal "vlgg5-pyaaa-aaaai-qaqba-cai"}' \n`;
+  dfxd += `dfx deploy --network ic access_${idx} --argument 'record{_admin = principal "vlgg5-pyaaa-aaaai-qaqba-cai"; _router = principal "${cluster.router[0]}"}' \n`;
 });
 
 fs.writeFileSync("./dfx_deploy.json", JSON.stringify(r));

@@ -15,12 +15,12 @@ import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim"; 
 
  
-shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
+shared({caller = installer}) actor class AccessControl({_admin: Principal; _router: Principal}) {
     
     public type User = {
-          solution  : Text; 
-          balance : Nat;
-      };
+        solution  : Text; 
+        balance : Nat;
+    };
 
     public type CommonError = {
         #NotEnough;
@@ -47,6 +47,7 @@ shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
     system func postupgrade() {
         _tmpConsumers := [];
         _tmpAccount := [];
+        // _consumers := HashMap.fromIter( Iter.fromArray([(Principal.fromText("rdwbj-yqaaa-aaaai-qa4xq-cai"), true), (Principal.fromText("z4cxk-lqaaa-aaaai-qa26a-cai"), true), (Principal.fromText("rexh5-viaaa-aaaai-qa4xa-cai"), true)]), 0, Principal.equal, Principal.hash );
     };
 
     // This function is called by the canister which requires access tokens
@@ -61,9 +62,15 @@ shared({caller = intaller}) actor class AccessControl({_admin: Principal}) {
      }
     };
 
+
+
+    public query func showAllowed() : async [Text] {
+        Iter.toArray(Iter.map(_consumers.entries(), func((x:Principal, b:Bool)) : Text { Principal.toText(x); }));
+    };
+
     // list of allowed nft canisters which can add/rem to account                                     
     public shared ({caller}) func addAllowed(p: Principal) : async () {
-        assert(caller == intaller);
+        assert(caller == _router);
         _consumers.put(p, true);
     };
 
