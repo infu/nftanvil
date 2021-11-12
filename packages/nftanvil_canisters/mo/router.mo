@@ -3,6 +3,7 @@ import Iter "mo:base/Iter";
 
 import Principal "mo:base/Principal";
 import Nat32 "mo:base/Nat32";
+import HashMap "mo:base/HashMap";
 
 
 import ICType "./ictype";
@@ -30,9 +31,20 @@ shared({caller = owner}) actor class Router() = this {
     private stable var _account_canisters_next_id:Nat32 = 0;
     private stable var _access_canisters_next_id:Nat32 = 0;
 
-    system func postupgrade() {
-        _access_canisters := [ actor("zhhlp-riaaa-aaaai-qa24q-cai"):AccessControl.AccessControl ];
+    private stable var _tmpNftAvailability : [(Principal, Bool)] = [];
+    private var _nft_availability : HashMap.HashMap<Principal, Bool> = HashMap.fromIter(_tmpNftAvailability.vals(), 0, Principal.equal, Principal.hash);
+
+    system func preupgrade() {
+        _tmpNftAvailability := Iter.toArray(_nft_availability.entries());
     };
+
+    system func postupgrade() {
+        _tmpNftAvailability := [];
+    };
+
+    // system func postupgrade() {
+    //     _access_canisters := [ actor("zhhlp-riaaa-aaaai-qa24q-cai"):AccessControl.AccessControl ];
+    // };
 
     public shared({caller}) func debug_reset() : async () {
         assert(caller == owner);
@@ -43,7 +55,9 @@ shared({caller = owner}) actor class Router() = this {
         _account_canisters := [];
         _account_canisters_next_id := 0;
 
-     
+        _nft_availability := HashMap.fromIter(Iter.fromArray([]), 0, Principal.equal, Principal.hash);
+        _access_canisters_next_id := 0;
+        _account_canisters := [];
 
         await addAccessCanister();
         await addAccessCanister();
@@ -57,21 +71,35 @@ shared({caller = owner}) actor class Router() = this {
         };
 
         // create one NFT canister
-        await addNFTCanister();
-     
+        var nftcan = 0; 
+        while(nftcan < 3) {
+            await addNFTCanister();
+            nftcan := nftcan + 1;
+        };
+
     };
 
     public shared({caller}) func reportOutOfMemory() : async () {
-        
-        assert((caller == owner) or (switch( Array.find(_nft_canisters, func(x : NFT.NFT) : Bool {
-             Principal.fromActor(x) == caller 
-             } ) ) { case (?a) true; case (_) false; } ));
-        
-        await addNFTCanister();
+        switch(_nft_availability.get(caller)) {
+            case (?a) {
+                _nft_availability.put(caller, false);
+                await addNFTCanister();
+            };
+            case (_) {
+                ()
+            }
+        }
     };
 
-    public query func getAvailable() : async Principal {
-            Principal.fromActor(_nft_canisters[ Nat32.toNat(_nft_canisters_next_id) - 1]);
+    public query func getAvailable() : async [Text] {
+        var result: [Text] = [];
+        for ((x:Principal, available:Bool) in _nft_availability.entries()) {
+            if (available == true) {
+                result := Array.append<Text>(result, [Principal.toText(x)])
+            }
+        };
+
+        return result;
     };
 
     private func addNFTCanister() : async () {
@@ -92,6 +120,7 @@ shared({caller = owner}) actor class Router() = this {
                 }
             });
 
+            _nft_availability.put(Principal.fromActor(new), true);
             _nft_canisters := Array.append<NFT.NFT>(_nft_canisters, [new]);
 
             // register it inside account canisters
@@ -150,7 +179,7 @@ shared({caller = owner}) actor class Router() = this {
     };
 
     public query func fetchNFTCanisters() : async [Text] {
-        Iter.toArray(Iter.map(Iter.fromArray(_nft_canisters), func(x:NFT.NFT) : Text { Principal.toText(Principal.fromActor(x)); }));
+          Iter.toArray(Iter.map(Iter.fromArray(_nft_canisters), func(x:NFT.NFT) : Text { Principal.toText(Principal.fromActor(x)); }));
     };
 
     private func getAccountCanisters() : [Text] {

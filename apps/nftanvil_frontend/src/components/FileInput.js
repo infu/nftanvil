@@ -1,18 +1,6 @@
 import React from "react";
-import media_upload from "../assets/media_upload.svg";
 
-import {
-  ButtonGroup,
-  Button,
-  Box,
-  Spinner,
-  toast,
-  useToast,
-  IconButton,
-  Center,
-  Text,
-  Stack,
-} from "@chakra-ui/react";
+import { Button, Box, Center, Stack } from "@chakra-ui/react";
 import { UploadIcon } from "../icons";
 export const FileInput = (props) => {
   const inputRef = React.createRef();

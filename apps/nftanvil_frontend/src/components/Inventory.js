@@ -1,23 +1,12 @@
 import {
-  ButtonGroup,
-  Button,
   Box,
   Spinner,
-  toast,
-  useToast,
-  IconButton,
   Wrap,
   useColorModeValue,
   Center,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { LoginRequired } from "./LoginRequired";
 
-import {
-  itemQuality,
-  itemTransfer,
-  itemUse,
-} from "@vvv-interactive/nftanvil-tools/cjs/items.js";
 import { NFT } from "./NFT";
 import itemgrid from "../assets/itemgrid.png";
 import itemgrid_light from "../assets/itemgrid_light.png";

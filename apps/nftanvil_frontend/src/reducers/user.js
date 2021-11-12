@@ -5,21 +5,10 @@ import { accessCanister } from "@vvv-interactive/nftanvil-canisters/cjs/accessco
 
 import authentication from "../auth";
 
-import {
-  principalToAccountIdentifier,
-  encodeTokenId,
-} from "@vvv-interactive/nftanvil-tools/cjs/token.js";
-import { WebAuthnIdentity } from "@dfinity/identity";
-import {
-  encodeArrayBuffer,
-  jsonToNat8,
-} from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+
 import { Principal } from "@dfinity/principal";
 
-import { nftCanister } from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
-import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
-
-import produce from "immer";
 import { aid2acccan } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
 import { toast } from "react-toastify";

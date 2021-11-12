@@ -13,7 +13,7 @@ export function LoginRequired({ label, children }) {
       <Button
         variant="solid"
         rightIcon={
-          <img src={Dfinity} style={{ width: "40px", height: "40px" }} />
+          <img alt="" src={Dfinity} style={{ width: "40px", height: "40px" }} />
         }
         mt={4}
         w={"100%"}

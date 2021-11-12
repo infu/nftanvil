@@ -1,56 +1,32 @@
 import React from "react";
-import moment from "moment";
 import { mint } from "../reducers/nft";
 import { proSet } from "../reducers/user";
 import { LoginRequired } from "./LoginRequired";
 import { useSelector, useDispatch } from "react-redux";
-import _ from "lodash";
+
 import {
-  ButtonGroup,
   Button,
   Box,
-  Spinner,
   IconButton,
   Radio,
   RadioGroup,
   Tooltip,
-  Wrap,
-  WrapItem,
-  useMediaQuery,
 } from "@chakra-ui/react";
 import { useWindowSize } from "react-use";
 
 import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverHeader,
-  PopoverBody,
-  PopoverFooter,
-  PopoverArrow,
-  PopoverCloseButton,
   Flex,
   Spacer,
-  Center,
   useColorModeValue,
-  Modal,
-  ModalOverlay,
-  ModalModalHeader,
-  ModalCloseButton,
-  ModalBody,
   FormLabel,
   Input,
   FormControl,
-  ModalFooter,
-  ModalContent,
-  ModalHeader,
   FormErrorMessage,
   Textarea,
   Text,
   Grid,
 } from "@chakra-ui/react";
-import { useClipboard, useColorMode } from "@chakra-ui/react";
-import { Checkbox, CheckboxGroup } from "@chakra-ui/react";
+
 import {
   NumberInput,
   NumberInputField,
@@ -60,30 +36,15 @@ import {
   Stack,
 } from "@chakra-ui/react";
 
-import {
-  CloseIcon,
-  SmallCloseIcon,
-  CopyIcon,
-  AddIcon,
-  WarningIcon,
-  InfoOutlineIcon,
-  ArrowForwardIcon,
-} from "@chakra-ui/icons";
+import { SmallCloseIcon, InfoOutlineIcon } from "@chakra-ui/icons";
 
 import { AnvilIcon } from "../icons";
-import {
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
-} from "@chakra-ui/react";
+
 import { Select } from "@chakra-ui/react";
 import { Formik, Field, Form, FieldArray } from "formik";
 import { Switch } from "@chakra-ui/react";
-import { challengeDraw } from "@vvv-interactive/nftanvil-tools/cjs/image.js";
 import { toast } from "react-toastify";
 
-import { theme } from "../theme.js";
 import {
   itemQuality,
   itemTransfer,
@@ -996,9 +957,9 @@ export const MintForm = () => {
                   </Button>
                 </LoginRequired>
                 {!pro ? (
-                  <Text fontSize="11px" align="center" mt="16px">
+                  <Box fontSize="11px" align="center" mt="16px">
                     For more options turn on <ProToggle />
-                  </Text>
+                  </Box>
                 ) : null}
                 {/* <Button
                 mt={4}

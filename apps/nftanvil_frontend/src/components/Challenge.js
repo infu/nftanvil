@@ -1,38 +1,11 @@
 import React from "react";
-import {
-  login,
-  logout,
-  mint,
-  owned,
-  challenge,
-  sendSolution,
-  challengeSet,
-} from "../reducers/user";
+import { sendSolution, challengeSet } from "../reducers/user";
 import { useSelector, useDispatch } from "react-redux";
 
+import { Button } from "@chakra-ui/react";
 import {
-  ButtonGroup,
-  Button,
-  Box,
-  Spinner,
-  IconButton,
-} from "@chakra-ui/react";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverHeader,
-  PopoverBody,
-  PopoverFooter,
-  PopoverArrow,
-  PopoverCloseButton,
-  Flex,
-  Spacer,
-  Center,
-  useColorModeValue,
   Modal,
   ModalOverlay,
-  ModalModalHeader,
   ModalCloseButton,
   ModalBody,
   FormLabel,
@@ -42,16 +15,8 @@ import {
   ModalContent,
   ModalHeader,
   FormErrorMessage,
-  useDisclosure,
 } from "@chakra-ui/react";
-import { useClipboard, useColorMode } from "@chakra-ui/react";
-import {
-  SunIcon,
-  MoonIcon,
-  CopyIcon,
-  AddIcon,
-  WarningIcon,
-} from "@chakra-ui/icons";
+
 import { Formik, Field, Form } from "formik";
 
 import { challengeDraw } from "@vvv-interactive/nftanvil-tools/cjs/image.js";

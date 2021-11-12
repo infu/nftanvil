@@ -8,16 +8,13 @@ import {
 import { nftCanister } from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 import {
   chunkBlob,
-  blobPrepare,
   encodeLink,
   decodeLink,
   generateKeyHashPair,
   uploadFile,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
-import { Principal } from "@dfinity/principal";
-import { produce } from "immer";
-import { Spinner } from "@chakra-ui/react";
+
 import { push } from "connected-react-router";
 import { challenge } from "./user";
 
