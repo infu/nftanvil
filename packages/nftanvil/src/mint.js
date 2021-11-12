@@ -14,7 +14,7 @@ import {
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
 import pLimit from "p-limit";
-const limit = pLimit(process.env.MINT_CONCURRENCY || 20); // Number of concurrent async requests. Don't get it too high or network may block you
+const limit = pLimit(process.env.MINT_CONCURRENCY?parseInt(process.env.MINT_CONCURRENCY,10) || 20); // Number of concurrent async requests. Don't get it too high or network may block you
 import { blobFrom } from "fetch-blob/from.js";
 
 export const easyMint = async (arr) => {
