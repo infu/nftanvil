@@ -436,7 +436,7 @@ export const NFTClaim = (p) => {
 
   useEffect(() => {
     dispatch(nftEnterCode(code));
-  }, [code]);
+  }, [code, dispatch]);
 
   return null;
 };
@@ -455,7 +455,7 @@ export const NFTPage = (p) => {
 
   useEffect(() => {
     dispatch(nftFetch(id));
-  }, [id]);
+  }, [id, dispatch]);
 
   const onClaim = async () => {
     setClaiming(true);

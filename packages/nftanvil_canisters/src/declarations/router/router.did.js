@@ -22,7 +22,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
-    'getAvailable' : IDL.Func([], [IDL.Principal], ['query']),
+    'getAvailable' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'reportOutOfMemory' : IDL.Func([], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
   });

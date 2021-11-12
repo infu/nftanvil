@@ -55,7 +55,7 @@ export const jsonToNat8 = async (json) => {
   return arr;
 };
 
-export const chunkBlob = async (url_or_blob, fetch = fetch) => {
+export const chunkBlob = async (url_or_blob) => {
   let blob;
   if (typeof url_or_blob === "string")
     blob = await fetch(url_or_blob).then((r) => r.blob());

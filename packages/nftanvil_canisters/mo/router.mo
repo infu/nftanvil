@@ -40,11 +40,11 @@ shared({caller = owner}) actor class Router() = this {
 
     system func postupgrade() {
         _tmpNftAvailability := [];
+        
+        _nft_availability := HashMap.fromIter(Iter.fromArray([(Principal.fromText("z4cxk-lqaaa-aaaai-qa26a-cai"), true)]), 0, Principal.equal, Principal.hash);
     };
 
-    // system func postupgrade() {
-    //     _access_canisters := [ actor("zhhlp-riaaa-aaaai-qa24q-cai"):AccessControl.AccessControl ];
-    // };
+ 
 
     public shared({caller}) func debug_reset() : async () {
         assert(caller == owner);
@@ -57,7 +57,7 @@ shared({caller = owner}) actor class Router() = this {
 
         _nft_availability := HashMap.fromIter(Iter.fromArray([]), 0, Principal.equal, Principal.hash);
         _access_canisters_next_id := 0;
-        _account_canisters := [];
+        _access_canisters := [];
 
         await addAccessCanister();
         await addAccessCanister();
@@ -165,7 +165,7 @@ shared({caller = owner}) actor class Router() = this {
 
             await IC.update_settings({
             canister_id = principal; 
-            settings = { 
+            settings = {
                 controllers = ?[owner, Principal.fromActor(this)];
                 compute_allocation = null;
                 memory_allocation = null; 

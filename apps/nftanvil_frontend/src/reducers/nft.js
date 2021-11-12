@@ -14,6 +14,7 @@ import {
   uploadFile,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
+import { Principal } from "@dfinity/principal";
 
 import { push } from "connected-react-router";
 import { challenge } from "./user";
@@ -40,12 +41,14 @@ export const nftFetch = (id) => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
   let s = getState();
 
-  let { index, canister, token } = decodeTokenId(id);
-
+  let { index, canister } = decodeTokenId(id);
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
   let resp = await nftcan.metadata(id);
   if (!resp) throw Error("Can't fetch NFT meta");
+  if (resp.err)
+    throw Error("Fetching NFT meta error " + JSON.stringify(resp.err));
+
   let { bearer, data, vars } = resp.ok;
 
   let meta = {
@@ -105,7 +108,7 @@ export const nftMediaGet = async ({
 }) => {
   let identity = authentication.client.getIdentity();
 
-  let { index, canister, token } = decodeTokenId(id);
+  let { index, canister } = decodeTokenId(id);
 
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
@@ -160,7 +163,7 @@ export const transfer =
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
 
-    let { index, canister, token } = decodeTokenId(id);
+    let { canister } = decodeTokenId(id);
 
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
     let s = getState();
@@ -184,7 +187,7 @@ export const burn =
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
 
-    let { index, canister, token } = decodeTokenId(id);
+    let { canister } = decodeTokenId(id);
 
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
     let s = getState();
@@ -206,7 +209,7 @@ export const use =
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
 
-    let { index, canister, token } = decodeTokenId(id);
+    let { canister } = decodeTokenId(id);
 
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
     let s = getState();
@@ -226,7 +229,7 @@ export const transfer_link =
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
 
-    let { index, canister, token } = decodeTokenId(id);
+    let { index, canister } = decodeTokenId(id);
 
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
     let s = getState();
@@ -273,21 +276,25 @@ export const claim_link =
   };
 
 export const nftEnterCode = (code) => async (dispatch, getState) => {
-  let { slot, tokenIndex, key } = decodeLink(code);
+  let { slot, tokenIndex } = decodeLink(code);
   let canister = await router.fetchNFTCan(slot);
   let id = encodeTokenId(canister, tokenIndex);
   dispatch(push("/nft/" + id + "/" + code));
 };
 
 export const mint = (vals) => async (dispatch, getState) => {
-  let canisterId = await router.getAvailable();
+  let available = await router.getAvailable();
+  console.log("AVAIL", available);
+  let canisterId = Principal.fromText(
+    available[Math.floor(Math.random() * available.length)]
+  );
+
   let identity = authentication.client.getIdentity();
   let nft = nftCanister(canisterId, { agentOptions: { identity } });
 
   let s = getState();
 
   let address = s.user.address;
-  let principal = s.user.principal;
 
   if (!address) throw Error("Annonymous cant mint"); // Wont let annonymous mint
 

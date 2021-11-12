@@ -159,7 +159,7 @@ function LoginBox() {
 
   const dispatch = useDispatch();
   return (
-    <Box w={270} sx={{ textAlign: "right" }}>
+    <Box w={380} sx={{ textAlign: "right" }}>
       <ButtonGroup variant="outline" spacing="3">
         {anonymous ? (
           <>
@@ -296,7 +296,7 @@ function Logo(props) {
 function DesktopMenu() {
   return (
     <Flex>
-      <Logo w={250} />
+      <Logo w={380} />
       <Spacer />
       <PageTabs />
       <Spacer />
@@ -419,7 +419,7 @@ function MobileMenu() {
 function MainMenu() {
   const { width, height } = useWindowSize();
 
-  const isDesktop = width > 480;
+  const isDesktop = width > 930;
   // const [isDesktop] = useMediaQuery("(min-width: 480px)");
 
   return isDesktop ? <DesktopMenu /> : <MobileMenu />;

@@ -6,7 +6,7 @@ export interface Router {
   'fetchSetup' : () => Promise<
       { 'accesslist' : Array<string>, 'acclist' : Array<string> }
     >,
-  'getAvailable' : () => Promise<Principal>,
+  'getAvailable' : () => Promise<Array<string>>,
   'reportOutOfMemory' : () => Promise<undefined>,
   'stats' : () => Promise<StatsResponse>,
 }

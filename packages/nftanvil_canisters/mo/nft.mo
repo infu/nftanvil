@@ -1,3 +1,6 @@
+// All rights reserved by VVV Interactive
+// Developer contributions are rewarded with stake
+
 import Ext "../lib/ext.std/src/Ext";
 import Interface "../lib/ext.std/src/Interface";
 import Text "mo:base/Text";

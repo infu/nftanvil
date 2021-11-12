@@ -17,7 +17,7 @@ type Router =
                         accesslist: vec text;
                         acclist: vec text;
                       }) query;
-   getAvailable: () -> (principal) query;
+   getAvailable: () -> (vec text) query;
    reportOutOfMemory: () -> ();
    stats: () -> (StatsResponse) query;
  };
