@@ -11,8 +11,8 @@ Powered by the Internet Computer https://dfinity.org/
 Explained in 2min https://www.youtube.com/watch?v=hGL5xtV7jIU
 
 
-**Current network (production will have a lot more nft and account canisters) Access canister id deprecated and its functionality will go to account**
-![image](https://user-images.githubusercontent.com/24810/140567962-9fa57616-084c-4662-8a21-cc8e185c23b7.png)
+**Current network (production will have a lot more nft and account canisters)**
+![image](https://user-images.githubusercontent.com/24810/141624169-80d4bc93-cc57-48ee-b1ca-d878c8dc6f13.png)
 
 ## Hackathon related
 
