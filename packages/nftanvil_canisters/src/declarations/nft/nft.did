@@ -89,6 +89,8 @@ type Token =
    key: text;
    sha256: opt vec nat8;
  };
+type Tags = vec Tag;
+type Tag = text;
 type SupplyResponse = 
  variant {
    err: CommonError;
@@ -194,8 +196,9 @@ type MetadataResponse =
  };
 type MetadataInput = 
  record {
-   attributes: vec Attribute;
+   attributes: Attributes;
    content: opt Content;
+   custom: opt CustomData;
    domain: opt text;
    extensionCanister: opt principal;
    hold: opt ItemHold;
@@ -203,6 +206,7 @@ type MetadataInput =
    name: opt text;
    quality: nat8;
    secret: bool;
+   tags: Tags;
    thumb: Content;
    transfer: ItemTransfer;
    ttl: opt nat32;
@@ -210,18 +214,20 @@ type MetadataInput =
  };
 type Metadata = 
  record {
-   attributes: vec Attribute;
+   attributes: Attributes;
    content: opt Content;
    created: nat32;
-   domain: opt text;
+   custom: opt CustomData;
+   domain: opt DomainName;
    entropy: blob;
    extensionCanister: opt principal;
    hold: opt ItemHold;
-   lore: opt text;
+   lore: opt ItemLore;
    minter: principal;
-   name: opt text;
+   name: opt ItemName;
    quality: nat8;
    secret: bool;
+   tags: Tags;
    thumb: Content;
    transfer: ItemTransfer;
    ttl: opt nat32;
@@ -231,13 +237,13 @@ type Memo = blob;
 type ItemUse = 
  variant {
    consumable: record {
-                 desc: text;
-                 useId: text;
+                 desc: EffectDesc;
+                 useId: CustomId;
                };
    cooldown: record {
-               desc: text;
+               desc: EffectDesc;
                duration: nat32;
-               useId: text;
+               useId: CustomId;
              };
  };
 type ItemTransfer = 
@@ -246,10 +252,13 @@ type ItemTransfer =
    bindsForever;
    unrestricted;
  };
-type ItemHold = variant {external: record {
-                                     desc: text;
-                                     holdId: text;
-                                   };};
+type ItemName = text;
+type ItemLore = text;
+type ItemHold = variant {
+                  external: record {
+                              desc: EffectDesc;
+                              holdId: CustomId;
+                            };};
 type HeaderField = 
  record {
    text;
@@ -266,6 +275,10 @@ type FetchChunkRequest =
    tokenIndex: TokenIndex;
  };
 type Extension = text;
+type EffectDesc = text;
+type DomainName = text;
+type CustomId = text;
+type CustomData = blob;
 type ContentType = text;
 type Content = 
  variant {
@@ -338,10 +351,11 @@ type BalanceRequest =
    user: User;
  };
 type Balance = nat;
+type Attributes = vec Attribute;
 type Attribute = 
  record {
    text;
-   int16;
+   nat16;
  };
 type ApproveResponse = 
  variant {

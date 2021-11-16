@@ -72,6 +72,7 @@ import {
   validateAttributeChange,
   mintFormValidate,
   validateDomain,
+  validateTagName,
 } from "@vvv-interactive/nftanvil-tools/cjs/validate.js";
 export const Mint = () => {
   return <MintForm />;
@@ -139,7 +140,7 @@ export const MintForm = () => {
         x.name.toLowerCase(),
         parseInt(x.change, 10),
       ]),
-
+      tags: v.tags.map((x) => x.toLowerCase()),
       content:
         v.content_storage === "internal" && v.content_internal?.url
           ? {
@@ -192,12 +193,14 @@ export const MintForm = () => {
       quality: v.quality,
       ttl: [v.ttl].filter(Boolean),
       attributes: v.attributes.filter(Boolean),
+      tags: v.tags.filter(Boolean),
       content: [v.content].filter(Boolean),
       thumb: v.thumb,
       secret: v.secret,
       extensionCanister: [
         v.extensionCanister ? Principal.fromText(v.extensionCanister) : null,
       ].filter(Boolean),
+      custom: [],
     };
 
     return a;
@@ -232,6 +235,7 @@ export const MintForm = () => {
         thumb_storage: "internal",
         thumb_external_idx: 0,
         secret: false,
+        tags: [],
       }}
       onSubmit={(values, actions) => {
         // setInterval(() => {
@@ -544,6 +548,58 @@ export const MintForm = () => {
                       </Stack>
                     )}
                   </FieldArray>
+
+                  <FieldArray name="tags">
+                    {({ insert, remove, push }) => (
+                      <Stack spacing={3}>
+                        {props.values.tags.length > 0 &&
+                          props.values.tags.map((friend, index) => (
+                            <Box key={index}>
+                              <Grid templateColumns="1fr 50px" gap={6}>
+                                <Field
+                                  name={`tags.${index}`}
+                                  validate={validateTagName}
+                                >
+                                  {({ field, form }) => {
+                                    let hasError, errText;
+                                    try {
+                                      hasError =
+                                        form.errors.tags[index] &&
+                                        form.touched.tags[index];
+                                      errText = form.errors.tags[index];
+                                    } catch (e) {}
+
+                                    return (
+                                      <FormControl isInvalid={hasError}>
+                                        <Input
+                                          {...field}
+                                          id={`tags.${index}`}
+                                          placeholder="tag"
+                                          variant="filled"
+                                        />
+                                        <FormErrorMessage>
+                                          {errText}
+                                        </FormErrorMessage>
+                                      </FormControl>
+                                    );
+                                  }}
+                                </Field>
+
+                                <IconButton
+                                  colorScheme="gray"
+                                  variant="solid"
+                                  icon={<SmallCloseIcon />}
+                                  onClick={() => remove(index)}
+                                />
+                              </Grid>
+                            </Box>
+                          ))}
+
+                        <Button onClick={() => push("")}>Add tag</Button>
+                      </Stack>
+                    )}
+                  </FieldArray>
+
                   {pro ? (
                     <Field name="quality" validate={validateQuality}>
                       {({ field, form }) => (

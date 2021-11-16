@@ -734,10 +734,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
             tags = m.tags;
             custom = m.custom;
             content = m.content;
-            thumb = m.thumb;
+            thumb = m.thumb; 
             extensionCanister = m.extensionCanister;
             minter= caller;
             created = timestamp;
+            updated = timestamp;
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
         };
 
@@ -779,6 +780,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                     }
                 }; 
              var cooldownUntil = null; // in minutes
+             var sockets = [];
         };
 
         assert(switch(_meta.get(tokenIndex)) { // make some memory integrity checks
@@ -813,7 +815,200 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     };
 
+    // Calls func socket on the target token
+    public shared({caller}) func plug(request: Ext.PlugRequest) : async Ext.PlugResponse {
+        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+ 
+        switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.plug; user = request.user}),1),caller_user, caller)) {
+            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+     
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+
+                            switch (Ext.TokenIdentifier.decode(request.socket)) {
+                                case (#ok(socketCanister, _)) {
+
+                                    let socketActor = actor (Principal.toText(socketCanister)) : NFT;
+                                    switch(await socketActor.socket(request)) {
+                                        case (#ok()) {
+                                            let to = Ext.User.toAccountIdentifier( #principal(socketCanister) );
+                                            await SNFT_move(Ext.User.toAccountIdentifier(request.user), to, tokenIndex);
+                                            #ok(());
+                                        };
+                                        case (#err(e)) {
+                                             #err(#Other("Socket rejected plug"));
+                                        }
+                                    };
+                                };
+                                case (#err(e)) {
+                                    #err(#InvalidToken(request.socket));
+                                }
+                            }
+
+                    };
+                    case (#err()) {
+                         #err(#InvalidToken(request.plug));
+                    }
+                }
+           
+            };
+            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
+            case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
+            case (#err(e)) return #err(#Other("Something went wrong"));
+        };
+    };
+
+    // Calls the extension canister and asks if it accepts the plug
+    public shared({caller}) func socket(request: Ext.SocketRequest) : async Ext.SocketResponse {
+         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+ 
+        switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.socket; user = request.user}),1),caller_user, caller)) {
+            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+     
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+
+                        switch(meta.extensionCanister) {
+                            case (?extCan) {
+                                let extensionActor = actor (Principal.toText(extCan)) : actor {
+                                    socketAllow : query (request: Ext.SocketRequest) -> async Result.Result<
+                                        (),
+                                        {#Other: Text}
+                                        >;
+                                };
+
+                                // get permission from extension canister
+                                switch (await extensionActor.socketAllow(request)) {
+                                    case (#ok()) {
+                                        #ok()
+                                    };
+                                    case (#err(e)) #err(e);
+                                };
+                            };
+                            case (null) {
+                                // canisters without extension don't need permission
+                                #ok()
+                            }
+                        }
+                        
+                    
+                    };
+                    case (#err()) {
+                         #err(#InvalidToken(request.plug));
+                    }
+                }
+           
+            };
+            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
+            case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
+            case (#err(e)) return #err(#Other("Something went wrong"));
+        };
+    };
+
+    // Unsockets and returns it to owner
+    public shared({caller}) func unsocket(request: Ext.UnsocketRequest) : async Ext.UnsocketResponse {
+
+        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     
+            switch (balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.socket; user = request.user}),1),caller_user, caller)) {
+                case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+        
+                    switch(getMeta(tokenIndex)) {
+                        case (#ok((meta,vars))) {
+
+                            switch(switch(meta.extensionCanister) {
+                                case (?extCan) {
+                                    let extensionActor = actor (Principal.toText(extCan)) : actor {
+                                        unsocketAllow : query (request: Ext.UnsocketRequest) -> async Result.Result<
+                                            (),
+                                            {#Other: Text}
+                                            >;
+                                    };
+
+                                    // get permission from extension canister
+                                    switch (await extensionActor.unsocketAllow(request)) {
+                                        case (#ok()) {
+                                            #ok()
+                                        };
+                                        case (#err(e)) #err(e);
+                                    };
+                                };
+                                case (null) {
+                                    // canisters without extension don't need permission
+                                    #ok()
+                                }
+                            }) {
+                                case (#ok()) {
+                                   switch (Ext.TokenIdentifier.decode(request.socket)) {
+                                    case (#ok(plugCanister, _)) {
+                                        let plugActor = actor (Principal.toText(plugCanister)) : NFT;
+                                        switch(await plugActor.unplug(request)) {
+                                            case (#ok()) {
+
+                                                //remove from socket metavars
+                                                vars.sockets := Array.filter( vars.sockets, func (tid:TokenIdentifier) : Bool {
+                                                    tid != request.plug
+                                                });
+
+                                                #ok();
+                                            };
+                                            case (#err(e)) #err(e);
+                                        }
+                                    };
+                                    case (#err(e)) #err(#InvalidToken(request.socket));
+                                    }
+                                    
+                                };
+                                case (#err(e)) #err(e);
+                            }
+                            
+                        
+                        };
+                        case (#err()) {
+                            #err(#InvalidToken(request.plug));
+                        }
+                    }
+            
+                };
+                case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+                case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
+                case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
+                case (#err(e)) return #err(#Other("Something went wrong"));
+            };
+
+    };
+
+
+// Unsockets and returns it to owner
+    public shared({caller}) func unplug(request: Ext.UnsocketRequest) : async Ext.UnplugResponse {
+
+        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+    
+            switch (balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.plug; user = caller_user}),1),caller_user, caller)) {
+                case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
+        
+                    switch(getMeta(tokenIndex)) {
+                        case (#ok((meta,vars))) {
+
+                            await SNFT_move(Ext.User.toAccountIdentifier(#principal(caller)),Ext.User.toAccountIdentifier(request.user), tokenIndex);
+
+                            #ok();
+                        };
+                        case (#err()) {
+                            #err(#InvalidToken(request.plug));
+                        }
+                    }
+            
+                };
+                case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+                case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
+                case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
+                case (#err(e)) return #err(#Other("Something went wrong"));
+            };
+
+    };
 
     public query func bearer(token : Ext.TokenIdentifier) : async Ext.NonFungible.BearerResponse {
            switch (Ext.TokenIdentifier.decode(token)) {
@@ -919,8 +1114,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     private func consumeAccessTokens(caller:Principal, count:Nat) : async Bool {
         let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
         let accessControl = accessActor(aid);
-        let atokens = await accessControl.getBalance(aid);
-        if (atokens < count) return false;
+        // let atokens = await accessControl.getBalance(aid);
+        // if (atokens < count) return false;
         if ((await accessControl.consumeAccess(aid, count)) == #ok(true)) return true;
         return false;
     };

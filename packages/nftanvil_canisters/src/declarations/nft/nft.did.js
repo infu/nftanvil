@@ -105,12 +105,14 @@ export const idlFactory = ({ IDL }) => {
     'token' : IDL.Opt(Token),
     'body' : IDL.Vec(IDL.Nat8),
   });
+  const EffectDesc = IDL.Text;
+  const CustomId = IDL.Text;
   const ItemUse = IDL.Variant({
-    'consumable' : IDL.Record({ 'desc' : IDL.Text, 'useId' : IDL.Text }),
+    'consumable' : IDL.Record({ 'desc' : EffectDesc, 'useId' : CustomId }),
     'cooldown' : IDL.Record({
       'duration' : IDL.Nat32,
-      'desc' : IDL.Text,
-      'useId' : IDL.Text,
+      'desc' : EffectDesc,
+      'useId' : CustomId,
     }),
   });
   const ContentType = IDL.Text;
@@ -121,10 +123,17 @@ export const idlFactory = ({ IDL }) => {
     }),
     'external' : IDL.Record({ 'idx' : IDL.Nat32, 'contentType' : ContentType }),
   });
+  const DomainName = IDL.Text;
+  const CustomData = IDL.Vec(IDL.Nat8);
   const ItemHold = IDL.Variant({
-    'external' : IDL.Record({ 'desc' : IDL.Text, 'holdId' : IDL.Text }),
+    'external' : IDL.Record({ 'desc' : EffectDesc, 'holdId' : CustomId }),
   });
-  const Attribute = IDL.Tuple(IDL.Text, IDL.Int16);
+  const ItemLore = IDL.Text;
+  const ItemName = IDL.Text;
+  const Tag = IDL.Text;
+  const Tags = IDL.Vec(Tag);
+  const Attribute = IDL.Tuple(IDL.Text, IDL.Nat16);
+  const Attributes = IDL.Vec(Attribute);
   const ItemTransfer = IDL.Variant({
     'unrestricted' : IDL.Null,
     'bindsForever' : IDL.Null,
@@ -136,16 +145,18 @@ export const idlFactory = ({ IDL }) => {
     'thumb' : Content,
     'created' : IDL.Nat32,
     'content' : IDL.Opt(Content),
-    'domain' : IDL.Opt(IDL.Text),
+    'domain' : IDL.Opt(DomainName),
     'extensionCanister' : IDL.Opt(IDL.Principal),
+    'custom' : IDL.Opt(CustomData),
     'quality' : IDL.Nat8,
     'hold' : IDL.Opt(ItemHold),
-    'lore' : IDL.Opt(IDL.Text),
-    'name' : IDL.Opt(IDL.Text),
+    'lore' : IDL.Opt(ItemLore),
+    'name' : IDL.Opt(ItemName),
+    'tags' : Tags,
     'minter' : IDL.Principal,
     'secret' : IDL.Bool,
     'entropy' : IDL.Vec(IDL.Nat8),
-    'attributes' : IDL.Vec(Attribute),
+    'attributes' : Attributes,
     'transfer' : ItemTransfer,
   });
   const MetavarsFrozen = IDL.Record({
@@ -167,12 +178,14 @@ export const idlFactory = ({ IDL }) => {
     'content' : IDL.Opt(Content),
     'domain' : IDL.Opt(IDL.Text),
     'extensionCanister' : IDL.Opt(IDL.Principal),
+    'custom' : IDL.Opt(CustomData),
     'quality' : IDL.Nat8,
     'hold' : IDL.Opt(ItemHold),
     'lore' : IDL.Opt(IDL.Text),
     'name' : IDL.Opt(IDL.Text),
+    'tags' : Tags,
     'secret' : IDL.Bool,
-    'attributes' : IDL.Vec(Attribute),
+    'attributes' : Attributes,
     'transfer' : ItemTransfer,
   });
   const MintRequest = IDL.Record({ 'to' : User, 'metadata' : MetadataInput });

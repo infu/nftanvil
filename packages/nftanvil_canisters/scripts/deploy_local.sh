@@ -1,5 +1,4 @@
 #!/bin/sh
 
-dfx build
-dfx generate
-dfx deploy dropship
+dfx deploy router
+dfx canister --wallet=$(dfx identity get-wallet) call router debug_reset

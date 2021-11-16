@@ -14,6 +14,7 @@ export type ApproveResponse = { 'ok' : null } |
       { 'Other' : string }
   };
 export type Attribute = [string, number];
+export type Attributes = Array<Attribute>;
 export type Balance = bigint;
 export interface BalanceRequest { 'token' : TokenIdentifier, 'user' : User }
 export type BalanceResponse = { 'ok' : Balance } |
@@ -53,6 +54,10 @@ export type Content = {
   } |
   { 'external' : { 'idx' : number, 'contentType' : ContentType } };
 export type ContentType = string;
+export type CustomData = Array<number>;
+export type CustomId = string;
+export type DomainName = string;
+export type EffectDesc = string;
 export type Extension = string;
 export interface FetchChunkRequest {
   'tokenIndex' : TokenIndex,
@@ -62,12 +67,24 @@ export interface FetchChunkRequest {
     { 'content' : null },
 }
 export type HeaderField = [string, string];
-export type ItemHold = { 'external' : { 'desc' : string, 'holdId' : string } };
+export type ItemHold = {
+    'external' : { 'desc' : EffectDesc, 'holdId' : CustomId }
+  };
+export type ItemLore = string;
+export type ItemName = string;
 export type ItemTransfer = { 'unrestricted' : null } |
   { 'bindsForever' : null } |
   { 'bindsDuration' : number };
-export type ItemUse = { 'consumable' : { 'desc' : string, 'useId' : string } } |
-  { 'cooldown' : { 'duration' : number, 'desc' : string, 'useId' : string } };
+export type ItemUse = {
+    'consumable' : { 'desc' : EffectDesc, 'useId' : CustomId }
+  } |
+  {
+    'cooldown' : {
+      'duration' : number,
+      'desc' : EffectDesc,
+      'useId' : CustomId,
+    }
+  };
 export type Memo = Array<number>;
 export interface Metadata {
   'ttl' : [] | [number],
@@ -75,16 +92,18 @@ export interface Metadata {
   'thumb' : Content,
   'created' : number,
   'content' : [] | [Content],
-  'domain' : [] | [string],
+  'domain' : [] | [DomainName],
   'extensionCanister' : [] | [Principal],
+  'custom' : [] | [CustomData],
   'quality' : number,
   'hold' : [] | [ItemHold],
-  'lore' : [] | [string],
-  'name' : [] | [string],
+  'lore' : [] | [ItemLore],
+  'name' : [] | [ItemName],
+  'tags' : Tags,
   'minter' : Principal,
   'secret' : boolean,
   'entropy' : Array<number>,
-  'attributes' : Array<Attribute>,
+  'attributes' : Attributes,
   'transfer' : ItemTransfer,
 }
 export interface MetadataInput {
@@ -94,12 +113,14 @@ export interface MetadataInput {
   'content' : [] | [Content],
   'domain' : [] | [string],
   'extensionCanister' : [] | [Principal],
+  'custom' : [] | [CustomData],
   'quality' : number,
   'hold' : [] | [ItemHold],
   'lore' : [] | [string],
   'name' : [] | [string],
+  'tags' : Tags,
   'secret' : boolean,
-  'attributes' : Array<Attribute>,
+  'attributes' : Attributes,
   'transfer' : ItemTransfer,
 }
 export type MetadataResponse = {
@@ -183,6 +204,8 @@ export type StreamingStrategy = {
 export type SubAccount = Array<number>;
 export type SupplyResponse = { 'ok' : Balance } |
   { 'err' : CommonError };
+export type Tag = string;
+export type Tags = Array<Tag>;
 export interface Token {
   'key' : string,
   'sha256' : [] | [Array<number>],

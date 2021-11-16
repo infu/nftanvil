@@ -19,13 +19,16 @@ export const mintFormValidate = (values) => {
   return errors;
 };
 export function validateDomain(value) {
-  return null;
+  if (!value) return null;
+  return !(value.length > 2 && value.length < 64)
+    ? "Must be between 3 and 64 characters"
+    : null;
 }
 
 export function validateName(value) {
   if (!value) return null;
-  return !(value.length > 2 && value.length < 128)
-    ? "Must be between 2 and 128 characters"
+  return !(value.length > 2 && value.length < 96)
+    ? "Must be between 3 and 96 characters"
     : null;
 }
 
@@ -75,10 +78,12 @@ export function validateExternal(val) {
   if (!val) return;
   if (isNaN(val)) return "If specified, it must be 32 bit natural number";
 }
+
 export function validateExternalType(val) {
   if (!val) return "Must be specified";
   if (val.length < 3) return "Not a valid content type";
 }
+
 export function validateDescriptionOrNone(val) {
   if (typeof val !== "string") return null;
   if (val.trim().length === 0) return null;
@@ -89,9 +94,17 @@ export function validateDescriptionOrNone(val) {
 export function validateCooldown(val) {
   if (val < 1) return "Has to be at least one minute";
 }
+
 export function validateAttributeName(val) {
   if (typeof val !== "string") return null;
   if (val.length < 3) return "Too short";
+  if (val.length > 24) return "Too long";
+}
+
+export function validateTagName(val) {
+  if (typeof val !== "string") return null;
+  if (val.length < 3) return "Too short";
+  if (val.length > 24) return "Too long";
 }
 
 export function validateAttributeChange(val) {

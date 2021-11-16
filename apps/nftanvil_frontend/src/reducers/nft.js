@@ -79,6 +79,8 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     //vars
     cooldownUntil: vars.cooldownUntil[0],
     boundUntil: vars.boundUntil[0],
+    tags: vars.tags,
+    // custom isn't needed
   };
 
   if (meta.thumb.internal) meta.thumb.internal.url = tokenUrl(id, "thumb");
