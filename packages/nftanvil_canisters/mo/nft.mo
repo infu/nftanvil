@@ -79,9 +79,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         actor(selected): accountInterface;
     };
 
-    private func accessActor(p: Principal) : AccessControl.AccessControl {
-        let selected = _accesslist[ Nat32.toNat( Hash.djb2xor(Principal.toText(p)) % Nat32.fromNat(_accesslist_size) ) ];
-        actor(selected): AccessControl.AccessControl ;
+    private func accessActor(aid: AccountIdentifier) : AccessControl.AccessControl {
+        let selected = _accesslist[ Nat32.toNat( Hash.djb2xor(aid) % Nat32.fromNat(_accesslist_size) ) ];
+        actor(selected): AccessControl.AccessControl;
     };
 
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
@@ -716,6 +716,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         // Get class info, check if principal is allowed to mint
         let m = request.metadata;
 
+        if (Ext.MetadataInput.validate(m) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
+
         if (m.quality > 1) return #err(#Invalid("Higher than 1 quality not implemented"));
 
         let md : Metadata = {
@@ -729,6 +731,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
             ttl= m.ttl; // time to live
             secret= m.secret;
             attributes = m.attributes;
+            tags = m.tags;
+            custom = m.custom;
             content = m.content;
             thumb = m.thumb;
             extensionCanister = m.extensionCanister;
@@ -913,10 +917,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     // Internal functions which help for better code reusability
 
     private func consumeAccessTokens(caller:Principal, count:Nat) : async Bool {
-        let accessControl = accessActor(caller);
-        let atokens = await accessControl.getBalance(caller);
+        let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
+        let accessControl = accessActor(aid);
+        let atokens = await accessControl.getBalance(aid);
         if (atokens < count) return false;
-        if ((await accessControl.consumeAccess(caller, count)) == #ok(true)) return true;
+        if ((await accessControl.consumeAccess(aid, count)) == #ok(true)) return true;
         return false;
     };
 

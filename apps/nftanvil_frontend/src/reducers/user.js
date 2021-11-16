@@ -132,7 +132,7 @@ export const challenge = () => async (dispatch, getState) => {
 
   let identity = authentication.client.getIdentity();
 
-  let accesscan = aid2acccan(s.user.principal, s.user.accesslist);
+  let accesscan = aid2acccan(s.user.address, s.user.accesslist);
 
   let access = accessCanister(accesscan, { agentOptions: { identity } });
 
@@ -146,11 +146,11 @@ export const getAccessTokenBalance = () => async (dispatch, getState) => {
 
   let identity = authentication.client.getIdentity();
 
-  let accesscan = aid2acccan(s.user.principal, s.user.accesslist);
+  let accesscan = aid2acccan(s.user.address, s.user.accesslist);
 
   let access = accessCanister(accesscan, { agentOptions: { identity } });
 
-  let balance = await access.getBalance(Principal.fromText(s.user.principal));
+  let balance = await access.getBalance(s.user.address);
   dispatch(accessTokensSet(parseInt(balance, 10)));
 };
 
@@ -162,7 +162,7 @@ export const sendSolution = (code) => async (dispatch, getState) => {
 
   let identity = authentication.client.getIdentity();
 
-  let accesscan = aid2acccan(s.user.principal, s.user.accesslist);
+  let accesscan = aid2acccan(s.user.address, s.user.accesslist);
 
   let access = accessCanister(accesscan, { agentOptions: { identity } });
 

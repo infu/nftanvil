@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 export interface Router {
+  'addNFT' : () => Promise<undefined>,
   'debug_reset' : () => Promise<undefined>,
   'fetchNFTCan' : (arg_0: bigint) => Promise<string>,
   'fetchNFTCanisters' : () => Promise<Array<string>>,
@@ -8,6 +9,7 @@ export interface Router {
     >,
   'getAvailable' : () => Promise<Array<string>>,
   'reportOutOfMemory' : () => Promise<undefined>,
+  'setNFTOut' : (arg_0: Principal) => Promise<undefined>,
   'stats' : () => Promise<StatsResponse>,
 }
 export interface StatsResponse {

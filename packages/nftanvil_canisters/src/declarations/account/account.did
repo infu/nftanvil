@@ -19,4 +19,4 @@ type Account =
    rem: (AccountIdentifier, TokenIndex) -> ();
    stats: () -> (StatsResponse) query;
  };
-service : () -> Account
+service : (record {_router: principal;}) -> Account

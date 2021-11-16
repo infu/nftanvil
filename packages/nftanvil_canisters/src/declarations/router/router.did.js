@@ -9,6 +9,7 @@ export const idlFactory = ({ IDL }) => {
     'rts_version' : IDL.Text,
   });
   const Router = IDL.Service({
+    'addNFT' : IDL.Func([], [], []),
     'debug_reset' : IDL.Func([], [], []),
     'fetchNFTCan' : IDL.Func([IDL.Nat], [IDL.Text], ['query']),
     'fetchNFTCanisters' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
@@ -24,6 +25,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getAvailable' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'reportOutOfMemory' : IDL.Func([], [], []),
+    'setNFTOut' : IDL.Func([IDL.Principal], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
   });
   return Router;

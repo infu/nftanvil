@@ -15,8 +15,7 @@ import AccessControl "../mo/access";
 import PseudoRandom "../lib/vvv/src/PseudoRandom";
 
 
-
-let access = await AccessControl.AccessControl({_admin = Principal.fromText("aaaaa-aa") });
+// let access = await AccessControl.AccessControl({_admin = Principal.fromText("aaaaa-aa") });
 
 let x = PseudoRandom.PseudoRandom();
 

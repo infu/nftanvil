@@ -10,6 +10,7 @@ type StatsResponse =
  };
 type Router = 
  service {
+   addNFT: () -> ();
    debug_reset: () -> ();
    fetchNFTCan: (nat) -> (text) query;
    fetchNFTCanisters: () -> (vec text) query;
@@ -19,6 +20,7 @@ type Router =
                       }) query;
    getAvailable: () -> (vec text) query;
    reportOutOfMemory: () -> ();
+   setNFTOut: (principal) -> ();
    stats: () -> (StatsResponse) query;
  };
 service : () -> Router

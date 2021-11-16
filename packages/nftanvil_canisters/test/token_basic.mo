@@ -82,7 +82,9 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
             extensionCanister = null;
-            secret=false
+            secret=false;
+            custom=null;
+            tags=[];
 
             }})
             ) == #ok(0));
@@ -100,8 +102,10 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
-            extensionCanister = null;
-  secret=false
+            extensionCanister = null; 
+            custom=null;
+            tags=[];
+            secret=false
 }})) == #ok(1));
 
 
@@ -119,7 +123,9 @@ switch(await nft.mintNFT({to = user_john; metadata = {
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
             extensionCanister = null;
-      secret=false
+            secret=false;
+            custom=null;
+            tags=[];
             }})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
     case (#err(e)) Debug.print(debug_show(e));
@@ -139,6 +145,8 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
             extensionCanister = null;
+            custom=null;
+            tags=[];
         secret=false
 }})) == #ok(3));
 

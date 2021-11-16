@@ -6,6 +6,7 @@ import Iter "mo:base/Iter";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
+import Ext "../lib/ext.std/src/Ext";
 
 
 import PseudoRandom "../lib/vvv/src/PseudoRandom";
@@ -16,7 +17,9 @@ import Prim "mo:prim";
 
  
 shared({caller = installer}) actor class AccessControl({_admin: Principal; _router: Principal}) {
-    
+  
+    type AccountIdentifier = Ext.AccountIdentifier;
+
     public type User = {
         solution  : Text; 
         balance : Nat;
@@ -30,8 +33,8 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
 
     var rand = PseudoRandom.PseudoRandom();
 
-    private stable var _tmpAccount : [(Principal, User)] = [];
-    private var _account : HashMap.HashMap<Principal, User> = HashMap.fromIter(_tmpAccount.vals(), 0, Principal.equal, Principal.hash);
+    private stable var _tmpAccount : [(AccountIdentifier, User)] = [];
+    private var _account : HashMap.HashMap<AccountIdentifier, User> = HashMap.fromIter(_tmpAccount.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
     
     private stable var _tmpConsumers : [(Principal, Bool)] = [];
     private var _consumers : HashMap.HashMap<Principal, Bool> = HashMap.fromIter(_tmpConsumers.vals(), 0, Principal.equal, Principal.hash );
@@ -40,8 +43,8 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
 
     //Handle canister upgrades
     system func preupgrade() {
-        _tmpConsumers := Iter.toArray(_consumers.entries());
-        _tmpAccount := Iter.toArray(_account.entries());
+        _tmpConsumers := [];//Iter.toArray(_consumers.entries());
+        _tmpAccount := [];//Iter.toArray(_account.entries());
     };
 
     system func postupgrade() {
@@ -51,7 +54,7 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     };
 
     // This function is called by the canister which requires access tokens
-    public query func getBalance(acc:Principal): async (Nat) {
+    public query func getBalance(acc:AccountIdentifier): async (Nat) {
      switch(_account.get(acc)) {
         case (?a) {
           a.balance;
@@ -61,7 +64,6 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
         };
      }
     };
-
 
 
     public query func showAllowed() : async [Text] {
@@ -75,7 +77,7 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     };
 
     // If the principal has enough, then this function is called to remove access tokens from their balance
-    public shared({caller}) func consumeAccess(acc:Principal, count:Nat): async Result.Result<Bool, CommonError> {
+    public shared({caller}) func consumeAccess(acc:AccountIdentifier, count:Nat): async Result.Result<Bool, CommonError> {
       
       switch (_consumers.get(caller)) {
         case (?found) {
@@ -101,8 +103,9 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     // When a principal wants to earn access tokens, they get a challege, which they need to solve and return to sendChallenge
     public shared({caller}) func getChallenge(): async [Nat32] {
       let (correct, bitmap) = Captcha.randCaptcha(rand, 5);
+     let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
 
-      let newData = switch(_account.get(caller)) {
+      let newData = switch(_account.get(aid)) {
         case (?a) {
            {
             balance = a.balance;
@@ -117,21 +120,23 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
         }
       };
 
-      _account.put(caller, newData);
+      _account.put(aid, newData);
       return bitmap;
     };
 
     // User sends solution to the challenge given to them and if correct, they recieve access tokens
     public shared({caller}) func sendSolution(solution:Text): async Result.Result<Nat, CommonError> {
 
-     switch(_account.get(caller)) {
+     let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
+
+     switch(_account.get(aid)) {
         case (?a) {
           if ((a.solution != "") and (a.solution != solution)) return #err(#WrongSolution);
           let newData : User = {
             balance = a.balance + _reward;
             solution = "";
           };
-          _account.put(caller, newData);
+          _account.put(aid, newData);
           #ok(newData.balance);
         };
         case (_) #err(#NotEnough)
@@ -140,7 +145,7 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     };
 
     // The adminitrator can add access tokens to principal manually
-    public shared({caller}) func addTokens(acc:Principal, count:Nat): async () {
+    public shared({caller}) func addTokens(acc:AccountIdentifier, count:Nat): async () {
       assert(caller == _admin);
 
       let newData:User = {
@@ -152,15 +157,6 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
 
     };
 
-    // Admin will reset the whole memory when it goes big
-    public shared({caller}) func reset(): async () {
-        assert(caller == _admin);
-        var _tmp : [(Principal, User)] = [];
-        _account := HashMap.fromIter(_tmp.vals(), 0, Principal.equal, Principal.hash);
-
-    };
-
-  
     public type StatsResponse = {
         cycles: Nat;
         rts_version:Text;
@@ -170,7 +166,6 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
         rts_reclaimed:Nat;
         rts_max_live_size:Nat;
     };
-
 
     public query func stats() : async StatsResponse {
         {

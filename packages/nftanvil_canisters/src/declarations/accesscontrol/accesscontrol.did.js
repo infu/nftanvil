@@ -1,4 +1,5 @@
 export const idlFactory = ({ IDL }) => {
+  const AccountIdentifier = IDL.Text;
   const CommonError = IDL.Variant({
     'NotEnough' : IDL.Null,
     'Unauthorized' : IDL.Null,
@@ -17,16 +18,16 @@ export const idlFactory = ({ IDL }) => {
   });
   const AccessControl = IDL.Service({
     'addAllowed' : IDL.Func([IDL.Principal], [], []),
-    'addTokens' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
-    'consumeAccess' : IDL.Func([IDL.Principal, IDL.Nat], [Result_1], []),
-    'getBalance' : IDL.Func([IDL.Principal], [IDL.Nat], ['query']),
+    'addTokens' : IDL.Func([AccountIdentifier, IDL.Nat], [], []),
+    'consumeAccess' : IDL.Func([AccountIdentifier, IDL.Nat], [Result_1], []),
+    'getBalance' : IDL.Func([AccountIdentifier], [IDL.Nat], ['query']),
     'getChallenge' : IDL.Func([], [IDL.Vec(IDL.Nat32)], []),
-    'reset' : IDL.Func([], [], []),
     'sendSolution' : IDL.Func([IDL.Text], [Result], []),
+    'showAllowed' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
   });
   return AccessControl;
 };
 export const init = ({ IDL }) => {
-  return [IDL.Record({ '_admin' : IDL.Principal })];
+  return [IDL.Record({ '_admin' : IDL.Principal, '_router' : IDL.Principal })];
 };

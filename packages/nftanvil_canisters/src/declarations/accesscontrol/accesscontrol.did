@@ -24,15 +24,19 @@ type CommonError =
    Unauthorized;
    WrongSolution;
  };
+type AccountIdentifier = text;
 type AccessControl = 
  service {
    addAllowed: (principal) -> ();
-   addTokens: (principal, nat) -> ();
-   consumeAccess: (principal, nat) -> (Result_1);
-   getBalance: (principal) -> (nat) query;
+   addTokens: (AccountIdentifier, nat) -> ();
+   consumeAccess: (AccountIdentifier, nat) -> (Result_1);
+   getBalance: (AccountIdentifier) -> (nat) query;
    getChallenge: () -> (vec nat32);
-   reset: () -> ();
    sendSolution: (text) -> (Result);
+   showAllowed: () -> (vec text) query;
    stats: () -> (StatsResponse) query;
  };
-service : (record {_admin: principal;}) -> AccessControl
+service : (record {
+             _admin: principal;
+             _router: principal;
+           }) -> AccessControl

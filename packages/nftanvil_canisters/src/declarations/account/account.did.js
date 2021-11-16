@@ -24,4 +24,6 @@ export const idlFactory = ({ IDL }) => {
   });
   return Account;
 };
-export const init = ({ IDL }) => { return []; };
+export const init = ({ IDL }) => {
+  return [IDL.Record({ '_router' : IDL.Principal })];
+};

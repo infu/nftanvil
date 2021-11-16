@@ -1,14 +1,17 @@
 import type { Principal } from '@dfinity/principal';
 export interface AccessControl {
   'addAllowed' : (arg_0: Principal) => Promise<undefined>,
-  'addTokens' : (arg_0: Principal, arg_1: bigint) => Promise<undefined>,
-  'consumeAccess' : (arg_0: Principal, arg_1: bigint) => Promise<Result_1>,
-  'getBalance' : (arg_0: Principal) => Promise<bigint>,
+  'addTokens' : (arg_0: AccountIdentifier, arg_1: bigint) => Promise<undefined>,
+  'consumeAccess' : (arg_0: AccountIdentifier, arg_1: bigint) => Promise<
+      Result_1
+    >,
+  'getBalance' : (arg_0: AccountIdentifier) => Promise<bigint>,
   'getChallenge' : () => Promise<Array<number>>,
-  'reset' : () => Promise<undefined>,
   'sendSolution' : (arg_0: string) => Promise<Result>,
+  'showAllowed' : () => Promise<Array<string>>,
   'stats' : () => Promise<StatsResponse>,
 }
+export type AccountIdentifier = string;
 export type CommonError = { 'NotEnough' : null } |
   { 'Unauthorized' : null } |
   { 'WrongSolution' : null };
