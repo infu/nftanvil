@@ -37,6 +37,40 @@ type UploadChunkRequest =
              };
    tokenIndex: TokenIndex;
  };
+type UnsocketResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier;
+      UnplugError: UnplugError;
+    };
+   ok;
+ };
+type UnsocketRequest = 
+ record {
+   plug: TokenIdentifier;
+   socket: TokenIdentifier;
+   subaccount: opt SubAccount;
+   user: User;
+ };
+type UnplugResponse = 
+ variant {
+   err: UnplugError;
+   ok;
+ };
+type UnplugError = 
+ variant {
+   InsufficientBalance;
+   InvalidToken: TokenIdentifier;
+   NotLegitimateCaller;
+   Other: text;
+   Rejected;
+   Unauthorized: AccountIdentifier;
+ };
 type TransferResponse = 
  variant {
    err:
@@ -116,6 +150,29 @@ type StatsResponse =
    rts_version: text;
    transfers: nat32;
  };
+type Sockets = vec TokenIdentifier;
+type SocketResponse = 
+ variant {
+   err: SocketError;
+   ok;
+ };
+type SocketRequest = 
+ record {
+   plug: TokenIdentifier;
+   socket: TokenIdentifier;
+   subaccount: opt SubAccount;
+   user: User;
+ };
+type SocketError = 
+ variant {
+   InsufficientBalance;
+   InvalidToken: TokenIdentifier;
+   NotLegitimateCaller;
+   Other: text;
+   Rejected;
+   SocketsFull;
+   Unauthorized: AccountIdentifier;
+ };
 type Response__1 = 
  variant {
    err: CommonError;
@@ -141,6 +198,26 @@ type Request =
    method: text;
    url: text;
  };
+type PlugResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Rejected;
+      SocketError: SocketError;
+      Unauthorized: AccountIdentifier;
+    };
+   ok;
+ };
+type PlugRequest = 
+ record {
+   plug: TokenIdentifier;
+   socket: TokenIdentifier;
+   subaccount: opt SubAccount;
+   user: User;
+ };
 type NFT = 
  service {
    allowance: (Request__1) -> (Response__1) query;
@@ -157,10 +234,14 @@ type NFT =
    http_request_streaming_callback: (Token) -> (Callback) query;
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
    mintNFT: (MintRequest) -> (MintResponse);
+   plug: (PlugRequest) -> (PlugResponse);
+   socket: (SocketRequest) -> (SocketResponse);
    stats: () -> (StatsResponse) query;
    supply: (TokenIdentifier) -> (SupplyResponse) query;
    transfer: (TransferRequest) -> (TransferResponse);
    transfer_link: (TransferLinkRequest) -> (TransferLinkResponse);
+   unplug: (UnsocketRequest) -> (UnplugResponse);
+   unsocket: (UnsocketRequest) -> (UnsocketResponse);
    uploadChunk: (UploadChunkRequest) -> ();
    use: (UseRequest) -> (UseResponse);
  };
@@ -183,6 +264,7 @@ type MetavarsFrozen =
  record {
    boundUntil: opt nat32;
    cooldownUntil: opt nat32;
+   sockets: Sockets;
  };
 type MetadataResponse = 
  variant {

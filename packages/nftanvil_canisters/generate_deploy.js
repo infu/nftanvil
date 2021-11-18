@@ -13,7 +13,7 @@ let r = {
       packtool: "vessel sources",
     },
   },
-  dfx: "0.8.2",
+  dfx: "0.8.3",
   networks: {
     local: {
       bind: "127.0.0.1:8000",
@@ -23,6 +23,12 @@ let r = {
   version: 1,
 };
 let ci = {};
+
+r.canisters["anv"] = {
+  main: "mo/anv.mo",
+  type: "motoko",
+};
+dfxd += `dfx deploy --network ic anv\n`;
 
 cluster.router.forEach((x, idx) => {
   r.canisters["router" + (idx ? "_" + idx : "")] = {
@@ -43,7 +49,9 @@ cluster.nft.forEach((x, idx) => {
     '";"'
   )}"}; _accesslist= vec {"${cluster.access.join(
     '";"'
-  )}"}; _slot=${idx}; _debug_cannisterId=null}'\n`;
+  )}"}; _slot=${idx}; _router= principal "${
+    cluster.router[0]
+  }"; _debug_cannisterId=null}'\n`;
 });
 
 cluster.account.forEach((x, idx) => {

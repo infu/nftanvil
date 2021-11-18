@@ -24,6 +24,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAvailable' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'isLegitimate' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'reportOutOfMemory' : IDL.Func([], [], []),
     'setNFTOut' : IDL.Func([IDL.Principal], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),

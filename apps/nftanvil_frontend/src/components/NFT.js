@@ -9,6 +9,8 @@ import {
   use,
   transfer_link,
   claim_link,
+  plug,
+  unsocket,
 } from "../reducers/nft";
 import { Spinner } from "@chakra-ui/react";
 
@@ -34,6 +36,8 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  HStack,
+  Tag,
 } from "@chakra-ui/react";
 import {
   AlertDialog,
@@ -108,6 +112,8 @@ export const NFTMenu = ({ id, meta }) => {
         <TransferButton id={id} />
         <TransferLinkButton id={id} />
         <BurnButton id={id} />
+        <SocketButton id={id} />
+        <UnsocketButton id={id} />
       </Wrap>
     </Box>
   );
@@ -119,7 +125,7 @@ function TransferButton({ id }) {
   const initialRef = React.useRef();
 
   const transferOk = async () => {
-    let toAddress = initialRef.current.value;
+    let toAddress = initialRef.current.value.toUpperCase();
     onClose();
     let toastId = toast("Sending...", {
       type: toast.TYPE.INFO,
@@ -185,6 +191,170 @@ function TransferButton({ id }) {
             <Button onClick={onClose}>Cancel</Button>
             <Button ml={3} onClick={transferOk}>
               Send
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+
+function UnsocketButton({ id }) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const dispatch = useDispatch();
+  const initialRef = React.useRef();
+
+  const transferOk = async () => {
+    let plug_id = initialRef.current.value;
+    onClose();
+    let toastId = toast("Unplugging...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+    try {
+      await dispatch(unsocket({ socket_id: id, plug_id }));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div>
+            <div>Unplugging successfull.</div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      console.error("Unplugging error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <div>
+            <div>Unplugging failed.</div>
+            <div style={{ fontSize: "10px" }}>{e.message}</div>
+          </div>
+        ),
+      });
+    }
+  };
+  return (
+    <>
+      <Button onClick={onOpen}>Unplug from Socket</Button>
+
+      <Modal
+        initialFocusRef={initialRef}
+        onClose={onClose}
+        isOpen={isOpen}
+        isCentered
+        size={"xl"}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Unplug NFT from socket</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Target plug token identifier</FormLabel>
+              <Input ref={initialRef} placeholder="u2jxv-3qkor..." />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button ml={3} onClick={transferOk}>
+              Unplug
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+
+function SocketButton({ id }) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const dispatch = useDispatch();
+  const initialRef = React.useRef();
+
+  const transferOk = async () => {
+    let socket_id = initialRef.current.value;
+    onClose();
+    let toastId = toast("Plugging...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+    try {
+      await dispatch(plug({ plug_id: id, socket_id }));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div>
+            <div>Plugging successfull.</div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      console.error("Plugging error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <div>
+            <div>Socket failed.</div>
+            <div style={{ fontSize: "10px" }}>{e.message}</div>
+          </div>
+        ),
+      });
+    }
+  };
+  return (
+    <>
+      <Button onClick={onOpen}>Plug In Socket</Button>
+
+      <Modal
+        initialFocusRef={initialRef}
+        onClose={onClose}
+        isOpen={isOpen}
+        isCentered
+        size={"xl"}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Plug NFT into socket</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Target socket token identifier</FormLabel>
+              <Input ref={initialRef} placeholder="u2jxv-3qkor..." />
+              <Text p={1} mt={1}>
+                Both the plug and the socket need to be owned by the same
+                account
+              </Text>
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button ml={3} onClick={transferOk}>
+              Plug
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -394,38 +564,37 @@ export const NFT = ({ id }) => {
   }, [id]);
 
   return (
-    <Link to={"/nft/" + id}>
-      <Thumb
-        style={{ zIndex: popoverOpen ? 10 : 0 }}
-        onMouseOver={() => {
-          setPopover(true);
-        }}
-        onMouseOut={() => {
-          setPopover(false);
-        }}
-      >
+    <Thumb
+      style={{ zIndex: popoverOpen ? 10 : 0 }}
+      onMouseOver={() => {
+        setPopover(true);
+      }}
+      onMouseOut={() => {
+        setPopover(false);
+      }}
+    >
+      <Link to={"/nft/" + id}>
         {meta?.thumb?.internal?.url ? (
           <img className="custom" src={meta.thumb.internal.url} />
         ) : (
           ""
         )}
         <div className="border" />
-
-        {popoverOpen ? (
-          <Box
-            sx={{
-              pointerEvents: "none",
-              position: "absolute",
-              top: "56px",
-              left: "56px",
-              width: "400px",
-            }}
-          >
-            <NFTPopover meta={meta} />
-          </Box>
-        ) : null}
-      </Thumb>
-    </Link>
+      </Link>
+      {popoverOpen ? (
+        <Box
+          sx={{
+            pointerEvents: "none",
+            position: "absolute",
+            top: "56px",
+            left: "56px",
+            width: "400px",
+          }}
+        >
+          <NFTPopover meta={meta} />
+        </Box>
+      ) : null}
+    </Thumb>
   );
 };
 
@@ -480,7 +649,7 @@ export const NFTPage = (p) => {
       <Center>
         <NFTInfo meta={meta} />
       </Center>
-      {address === meta.bearer ? (
+      {address.toUpperCase() === meta.bearer.toUpperCase() ? (
         <Center>
           <NFTMenu id={id} meta={meta} />
         </Center>
@@ -643,6 +812,15 @@ export const NFTInfo = ({ meta }) => {
             {meta.name.capitalize()}
           </Text>
         ) : null}
+        {meta.tags && meta.tags.length ? (
+          <Wrap spacing={1}>
+            {meta.tags.map((a, idx) => (
+              <Tag key={idx} size="sm">
+                {a}
+              </Tag>
+            ))}
+          </Wrap>
+        ) : null}
         {meta.domain ? <MetaDomain meta={meta} /> : null}
         {"bindsForever" in meta.transfer ? (
           <Text fontSize="14px">Binds on transfer</Text>
@@ -689,6 +867,13 @@ export const NFTInfo = ({ meta }) => {
           <Text fontSize="14px" pt="14px" color={"red"}>
             Lasts {moment.duration(meta.ttl, "minutes").humanize()}
           </Text>
+        ) : null}
+        {meta.sockets && meta.sockets.length ? (
+          <Wrap spacing={0}>
+            {meta.sockets.map((tid, idx) => (
+              <NFT id={tid} key={tid} />
+            ))}
+          </Wrap>
         ) : null}
       </Stack>
     </Box>

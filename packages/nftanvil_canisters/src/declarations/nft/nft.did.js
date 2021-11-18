@@ -159,9 +159,11 @@ export const idlFactory = ({ IDL }) => {
     'attributes' : Attributes,
     'transfer' : ItemTransfer,
   });
+  const Sockets = IDL.Vec(TokenIdentifier);
   const MetavarsFrozen = IDL.Record({
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
+    'sockets' : Sockets,
   });
   const MetadataResponse = IDL.Variant({
     'ok' : IDL.Record({
@@ -198,6 +200,39 @@ export const idlFactory = ({ IDL }) => {
       'OutOfMemory' : IDL.Null,
     }),
   });
+  const PlugRequest = IDL.Record({
+    'socket' : TokenIdentifier,
+    'plug' : TokenIdentifier,
+    'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
+  });
+  const SocketError = IDL.Variant({
+    'InsufficientBalance' : IDL.Null,
+    'NotLegitimateCaller' : IDL.Null,
+    'InvalidToken' : TokenIdentifier,
+    'Rejected' : IDL.Null,
+    'Unauthorized' : AccountIdentifier,
+    'Other' : IDL.Text,
+    'SocketsFull' : IDL.Null,
+  });
+  const PlugResponse = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Variant({
+      'InsufficientBalance' : IDL.Null,
+      'SocketError' : SocketError,
+      'InvalidToken' : TokenIdentifier,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : AccountIdentifier,
+      'Other' : IDL.Text,
+    }),
+  });
+  const SocketRequest = IDL.Record({
+    'socket' : TokenIdentifier,
+    'plug' : TokenIdentifier,
+    'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
+  });
+  const SocketResponse = IDL.Variant({ 'ok' : IDL.Null, 'err' : SocketError });
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
     'transfers' : IDL.Nat32,
@@ -241,6 +276,32 @@ export const idlFactory = ({ IDL }) => {
   const TransferLinkResponse = IDL.Variant({
     'ok' : IDL.Nat32,
     'err' : IDL.Variant({
+      'InsufficientBalance' : IDL.Null,
+      'InvalidToken' : TokenIdentifier,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : AccountIdentifier,
+      'Other' : IDL.Text,
+    }),
+  });
+  const UnsocketRequest = IDL.Record({
+    'socket' : TokenIdentifier,
+    'plug' : TokenIdentifier,
+    'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
+  });
+  const UnplugError = IDL.Variant({
+    'InsufficientBalance' : IDL.Null,
+    'NotLegitimateCaller' : IDL.Null,
+    'InvalidToken' : TokenIdentifier,
+    'Rejected' : IDL.Null,
+    'Unauthorized' : AccountIdentifier,
+    'Other' : IDL.Text,
+  });
+  const UnplugResponse = IDL.Variant({ 'ok' : IDL.Null, 'err' : UnplugError });
+  const UnsocketResponse = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Variant({
+      'UnplugError' : UnplugError,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
       'Rejected' : IDL.Null,
@@ -295,6 +356,8 @@ export const idlFactory = ({ IDL }) => {
       ),
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
     'mintNFT' : IDL.Func([MintRequest], [MintResponse], []),
+    'plug' : IDL.Func([PlugRequest], [PlugResponse], []),
+    'socket' : IDL.Func([SocketRequest], [SocketResponse], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'supply' : IDL.Func([TokenIdentifier], [SupplyResponse], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
@@ -303,6 +366,8 @@ export const idlFactory = ({ IDL }) => {
         [TransferLinkResponse],
         [],
       ),
+    'unplug' : IDL.Func([UnsocketRequest], [UnplugResponse], []),
+    'unsocket' : IDL.Func([UnsocketRequest], [UnsocketResponse], []),
     'uploadChunk' : IDL.Func([UploadChunkRequest], [], []),
     'use' : IDL.Func([UseRequest], [UseResponse], []),
   });

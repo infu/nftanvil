@@ -134,6 +134,7 @@ export type MetadataResponse = {
 export interface MetavarsFrozen {
   'cooldownUntil' : [] | [number],
   'boundUntil' : [] | [number],
+  'sockets' : Sockets,
 }
 export interface MintRequest { 'to' : User, 'metadata' : MetadataInput }
 export type MintResponse = { 'ok' : TokenIndex } |
@@ -158,15 +159,34 @@ export interface NFT {
   'http_request_streaming_callback' : (arg_0: Token) => Promise<Callback>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mintNFT' : (arg_0: MintRequest) => Promise<MintResponse>,
+  'plug' : (arg_0: PlugRequest) => Promise<PlugResponse>,
+  'socket' : (arg_0: SocketRequest) => Promise<SocketResponse>,
   'stats' : () => Promise<StatsResponse>,
   'supply' : (arg_0: TokenIdentifier) => Promise<SupplyResponse>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
   'transfer_link' : (arg_0: TransferLinkRequest) => Promise<
       TransferLinkResponse
     >,
+  'unplug' : (arg_0: UnsocketRequest) => Promise<UnplugResponse>,
+  'unsocket' : (arg_0: UnsocketRequest) => Promise<UnsocketResponse>,
   'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
   'use' : (arg_0: UseRequest) => Promise<UseResponse>,
 }
+export interface PlugRequest {
+  'socket' : TokenIdentifier,
+  'plug' : TokenIdentifier,
+  'user' : User,
+  'subaccount' : [] | [SubAccount],
+}
+export type PlugResponse = { 'ok' : null } |
+  {
+    'err' : { 'InsufficientBalance' : null } |
+      { 'SocketError' : SocketError } |
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : AccountIdentifier } |
+      { 'Other' : string }
+  };
 export interface Request {
   'url' : string,
   'method' : string,
@@ -186,6 +206,22 @@ export interface Response {
 }
 export type Response__1 = { 'ok' : Balance } |
   { 'err' : CommonError };
+export type SocketError = { 'InsufficientBalance' : null } |
+  { 'NotLegitimateCaller' : null } |
+  { 'InvalidToken' : TokenIdentifier } |
+  { 'Rejected' : null } |
+  { 'Unauthorized' : AccountIdentifier } |
+  { 'Other' : string } |
+  { 'SocketsFull' : null };
+export interface SocketRequest {
+  'socket' : TokenIdentifier,
+  'plug' : TokenIdentifier,
+  'user' : User,
+  'subaccount' : [] | [SubAccount],
+}
+export type SocketResponse = { 'ok' : null } |
+  { 'err' : SocketError };
+export type Sockets = Array<TokenIdentifier>;
 export interface StatsResponse {
   'rts_max_live_size' : bigint,
   'transfers' : number,
@@ -241,6 +277,29 @@ export interface TransferRequest {
 export type TransferResponse = { 'ok' : Balance } |
   {
     'err' : { 'CannotNotify' : AccountIdentifier } |
+      { 'InsufficientBalance' : null } |
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : AccountIdentifier } |
+      { 'Other' : string }
+  };
+export type UnplugError = { 'InsufficientBalance' : null } |
+  { 'NotLegitimateCaller' : null } |
+  { 'InvalidToken' : TokenIdentifier } |
+  { 'Rejected' : null } |
+  { 'Unauthorized' : AccountIdentifier } |
+  { 'Other' : string };
+export type UnplugResponse = { 'ok' : null } |
+  { 'err' : UnplugError };
+export interface UnsocketRequest {
+  'socket' : TokenIdentifier,
+  'plug' : TokenIdentifier,
+  'user' : User,
+  'subaccount' : [] | [SubAccount],
+}
+export type UnsocketResponse = { 'ok' : null } |
+  {
+    'err' : { 'UnplugError' : UnplugError } |
       { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |

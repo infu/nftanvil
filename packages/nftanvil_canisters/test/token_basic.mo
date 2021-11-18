@@ -18,7 +18,7 @@ var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
 var someMeta = Blob.fromArray([116, 116, 105, 100]);
 var someMemo = Blob.fromArray([111, 111, 111, 111]);
 
-let nft = await Dropship.NFT({_acclist = []; _slot=3; _accesslist=[]; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
+let nft = await Dropship.NFT({_acclist = []; _slot=3; _router=Principal.fromText("aaaaa-aa"); _accesslist=[]; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
 
 
 // Debug.print(Principal.toText(Principal.fromActor(nft))); // BUG: this is not working when we run it from moc command line

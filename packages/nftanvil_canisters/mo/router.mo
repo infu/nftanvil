@@ -125,7 +125,7 @@ shared({caller = owner}) actor class Router() = this {
             let slot = _nft_canisters_next_id;
             _nft_canisters_next_id := _nft_canisters_next_id + 1;
 
-            let new = await NFT.NFT({_acclist = getAccountCanisters(); _accesslist=getAccessCanisters(); _slot= slot; _debug_cannisterId=null});
+            let new = await NFT.NFT({_acclist = getAccountCanisters(); _router = Principal.fromActor(this); _accesslist=getAccessCanisters(); _slot= slot; _debug_cannisterId=null});
             let principal = Principal.fromActor(new);
 
             await IC.update_settings({
@@ -210,6 +210,16 @@ shared({caller = owner}) actor class Router() = this {
 
     public query func fetchNFTCan(slot: Nat) : async Text {
         Principal.toText(Principal.fromActor(_nft_canisters[slot]));
+    };
+
+    public query func isLegitimate(can: Principal) : async Bool {
+        switch(Array.find<NFT.NFT>(_nft_canisters, 
+        func (p : NFT.NFT) : Bool {
+            Principal.fromActor(p) == can
+        })) {
+            case (?a) true;
+            case (null) false;
+        };
     };
 
     public query func fetchSetup() : async {accesslist:[Text]; acclist: [Text]} {

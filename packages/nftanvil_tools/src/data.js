@@ -75,7 +75,7 @@ export const blobPrepare = async (chunk) =>
   Array.from(new Uint8Array(await chunk.arrayBuffer()));
 
 export const aid2acccan = (aid, acclist) => {
-  return acclist[djb2xor(aid) % acclist.length];
+  return acclist[djb2xor(aid.toUpperCase()) % acclist.length];
 };
 
 export const djb2xor = (str) => {

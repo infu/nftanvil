@@ -29,6 +29,7 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
         #NotEnough;
         #WrongSolution;
         #Unauthorized;
+        #Other: Text;
     };
 
     var rand = PseudoRandom.PseudoRandom();
@@ -43,18 +44,20 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
 
     //Handle canister upgrades
     system func preupgrade() {
-        _tmpConsumers := [];//Iter.toArray(_consumers.entries());
-        _tmpAccount := [];//Iter.toArray(_account.entries());
+        _tmpConsumers := Iter.toArray(_consumers.entries());
+        _tmpAccount := Iter.toArray(_account.entries());
     };
 
     system func postupgrade() {
         _tmpConsumers := [];
         _tmpAccount := [];
-        // _consumers := HashMap.fromIter( Iter.fromArray([(Principal.fromText("rdwbj-yqaaa-aaaai-qa4xq-cai"), true), (Principal.fromText("z4cxk-lqaaa-aaaai-qa26a-cai"), true), (Principal.fromText("rexh5-viaaa-aaaai-qa4xa-cai"), true)]), 0, Principal.equal, Principal.hash );
+        //_consumers := HashMap.fromIter( Iter.fromArray([(Principal.fromText("757td-7qaaa-aaaai-qa5vq-cai"), true), (Principal.fromText("7iyco-6yaaa-aaaai-qa5wa-cai"), true), (Principal.fromText("7pze2-taaaa-aaaai-qa5wq-cai"), true)]), 0, Principal.equal, Principal.hash );
     };
 
     // This function is called by the canister which requires access tokens
     public query func getBalance(acc:AccountIdentifier): async (Nat) {
+     assert(Ext.User.validate(#address(acc)) == true);
+
      switch(_account.get(acc)) {
         case (?a) {
           a.balance;
@@ -78,6 +81,8 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
 
     // If the principal has enough, then this function is called to remove access tokens from their balance
     public shared({caller}) func consumeAccess(acc:AccountIdentifier, count:Nat): async Result.Result<Bool, CommonError> {
+      
+      if (Ext.User.validate(#address(acc)) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
       
       switch (_consumers.get(caller)) {
         case (?found) {
@@ -147,6 +152,7 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     // The adminitrator can add access tokens to principal manually
     public shared({caller}) func addTokens(acc:AccountIdentifier, count:Nat): async () {
       assert(caller == _admin);
+      assert(Ext.User.validate(#address(acc)) == true);
 
       let newData:User = {
         balance = count; 

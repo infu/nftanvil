@@ -19,6 +19,7 @@ type Router =
                         acclist: vec text;
                       }) query;
    getAvailable: () -> (vec text) query;
+   isLegitimate: (principal) -> (bool) query;
    reportOutOfMemory: () -> ();
    setNFTOut: (principal) -> ();
    stats: () -> (StatsResponse) query;

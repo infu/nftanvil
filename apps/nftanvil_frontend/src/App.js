@@ -205,7 +205,9 @@ function LoginBox() {
                   }}
                   rightIcon={<CopyIcon />}
                 >
-                  {address.substring(0, 4) + "..." + address.slice(-4)}
+                  {address.substring(0, 4).toLowerCase() +
+                    "..." +
+                    address.slice(-4).toLowerCase()}
                 </Button>
               </PopoverTrigger>
               <PopoverContent w={350} sx={{ textAlign: "left" }}>
@@ -219,8 +221,8 @@ function LoginBox() {
                   >
                     Your address:
                   </Text>
-                  <Text>{address}</Text>
-                  <Text
+                  <Text>{address.toLowerCase()}</Text>
+                  {/* <Text
                     casing="uppercase"
                     fontSize="xs"
                     mt="10px"
@@ -228,7 +230,7 @@ function LoginBox() {
                   >
                     Your principal:
                   </Text>
-                  <Text>{principal}</Text>
+                  <Text>{principal}</Text> */}
                 </PopoverBody>
                 <PopoverFooter
                   border="0"
@@ -387,7 +389,9 @@ function MobileMenu() {
                   icon={<CopyIcon />}
                 >
                   Your address{" "}
-                  {address.substring(0, 4) + "..." + address.slice(-4)}
+                  {address.substring(0, 4).toLowerCase() +
+                    "..." +
+                    address.slice(-4).toLowerCase()}
                 </MenuItem>
 
                 <MenuItem

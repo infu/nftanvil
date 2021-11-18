@@ -97,7 +97,9 @@ export const auth =
 
     let principal = identity.getPrincipal().toString();
     let anonymous = !(await authClient.isAuthenticated());
-    let address = !anonymous && principalToAccountIdentifier(principal);
+    let address =
+      !anonymous && principalToAccountIdentifier(principal).toUpperCase();
+
     router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
       agentOptions: { identity },
     });

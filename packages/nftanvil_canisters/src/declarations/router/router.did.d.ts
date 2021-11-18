@@ -8,6 +8,7 @@ export interface Router {
       { 'accesslist' : Array<string>, 'acclist' : Array<string> }
     >,
   'getAvailable' : () => Promise<Array<string>>,
+  'isLegitimate' : (arg_0: Principal) => Promise<boolean>,
   'reportOutOfMemory' : () => Promise<undefined>,
   'setNFTOut' : (arg_0: Principal) => Promise<undefined>,
   'stats' : () => Promise<StatsResponse>,

@@ -42,6 +42,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
   let s = getState();
 
   let { index, canister } = decodeTokenId(id);
+  // console.log("FETCHING", { index, canister });
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
   let resp = await nftcan.metadata(id);
@@ -76,10 +77,11 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     attributes: data.attributes,
     transfer: data.transfer,
     domain: data.domain[0],
+    tags: data.tags,
     //vars
     cooldownUntil: vars.cooldownUntil[0],
     boundUntil: vars.boundUntil[0],
-    tags: vars.tags,
+    sockets: vars.sockets,
     // custom isn't needed
   };
 
@@ -184,6 +186,48 @@ export const transfer =
     if (!t.ok) throw t;
   };
 
+export const plug =
+  ({ plug_id, socket_id }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { canister } = decodeTokenId(plug_id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    let t = await nftcan.plug({
+      user: { address },
+      subaccount: [],
+      plug: plug_id,
+      socket: socket_id,
+    });
+    if (t.ok !== null) throw t.err;
+  };
+
+export const unsocket =
+  ({ plug_id, socket_id }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { canister } = decodeTokenId(socket_id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    let t = await nftcan.unsocket({
+      user: { address },
+      subaccount: [],
+      plug: plug_id,
+      socket: socket_id,
+    });
+    if (t.ok !== null) throw t.err;
+  };
+
 export const burn =
   ({ id }) =>
   async (dispatch, getState) => {
@@ -247,6 +291,7 @@ export const transfer_link =
       amount: 1,
       subaccount: [],
     });
+    slot = slot.ok;
 
     let code = encodeLink(slot, index, key);
 
@@ -280,13 +325,13 @@ export const claim_link =
 export const nftEnterCode = (code) => async (dispatch, getState) => {
   let { slot, tokenIndex } = decodeLink(code);
   let canister = await router.fetchNFTCan(slot);
+
   let id = encodeTokenId(canister, tokenIndex);
   dispatch(push("/nft/" + id + "/" + code));
 };
 
 export const mint = (vals) => async (dispatch, getState) => {
   let available = await router.getAvailable();
-  console.log("AVAIL", available);
   let canisterId = Principal.fromText(
     available[Math.floor(Math.random() * available.length)]
   );

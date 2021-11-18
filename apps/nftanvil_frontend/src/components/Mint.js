@@ -1065,10 +1065,10 @@ const File = ({
   const keyStorage = name + "_storage";
   const keyInternal = name + "_internal";
   const keyExternal = name + "_external";
-
+  const showpro = form.values[keyStorage] === "external" || pro;
   return (
     <Box
-      {...(pro
+      {...(showpro
         ? {
             borderWidth: "1px",
             p: "3",
@@ -1078,8 +1078,8 @@ const File = ({
         : {})}
     >
       <Stack spacing="2">
-        {pro ? <FormLabel htmlFor="ttl">{label}</FormLabel> : null}
-        {pro ? (
+        {showpro ? <FormLabel htmlFor="ttl">{label}</FormLabel> : null}
+        {showpro ? (
           <Field name={keyStorage}>
             {({ field, form }) => (
               <RadioGroup

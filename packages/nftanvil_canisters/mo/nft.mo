@@ -33,7 +33,7 @@ import Painless "../lib/vvv/src/Painless";
 import SHA256 "mo:sha/SHA256";
 
 
-shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text]; _slot:Nat32; _debug_cannisterId:?Principal}) : async Interface.NonFungibleToken = this {
+shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text]; _router:Principal;  _slot:Nat32; _debug_cannisterId:?Principal}) : async Interface.NonFungibleToken = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Ext.AccountIdentifier;
@@ -62,8 +62,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         #Other        : Text;
     };
 
-    let ROUTER = actor(Principal.toText(_owner)) : actor {
+    let ROUTER = actor(Principal.toText(_router)) : actor {
         reportOutOfMemory : shared () -> async ();
+        isLegitimate : query (p:Principal) -> async Bool;
     };
     
     private let _acclist_size = Iter.size(Iter.fromArray(_acclist));
@@ -157,7 +158,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
         
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
- 
+
+        if (Ext.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
                 await SNFT_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
@@ -215,6 +218,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     public shared({caller}) func transfer_link(request : Ext.Core.TransferLinkRequest) : async Ext.Core.TransferLinkResponse {
         
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
+        if (Ext.User.validate(request.from) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
@@ -247,6 +251,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     public shared({caller}) func claim_link(request : Ext.Core.ClaimLinkRequest) : async Ext.Core.ClaimLinkResponse {
     
         let keyHash = Blob.fromArray(SHA256.sum224(Blob.toArray(request.key)));
+        if (Ext.User.validate(request.to) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
         switch (Ext.TokenIdentifier.decode(request.token)) {
                 case (#ok(cannisterId, tokenIndex)) {
@@ -291,7 +296,10 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     public shared({caller}) func transfer(request : TransferRequest) : async TransferResponse {
 
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
-        
+
+        if (Ext.User.validate(request.from) == false) return #err(#Other("Invalid User From. Account identifiers must be all uppercase"));
+        if (Ext.User.validate(request.to) == false) return #err(#Other("Invalid User To. Account identifiers must be all uppercase"));
+
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.from}),1),caller_user, caller)) {
@@ -336,6 +344,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
 
     public shared({caller}) func use(request : Ext.Core.UseRequest) : async Ext.Core.UseResponse {
+
+        if (Ext.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
@@ -801,6 +811,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
 
+        if (Ext.User.validate(request.to) == false) return #err(#Invalid("Invalid User. Account identifiers must be all uppercase"));
+
         if (_available == false) { return #err(#OutOfMemory) };
 
         if ((thresholdNFTCount  <= _nextTokenId) or (thresholdMemory <= Prim.rts_memory_size() )) {
@@ -836,7 +848,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                             #ok(());
                                         };
                                         case (#err(e)) {
-                                             #err(#Other("Socket rejected plug"));
+                                             #err(#SocketError(e));
                                         }
                                     };
                                 };
@@ -861,15 +873,18 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     // Calls the extension canister and asks if it accepts the plug
     public shared({caller}) func socket(request: Ext.SocketRequest) : async Ext.SocketResponse {
-         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
- 
-        switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.socket; user = request.user}),1),caller_user, caller)) {
+        
+        if ((await ROUTER.isLegitimate(caller)) == false) return #err(#NotLegitimateCaller);
+        
+        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+
+        switch ( balRequireOwner(balRequireMinimum(balGet({token = request.socket; user = request.user}),1),request.user)) {
             case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                        switch(meta.extensionCanister) {
+                        switch(switch(meta.extensionCanister) {
                             case (?extCan) {
                                 let extensionActor = actor (Principal.toText(extCan)) : actor {
                                     socketAllow : query (request: Ext.SocketRequest) -> async Result.Result<
@@ -880,7 +895,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
                                 // get permission from extension canister
                                 switch (await extensionActor.socketAllow(request)) {
-                                    case (#ok()) {
+                                    case (#ok()) {                                        
                                         #ok()
                                     };
                                     case (#err(e)) #err(e);
@@ -890,6 +905,13 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                 // canisters without extension don't need permission
                                 #ok()
                             }
+                        }) {
+                            case (#ok()) {
+                                if (Iter.size(Iter.fromArray(vars.sockets)) >= 10) return #err(#SocketsFull);
+                                vars.sockets := Array.append( vars.sockets, [request.plug] );
+                                #ok();
+                            };
+                            case (#err(e)) #err(e);
                         }
                         
                     
@@ -941,7 +963,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                 }
                             }) {
                                 case (#ok()) {
-                                   switch (Ext.TokenIdentifier.decode(request.socket)) {
+                                   switch (Ext.TokenIdentifier.decode(request.plug)) {
                                     case (#ok(plugCanister, _)) {
                                         let plugActor = actor (Principal.toText(plugCanister)) : NFT;
                                         switch(await plugActor.unplug(request)) {
@@ -954,7 +976,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
                                                 #ok();
                                             };
-                                            case (#err(e)) #err(e);
+                                            case (#err(e)) #err(#UnplugError(e));
                                         }
                                     };
                                     case (#err(e)) #err(#InvalidToken(request.socket));
@@ -964,7 +986,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                 case (#err(e)) #err(e);
                             }
                             
-                        
                         };
                         case (#err()) {
                             #err(#InvalidToken(request.plug));
@@ -983,24 +1004,22 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
 // Unsockets and returns it to owner
     public shared({caller}) func unplug(request: Ext.UnsocketRequest) : async Ext.UnplugResponse {
+        if ((await ROUTER.isLegitimate(caller)) == false) return #err(#NotLegitimateCaller);
 
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     
-            switch (balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.plug; user = caller_user}),1),caller_user, caller)) {
+            switch (balRequireOwner(balRequireMinimum(balGet({token = request.plug; user = caller_user}),1),caller_user)) {
                 case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
         
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
-
                             await SNFT_move(Ext.User.toAccountIdentifier(#principal(caller)),Ext.User.toAccountIdentifier(request.user), tokenIndex);
-
                             #ok();
                         };
                         case (#err()) {
                             #err(#InvalidToken(request.plug));
                         }
                     }
-            
                 };
                 case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
                 case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
@@ -1031,7 +1050,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
 
     public query func allowance(request : Ext.Allowance.Request) : async Ext.Allowance.Response {
-        
+        if (Ext.User.validate(request.owner) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+
         switch ( balGetAllowance(balGet({token = request.token; user = request.owner}),request.spender)) {
             case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
                 return #ok(allowance);
@@ -1044,7 +1064,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     // NOTE: Currently approve allows only one principal to be allowed, which means, 
     // the owner can't list NFT in multiple marketplaces. This will be changed.
     public shared({caller}) func approve(request : Ext.Allowance.ApproveRequest) : async Ext.Allowance.ApproveResponse {
-        
+
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
         
         if (request.allowance != 1) return #err(#Other("NFT allowance has to be 1"));
@@ -1163,6 +1183,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     // ***** Balance 
     private func balGet(request : BalanceRequest) : BalanceInt {
+
        switch (Ext.TokenIdentifier.decode(request.token)) {
             case (#ok(cannisterId, tokenIndex)) {
                 if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(request.token));

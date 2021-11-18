@@ -69,6 +69,8 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
 
 
     public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex) : async () {
+        assert(Ext.User.validate(#address(aid)) == true);
+
         switch(_can2idx.get(caller)) {
             case (?a) { 
                HashSmash.add<AccountIdentifier>(_account, aid, idx);
@@ -78,6 +80,8 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
     };
 
     public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex) : async () {
+        assert(Ext.User.validate(#address(aid)) == true);
+
         switch(_can2idx.get(caller)) {
             case (?a) { 
                HashSmash.rem<AccountIdentifier>(_account, aid, idx);
@@ -87,6 +91,8 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
     };
 
     public query func list(aid: AccountIdentifier, page:Nat) : async [TokenIdentifier] {
+        assert(Ext.User.validate(#address(aid)) == true); 
+
         let rez:[var TokenIdentifier] = Array.init<TokenIdentifier>(100,"");
         let it = HashSmash.list<AccountIdentifier>(_account, aid);
 
