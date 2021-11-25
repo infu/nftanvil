@@ -574,7 +574,9 @@ export const NFT = ({ id }) => {
       }}
     >
       <Link to={"/nft/" + id}>
-        {meta?.thumb?.internal?.url ? (
+        {meta?.thumb?.ipfs?.url ? (
+          <img className="custom" src={meta.thumb.ipfs.url} />
+        ) : meta?.thumb?.internal?.url ? (
           <img className="custom" src={meta.thumb.internal.url} />
         ) : (
           ""
@@ -699,19 +701,27 @@ export const NFTPage = (p) => {
 };
 
 export const NFTContent = (p) => {
-  if (!p.meta?.content?.internal) return null;
-  const c = p.meta.content.internal;
+  if (p.meta?.content?.external) return null;
+
+  const c =
+    p.meta?.content?.internal ||
+    p.meta?.content?.ipfs ||
+    p.meta?.content?.external;
+  if (!c) return null;
   const ctype =
     c.contentType.indexOf("image/") !== -1
       ? "image"
       : c.contentType.indexOf("video/") !== -1
       ? "video"
       : "unknown";
+
   if (ctype === "unknown") return null;
 
   return (
     <ContentBox>
-      {ctype === "image" && c.url ? <img src={c.url} width="100%" /> : null}
+      {ctype === "image" && c.url ? (
+        <img src={c.url} alt="" width="100%" />
+      ) : null}
       {ctype === "video" && c.url ? (
         <video controls loop muted autoPlay>
           <source src={c.url} type={c.contentType} />
@@ -732,14 +742,14 @@ export const NFTPreview = (p) => {
 };
 
 export const NFTThumb = (p) => {
-  if (!p.meta?.thumb?.internal && !p.meta?.thumb?.external) return null;
+  if (p.meta?.thumb?.external) return null;
+
+  const c =
+    p.meta?.thumb?.internal || p.meta?.thumb?.ipfs || p.meta?.thumb?.external;
+  if (!c) return null;
   return (
     <Thumb {...p}>
-      {p.meta?.thumb?.internal?.url ? (
-        <img className="custom" src={p.meta.thumb.internal.url} />
-      ) : (
-        ""
-      )}
+      {c.url ? <img className="custom" alt="" src={c.url} /> : ""}
       <div className="border" />
     </Thumb>
   );

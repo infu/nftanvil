@@ -4,7 +4,8 @@
   "scripts": {
     "watch": "babel -d cjs src --copy-files --watch",
     "build": "node generate_deploy.js && ./dfx_generate.sh && babel -d cjs src --copy-files",
-    "deploy": "node generate_deploy.js && ./dfx_deploy.sh",
+    "deploy": "NODE_ENV=production node generate_deploy.js && ./dfx_deploy.sh",
+    "deploy:dev": "NODE_ENV=development node generate_deploy.js && ./dfx_deploy.sh",
     "generate": "./dfx_generate.sh"
   },
   "browserslist": {

@@ -21,6 +21,7 @@ type Result =
 type CommonError = 
  variant {
    NotEnough;
+   Other: text;
    Unauthorized;
    WrongSolution;
  };

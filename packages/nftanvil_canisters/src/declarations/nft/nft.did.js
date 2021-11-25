@@ -68,7 +68,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const ClaimLinkResponse = IDL.Variant({
     'ok' : IDL.Null,
-    'err' : IDL.Variant({ 'Rejected' : IDL.Null }),
+    'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'Other' : IDL.Text }),
   });
   const Extension = IDL.Text;
   const TokenIndex = IDL.Nat32;
@@ -116,8 +116,14 @@ export const idlFactory = ({ IDL }) => {
     }),
   });
   const ContentType = IDL.Text;
+  const IPFS_CID = IDL.Text;
   const Content = IDL.Variant({
     'internal' : IDL.Record({
+      'contentType' : ContentType,
+      'size' : IDL.Nat32,
+    }),
+    'ipfs' : IDL.Record({
+      'cid' : IPFS_CID,
       'contentType' : ContentType,
       'size' : IDL.Nat32,
     }),
@@ -377,6 +383,7 @@ export const init = ({ IDL }) => {
   return [
     IDL.Record({
       '_debug_cannisterId' : IDL.Opt(IDL.Principal),
+      '_router' : IDL.Principal,
       '_accesslist' : IDL.Vec(IDL.Text),
       '_acclist' : IDL.Vec(IDL.Text),
       '_slot' : IDL.Nat32,

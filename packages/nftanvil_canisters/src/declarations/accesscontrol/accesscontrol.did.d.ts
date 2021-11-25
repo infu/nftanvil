@@ -14,7 +14,8 @@ export interface AccessControl {
 export type AccountIdentifier = string;
 export type CommonError = { 'NotEnough' : null } |
   { 'Unauthorized' : null } |
-  { 'WrongSolution' : null };
+  { 'WrongSolution' : null } |
+  { 'Other' : string };
 export type Result = { 'ok' : bigint } |
   { 'err' : CommonError };
 export type Result_1 = { 'ok' : boolean } |

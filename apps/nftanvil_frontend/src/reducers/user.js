@@ -100,9 +100,12 @@ export const auth =
     let address =
       !anonymous && principalToAccountIdentifier(principal).toUpperCase();
 
+    console.log("ROUTER", process.env.REACT_APP_ROUTER_CANISTER_ID);
+
     router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
       agentOptions: { identity },
     });
+
     let { accesslist, acclist } = await router.fetchSetup();
     let acccan = aid2acccan(address, acclist);
 

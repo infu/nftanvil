@@ -6,7 +6,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "node --no-deprecation src/index.js"
+    "start": "NODE_ENV=production node --no-deprecation src/index.js",
+    "dev": "NODE_ENV=development node --no-deprecation src/index.js"
   },
   "dependencies": {
     "@vvv-interactive/nftanvil": "^0.0.13",

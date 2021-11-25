@@ -11,7 +11,9 @@ import { encodeTokenId } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import fetch from "node-fetch";
 import { fileIdentity } from "./identity.js";
 
-dotenv.config();
+dotenv.config(
+  process.env.NODE_ENV !== "production" ? { path: ".dev.env" } : {}
+);
 let identity = fileIdentity();
 
 import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";

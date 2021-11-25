@@ -46,11 +46,14 @@ export interface ClaimLinkRequest {
   'token' : TokenIdentifier,
 }
 export type ClaimLinkResponse = { 'ok' : null } |
-  { 'err' : { 'Rejected' : null } };
+  { 'err' : { 'Rejected' : null } | { 'Other' : string } };
 export type CommonError = { 'InvalidToken' : TokenIdentifier } |
   { 'Other' : string };
 export type Content = {
     'internal' : { 'contentType' : ContentType, 'size' : number }
+  } |
+  {
+    'ipfs' : { 'cid' : IPFS_CID, 'contentType' : ContentType, 'size' : number }
   } |
   { 'external' : { 'idx' : number, 'contentType' : ContentType } };
 export type ContentType = string;
@@ -67,6 +70,7 @@ export interface FetchChunkRequest {
     { 'content' : null },
 }
 export type HeaderField = [string, string];
+export type IPFS_CID = string;
 export type ItemHold = {
     'external' : { 'desc' : EffectDesc, 'holdId' : CustomId }
   };

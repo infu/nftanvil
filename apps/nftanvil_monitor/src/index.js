@@ -11,9 +11,13 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 
-const queryNetworkInfo = (id) => {
+const queryNetworkInfo = (id, prod = false) => {
   let q = execSync(
-    "dfx canister --no-wallet --network ic info " + id + " 2> /dev/null",
+    "dfx canister --no-wallet " +
+      (prod ? "--network ic" : "") +
+      " info " +
+      id +
+      " 2> /dev/null",
     {
       encoding: "utf8",
       maxBuffer: 50 * 1024 * 1024,
@@ -26,13 +30,14 @@ const queryNetworkInfo = (id) => {
 };
 
 const main = async () => {
+  const prod = process.env.NODE_ENV === "production";
   let rez = {};
   let { principal, address, router, id: routerId } = await routerCanister();
 
   let rs = await router.stats();
   rs.id = routerId;
   rez.router = [routerId];
-  let rnetinfo = queryNetworkInfo(routerId);
+  let rnetinfo = queryNetworkInfo(routerId, prod);
 
   let nftCanisters = await router.fetchNFTCanisters();
   rez.nft = nftCanisters;
@@ -40,7 +45,7 @@ const main = async () => {
     nftCanisters.map(async (can) => {
       let nft = nftCanister(can);
       let s = await nft.stats();
-      s = { ...s, ...queryNetworkInfo(can) };
+      s = { ...s, ...queryNetworkInfo(can, prod) };
       s.id = can;
       return s;
     })
@@ -53,7 +58,7 @@ const main = async () => {
     setup.acclist.map(async (can) => {
       let acc = accountCanister(can);
       let s = await acc.stats();
-      s = { ...s, ...queryNetworkInfo(can) };
+      s = { ...s, ...queryNetworkInfo(can, prod) };
       s.id = can;
       return s;
     })
@@ -63,7 +68,7 @@ const main = async () => {
     setup.accesslist.map(async (can) => {
       let acc = accessCanister(can);
       let s = await acc.stats();
-      s = { ...s, ...queryNetworkInfo(can) };
+      s = { ...s, ...queryNetworkInfo(can, prod) };
       s.id = can;
       return s;
     })
@@ -134,7 +139,11 @@ const main = async () => {
   );
 
   console.log(table.toString());
-  let savePath = path.resolve("..", "..", "cluster.json");
+  let savePath = path.resolve(
+    "..",
+    "..",
+    prod ? "cluster.json" : "cluster.local.json"
+  );
 
   fs.writeFileSync(savePath, JSON.stringify(rez));
 };

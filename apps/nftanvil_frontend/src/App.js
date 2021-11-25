@@ -108,7 +108,7 @@ function AlertTestNet() {
                 />{" "}
                 discord{" "}
               </a>{" "}
-              & follow
+              &amp; follow
               <a
                 rel="noreferrer"
                 target="_blank"
@@ -123,13 +123,6 @@ function AlertTestNet() {
                 twitter
               </a>
               . Airdrops soon!
-              <br />
-              <a
-                href="/address/9/9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"
-                style={{ color: "#e67", borderBottom: "1px dotted" }}
-              >
-                Take a look at some of the upcoming items
-              </a>
             </Text>
           </AlertDescription>
         </Box>
@@ -166,7 +159,11 @@ function LoginBox() {
             <Button
               variant="solid"
               rightIcon={
-                <img src={Dfinity} style={{ width: "40px", height: "40px" }} />
+                <img
+                  src={Dfinity}
+                  style={{ width: "40px", height: "40px" }}
+                  alt=""
+                />
               }
               colorScheme="gray"
               onClick={() => dispatch(login())}
@@ -189,6 +186,7 @@ function LoginBox() {
                 <img
                   src={blueflame}
                   style={{ marginLeft: "4px", width: "13px", height: "13px" }}
+                  alt=""
                 />
               </Button>
             </Tooltip>

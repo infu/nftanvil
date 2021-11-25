@@ -4,6 +4,7 @@ export const idlFactory = ({ IDL }) => {
     'NotEnough' : IDL.Null,
     'Unauthorized' : IDL.Null,
     'WrongSolution' : IDL.Null,
+    'Other' : IDL.Text,
   });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : CommonError });
   const Result = IDL.Variant({ 'ok' : IDL.Nat, 'err' : CommonError });

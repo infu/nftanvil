@@ -675,6 +675,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                         case (#external(_)) {
                                             Painless.NotFound("Token points to external data");
                                         };
+                                        case (#ipfs(_)) {
+                                            Painless.NotFound("Token points to IPFS");
+                                        };
                                     }
                                 
                                 };
@@ -756,6 +759,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         if (md.secret == true) switch (md.content) {
             case (?#external(_)) {
                 return #err(#Invalid("Can't have secret external content"));
+            };
+            case (?#ipfs(_)) {
+                return #err(#Invalid("Can't have secret IPFS content"));
             };
             case (_) ();
         };

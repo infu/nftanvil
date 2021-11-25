@@ -4,6 +4,7 @@ import {
   encodeTokenId,
   decodeTokenId,
   tokenUrl,
+  ipfsTokenUrl,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import { nftCanister } from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 import {
@@ -86,6 +87,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
   };
 
   if (meta.thumb.internal) meta.thumb.internal.url = tokenUrl(id, "thumb");
+  if (meta.thumb.ipfs) meta.thumb.ipfs.url = ipfsTokenUrl(meta.thumb.ipfs.cid);
 
   if (meta.content?.internal) {
     if (meta.secret)
@@ -98,6 +100,8 @@ export const nftFetch = (id) => async (dispatch, getState) => {
       });
     else meta.content.internal.url = tokenUrl(id, "content");
   }
+  if (meta.content?.ipfs)
+    meta.content.ipfs.url = ipfsTokenUrl(meta.content.ipfs.cid);
 
   dispatch(nftSet({ id, meta }));
   return meta;
@@ -298,6 +302,23 @@ export const transfer_link =
     return code;
   };
 
+export const uploadIPFS = async (up) => {
+  if (typeof up === "string" && up.indexOf("blob:") === 0)
+    up = await fetch(up).then((r) => r.blob());
+
+  return fetch("https://nftpkg.com/nft/upload", {
+    method: "POST",
+    mode: "cors",
+    body: up,
+  })
+    .then((d) => {
+      return d.json();
+    })
+    .then((x) => {
+      return x;
+    });
+};
+
 export const claim_link =
   ({ code }) =>
   async (dispatch, getState) => {
@@ -331,6 +352,22 @@ export const nftEnterCode = (code) => async (dispatch, getState) => {
 };
 
 export const mint = (vals) => async (dispatch, getState) => {
+  // const key = "sdfsdf";
+  // await uploadIPFS(vals.content[0].internal.url, key);
+
+  if (vals?.content[0]?.ipfs?.url) {
+    let { ok, cid } = await uploadIPFS(vals.content[0].ipfs.url);
+    console.log("CID", cid);
+    vals.content[0].ipfs.cid = cid;
+  }
+
+  if (vals?.thumb?.ipfs?.url) {
+    let { ok, cid } = await uploadIPFS(vals.thumb.ipfs.url);
+    vals.thumb.ipfs.cid = cid;
+  }
+
+  console.log("MINTING", vals);
+
   let available = await router.getAvailable();
   let canisterId = Principal.fromText(
     available[Math.floor(Math.random() * available.length)]
@@ -381,6 +418,7 @@ export const mint = (vals) => async (dispatch, getState) => {
       render: "Uploading files...",
     });
 
+    // Upload Internal
     if (vals?.content[0]?.internal?.url)
       await uploadFile(
         nft,
@@ -388,6 +426,7 @@ export const mint = (vals) => async (dispatch, getState) => {
         "content",
         await chunkBlob(vals.content[0].internal.url)
       );
+
     if (vals?.thumb?.internal?.url)
       await uploadFile(
         nft,

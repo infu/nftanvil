@@ -80,6 +80,10 @@ export const encodeChunkId = (tokenIndex, chunkIndex, ctype) => {
 
 let proxyInfo = false;
 
+export const ipfsTokenUrl = (cid) => {
+  return "https://nftpkg.com/ipfs/" + cid;
+};
+
 export const tokenUrl = (tid, type) => {
   let { index, canister } = decodeTokenId(tid);
   if (process.env.NODE_ENV === "production") {

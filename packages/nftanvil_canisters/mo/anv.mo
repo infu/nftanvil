@@ -13,8 +13,6 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 
-
-
 shared({caller = _installer}) actor class ANV() = this {
 
   public type Balance = Ext.Balance;

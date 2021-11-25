@@ -56,16 +56,16 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
 
     // This function is called by the canister which requires access tokens
     public query func getBalance(acc:AccountIdentifier): async (Nat) {
-     assert(Ext.User.validate(#address(acc)) == true);
+     let aid = Ext.AccountIdentifier.normalize(acc);
 
-     switch(_account.get(acc)) {
+     switch(_account.get(aid)) {
         case (?a) {
           a.balance;
         };
         case (_) {
           0
         };
-     }
+      }
     };
 
 
@@ -82,21 +82,21 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     // If the principal has enough, then this function is called to remove access tokens from their balance
     public shared({caller}) func consumeAccess(acc:AccountIdentifier, count:Nat): async Result.Result<Bool, CommonError> {
       
-      if (Ext.User.validate(#address(acc)) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
-      
+     let aid = Ext.AccountIdentifier.normalize(acc);
+
       switch (_consumers.get(caller)) {
         case (?found) {
-           switch(_account.get(acc)) {
+           switch(_account.get(aid)) {
             case (?a) {
               if (a.balance < count) return #err(#NotEnough);
               let newData : User = {
                 balance = a.balance - count;
                 solution = a.solution;
               };
-              _account.put(acc, newData);
+              _account.put(aid, newData);
               #ok(true);
             };
-            case (_) #err(#NotEnough)
+            case (_) #err(#NotEnough);
           };
         };
         case (_) {
@@ -105,10 +105,11 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
       }
     };
 
+
     // When a principal wants to earn access tokens, they get a challege, which they need to solve and return to sendChallenge
     public shared({caller}) func getChallenge(): async [Nat32] {
       let (correct, bitmap) = Captcha.randCaptcha(rand, 5);
-     let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
+      let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
 
       let newData = switch(_account.get(aid)) {
         case (?a) {
@@ -152,14 +153,14 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     // The adminitrator can add access tokens to principal manually
     public shared({caller}) func addTokens(acc:AccountIdentifier, count:Nat): async () {
       assert(caller == _admin);
-      assert(Ext.User.validate(#address(acc)) == true);
+      let aid = Ext.AccountIdentifier.normalize(acc);
 
       let newData:User = {
         balance = count; 
         solution = "";
         };
 
-      _account.put(acc, newData);
+      _account.put(aid, newData);
 
     };
 

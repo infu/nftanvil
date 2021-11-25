@@ -341,6 +341,7 @@ type ItemHold = variant {
                               desc: EffectDesc;
                               holdId: CustomId;
                             };};
+type IPFS_CID = text;
 type HeaderField = 
  record {
    text;
@@ -372,6 +373,11 @@ type Content =
                contentType: ContentType;
                size: nat32;
              };
+   ipfs: record {
+           cid: IPFS_CID;
+           contentType: ContentType;
+           size: nat32;
+         };
  };
 type CommonError = 
  variant {
@@ -380,7 +386,10 @@ type CommonError =
  };
 type ClaimLinkResponse = 
  variant {
-   err: variant {Rejected;};
+   err: variant {
+          Other: text;
+          Rejected;
+        };
    ok;
  };
 type ClaimLinkRequest = 
@@ -462,5 +471,6 @@ service : (record {
              _accesslist: vec text;
              _acclist: vec text;
              _debug_cannisterId: opt principal;
+             _router: principal;
              _slot: nat32;
            }) -> NFT

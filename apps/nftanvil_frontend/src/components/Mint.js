@@ -150,6 +150,14 @@ export const MintForm = () => {
                 size: v.content_internal.size,
               },
             }
+          : v.content_storage === "ipfs" && v.content_ipfs?.url
+          ? {
+              ipfs: {
+                url: v.content_ipfs.url,
+                contentType: v.content_ipfs.type,
+                size: v.content_ipfs.size,
+              },
+            }
           : v.content_storage === "external"
           ? {
               external: {
@@ -166,6 +174,14 @@ export const MintForm = () => {
                 url: v.thumb_internal.url,
                 contentType: v.thumb_internal.type,
                 size: v.thumb_internal.size,
+              },
+            }
+          : v.thumb_storage === "ipfs" && v.thumb_ipfs?.url
+          ? {
+              ipfs: {
+                url: v.thumb_ipfs.url,
+                contentType: v.thumb_ipfs.type,
+                size: v.thumb_ipfs.size,
               },
             }
           : v.thumb_storage === "external"
@@ -230,9 +246,9 @@ export const MintForm = () => {
         ttl: 0,
         maxChildren: 0,
         attributes: [],
-        content_storage: "internal",
+        content_storage: "ipfs",
         content_external_idx: 0,
-        thumb_storage: "internal",
+        thumb_storage: "ipfs",
         thumb_external_idx: 0,
         secret: false,
         tags: [],
@@ -361,7 +377,7 @@ export const MintForm = () => {
                       if (info.type.indexOf("image/") !== -1) {
                         if (info.size > 1024 * 1024) {
                           let x = await resizeImage(info.url, 1280, 1280);
-                          props.setFieldValue("content_internal", x);
+                          props.setFieldValue("content_ipfs", x);
 
                           toast.info(
                             "Image was too big. Resizing automatically",
@@ -369,7 +385,7 @@ export const MintForm = () => {
                           );
                         }
                         let f = await resizeImage(info.url, 124, 124, true);
-                        props.setFieldValue("thumb_internal", f);
+                        props.setFieldValue("thumb_ipfs", f);
                       }
                     }}
                     accept="image/*,video/*"
@@ -412,7 +428,7 @@ export const MintForm = () => {
                       if (info.type.indexOf("image/") !== -1) {
                         if (info.size > 1024 * 128) {
                           let x = await resizeImage(info.url, 124, 124);
-                          props.setFieldValue("thumb_internal", x);
+                          props.setFieldValue("thumb_ipfs", x);
                           toast.info(
                             "Image was too big. Resizing automatically",
                             { position: "bottom-center" }
@@ -1043,8 +1059,9 @@ const FormTip = ({ children, text }) => {
   return (
     <Tooltip placement="top-start" label={text}>
       <Text>
-        {children}{" "}
-        <InfoOutlineIcon color={"gray.500"} w={3} h={3} mt={"-3px"} />
+        {children}
+        {/* {" "}
+        <InfoOutlineIcon color={"gray.500"} w={3} h={3} mt={"-3px"} /> */}
       </Text>
     </Tooltip>
   );
@@ -1064,6 +1081,7 @@ const File = ({
 }) => {
   const keyStorage = name + "_storage";
   const keyInternal = name + "_internal";
+  const keyIpfs = name + "_ipfs";
   const keyExternal = name + "_external";
   const showpro = form.values[keyStorage] === "external" || pro;
   return (
@@ -1088,9 +1106,12 @@ const File = ({
                   form.setFieldValue(keyStorage, x);
                 }}
               >
-                <Stack spacing={1} direction="row">
-                  <Radio size="sm" mr={"10px"} value={"internal"}>
-                    <FormTip text="NFTAnvil will store all data">
+                <Stack spacing={6} direction="row">
+                  <Radio size="sm" value={"ipfs"}>
+                    <FormTip text="Stored on IPFS">IPFS</FormTip>
+                  </Radio>
+                  <Radio size="sm" value={"internal"}>
+                    <FormTip text="Stored on Internet Computer">
                       Internal
                     </FormTip>
                   </Radio>
@@ -1120,6 +1141,26 @@ const File = ({
                   }}
                 />
                 <FormErrorMessage>{form.errors[keyInternal]}</FormErrorMessage>
+              </FormControl>
+            )}
+          </Field>
+        ) : null}
+
+        {form.values[keyStorage] === "ipfs" ? (
+          <Field name={keyIpfs} validate={validateInternal}>
+            {({ field, form }) => (
+              <FormControl isInvalid={form.errors[keyIpfs]}>
+                <FileInput
+                  label={buttonLabel}
+                  button={{ w: "100%" }}
+                  {...field}
+                  accept={accept}
+                  onChange={(f) => {
+                    form.setFieldValue(keyIpfs, f, true);
+                    if (onChange) onChange(f);
+                  }}
+                />
+                <FormErrorMessage>{form.errors[keyIpfs]}</FormErrorMessage>
               </FormControl>
             )}
           </Field>
