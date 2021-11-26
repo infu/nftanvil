@@ -1,24 +1,28 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 
 // Imports and re-exports candid interface
-import { idlFactory } from './router.did.js';
-export { idlFactory } from './router.did.js';
+import { idlFactory } from "./router.did.js";
+export { idlFactory } from "./router.did.js";
 // CANISTER_ID is replaced by webpack based on node environment
 export const canisterId = process.env.ROUTER_CANISTER_ID;
+if (!process.env.ROUTER_CANISTER_ID)
+  console.log("ROUTER_CANISTER_ID env var not set");
 
 /**
- * 
+ *
  * @param {string | import("@dfinity/principal").Principal} canisterId Canister ID of Agent
  * @param {{agentOptions?: import("@dfinity/agent").HttpAgentOptions; actorOptions?: import("@dfinity/agent").ActorConfig}} [options]
  * @return {import("@dfinity/agent").ActorSubclass<import("./router.did.js")._SERVICE>}
  */
- export const createActor = (canisterId, options) => {
+export const createActor = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
-  
+
   // Fetch root key for certificate validation during development
-  if(process.env.NODE_ENV !== "production") {
-    agent.fetchRootKey().catch(err=>{
-      console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
+  if (process.env.NODE_ENV !== "production") {
+    agent.fetchRootKey().catch((err) => {
+      console.warn(
+        "Unable to fetch root key. Check to ensure that your local replica is running"
+      );
       console.error(err);
     });
   }
@@ -30,9 +34,9 @@ export const canisterId = process.env.ROUTER_CANISTER_ID;
     ...options?.actorOptions,
   });
 };
-  
+
 /**
  * A ready-to-use agent for the router canister
  * @type {import("@dfinity/agent").ActorSubclass<import("./router.did.js")._SERVICE>}
  */
- export const router = createActor(canisterId);
+export const router = createActor(canisterId);

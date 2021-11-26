@@ -6,12 +6,12 @@ const main = async () => {
   console.log("Script principal ", principal.toText());
 
   let myaddress =
-    "9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32";
+    "D1B158C1E1B8376761295F759F8907E29E10AAF6F556D7F90BE2C580A2E42DA1";
 
   // Currently agent-js candid implementation doesn't supply the user with very informative errors,
   // so a creating correct metadata record will be hard. Add one change at a time and test.
   let metadata = {
-    name: ["Excalibur"],
+    name: ["Excalibur IPFS"],
     domain: [],
     lore: [],
     use: [],
@@ -22,10 +22,12 @@ const main = async () => {
     attributes: [],
     content: [],
     thumb: {
-      internal: { contentType: "image/jpeg", path: "./some.jpg" },
+      ipfs: { contentType: "image/jpeg", path: "./some.jpg" },
     },
     secret: false,
     extensionCanister: [],
+    custom: [],
+    tags: [],
   };
 
   try {

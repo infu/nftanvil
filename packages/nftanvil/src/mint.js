@@ -27,7 +27,59 @@ export const easyMint = async (arr) => {
   );
 };
 
+export const uploadIPFS = async (up) => {
+  if (typeof up === "string" && up.indexOf("blob:") === 0)
+    up = await fetch(up).then((r) => r.blob());
+
+  return fetch("https://nftpkg.com/nft/upload", {
+    method: "POST",
+    mode: "cors",
+    body: up,
+  })
+    .then((d) => {
+      return d.json();
+    })
+    .then((x) => {
+      console.log(x);
+      return x;
+    });
+};
+
+export const pinIPFS = async (tokenid, cid, secret) => {
+  return fetch(
+    "https://nftpkg.com/nft/pin/" + tokenid + "/" + cid + "/" + secret,
+    {
+      method: "POST",
+      mode: "cors",
+    }
+  )
+    .then((d) => {
+      return d.json();
+    })
+    .then((x) => {
+      return x;
+    });
+};
+
 export const easyMintOne = async ({ to, metadata }) => {
+  console.log("EASYMINT");
+  let ipfs_pins = [];
+  if (metadata?.content[0]?.ipfs?.path) {
+    let { ok, cid, secret } = await uploadIPFS(
+      await blobFrom(metadata.content[0].ipfs.path)
+    );
+    ipfs_pins.push({ cid, secret });
+    metadata.content[0].ipfs.cid = cid;
+  }
+
+  if (metadata?.thumb?.ipfs?.path) {
+    let { ok, cid, secret } = await uploadIPFS(
+      await blobFrom(metadata.thumb.ipfs.path)
+    );
+    ipfs_pins.push({ cid, secret });
+    metadata.thumb.ipfs.cid = cid;
+  }
+
   let { router } = await routerCanister();
 
   let available = await router.getAvailable();
@@ -58,6 +110,12 @@ export const easyMintOne = async ({ to, metadata }) => {
   let s = await nft.mintNFT({ to, metadata });
   if (s.ok) {
     let tokenIndex = s.ok;
+    let tid = encodeTokenId(nftcan.toText(), tokenIndex);
+
+    for (let { cid, secret } of ipfs_pins) {
+      let { ok, err } = await pinIPFS(tid, cid, secret);
+      if (err) throw Error("Couldn't pin to IPFS");
+    }
 
     if (metadata?.content[0]?.internal?.path)
       await uploadFile(
@@ -78,7 +136,6 @@ export const easyMintOne = async ({ to, metadata }) => {
         await chunkBlob(await blobFrom(metadata.thumb.internal.path), fetch)
       );
 
-    let tid = encodeTokenId(nftcan.toText(), tokenIndex);
     return tid;
   } else {
     throw s && s.err;

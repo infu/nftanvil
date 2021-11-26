@@ -25,6 +25,7 @@ import {
   Textarea,
   Text,
   Grid,
+  useClipboard,
 } from "@chakra-ui/react";
 
 import {
@@ -223,7 +224,8 @@ export const MintForm = () => {
   };
 
   const devGetRecord = (values) => {
-    console.log(record2request(form2record(values)));
+    let s = record2request(form2record(values));
+    console.log(JSON.stringify(s));
   };
 
   const boxColor = useColorModeValue("white", "gray.600");
@@ -1033,13 +1035,13 @@ export const MintForm = () => {
                     For more options turn on <ProToggle />
                   </Box>
                 ) : null}
-                {/* <Button
-                mt={4}
-                size="sm"
-                onClick={() => devGetRecord(props.values)}
-              >
-                &lt;&gt;
-              </Button> */}
+                <Button
+                  mt={4}
+                  size="xs"
+                  onClick={() => devGetRecord(props.values)}
+                >
+                  Print structure in console
+                </Button>
               </Form>
             </Box>
 

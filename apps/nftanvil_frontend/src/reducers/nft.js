@@ -315,6 +315,23 @@ export const uploadIPFS = async (up) => {
       return d.json();
     })
     .then((x) => {
+      console.log(x);
+      return x;
+    });
+};
+
+export const pinIPFS = async (tokenid, cid, secret) => {
+  return fetch(
+    "https://nftpkg.com/nft/pin/" + tokenid + "/" + cid + "/" + secret,
+    {
+      method: "POST",
+      mode: "cors",
+    }
+  )
+    .then((d) => {
+      return d.json();
+    })
+    .then((x) => {
       return x;
     });
 };
@@ -354,19 +371,18 @@ export const nftEnterCode = (code) => async (dispatch, getState) => {
 export const mint = (vals) => async (dispatch, getState) => {
   // const key = "sdfsdf";
   // await uploadIPFS(vals.content[0].internal.url, key);
-
+  let ipfs_pins = [];
   if (vals?.content[0]?.ipfs?.url) {
-    let { ok, cid } = await uploadIPFS(vals.content[0].ipfs.url);
-    console.log("CID", cid);
+    let { ok, cid, secret } = await uploadIPFS(vals.content[0].ipfs.url);
+    ipfs_pins.push({ cid, secret });
     vals.content[0].ipfs.cid = cid;
   }
 
   if (vals?.thumb?.ipfs?.url) {
-    let { ok, cid } = await uploadIPFS(vals.thumb.ipfs.url);
+    let { ok, cid, secret } = await uploadIPFS(vals.thumb.ipfs.url);
+    ipfs_pins.push({ cid, secret });
     vals.thumb.ipfs.cid = cid;
   }
-
-  console.log("MINTING", vals);
 
   let available = await router.getAvailable();
   let canisterId = Principal.fromText(
@@ -413,6 +429,11 @@ export const mint = (vals) => async (dispatch, getState) => {
 
     let tokenIndex = mint.ok;
     let tid = encodeTokenId(canisterId.toText(), tokenIndex);
+
+    for (let { cid, secret } of ipfs_pins) {
+      let { ok, err } = await pinIPFS(tid, cid, secret);
+      if (err) throw Error("Couldn't pin to IPFS");
+    }
 
     toast.update(toastId, {
       render: "Uploading files...",
