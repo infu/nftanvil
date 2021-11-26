@@ -1,0 +1,33 @@
+{
+  "name": "@vvv-interactive/nftanvil-canisters",
+  "version": "0.0.15",
+  "scripts": {
+    "watch": "babel -d cjs src --copy-files --watch",
+    "build": "node generate_deploy.js && ./dfx_generate.sh && babel -d cjs src --copy-files",
+    "deploy": "NODE_ENV=production node generate_deploy.js && ./dfx_deploy.sh",
+    "deploy:dev": "NODE_ENV=development node generate_deploy.js && ./dfx_deploy.sh",
+    "generate": "./dfx_generate.sh"
+  },
+  "browserslist": {
+    "production": [
+      "last 2 chrome version",
+      "last 2 firefox version",
+      "last 2 safari version",
+      "last 2 edge version"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@dfinity/agent": "^0.10.1",
+    "@dfinity/auth-client": "^0.10.1",
+    "@dfinity/authentication": "^0.10.1",
+    "@dfinity/candid": "^0.10.1",
+    "@dfinity/identity": "^0.10.1",
+    "@dfinity/principal": "^0.10.1"
+  },
+  "gitHead": "bcf17272c99292bef6eea23897f1a50614ce5f60"
+}
