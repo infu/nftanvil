@@ -28,7 +28,6 @@ if (process.env.NODE_ENV !== "production")
 
 export const routerCanister = async () => {
   let id = process.env.ROUTER_CANISTER;
-
   let { router, agent } = cRouter.routerCanister(id, {
     agentOptions: { fetch, identity, host },
   });

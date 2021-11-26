@@ -62,22 +62,23 @@ export const pinIPFS = async (tokenid, cid, secret) => {
 };
 
 export const easyMintOne = async ({ to, metadata }) => {
-  console.log("EASYMINT");
   let ipfs_pins = [];
   if (metadata?.content[0]?.ipfs?.path) {
-    let { ok, cid, secret } = await uploadIPFS(
-      await blobFrom(metadata.content[0].ipfs.path)
-    );
-    ipfs_pins.push({ cid, secret });
+    let blob = await blobFrom(metadata.content[0].ipfs.path);
+    let size = getFilesizeInBytes(metadata.content[0].ipfs.path);
+    let { ok, cid, secret } = await uploadIPFS(blob);
+    ipfs_pins.push({ cid, secret, size });
     metadata.content[0].ipfs.cid = cid;
+    metadata.content[0].ipfs.size = size;
   }
 
   if (metadata?.thumb?.ipfs?.path) {
-    let { ok, cid, secret } = await uploadIPFS(
-      await blobFrom(metadata.thumb.ipfs.path)
-    );
-    ipfs_pins.push({ cid, secret });
+    let blob = await blobFrom(metadata.thumb.ipfs.path);
+    let size = getFilesizeInBytes(metadata.thumb.ipfs.path);
+    let { ok, cid, secret } = await uploadIPFS(blob);
+    ipfs_pins.push({ cid, secret, size });
     metadata.thumb.ipfs.cid = cid;
+    metadata.thumb.ipfs.size = size;
   }
 
   let { router } = await routerCanister();
