@@ -12,7 +12,8 @@ Powered by the Internet Computer https://dfinity.org/
 
 LINCENSING: 
 + IC Smart contracts (in Motoko) are All Rights Reserved.
-+ Frontend & NPM Packages are Apache 2.0
++ Frontend is All Rights Reserved
++ Components - NPM Packages are Apache 2.0.
 
 
 **Current network (production will have a lot more nft and account canisters)**
