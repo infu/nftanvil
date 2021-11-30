@@ -25,7 +25,7 @@ type CommonError =
    Unauthorized;
    WrongSolution;
  };
-type AccountIdentifier = text;
+type AccountIdentifier = blob;
 type AccessControl = 
  service {
    addAllowed: (principal) -> ();

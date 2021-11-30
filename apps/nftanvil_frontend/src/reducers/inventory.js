@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
 import authentication from "../auth";
 import { produce } from "immer";
-import { aid2acccan } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 export const inventorySlice = createSlice({
   name: "inventory",
@@ -26,10 +26,10 @@ export const loadInventory = (aid, pageIdx) => async (dispatch, getState) => {
     : null;
   let s = getState();
   if (!s.user.acclist?.length) return null;
-  let can = aid2acccan(aid, s.user.acclist);
+  let can = AccountIdentifier.TextToSlot(aid, s.user.acclist);
   let acc = accountCanister(can, { agentOptions: { identity } });
   pageIdx = parseInt(pageIdx, 10);
-  let list = await acc.list(aid, pageIdx);
+  let list = await acc.list(AccountIdentifier.TextToArray(aid), pageIdx);
   list = list.filter((x) => x !== "");
 
   dispatch(pageSet({ aid, pageIdx, list }));

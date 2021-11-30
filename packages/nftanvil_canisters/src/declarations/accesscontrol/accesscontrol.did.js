@@ -1,5 +1,5 @@
 export const idlFactory = ({ IDL }) => {
-  const AccountIdentifier = IDL.Text;
+  const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const CommonError = IDL.Variant({
     'NotEnough' : IDL.Null,
     'Unauthorized' : IDL.Null,

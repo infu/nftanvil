@@ -1,6 +1,6 @@
 export const idlFactory = ({ IDL }) => {
   const TokenIdentifier = IDL.Text;
-  const AccountIdentifier = IDL.Text;
+  const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const User = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
@@ -41,10 +41,9 @@ export const idlFactory = ({ IDL }) => {
     'ok' : AccountIdentifier,
     'err' : CommonError,
   });
-  const Memo = IDL.Vec(IDL.Nat8);
+  const Memo = IDL.Nat64;
   const BurnRequest = IDL.Record({
     'token' : TokenIdentifier,
-    'notify' : IDL.Bool,
     'memo' : Memo,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
@@ -70,7 +69,6 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Null,
     'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'Other' : IDL.Text }),
   });
-  const Extension = IDL.Text;
   const TokenIndex = IDL.Nat32;
   const FetchChunkRequest = IDL.Record({
     'tokenIndex' : TokenIndex,
@@ -107,10 +105,11 @@ export const idlFactory = ({ IDL }) => {
   });
   const EffectDesc = IDL.Text;
   const CustomId = IDL.Text;
+  const Cooldown = IDL.Nat32;
   const ItemUse = IDL.Variant({
     'consumable' : IDL.Record({ 'desc' : EffectDesc, 'useId' : CustomId }),
     'cooldown' : IDL.Record({
-      'duration' : IDL.Nat32,
+      'duration' : Cooldown,
       'desc' : EffectDesc,
       'useId' : CustomId,
     }),
@@ -165,11 +164,13 @@ export const idlFactory = ({ IDL }) => {
     'attributes' : Attributes,
     'transfer' : ItemTransfer,
   });
-  const Sockets = IDL.Vec(TokenIdentifier);
+  const TokenIdentifierBlob = IDL.Vec(IDL.Nat8);
+  const Sockets = IDL.Vec(TokenIdentifierBlob);
   const MetavarsFrozen = IDL.Record({
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
     'sockets' : Sockets,
+    'price' : IDL.Nat64,
   });
   const MetadataResponse = IDL.Variant({
     'ok' : IDL.Record({
@@ -255,7 +256,6 @@ export const idlFactory = ({ IDL }) => {
   const TransferRequest = IDL.Record({
     'to' : User,
     'token' : TokenIdentifier,
-    'notify' : IDL.Bool,
     'from' : User,
     'memo' : Memo,
     'subaccount' : IDL.Opt(SubAccount),
@@ -348,7 +348,6 @@ export const idlFactory = ({ IDL }) => {
     'claim_link' : IDL.Func([ClaimLinkRequest], [ClaimLinkResponse], []),
     'cyclesAccept' : IDL.Func([], [], []),
     'cyclesBalance' : IDL.Func([], [IDL.Nat], ['query']),
-    'extensions' : IDL.Func([], [IDL.Vec(Extension)], ['query']),
     'fetchChunk' : IDL.Func(
         [FetchChunkRequest],
         [IDL.Opt(IDL.Vec(IDL.Nat8))],

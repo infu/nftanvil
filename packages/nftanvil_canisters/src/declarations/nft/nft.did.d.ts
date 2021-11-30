@@ -1,5 +1,5 @@
 import type { Principal } from '@dfinity/principal';
-export type AccountIdentifier = string;
+export type AccountIdentifier = Array<number>;
 export interface ApproveRequest {
   'token' : TokenIdentifier,
   'subaccount' : [] | [SubAccount],
@@ -23,7 +23,6 @@ export type BearerResponse = { 'ok' : AccountIdentifier } |
   { 'err' : CommonError };
 export interface BurnRequest {
   'token' : TokenIdentifier,
-  'notify' : boolean,
   'memo' : Memo,
   'user' : User,
   'subaccount' : [] | [SubAccount],
@@ -57,11 +56,11 @@ export type Content = {
   } |
   { 'external' : { 'idx' : number, 'contentType' : ContentType } };
 export type ContentType = string;
+export type Cooldown = number;
 export type CustomData = Array<number>;
 export type CustomId = string;
 export type DomainName = string;
 export type EffectDesc = string;
-export type Extension = string;
 export interface FetchChunkRequest {
   'tokenIndex' : TokenIndex,
   'subaccount' : [] | [SubAccount],
@@ -84,12 +83,12 @@ export type ItemUse = {
   } |
   {
     'cooldown' : {
-      'duration' : number,
+      'duration' : Cooldown,
       'desc' : EffectDesc,
       'useId' : CustomId,
     }
   };
-export type Memo = Array<number>;
+export type Memo = bigint;
 export interface Metadata {
   'ttl' : [] | [number],
   'use' : [] | [ItemUse],
@@ -139,6 +138,7 @@ export interface MetavarsFrozen {
   'cooldownUntil' : [] | [number],
   'boundUntil' : [] | [number],
   'sockets' : Sockets,
+  'price' : bigint,
 }
 export interface MintRequest { 'to' : User, 'metadata' : MetadataInput }
 export type MintResponse = { 'ok' : TokenIndex } |
@@ -157,7 +157,6 @@ export interface NFT {
   'claim_link' : (arg_0: ClaimLinkRequest) => Promise<ClaimLinkResponse>,
   'cyclesAccept' : () => Promise<undefined>,
   'cyclesBalance' : () => Promise<bigint>,
-  'extensions' : () => Promise<Array<Extension>>,
   'fetchChunk' : (arg_0: FetchChunkRequest) => Promise<[] | [Array<number>]>,
   'http_request' : (arg_0: Request) => Promise<Response>,
   'http_request_streaming_callback' : (arg_0: Token) => Promise<Callback>,
@@ -225,7 +224,7 @@ export interface SocketRequest {
 }
 export type SocketResponse = { 'ok' : null } |
   { 'err' : SocketError };
-export type Sockets = Array<TokenIdentifier>;
+export type Sockets = Array<TokenIdentifierBlob>;
 export interface StatsResponse {
   'rts_max_live_size' : bigint,
   'transfers' : number,
@@ -253,6 +252,7 @@ export interface Token {
   'content_encoding' : string,
 }
 export type TokenIdentifier = string;
+export type TokenIdentifierBlob = Array<number>;
 export type TokenIndex = number;
 export interface TransferLinkRequest {
   'token' : TokenIdentifier,
@@ -272,7 +272,6 @@ export type TransferLinkResponse = { 'ok' : number } |
 export interface TransferRequest {
   'to' : User,
   'token' : TokenIdentifier,
-  'notify' : boolean,
   'from' : User,
   'memo' : Memo,
   'subaccount' : [] | [SubAccount],

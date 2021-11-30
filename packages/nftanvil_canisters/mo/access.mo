@@ -56,9 +56,8 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
 
     // This function is called by the canister which requires access tokens
     public query func getBalance(acc:AccountIdentifier): async (Nat) {
-     let aid = Ext.AccountIdentifier.normalize(acc);
 
-     switch(_account.get(aid)) {
+     switch(_account.get(acc)) {
         case (?a) {
           a.balance;
         };
@@ -81,19 +80,17 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
 
     // If the principal has enough, then this function is called to remove access tokens from their balance
     public shared({caller}) func consumeAccess(acc:AccountIdentifier, count:Nat): async Result.Result<Bool, CommonError> {
-      
-     let aid = Ext.AccountIdentifier.normalize(acc);
-
+    
       switch (_consumers.get(caller)) {
         case (?found) {
-           switch(_account.get(aid)) {
+           switch(_account.get(acc)) {
             case (?a) {
               if (a.balance < count) return #err(#NotEnough);
               let newData : User = {
                 balance = a.balance - count;
                 solution = a.solution;
               };
-              _account.put(aid, newData);
+              _account.put(acc, newData);
               #ok(true);
             };
             case (_) #err(#NotEnough);
@@ -153,14 +150,13 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     // The adminitrator can add access tokens to principal manually
     public shared({caller}) func addTokens(acc:AccountIdentifier, count:Nat): async () {
       assert(caller == _admin);
-      let aid = Ext.AccountIdentifier.normalize(acc);
 
       let newData:User = {
         balance = count; 
         solution = "";
         };
 
-      _account.put(aid, newData);
+      _account.put(acc, newData);
 
     };
 

@@ -10,7 +10,7 @@ type StatsResponse =
    rts_total_allocation: nat;
    rts_version: text;
  };
-type AccountIdentifier = text;
+type AccountIdentifier = blob;
 type Account = 
  service {
    add: (AccountIdentifier, TokenIndex) -> ();

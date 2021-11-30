@@ -11,7 +11,7 @@ export interface AccessControl {
   'showAllowed' : () => Promise<Array<string>>,
   'stats' : () => Promise<StatsResponse>,
 }
-export type AccountIdentifier = string;
+export type AccountIdentifier = Array<number>;
 export type CommonError = { 'NotEnough' : null } |
   { 'Unauthorized' : null } |
   { 'WrongSolution' : null } |

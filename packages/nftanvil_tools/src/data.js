@@ -4,7 +4,7 @@ import { sha224 } from "@dfinity/principal/lib/cjs/utils/sha224";
 var BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 var bs58 = basex(BASE58);
 
-const bytesArrayToNumber = (a) => {
+export const bytesArrayToNumber = (a) => {
   let n = 0;
   for (let i = a.length - 1; i >= 0; i--) {
     n += Math.pow(256, a.length - i - 1) * a[i];
@@ -12,7 +12,7 @@ const bytesArrayToNumber = (a) => {
   return n;
 };
 
-const numberToBytesArray = (n, size) => {
+export const numberToBytesArray = (n, size) => {
   const a = Array(size).fill(0);
 
   for (let i = 0; i < size; i++) {
@@ -55,6 +55,12 @@ export const jsonToNat8 = async (json) => {
   return arr;
 };
 
+export const fromHexString = (hexString) =>
+  hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16));
+
+export const toHexString = (bytes) =>
+  bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
+
 export const chunkBlob = async (url_or_blob) => {
   let blob;
   if (typeof url_or_blob === "string")
@@ -73,10 +79,6 @@ export const chunkBlob = async (url_or_blob) => {
 
 export const blobPrepare = async (chunk) =>
   Array.from(new Uint8Array(await chunk.arrayBuffer()));
-
-export const aid2acccan = (aid, acclist) => {
-  return acclist[djb2xor(aid.toLowerCase()) % acclist.length];
-};
 
 export const djb2xor = (str) => {
   // The normal djb2 from Text.hash is hard to do in js because overflow looses precision

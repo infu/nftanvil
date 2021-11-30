@@ -28,7 +28,9 @@ let r = {
   },
   version: 1,
 };
-let ci = {};
+let ci = {
+  anv: { ic: "4kn7r-oiaaa-aaaai-qa55a-cai" },
+};
 
 r.canisters["anv"] = {
   main: "mo/anv.mo",

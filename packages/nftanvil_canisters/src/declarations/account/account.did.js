@@ -1,5 +1,5 @@
 export const idlFactory = ({ IDL }) => {
-  const AccountIdentifier = IDL.Text;
+  const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const TokenIndex = IDL.Nat32;
   const TokenIdentifier = IDL.Text;
   const StatsResponse = IDL.Record({

@@ -9,7 +9,7 @@ import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cj
 
 import { Principal } from "@dfinity/principal";
 
-import { aid2acccan } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 import { toast } from "react-toastify";
 export const userSlice = createSlice({
@@ -107,7 +107,9 @@ export const auth =
     });
 
     let { accesslist, acclist } = await router.fetchSetup();
-    let acccan = aid2acccan(address, acclist);
+    let acccan = address
+      ? AccountIdentifier.TextToSlot(address, acclist)
+      : null;
 
     dispatch(
       authSet({ address, principal, anonymous, acclist, acccan, accesslist })
@@ -137,7 +139,10 @@ export const challenge = () => async (dispatch, getState) => {
 
   let identity = authentication.client.getIdentity();
 
-  let accesscan = aid2acccan(s.user.address, s.user.accesslist);
+  let accesscan = AccountIdentifier.TextToSlot(
+    s.user.address,
+    s.user.accesslist
+  );
 
   let access = accessCanister(accesscan, { agentOptions: { identity } });
 
@@ -151,11 +156,36 @@ export const getAccessTokenBalance = () => async (dispatch, getState) => {
 
   let identity = authentication.client.getIdentity();
 
-  let accesscan = aid2acccan(s.user.address, s.user.accesslist);
+  let accesscan = AccountIdentifier.TextToSlot(
+    s.user.address,
+    s.user.accesslist
+  );
 
   let access = accessCanister(accesscan, { agentOptions: { identity } });
 
-  let balance = await access.getBalance(s.user.address);
+  let balance = await access.getBalance(
+    AccountIdentifier.TextToArray(s.user.address)
+  );
+
+  // console.log(
+  //   "AT",
+  //   await accessCanister(s.user.accesslist[0], {
+  //     agentOptions: { identity },
+  //   }).getBalance(AccountIdentifier.TextToArray(s.user.address))
+  // );
+  // console.log(
+  //   "AT",
+  //   await accessCanister(s.user.accesslist[1], {
+  //     agentOptions: { identity },
+  //   }).getBalance(AccountIdentifier.TextToArray(s.user.address))
+  // );
+  // console.log(
+  //   "AT",
+  //   await accessCanister(s.user.accesslist[2], {
+  //     agentOptions: { identity },
+  //   }).getBalance(AccountIdentifier.TextToArray(s.user.address))
+  // );
+
   dispatch(accessTokensSet(parseInt(balance, 10)));
 };
 
@@ -167,7 +197,10 @@ export const sendSolution = (code) => async (dispatch, getState) => {
 
   let identity = authentication.client.getIdentity();
 
-  let accesscan = aid2acccan(s.user.address, s.user.accesslist);
+  let accesscan = AccountIdentifier.TextToSlot(
+    s.user.address,
+    s.user.accesslist
+  );
 
   let access = accessCanister(accesscan, { agentOptions: { identity } });
 

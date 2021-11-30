@@ -16,7 +16,7 @@ import Array_ "../lib/vvv/src/Array"
 var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
 
 var someMeta = Blob.fromArray([116, 116, 105, 100]);
-var someMemo = Blob.fromArray([111, 111, 111, 111]);
+var someMemo:Nat64 = 0;
 
 let nft = await Dropship.NFT({_acclist = []; _slot=3; _router=Principal.fromText("aaaaa-aa"); _accesslist=[]; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
 
@@ -39,8 +39,8 @@ let user_peter : Ext.User = #principal(user_peter_principal);
 
 
 
-let user_john_sub1 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]));
-let user_john_sub2 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,210]));
+let user_john_sub1 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?Blob.fromArray([1])));
+let user_john_sub2 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?Blob.fromArray([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,210])));
 
 let token_one : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 0);
 let token_two : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 1);
@@ -57,8 +57,8 @@ Debug.print("NFTcanisterId: " # NFTcanisterId);
 Debug.print("Token one: " # token_one);
 Debug.print("Token two: " # token_two);
 
-Debug.print("User john Account Identifier: " # Ext.User.toAccountIdentifier(user_john));
-Debug.print("User john Account Identifier sub2: " # Ext.User.toAccountIdentifier(user_john_sub2));
+Debug.print("User john Account Identifier: " # Ext.AccountIdentifier.toText(Ext.User.toAccountIdentifier(user_john)));
+Debug.print("User john Account Identifier sub2: " # Ext.AccountIdentifier.toText(Ext.User.toAccountIdentifier(user_john_sub2)));
 
 
 // -- Check Minting & balances
@@ -160,16 +160,16 @@ assert( (await nft.balance({ user  = user_john; token = token_two;})) == #ok(1))
 // -- Check transfers 
 
 // try to transfer token one with ammount 0
-Result.assertErr( (await nft.transfer({ from  = user_peter; to = user_john; token = token_one; amount = 0; memo = someMemo; notify=true; subaccount = null })) );
+Result.assertErr( (await nft.transfer({ from  = user_peter; to = user_john; token = token_one; amount = 0; memo = someMemo; subaccount = null })) );
 
 // try to transfer token one with ammount 2
-Result.assertErr( (await nft.transfer({ from  = user_peter; to = user_john; token = token_one; amount = 2; memo = someMemo; notify=true; subaccount = null })) );
+Result.assertErr( (await nft.transfer({ from  = user_peter; to = user_john; token = token_one; amount = 2; memo = someMemo;  subaccount = null })) );
 
 // try to transfer token one  peter to john while peter doesn't have it
-Result.assertErr( (await nft.transfer({ from  = user_peter; to = user_john; token = token_one; amount = 1; memo = someMemo; notify=true; subaccount = null })) );
+Result.assertErr( (await nft.transfer({ from  = user_peter; to = user_john; token = token_one; amount = 1; memo = someMemo; subaccount = null })) );
 
 // transfer token one from john to peter
-assert( (await nft.transfer({ from  = user_john; to = user_peter; token = token_one; amount = 1; memo = someMemo; notify=true; subaccount = null })) == #ok(1) );
+assert( (await nft.transfer({ from  = user_john; to = user_peter; token = token_one; amount = 1; memo = someMemo; subaccount = null })) == #ok(1) );
 
 // check balance of john for token one, should be zero
 assert( (await nft.balance({ user  = user_john; token = token_one;})) == #ok(0));
@@ -178,7 +178,7 @@ assert( (await nft.balance({ user  = user_john; token = token_one;})) == #ok(0))
 assert( (await nft.balance({ user  = user_peter; token = token_one;})) == #ok(1));
 
 // try to transfer token one from peter to john while john is the one calling transfer method
-Result.assertErr( (await nft.transfer({ from  = user_peter; to = user_john; token = token_one; amount = 1; memo = someMemo; notify=true; subaccount = null })) );
+Result.assertErr( (await nft.transfer({ from  = user_peter; to = user_john; token = token_one; amount = 1; memo = someMemo;  subaccount = null })) );
 
 // -- Approve
 
@@ -209,7 +209,7 @@ assert( (await nft.allowance({token = token_one; owner = user_john; spender = us
 assert( (await nft.balance({ user  = user_john_sub1; token = token_two;})) == #ok(0));
 
 // transfer to sub account  
-assert( (await nft.transfer({ from  = user_john; to = user_john_sub1; token = token_two; amount = 1; memo = someMemo; notify=true; subaccount = null })) == #ok(1) );
+assert( (await nft.transfer({ from  = user_john; to = user_john_sub1; token = token_two; amount = 1; memo = someMemo; subaccount = null })) == #ok(1) );
 
 // check balance of john subaccount 1 for token two 
 assert( (await nft.balance({ user  = user_john_sub1; token = token_two;})) == #ok(1));
@@ -218,7 +218,7 @@ assert( (await nft.balance({ user  = user_john_sub1; token = token_two;})) == #o
 assert( (await nft.balance({ user  = user_john; token = token_two;})) == #ok(0));
 
 // transfer the token back to main account
-assert( (await nft.transfer({ from  = user_john_sub1; to = user_john; token = token_two; amount = 1; memo = someMemo; notify=true; subaccount = ?[1] })) == #ok(1) );
+assert( (await nft.transfer({ from  = user_john_sub1; to = user_john; token = token_two; amount = 1; memo = someMemo;  subaccount = ?Blob.fromArray([1]) })) == #ok(1) );
 
 // check balance of john main account for token two 
 assert( (await nft.balance({ user  = user_john; token = token_two;})) == #ok(1));
@@ -226,7 +226,6 @@ assert( (await nft.balance({ user  = user_john; token = token_two;})) == #ok(1))
 
 
 // -- We simulate different caller, so we do some proper checks of methods like 'transfer' and 'approve' which depend on it
-
 
 var user_infu : Ext.User = user_john;  // Infu is John's brother. He will hack a bit and spoof caller.
 var user_infu_principal : Principal = user_john_principal; 
@@ -239,16 +238,16 @@ actor class Infu() { // all methods in this actor will have their own principal 
         Debug.print("Infu's Principal: " # Principal.toText(user_infu_principal));
  
         user_infu := #address(Ext.AccountIdentifier.fromPrincipal(user_infu_principal, null));
-        Debug.print("Infu's AccountIdentifier: " # Ext.User.toAccountIdentifier(user_infu));
+        Debug.print("Infu's AccountIdentifier: " #  Ext.AccountIdentifier.toText(Ext.User.toAccountIdentifier(user_infu)));
     };
 
     public shared({caller}) func run_two () : async () {
-        assert ( (await nft.transfer({ from = user_infu; to = user_john; token = token_two; amount = 1; memo = someMemo; notify=true; subaccount = null })) == #ok(1) );
+        assert ( (await nft.transfer({ from = user_infu; to = user_john; token = token_two; amount = 1; memo = someMemo;  subaccount = null })) == #ok(1) );
     };
 
     public shared({caller}) func run_three () : async () {
-        // Debug.print(debug_show( (await nft.transfer({ from = user_john; to = user_peter; token = token_two; amount = 1; memo = someMemo; notify=true; subaccount = null }))));
-        assert ( (await nft.transfer({ from = user_john; to = user_peter; token = token_two; amount = 1; memo = someMemo; notify=true; subaccount = null })) == #ok(1) );
+        // Debug.print(debug_show( (await nft.transfer({ from = user_john; to = user_peter; token = token_two; amount = 1; memo = someMemo;  subaccount = null }))));
+        assert ( (await nft.transfer({ from = user_john; to = user_peter; token = token_two; amount = 1; memo = someMemo;  subaccount = null })) == #ok(1) );
     };
 }; 
 
@@ -256,13 +255,13 @@ let infu = await Infu();
 await infu.run_one(); 
 
 // lets move the NFT from John to Infu
-assert( (await nft.transfer({ from  = user_john; to = user_infu; token = token_two; amount = 1; memo = someMemo; notify=true; subaccount = null })) == #ok(1) );
+assert( (await nft.transfer({ from  = user_john; to = user_infu; token = token_two; amount = 1; memo = someMemo; subaccount = null })) == #ok(1) );
 
 // check balance of infus main account for token two 
 assert( (await nft.balance({ user  = user_infu; token = token_two;})) == #ok(1));
 
 // John tries to steal infus token 
-Result.assertErr( (await nft.transfer({ from  = user_infu; to = user_john; token = token_two; amount = 1; memo = someMemo; notify=true; subaccount = null })));
+Result.assertErr( (await nft.transfer({ from  = user_infu; to = user_john; token = token_two; amount = 1; memo = someMemo; subaccount = null })));
 
 // Infu sends its back to John
 await infu.run_two();
@@ -319,7 +318,7 @@ assert(stats.minted == 4);
 assert(stats.transfers == 6);
 
 // burn the token
-assert( (await nft.burn({ user = user_john; token = token_for_burning; amount = 1; memo = someMemo; notify=true; subaccount = null })) == #ok(1));
+assert( (await nft.burn({ user = user_john; token = token_for_burning; amount = 1; memo = someMemo; subaccount = null })) == #ok(1));
 
 // get new stats
 stats := await nft.stats();

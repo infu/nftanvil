@@ -59,19 +59,19 @@ shared({caller = owner}) actor class Router() = this {
         _access_canisters := [];
 
         await addAccessCanister();
-        await addAccessCanister();
-        await addAccessCanister();
+        // await addAccessCanister();
+        // await addAccessCanister();
 
         // create account canisters 
         var can = 0; 
-        while(can < 3) {
+        while(can < 1) {
             await addAccountCanister();
             can := can + 1;
         };
 
         // create one NFT canister
         var nftcan = 0; 
-        while(nftcan < 3) {
+        while(nftcan < 1) {
             await addNFTCanister();
             nftcan := nftcan + 1;
         };

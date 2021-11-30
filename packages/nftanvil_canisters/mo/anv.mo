@@ -91,16 +91,17 @@ shared({caller = _installer}) actor class ANV() = this {
       _blockIndex := _blockIndex + 1;
       let newBlockIndex = _blockIndex;
       let time = Time.now();
-      let a = switch (Hex.decode(from)) { case (#err(_)) []; case (#ok(aR)) aR; };
-      let b = switch (Hex.decode(to)) { case (#err(_)) []; case (#ok(aR)) aR; };
+      let a = Blob.toArray(from);
+      let b = Blob.toArray(to);
       let c = Blob_.nat64ToBytes(Nat64.fromNat(amount));
       let d = Blob_.nat64ToBytes(Nat64.fromIntWrap(time));
       let e = switch(_blockchain.get(newBlockIndex - 1 )) {
           case (?a) Blob.toArray(a.4);
           case (_) []
       };
-      
-      let hash = Blob.fromArray(SHA256.sum224( Array.flatten([a,b,c,d,e])));
+      let f:[[Nat8]] = [a,b,c,d,e];
+
+      let hash = Blob.fromArray(SHA256.sum224( Array.flatten(f)));
 
       let newBlock = (from, to, amount, time, hash);
       _blockchain.put(newBlockIndex, newBlock);

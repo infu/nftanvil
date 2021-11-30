@@ -142,6 +142,7 @@ function AlertTestNet() {
 function LoginBox() {
   const address = useSelector((state) => state.user.address);
   const principal = useSelector((state) => state.user.principal);
+  const pro = useSelector((state) => state.user.pro);
 
   const anonymous = useSelector((state) => state.user.anonymous);
   const accesstokens = useSelector((state) => state.user.accesstokens);
@@ -220,15 +221,19 @@ function LoginBox() {
                     Your address:
                   </Text>
                   <Text>{address.toLowerCase()}</Text>
-                  {/* <Text
-                    casing="uppercase"
-                    fontSize="xs"
-                    mt="10px"
-                    color="gray.500"
-                  >
-                    Your principal:
-                  </Text>
-                  <Text>{principal}</Text> */}
+                  {pro ? (
+                    <>
+                      <Text
+                        casing="uppercase"
+                        fontSize="xs"
+                        mt="10px"
+                        color="gray.500"
+                      >
+                        Your principal:
+                      </Text>
+                      <Text>{principal}</Text>
+                    </>
+                  ) : null}
                 </PopoverBody>
                 <PopoverFooter
                   border="0"

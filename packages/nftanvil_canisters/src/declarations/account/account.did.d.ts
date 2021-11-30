@@ -8,7 +8,7 @@ export interface Account {
   'rem' : (arg_0: AccountIdentifier, arg_1: TokenIndex) => Promise<undefined>,
   'stats' : () => Promise<StatsResponse>,
 }
-export type AccountIdentifier = string;
+export type AccountIdentifier = Array<number>;
 export interface StatsResponse {
   'rts_max_live_size' : bigint,
   'cycles' : bigint,

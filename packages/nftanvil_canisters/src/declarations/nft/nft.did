@@ -89,7 +89,6 @@ type TransferRequest =
    amount: Balance;
    from: User;
    memo: Memo;
-   notify: bool;
    subaccount: opt SubAccount;
    to: User;
    token: TokenIdentifier;
@@ -115,6 +114,7 @@ type TransferLinkRequest =
    token: TokenIdentifier;
  };
 type TokenIndex = nat32;
+type TokenIdentifierBlob = blob;
 type TokenIdentifier = text;
 type Token = 
  record {
@@ -130,7 +130,7 @@ type SupplyResponse =
    err: CommonError;
    ok: Balance;
  };
-type SubAccount = vec nat8;
+type SubAccount = blob;
 type StreamingStrategy = variant {
                            Callback:
                             record {
@@ -150,7 +150,7 @@ type StatsResponse =
    rts_version: text;
    transfers: nat32;
  };
-type Sockets = vec TokenIdentifier;
+type Sockets = vec TokenIdentifierBlob;
 type SocketResponse = 
  variant {
    err: SocketError;
@@ -228,7 +228,6 @@ type NFT =
    claim_link: (ClaimLinkRequest) -> (ClaimLinkResponse);
    cyclesAccept: () -> ();
    cyclesBalance: () -> (nat) query;
-   extensions: () -> (vec Extension) query;
    fetchChunk: (FetchChunkRequest) -> (opt blob);
    http_request: (Request) -> (Response) query;
    http_request_streaming_callback: (Token) -> (Callback) query;
@@ -264,6 +263,7 @@ type MetavarsFrozen =
  record {
    boundUntil: opt nat32;
    cooldownUntil: opt nat32;
+   price: nat64;
    sockets: Sockets;
  };
 type MetadataResponse = 
@@ -315,7 +315,7 @@ type Metadata =
    ttl: opt nat32;
    use: opt ItemUse;
  };
-type Memo = blob;
+type Memo = nat64;
 type ItemUse = 
  variant {
    consumable: record {
@@ -324,7 +324,7 @@ type ItemUse =
                };
    cooldown: record {
                desc: EffectDesc;
-               duration: nat32;
+               duration: Cooldown;
                useId: CustomId;
              };
  };
@@ -357,11 +357,11 @@ type FetchChunkRequest =
    subaccount: opt SubAccount;
    tokenIndex: TokenIndex;
  };
-type Extension = text;
 type EffectDesc = text;
 type DomainName = text;
 type CustomId = text;
 type CustomData = blob;
+type Cooldown = nat32;
 type ContentType = text;
 type Content = 
  variant {
@@ -421,7 +421,6 @@ type BurnRequest =
  record {
    amount: Balance;
    memo: Memo;
-   notify: bool;
    subaccount: opt SubAccount;
    token: TokenIdentifier;
    user: User;
@@ -466,7 +465,7 @@ type ApproveRequest =
    subaccount: opt SubAccount;
    token: TokenIdentifier;
  };
-type AccountIdentifier = text;
+type AccountIdentifier = blob;
 service : (record {
              _accesslist: vec text;
              _acclist: vec text;

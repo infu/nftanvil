@@ -1,4 +1,4 @@
-// All rights reserved by VVV Interactive
+// All rights reserved by 3V Interactive
 // Developer contributions are rewarded with stake
 
 import Ext "../lib/ext.std/src/Ext";
@@ -31,6 +31,8 @@ import Blob_ "../lib/vvv/src/Blob";
 import Hash "../lib/vvv/src/Hash";
 import Painless "../lib/vvv/src/Painless";
 import SHA256 "mo:sha/SHA256";
+import Ledger  "./ledger_interface";
+import AccountIdentifierArray "mo:principal/AccountIdentifier";
 
 
 shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text]; _router:Principal;  _slot:Nat32; _debug_cannisterId:?Principal}) : async Interface.NonFungibleToken = this {
@@ -39,6 +41,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     type AccountIdentifier = Ext.AccountIdentifier;
     type Balance = Ext.Balance;
     type TokenIdentifier = Ext.TokenIdentifier;
+    type TokenIdentifierBlob = Ext.TokenIdentifierBlob;
     type TokenIndex = Ext.TokenIndex;
     type User = Ext.User;
     type CommonError = Ext.CommonError;
@@ -67,6 +70,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         isLegitimate : query (p:Principal) -> async Bool;
     };
     
+    private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
+
     private let _acclist_size = Iter.size(Iter.fromArray(_acclist));
     private let _accesslist_size = Iter.size(Iter.fromArray(_accesslist));
 
@@ -76,12 +81,12 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
 
     private func accountActor(aid: AccountIdentifier) : accountInterface {
-        let selected = _acclist[ Nat32.toNat( Hash.djb2xor(aid) % Nat32.fromNat(_acclist_size) ) ];
+        let selected = _acclist[ Ext.AccountIdentifier.slot(aid, _acclist_size) ];
         actor(selected): accountInterface;
     };
 
     private func accessActor(aid: AccountIdentifier) : AccessControl.AccessControl {
-        let selected = _accesslist[ Nat32.toNat( Hash.djb2xor(aid) % Nat32.fromNat(_accesslist_size) ) ];
+        let selected = _accesslist[ Ext.AccountIdentifier.slot(aid, _accesslist_size) ];
         actor(selected): AccessControl.AccessControl;
     };
 
@@ -141,11 +146,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         _tmpChunk := [];
     };
     
-    public query func extensions() : async [Ext.Extension] {
-        ["@ext:common", "@ext/allowance", "@ext/nonfungible", "nftanvil"];
-    };
-
-
     public query func balance(request : BalanceRequest) : async BalanceResponse {
          switch(balGet(request)) {
              case (#ok(holder,tokenIndex, bal, allowance)) #ok(bal);
@@ -293,6 +293,51 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
             }
     };
     
+    // Get accountid and exact ICP amount
+    public query func purchaseIntent(tokenIndex:Nat32, user:User) : async AccountIdentifier {
+        let userAccountId = Ext.User.toAccountIdentifier(user);
+
+        let (purchaseAccountId,_) = Ext.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, userAccountId);
+        Ext.AccountIdentifier.fromShort(purchaseAccountId);
+    };
+
+    // Check accountid if its exact or more than asked. If something is wrong, refund. If more is sent, refund extra.
+    public func purchaseClaim(tokenIndex:Nat32, user:User) : () {
+        let userAccountId = Ext.User.toAccountIdentifier(user);
+
+        let (purchaseAccountId, purchaseSubAccount) = Ext.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, userAccountId);
+        
+        let {e8s = bal} = await ledger.account_balance({
+            account = purchaseAccountId
+        });
+
+        let fee:Nat64 = 10000;
+        let requiredAmount:Nat64 = 1000000;
+
+        let refundAmount = bal - requiredAmount;
+
+        if (refundAmount > 0) {
+            // refund
+            let transfer : Ledger.TransferArgs = {
+                memo = 0;
+                amount = {e8s = refundAmount};
+                fee = {e8s = fee};
+                from_subaccount = ?purchaseSubAccount;
+                to = userAccountId;
+                created_at_time = null;
+                };
+
+            switch(await ledger.transfer(transfer)) {
+                case (#Ok(blockIndex)) {
+                    ()
+                };
+                case (#Err(e)) {
+                    ()
+                }
+            };
+        }
+    }; 
+
     public shared({caller}) func transfer(request : TransferRequest) : async TransferResponse {
 
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
@@ -786,7 +831,6 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
             };
         };
         
-
         let mvar : Metavars = {
              var boundUntil = switch (md.transfer) {
                     case (#unrestricted) { null };
@@ -797,6 +841,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                 }; 
              var cooldownUntil = null; // in minutes
              var sockets = [];
+             var price = 0;
         };
 
         assert(switch(_meta.get(tokenIndex)) { // make some memory integrity checks
@@ -880,6 +925,10 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     // Calls the extension canister and asks if it accepts the plug
     public shared({caller}) func socket(request: Ext.SocketRequest) : async Ext.SocketResponse {
         
+        if (Ext.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
+        let plugBlob = Ext.TokenIdentifier.toBlob(request.plug);
+
+
         if ((await ROUTER.isLegitimate(caller)) == false) return #err(#NotLegitimateCaller);
         
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
@@ -914,7 +963,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                         }) {
                             case (#ok()) {
                                 if (Iter.size(Iter.fromArray(vars.sockets)) >= 10) return #err(#SocketsFull);
-                                vars.sockets := Array.append( vars.sockets, [request.plug] );
+                                vars.sockets := Array.append(vars.sockets, [plugBlob]);
                                 #ok();
                             };
                             case (#err(e)) #err(e);
@@ -937,6 +986,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     // Unsockets and returns it to owner
     public shared({caller}) func unsocket(request: Ext.UnsocketRequest) : async Ext.UnsocketResponse {
+
+        if (Ext.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
+        let plugBlob = Ext.TokenIdentifier.toBlob(request.plug);
 
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     
@@ -974,10 +1026,10 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                         let plugActor = actor (Principal.toText(plugCanister)) : NFT;
                                         switch(await plugActor.unplug(request)) {
                                             case (#ok()) {
-
+                                                
                                                 //remove from socket metavars
-                                                vars.sockets := Array.filter( vars.sockets, func (tid:TokenIdentifier) : Bool {
-                                                    tid != request.plug
+                                                vars.sockets := Array.filter( vars.sockets, func (tid:TokenIdentifierBlob) : Bool {
+                                                    tid != plugBlob
                                                 });
 
                                                 #ok();
@@ -1157,9 +1209,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
     
     private func SNFT_del(aid: AccountIdentifier, tidx: TokenIndex) : async () {
-        //  if assertations fail storeage is a mish-mash
-        let stored_aid = switch(SNFT_tidxGet(tidx)) { case (?a) a; case _ ""; };
-        assert(Ext.AccountIdentifier.equal(stored_aid, aid)); 
+        //  if assertations fail storeage is a mish-mash or someone is trying to hack it 
+        let stored_aid = switch(SNFT_tidxGet(tidx)) { case (?a) a; case _ Blob.fromArray([]); };
+        assert(stored_aid == aid);
 
         _balance.delete(tidx);
         _allowance.delete(tidx);

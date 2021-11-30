@@ -19,6 +19,8 @@ import { Principal } from "@dfinity/principal";
 
 import { push } from "connected-react-router";
 import { challenge } from "./user";
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import * as TokenIdentifier from "@vvv-interactive/nftanvil-tools/cjs/tokenidentifier.js";
 
 import { toast } from "react-toastify";
 
@@ -54,7 +56,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
   let { bearer, data, vars } = resp.ok;
 
   let meta = {
-    bearer,
+    bearer: AccountIdentifier.ArrayToText(bearer),
 
     // inherant
     tokenIndex: index,
@@ -82,7 +84,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     //vars
     cooldownUntil: vars.cooldownUntil[0],
     boundUntil: vars.boundUntil[0],
-    sockets: vars.sockets,
+    sockets: vars.sockets.map((x) => TokenIdentifier.ArrayToText(x)),
     // custom isn't needed
   };
 
@@ -179,12 +181,11 @@ export const transfer =
     let address = s.user.address;
 
     let t = await nftcan.transfer({
-      from: { address },
-      to: { address: toAddress },
+      from: { address: AccountIdentifier.TextToArray(address) },
+      to: { address: AccountIdentifier.TextToArray(toAddress) },
       token: id,
       amount: 1,
-      memo: [],
-      notify: false,
+      memo: 0,
       subaccount: [],
     });
     if (!t.ok) throw t;
@@ -203,7 +204,7 @@ export const plug =
     let address = s.user.address;
 
     let t = await nftcan.plug({
-      user: { address },
+      user: { address: AccountIdentifier.TextToArray(address) },
       subaccount: [],
       plug: plug_id,
       socket: socket_id,
@@ -224,7 +225,7 @@ export const unsocket =
     let address = s.user.address;
 
     let t = await nftcan.unsocket({
-      user: { address },
+      user: { address: AccountIdentifier.TextToArray(address) },
       subaccount: [],
       plug: plug_id,
       socket: socket_id,
@@ -245,11 +246,10 @@ export const burn =
     let address = s.user.address;
 
     await nftcan.burn({
-      user: { address },
+      user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
       amount: 1,
-      memo: [],
-      notify: false,
+      memo: 0,
       subaccount: [],
     });
   };
@@ -267,9 +267,9 @@ export const use =
     let address = s.user.address;
 
     await nftcan.use({
-      user: { address },
+      user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
-      memo: [],
+      memo: 0,
       subaccount: [],
     });
   };
@@ -289,7 +289,7 @@ export const transfer_link =
     let { key, hash } = generateKeyHashPair();
 
     let slot = await nftcan.transfer_link({
-      from: { address },
+      from: { address: AccountIdentifier.TextToArray(address) },
       hash: Array.from(hash),
       token: id,
       amount: 1,
@@ -315,7 +315,6 @@ export const uploadIPFS = async (up) => {
       return d.json();
     })
     .then((x) => {
-      console.log(x);
       return x;
     });
 };
@@ -352,7 +351,7 @@ export const claim_link =
     let id = encodeTokenId(canister, tokenIndex);
 
     let resp = await nftcan.claim_link({
-      to: { address },
+      to: { address: AccountIdentifier.TextToArray(address) },
       key: Array.from(key),
       token: id,
     });
@@ -417,7 +416,7 @@ export const mint = (vals) => async (dispatch, getState) => {
 
   try {
     let mint = await nft.mintNFT({
-      to: { address },
+      to: { address: AccountIdentifier.TextToArray(address) },
       metadata: vals,
     });
 
