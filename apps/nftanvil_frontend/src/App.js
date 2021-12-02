@@ -60,6 +60,9 @@ import { Inventory } from "./components/Inventory";
 import { NFTPage, NFTClaim } from "./components/NFT";
 import { useWindowSize } from "react-use";
 import { Menu, MenuButton, MenuList, MenuItem } from "@chakra-ui/react";
+
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+
 function PageTabs() {
   const address = useSelector((state) => state.user.address);
 
@@ -146,6 +149,9 @@ function LoginBox() {
 
   const anonymous = useSelector((state) => state.user.anonymous);
   const accesstokens = useSelector((state) => state.user.accesstokens);
+  const icp = AccountIdentifier.e8sToIcp(
+    useSelector((state) => state.user.icp)
+  );
 
   const { onCopy } = useClipboard(address);
 
@@ -174,6 +180,15 @@ function LoginBox() {
           </>
         ) : (
           <>
+            <Tooltip hasArrow label="Internet Computer main currency">
+              <Button
+                onClick={() => {
+                  dispatch(challenge());
+                }}
+              >
+                {icp} ICP
+              </Button>
+            </Tooltip>
             <Tooltip
               hasArrow
               label="Temporary access tokens. Rewarded for proving personhood"

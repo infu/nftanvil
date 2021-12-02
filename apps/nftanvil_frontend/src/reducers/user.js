@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { AuthClient } from "@dfinity/auth-client";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { accessCanister } from "@vvv-interactive/nftanvil-canisters/cjs/accesscontrol.js";
+import { ledger } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 
 import authentication from "../auth";
 
@@ -21,6 +22,7 @@ export const userSlice = createSlice({
     anonymous: true,
     challenge: null,
     accesstokens: 0,
+    icp: "0",
     acclist: [],
     acccan: "",
     accesslist: [],
@@ -35,6 +37,9 @@ export const userSlice = createSlice({
     },
     accessTokensSet: (state, action) => {
       return { ...state, accesstokens: action.payload };
+    },
+    icpSet: (state, action) => {
+      return { ...state, icp: action.payload };
     },
     acclistSet: (state, action) => {
       return { ...state, acclist: action.payload };
@@ -65,6 +70,7 @@ export const {
   authSet,
   challengeSet,
   accessTokensSet,
+  icpSet,
   accessTokensAdd,
   acclistSet,
 } = userSlice.actions;
@@ -167,6 +173,15 @@ export const getAccessTokenBalance = () => async (dispatch, getState) => {
     AccountIdentifier.TextToArray(s.user.address)
   );
 
+  try {
+    let { e8s } = await ledger.account_balance({
+      account: AccountIdentifier.TextToArray(s.user.address),
+    });
+
+    dispatch(icpSet(e8s.toString()));
+  } catch (e) {
+    console.log(e);
+  }
   // console.log(
   //   "AT",
   //   await accessCanister(s.user.accesslist[0], {

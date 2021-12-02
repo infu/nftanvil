@@ -1,3 +1,4 @@
+/* global BigInt */
 import { createSlice } from "@reduxjs/toolkit";
 import authentication from "../auth";
 import {
@@ -21,6 +22,7 @@ import { push } from "connected-react-router";
 import { challenge } from "./user";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TokenIdentifier from "@vvv-interactive/nftanvil-tools/cjs/tokenidentifier.js";
+import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 
 import { toast } from "react-toastify";
 
@@ -54,6 +56,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     throw Error("Fetching NFT meta error " + JSON.stringify(resp.err));
 
   let { bearer, data, vars } = resp.ok;
+  let now = Math.ceil(Date.now() / 1000 / 60);
 
   let meta = {
     bearer: AccountIdentifier.ArrayToText(bearer),
@@ -85,8 +88,12 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     cooldownUntil: vars.cooldownUntil[0],
     boundUntil: vars.boundUntil[0],
     sockets: vars.sockets.map((x) => TokenIdentifier.ArrayToText(x)),
-    // custom isn't needed
+    price: vars.price.toString(),
   };
+
+  meta.transferable =
+    meta.transfer.unrestricted === null ||
+    (meta.transfer.bindsDuration && meta.boundUntil < now);
 
   if (meta.thumb.internal) meta.thumb.internal.url = tokenUrl(id, "thumb");
   if (meta.thumb.ipfs) meta.thumb.ipfs.url = ipfsTokenUrl(meta.thumb.ipfs.cid);
@@ -167,6 +174,94 @@ const fetchFile = async (
     return URL.createObjectURL(blob);
   });
 };
+
+export const buy =
+  ({ id, intent }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { canister } = decodeTokenId(id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+    console.log("BUYING", id, intent);
+
+    let ledger = ledgerCanister({ agentOptions: { identity } });
+
+    let trez = await ledger.transfer({
+      memo: 0,
+      amount: { e8s: intent.price },
+      fee: { e8s: 10000n },
+      from_subaccount: [],
+      to: intent.paymentAddress,
+      created_at_time: [],
+    });
+    console.log("TREZ", trez);
+
+    let claim = await nftcan.purchase_claim({
+      token: id,
+      user: { address: AccountIdentifier.TextToArray(address) },
+    });
+
+    console.log("CLAIM", claim);
+    // let t = await nftcan.purchase_intent({
+    //   user: { address: AccountIdentifier.TextToArray(address) },
+    //   token: id,
+    // });
+
+    // if (!("ok" in t)) throw t;
+
+    // return t.ok;
+  };
+
+export const purchase_intent =
+  ({ id }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { canister } = decodeTokenId(id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    let t = await nftcan.purchase_intent({
+      user: { address: AccountIdentifier.TextToArray(address) },
+      token: id,
+    });
+
+    if (!("ok" in t)) throw t;
+
+    return t.ok;
+  };
+
+export const set_price =
+  ({ id, price }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let e8s = BigInt(parseFloat(price) * 100000000);
+    console.log("E8S", e8s);
+
+    let { canister } = decodeTokenId(id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+
+    let t = await nftcan.set_price({
+      user: { address: AccountIdentifier.TextToArray(address) },
+      token: id,
+      price: e8s,
+      subaccount: [],
+    });
+
+    if (!("ok" in t)) throw t;
+  };
 
 export const transfer =
   ({ id, toAddress }) =>

@@ -11,6 +11,9 @@ import {
   claim_link,
   plug,
   unsocket,
+  set_price,
+  buy,
+  purchase_intent,
 } from "../reducers/nft";
 import { Spinner } from "@chakra-ui/react";
 
@@ -59,6 +62,7 @@ import moment from "moment";
 import styled from "@emotion/styled";
 import thumb_bg from "../assets/default.png";
 import thumb_over from "../assets/over.png";
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -104,22 +108,117 @@ const Thumb = styled.div`
   }
 `;
 
-export const NFTMenu = ({ id, meta }) => {
+export const NFTMenu = ({ id, meta, owner }) => {
   return (
     <Box p={3}>
-      <Wrap spacing="3">
-        {meta.use ? <UseButton id={id} meta={meta} /> : null}
-        <TransferButton id={id} />
-        <TransferLinkButton id={id} />
-        <BurnButton id={id} />
-        <SocketButton id={id} />
-        <UnsocketButton id={id} />
-      </Wrap>
+      {owner ? (
+        <Wrap spacing="3">
+          {meta.use ? <UseButton id={id} meta={meta} /> : null}
+          <TransferButton id={id} meta={meta} />
+          <TransferLinkButton id={id} meta={meta} />
+          <SetPriceButton id={id} meta={meta} />
+
+          <BurnButton id={id} meta={meta} />
+          <SocketButton id={id} meta={meta} />
+          <UnsocketButton id={id} meta={meta} />
+        </Wrap>
+      ) : (
+        <Wrap>
+          {meta.transferable && meta.price !== "0" ? (
+            <LoginRequired label="Authenticate to buy">
+              <BuyButton id={id} meta={meta} />
+            </LoginRequired>
+          ) : null}
+        </Wrap>
+      )}
     </Box>
   );
 };
 
-function TransferButton({ id }) {
+function SetPriceButton({ id }) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const dispatch = useDispatch();
+  const address = useSelector((state) => state.user.address);
+
+  const initialRef = React.useRef();
+
+  const setPriceOk = async () => {
+    let price = initialRef.current.value;
+
+    onClose();
+    let toastId = toast("Setting price...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+    try {
+      await dispatch(set_price({ id, price }));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div>
+            <div>Setting price successfull.</div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      console.error("SetPrice error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <div>
+            <div>Setting price failed.</div>
+            <div style={{ fontSize: "10px" }}>{e.message}</div>
+          </div>
+        ),
+      });
+    }
+  };
+  return (
+    <>
+      <Button onClick={onOpen}>Set Sell Price</Button>
+
+      <Modal
+        initialFocusRef={initialRef}
+        onClose={onClose}
+        isOpen={isOpen}
+        isCentered
+        size={"xl"}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Set Sell Price</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Price</FormLabel>
+              <Input ref={initialRef} placeholder="0.001" />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button ml={3} onClick={setPriceOk}>
+              Set
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+
+function TransferButton({ id, meta }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
   const initialRef = React.useRef();
@@ -168,7 +267,9 @@ function TransferButton({ id }) {
   };
   return (
     <>
-      <Button onClick={onOpen}>Transfer</Button>
+      <Button onClick={onOpen} isDisabled={!meta.transferable}>
+        Transfer
+      </Button>
 
       <Modal
         initialFocusRef={initialRef}
@@ -414,7 +515,7 @@ export const UseButton = ({ id, meta }) => {
   );
 };
 
-export const TransferLinkButton = ({ id }) => {
+export const TransferLinkButton = ({ id, meta }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [creatingLink, setCreateLink] = React.useState(false);
 
@@ -435,7 +536,9 @@ export const TransferLinkButton = ({ id }) => {
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>Create Transfer Link</Button>
+      <Button onClick={() => setIsOpen(true)} isDisabled={!meta.transferable}>
+        Create Transfer Link
+      </Button>
 
       <AlertDialog
         isOpen={isOpen}
@@ -489,6 +592,64 @@ export const TransferLinkButton = ({ id }) => {
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
+    </>
+  );
+};
+
+export const BuyButton = ({ id, meta }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const onClose = () => setIsOpen(false);
+  const dispatch = useDispatch();
+
+  const cancelRef = React.useRef();
+
+  const [purchaseIntent, setPurchaseIntent] = useState(null);
+
+  const buyOk = () => {
+    onClose();
+    dispatch(buy({ id, intent: purchaseIntent }));
+  };
+
+  return (
+    <>
+      <Button
+        onClick={async () => {
+          let intent = await dispatch(purchase_intent({ id }));
+          setPurchaseIntent(intent);
+          setIsOpen(true);
+        }}
+      >
+        Buy
+      </Button>
+
+      {purchaseIntent ? (
+        <AlertDialog
+          isOpen={isOpen}
+          leastDestructiveRef={cancelRef}
+          onClose={onClose}
+        >
+          <AlertDialogOverlay>
+            <AlertDialogContent>
+              <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                Buy NFT
+              </AlertDialogHeader>
+
+              <AlertDialogBody>
+                Buy for {AccountIdentifier.e8sToIcp(purchaseIntent.price)} ICP ?
+              </AlertDialogBody>
+
+              <AlertDialogFooter>
+                <Button ref={cancelRef} onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button colorScheme="red" onClick={buyOk} ml={3}>
+                  Buy
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogOverlay>
+        </AlertDialog>
+      ) : null}
     </>
   );
 };
@@ -651,11 +812,17 @@ export const NFTPage = (p) => {
       <Center>
         <NFTInfo meta={meta} />
       </Center>
-      {address.toUpperCase() === meta.bearer.toUpperCase() ? (
-        <Center>
-          <NFTMenu id={id} meta={meta} />
-        </Center>
-      ) : null}
+
+      <Center>
+        <NFTMenu
+          owner={
+            address && address.toUpperCase() === meta?.bearer?.toUpperCase()
+          }
+          id={id}
+          meta={meta}
+        />
+      </Center>
+
       {claimed ? (
         <>
           <Confetti />
@@ -811,7 +978,7 @@ export const NFTInfo = ({ meta }) => {
   const bg = useColorModeValue("gray.500", "gray.700");
   if (!meta || !meta.quality) return null;
   const qcolor = itemQuality[meta.quality].color;
-  if (!meta.name) return null;
+  //if (!meta.name) return null;
   return (
     <Box bg={bg} borderRadius="md" borderWidth={"2px"} w={350} p={2}>
       {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
@@ -884,6 +1051,9 @@ export const NFTInfo = ({ meta }) => {
               <NFT id={tid} key={tid} />
             ))}
           </Wrap>
+        ) : null}
+        {meta.price && meta.price !== "0" ? (
+          <Text>{AccountIdentifier.e8sToIcp(meta.price)} ICP</Text>
         ) : null}
       </Stack>
     </Box>
