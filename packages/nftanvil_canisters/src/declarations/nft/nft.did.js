@@ -54,6 +54,7 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Variant({
       'CannotNotify' : AccountIdentifier,
       'InsufficientBalance' : IDL.Null,
+      'NotTransferable' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
@@ -233,6 +234,53 @@ export const idlFactory = ({ IDL }) => {
       'Other' : IDL.Text,
     }),
   });
+  const PurchaseClaimRequest = IDL.Record({
+    'token' : TokenIdentifier,
+    'user' : User,
+  });
+  const PurchaseClaimResponse = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Variant({
+      'Refunded' : IDL.Null,
+      'ErrorWhileRefunding' : IDL.Null,
+      'InvalidToken' : TokenIdentifier,
+      'NotForSale' : IDL.Null,
+      'NotEnoughToRefund' : IDL.Null,
+    }),
+  });
+  const PurchaseIntentRequest = IDL.Record({
+    'token' : TokenIdentifier,
+    'user' : User,
+  });
+  const PurchaseIntentResponse = IDL.Variant({
+    'ok' : IDL.Record({
+      'paymentAddress' : AccountIdentifier,
+      'price' : IDL.Nat64,
+    }),
+    'err' : IDL.Variant({
+      'InvalidToken' : TokenIdentifier,
+      'NotForSale' : IDL.Null,
+    }),
+  });
+  const SetPriceRequest = IDL.Record({
+    'token' : TokenIdentifier,
+    'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
+    'price' : IDL.Nat64,
+  });
+  const SetPriceResponse = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Variant({
+      'TooHigh' : IDL.Null,
+      'CannotNotify' : AccountIdentifier,
+      'InsufficientBalance' : IDL.Null,
+      'NotTransferable' : IDL.Null,
+      'InvalidToken' : TokenIdentifier,
+      'Unauthorized' : AccountIdentifier,
+      'TooLow' : IDL.Null,
+      'Other' : IDL.Text,
+    }),
+  });
   const SocketRequest = IDL.Record({
     'socket' : TokenIdentifier,
     'plug' : TokenIdentifier,
@@ -266,6 +314,7 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Variant({
       'CannotNotify' : AccountIdentifier,
       'InsufficientBalance' : IDL.Null,
+      'NotTransferable' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
@@ -362,6 +411,17 @@ export const idlFactory = ({ IDL }) => {
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
     'mintNFT' : IDL.Func([MintRequest], [MintResponse], []),
     'plug' : IDL.Func([PlugRequest], [PlugResponse], []),
+    'purchase_claim' : IDL.Func(
+        [PurchaseClaimRequest],
+        [PurchaseClaimResponse],
+        [],
+      ),
+    'purchase_intent' : IDL.Func(
+        [PurchaseIntentRequest],
+        [PurchaseIntentResponse],
+        ['query'],
+      ),
+    'set_price' : IDL.Func([SetPriceRequest], [SetPriceResponse], []),
     'socket' : IDL.Func([SocketRequest], [SocketResponse], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'supply' : IDL.Func([TokenIdentifier], [SupplyResponse], ['query']),

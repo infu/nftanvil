@@ -32,6 +32,7 @@ export type BurnResponse = { 'ok' : Balance } |
   {
     'err' : { 'CannotNotify' : AccountIdentifier } |
       { 'InsufficientBalance' : null } |
+      { 'NotTransferable' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
@@ -163,6 +164,13 @@ export interface NFT {
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mintNFT' : (arg_0: MintRequest) => Promise<MintResponse>,
   'plug' : (arg_0: PlugRequest) => Promise<PlugResponse>,
+  'purchase_claim' : (arg_0: PurchaseClaimRequest) => Promise<
+      PurchaseClaimResponse
+    >,
+  'purchase_intent' : (arg_0: PurchaseIntentRequest) => Promise<
+      PurchaseIntentResponse
+    >,
+  'set_price' : (arg_0: SetPriceRequest) => Promise<SetPriceResponse>,
   'socket' : (arg_0: SocketRequest) => Promise<SocketResponse>,
   'stats' : () => Promise<StatsResponse>,
   'supply' : (arg_0: TokenIdentifier) => Promise<SupplyResponse>,
@@ -190,6 +198,26 @@ export type PlugResponse = { 'ok' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'Other' : string }
   };
+export interface PurchaseClaimRequest {
+  'token' : TokenIdentifier,
+  'user' : User,
+}
+export type PurchaseClaimResponse = { 'ok' : null } |
+  {
+    'err' : { 'Refunded' : null } |
+      { 'ErrorWhileRefunding' : null } |
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'NotForSale' : null } |
+      { 'NotEnoughToRefund' : null }
+  };
+export interface PurchaseIntentRequest {
+  'token' : TokenIdentifier,
+  'user' : User,
+}
+export type PurchaseIntentResponse = {
+    'ok' : { 'paymentAddress' : AccountIdentifier, 'price' : bigint }
+  } |
+  { 'err' : { 'InvalidToken' : TokenIdentifier } | { 'NotForSale' : null } };
 export interface Request {
   'url' : string,
   'method' : string,
@@ -209,6 +237,23 @@ export interface Response {
 }
 export type Response__1 = { 'ok' : Balance } |
   { 'err' : CommonError };
+export interface SetPriceRequest {
+  'token' : TokenIdentifier,
+  'user' : User,
+  'subaccount' : [] | [SubAccount],
+  'price' : bigint,
+}
+export type SetPriceResponse = { 'ok' : null } |
+  {
+    'err' : { 'TooHigh' : null } |
+      { 'CannotNotify' : AccountIdentifier } |
+      { 'InsufficientBalance' : null } |
+      { 'NotTransferable' : null } |
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'Unauthorized' : AccountIdentifier } |
+      { 'TooLow' : null } |
+      { 'Other' : string }
+  };
 export type SocketError = { 'InsufficientBalance' : null } |
   { 'NotLegitimateCaller' : null } |
   { 'InvalidToken' : TokenIdentifier } |
@@ -281,6 +326,7 @@ export type TransferResponse = { 'ok' : Balance } |
   {
     'err' : { 'CannotNotify' : AccountIdentifier } |
       { 'InsufficientBalance' : null } |
+      { 'NotTransferable' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |

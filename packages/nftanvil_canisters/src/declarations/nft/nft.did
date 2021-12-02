@@ -78,6 +78,7 @@ type TransferResponse =
       CannotNotify: AccountIdentifier;
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
+      NotTransferable;
       Other: text;
       Rejected;
       Unauthorized: AccountIdentifier;
@@ -173,6 +174,28 @@ type SocketError =
    SocketsFull;
    Unauthorized: AccountIdentifier;
  };
+type SetPriceResponse = 
+ variant {
+   err:
+    variant {
+      CannotNotify: AccountIdentifier;
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      NotTransferable;
+      Other: text;
+      TooHigh;
+      TooLow;
+      Unauthorized: AccountIdentifier;
+    };
+   ok;
+ };
+type SetPriceRequest = 
+ record {
+   price: nat64;
+   subaccount: opt SubAccount;
+   token: TokenIdentifier;
+   user: User;
+ };
 type Response__1 = 
  variant {
    err: CommonError;
@@ -197,6 +220,39 @@ type Request =
    headers: vec HeaderField;
    method: text;
    url: text;
+ };
+type PurchaseIntentResponse = 
+ variant {
+   err: variant {
+          InvalidToken: TokenIdentifier;
+          NotForSale;
+        };
+   ok: record {
+         paymentAddress: AccountIdentifier;
+         price: nat64;
+       };
+ };
+type PurchaseIntentRequest = 
+ record {
+   token: TokenIdentifier;
+   user: User;
+ };
+type PurchaseClaimResponse = 
+ variant {
+   err:
+    variant {
+      ErrorWhileRefunding;
+      InvalidToken: TokenIdentifier;
+      NotEnoughToRefund;
+      NotForSale;
+      Refunded;
+    };
+   ok;
+ };
+type PurchaseClaimRequest = 
+ record {
+   token: TokenIdentifier;
+   user: User;
  };
 type PlugResponse = 
  variant {
@@ -234,6 +290,9 @@ type NFT =
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
    mintNFT: (MintRequest) -> (MintResponse);
    plug: (PlugRequest) -> (PlugResponse);
+   purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
+   purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse) query;
+   set_price: (SetPriceRequest) -> (SetPriceResponse);
    socket: (SocketRequest) -> (SocketResponse);
    stats: () -> (StatsResponse) query;
    supply: (TokenIdentifier) -> (SupplyResponse) query;
@@ -411,6 +470,7 @@ type BurnResponse =
       CannotNotify: AccountIdentifier;
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
+      NotTransferable;
       Other: text;
       Rejected;
       Unauthorized: AccountIdentifier;

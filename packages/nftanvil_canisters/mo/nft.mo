@@ -49,6 +49,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     type Metavars = Ext.Metavars;
     type MetavarsOut = Ext.MetavarsFrozen;
 
+    private stable var _fee:Nat64 = 10000;
+
 
     type BalanceRequest = Ext.Core.BalanceRequest;
     type BalanceResponse = Ext.Core.BalanceResponse;
@@ -163,8 +165,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
-                await SNFT_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
-                
+                 SNFT_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
+                 await ACC_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
+
                 return #ok(1);
             }; 
             case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
@@ -266,7 +269,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                 case (?from) {
                                     switch(getMeta(tokenIndex)) {
                                             case (#ok((meta,vars))) {
-                                                    await SNFT_move(from,Ext.User.toAccountIdentifier(request.to), tokenIndex);
+                                                    SNFT_move(from,Ext.User.toAccountIdentifier(request.to), tokenIndex);
+                                                    await ACC_move(from,Ext.User.toAccountIdentifier(request.to), tokenIndex);
 
                                                     resetTransferBindings(meta, vars);
 
@@ -294,56 +298,201 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
     
     // Get accountid and exact ICP amount
-    public query func purchaseIntent(tokenIndex:Nat32, user:User) : async AccountIdentifier {
-        let userAccountId = Ext.User.toAccountIdentifier(user);
+    public query func purchase_intent( request: Ext.PurchaseIntentRequest) : async Ext.PurchaseIntentResponse {
+        let toUserAID = Ext.User.toAccountIdentifier(request.user);
 
-        let (purchaseAccountId,_) = Ext.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, userAccountId);
-        Ext.AccountIdentifier.fromShort(purchaseAccountId);
+        switch (Ext.TokenIdentifier.decode(request.token)) {
+                case (#ok(cannisterId, tokenIndex)) {
+
+                    switch(getMeta(tokenIndex)) {
+                        case (#ok((meta,vars))) {
+                            if (vars.price == 0) return #err(#NotForSale);
+
+                            let (purchaseAccountId,_) = Ext.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
+                            
+                            #ok({
+                                paymentAddress = purchaseAccountId;
+                                price = vars.price;
+                                });
+                        };
+                        case(#err(e)) #err(#InvalidToken(request.token));
+                        
+                    };
+                };
+                case (#err(e)) #err(#InvalidToken(request.token));
+            }
     };
 
     // Check accountid if its exact or more than asked. If something is wrong, refund. If more is sent, refund extra.
-    public func purchaseClaim(tokenIndex:Nat32, user:User) : () {
-        let userAccountId = Ext.User.toAccountIdentifier(user);
+    public shared({caller}) func purchase_claim(request: Ext.PurchaseClaimRequest) : async Ext.PurchaseClaimResponse {
 
-        let (purchaseAccountId, purchaseSubAccount) = Ext.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, userAccountId);
-        
-        let {e8s = bal} = await ledger.account_balance({
-            account = purchaseAccountId
-        });
+        let toUserAID = Ext.User.toAccountIdentifier(request.user);
+        switch (Ext.TokenIdentifier.decode(request.token)) {
+             case (#ok(cannisterId, tokenIndex)) {
 
-        let fee:Nat64 = 10000;
-        let requiredAmount:Nat64 = 1000000;
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+                        switch(SNFT_tidxGet(tokenIndex)) {
+                            case(?seller) {
 
-        let refundAmount = bal - requiredAmount;
+                                if (vars.price == 0) return #err(#NotForSale);
 
-        if (refundAmount > 0) {
-            // refund
-            let transfer : Ledger.TransferArgs = {
-                memo = 0;
-                amount = {e8s = refundAmount};
-                fee = {e8s = fee};
-                from_subaccount = ?purchaseSubAccount;
-                to = userAccountId;
-                created_at_time = null;
-                };
+                                let (purchaseAccountId, purchaseSubAccount) = Ext.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
+                                
+                                let {e8s = payment} = await ledger.account_balance({
+                                    account = purchaseAccountId
+                                });
 
-            switch(await ledger.transfer(transfer)) {
-                case (#Ok(blockIndex)) {
-                    ()
-                };
-                case (#Err(e)) {
-                    ()
-                }
-            };
-        }
+                        
+                                let purchaseOk = payment >= vars.price;
+
+                                let fullRefund = payment - _fee;
+                                let noRefund = 0;
+
+                                let refundAmount = switch(purchaseOk) {
+                                    case(true) {
+
+                                        switch(SNFT_tidxGet(tokenIndex)) {
+                                                case(?fromAccount) {
+                                                    try {
+                                                        SNFT_move(fromAccount, toUserAID, tokenIndex);
+                                                        vars.price := 0;
+                                                        try {
+                                                            await ACC_move(fromAccount, toUserAID, tokenIndex);
+                                                            ()
+                                                        } catch (e) {
+                                                            ()
+                                                        };
+                                                        noRefund;
+                                                    } catch (e) {
+                                                        fullRefund;
+                                                    };
+                                                };
+                                                case(_) {
+                                                    fullRefund;
+                                                }
+                                            }
+                                        };
+
+                                    case(false) {
+                                        fullRefund;
+                                        }
+                                };
+
+                                switch (purchaseOk) {
+                                    case (true) {
+                                        let amount = {e8s = payment - _fee};
+                                        // move
+                                        let transfer : Ledger.TransferArgs = {
+                                            memo = 0;
+                                            amount;
+                                            fee = {e8s = _fee};
+                                            from_subaccount = ?purchaseSubAccount;
+                                            to = TreasuryAddress;
+                                            created_at_time = null;
+                                            };
+
+                                        switch(await ledger.transfer(transfer)) {
+                                            case (#Ok(blockIndex)) {
+                                                let minterAddress = Ext.AccountIdentifier.fromPrincipal(meta.minter, null);
+
+                                                TreasuryActor.notifyTransfer({
+                                                    buyerAccount = toUserAID;
+                                                    blockIndex;
+                                                    amount;
+                                                    seller;
+                                                    minter = {address=minterAddress; share=meta.minterShare};
+                                                    marketplace = request.marketplace;
+                                                    purchaseAccount = purchaseAccountId; 
+                                                })
+                                                // notify Treasury of transaction and splits
+                                            };
+                                            case (#Err(e)) {
+                                                if (purchaseOk == false) return #err(#ErrorWhileRefunding);
+                                            }
+                                        };
+                                    };
+
+                                    case (false) {
+                                        if (refundAmount <= _fee) return #err(#NotEnoughToRefund);
+
+                                        // refund
+                                        let transfer : Ledger.TransferArgs = {
+                                            memo = 0;
+                                            amount = {e8s = refundAmount};
+                                            fee = {e8s = _fee};
+                                            from_subaccount = ?purchaseSubAccount;
+                                            to = toUserAID;
+                                            created_at_time = null;
+                                            };
+
+                                        switch(await ledger.transfer(transfer)) {
+                                                case (#Ok(blockIndex)) {
+                                                    #err(#Refunded)
+                                                };
+                                                case (#Err(e)) {
+                                                    if (purchaseOk == false) return #err(#ErrorWhileRefunding);
+                                                }
+                                            };
+                                        
+                                        };
+                                    };
+
+                            };
+                            case (_) {
+                                #err(#InvalidToken(request.token));
+                            };
+                        };
+                    };
+                    case (#err(e)) #err(#InvalidToken(request.token))
+                    }
+             };
+             case (#err(e)) #err(#InvalidToken(request.token));
+            }
+  
     }; 
+
+    public shared({caller}) func set_price(request: Ext.SetPriceRequest) : async Ext.SetPriceResponse {
+            if (request.price < 100000) return #err(#TooLow);
+            if (request.price > 100000000000) return #err(#TooHigh);
+
+            if (Ext.User.validate(request.user) == false) return #err(#Other("Invalid user"));
+            
+            let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+
+            switch ( balRequireOwner(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user)) {
+            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+     
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+
+                            if (isTransferBound(caller, meta, vars) == true) return #err(#NotTransferable);
+
+                            vars.price := request.price;
+
+                            #ok();
+
+                           };
+                    case (#err()) {
+                         #err(#InvalidToken(request.token));
+                    }
+                }
+           
+            }; 
+            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
+            case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
+            case (#err(e)) return #err(#Other("Something went wrong"));
+            };
+
+    };
 
     public shared({caller}) func transfer(request : TransferRequest) : async TransferResponse {
 
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
 
-        if (Ext.User.validate(request.from) == false) return #err(#Other("Invalid User From. Account identifiers must be all uppercase"));
-        if (Ext.User.validate(request.to) == false) return #err(#Other("Invalid User To. Account identifiers must be all uppercase"));
+        if (Ext.User.validate(request.from) == false) return #err(#Other("Invalid from"));
+        if (Ext.User.validate(request.to) == false) return #err(#Other("Invalid to"));
 
         let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
@@ -353,10 +502,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                            if (isTransferBound(caller, meta, vars) == true) return #err(#Rejected);
+                            if (isTransferBound(caller, meta, vars) == true) return #err(#NotTransferable);
                             
-                            await SNFT_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
-                            
+                            SNFT_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
+                            await ACC_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
+
                             resetTransferBindings(meta, vars);
 
                             return #ok(1);
@@ -438,7 +588,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                             useId = use.useId;
                                             })) {
                                                 case (#ok()) {
-                                                    await SNFT_burn(aid, tokenIndex);
+                                                    SNFT_burn(aid, tokenIndex);
+                                                    await ACC_burn(aid, tokenIndex);
                                                     return #ok(#consumed);
                                                 };
                                                 case (#err(e)) {
@@ -852,7 +1003,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         _meta.put(tokenIndex, md);
         _metavars.put(tokenIndex, mvar);
 
-        await SNFT_put(receiver, tokenIndex);
+        SNFT_put(receiver, tokenIndex);
+        await ACC_put(receiver, tokenIndex);
 
         return #ok(tokenIndex);
 
@@ -895,7 +1047,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                     switch(await socketActor.socket(request)) {
                                         case (#ok()) {
                                             let to = Ext.User.toAccountIdentifier( #principal(socketCanister) );
-                                            await SNFT_move(Ext.User.toAccountIdentifier(request.user), to, tokenIndex);
+                                            SNFT_move(Ext.User.toAccountIdentifier(request.user), to, tokenIndex);
+                                            await ACC_move(Ext.User.toAccountIdentifier(request.user), to, tokenIndex);
+
                                             #ok(());
                                         };
                                         case (#err(e)) {
@@ -1071,7 +1225,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
-                            await SNFT_move(Ext.User.toAccountIdentifier(#principal(caller)),Ext.User.toAccountIdentifier(request.user), tokenIndex);
+                            SNFT_move(Ext.User.toAccountIdentifier(#principal(caller)),Ext.User.toAccountIdentifier(request.user), tokenIndex);
+                            await ACC_move(Ext.User.toAccountIdentifier(#principal(caller)),Ext.User.toAccountIdentifier(request.user), tokenIndex);
+
                             #ok();
                         };
                         case (#err()) {
@@ -1199,16 +1355,17 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
 
     // ***** Storage layer
-    private func SNFT_put(aid: AccountIdentifier, tidx: TokenIndex) : async () { 
+    private func SNFT_put(aid: AccountIdentifier, tidx: TokenIndex) :  () { 
         _balance.put(tidx, aid);
-        await accountActor(aid).add(aid, tidx);
+         //await accountActor(aid).add(aid, tidx);
+
     };
 
     private func SNFT_tidxGet(tidx: TokenIndex) : ?AccountIdentifier { 
         _balance.get(tidx);
     };
     
-    private func SNFT_del(aid: AccountIdentifier, tidx: TokenIndex) : async () {
+    private func SNFT_del(aid: AccountIdentifier, tidx: TokenIndex) : () {
         //  if assertations fail storeage is a mish-mash or someone is trying to hack it 
         let stored_aid = switch(SNFT_tidxGet(tidx)) { case (?a) a; case _ Blob.fromArray([]); };
         assert(stored_aid == aid);
@@ -1217,18 +1374,35 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         _allowance.delete(tidx);
         _token2link.delete(tidx);
 
-        await accountActor(aid).rem(aid, tidx);   
+        // await accountActor(aid).rem(aid, tidx);   
     };
 
-    private func SNFT_burn(aid: AccountIdentifier, tidx: TokenIndex) : async () {
-        await SNFT_del(aid, tidx);
+    private func SNFT_burn(aid: AccountIdentifier, tidx: TokenIndex) :  () {
+        SNFT_del(aid, tidx);
         _meta.delete(tidx);
         _statsBurned := _statsBurned + 1;
     };
 
-    private func SNFT_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : async () {
-        await SNFT_del(from, tidx);
-        await SNFT_put(to, tidx);
+    private func ACC_burn(aid: AccountIdentifier, tidx: TokenIndex) :  async () {
+        await ACC_del(aid, tidx);
+    };
+
+    private func ACC_put(aid: AccountIdentifier, tidx: TokenIndex) : async () { 
+        await accountActor(aid).add(aid, tidx);
+    };
+
+    private func ACC_del(aid: AccountIdentifier, tidx: TokenIndex) : async () {
+        await accountActor(aid).rem(aid, tidx);   
+    };
+
+    private func ACC_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : async () {
+        await ACC_del(from, tidx);
+        await ACC_put(to, tidx);
+    };
+
+    private func SNFT_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : () {
+        SNFT_del(from, tidx);
+        SNFT_put(to, tidx);
         _statsTransfers := _statsTransfers + 1;
     };
 
