@@ -1,7 +1,7 @@
 // All rights reserved by 3V Interactive
 // Developer contributions are rewarded with stake
 
-import Nft "./nft_interface";
+import Nft "./type/nft_interface";
 import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import List "mo:base/List";
@@ -30,8 +30,8 @@ import Blob_ "./lib/Blob";
 import Hash "./lib/Hash";
 import Painless "./lib/Painless";
 import SHA256 "mo:sha/SHA256";
-import Ledger  "./ledger_interface";
-import Treasury  "./treasury_interface";
+import Ledger  "./type/ledger_interface";
+import Treasury  "./type/treasury_interface";
 
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
 

@@ -7,7 +7,7 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
-import Ext "../mo/nft_interface";
+import Ext "../mo/type/nft_interface";
 import Array_ "../mo/lib/Array";
 
 import AccessControl "../mo/access";

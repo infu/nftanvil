@@ -1,4 +1,7 @@
-import Nft "./nft_interface";
+import Nft "./type/nft_interface";
+import Treasury "./type/treasury_interface";
+import Ledger  "./type/ledger_interface";
+
 import Blob_ "./lib/Blob";
 
 import HashMap "mo:base/HashMap";
@@ -11,8 +14,7 @@ import Time "mo:base/Time";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
-import Treasury "./treasury_interface";
-import Ledger  "./ledger_interface";
+
 
 shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal}) = this {
 

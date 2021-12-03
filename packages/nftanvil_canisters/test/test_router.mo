@@ -2,7 +2,7 @@ import Router "../mo/router";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
-import Ext "../mo/nft_interface";
+import Ext "../mo/type/nft_interface";
 
 import Treasury "../mo/treasury";
 

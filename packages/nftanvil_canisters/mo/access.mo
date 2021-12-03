@@ -6,7 +6,7 @@ import Iter "mo:base/Iter";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
-import Nft "../mo/nft_interface";
+import Nft "./type/nft_interface";
 
 
 import PseudoRandom "./lib/PseudoRandom";

@@ -1,20 +1,15 @@
 import Array  "mo:base/Array";
 import Iter "mo:base/Iter";
-
+import Cycles "mo:base/ExperimentalCycles";
+import Prim "mo:prim"; 
 import Principal "mo:base/Principal";
 import Nat32 "mo:base/Nat32";
 import HashMap "mo:base/HashMap";
 
-
-import AAA "./aaa_interface";
+import AAA "./type/aaa_interface";
 import NFT "./nft";
 import AccessControl "./access";
-
 import Account "./account";
-
-import Cycles "mo:base/ExperimentalCycles";
-import Prim "mo:prim"; 
-
 import Treasury "./treasury";
 
 

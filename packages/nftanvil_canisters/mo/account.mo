@@ -1,5 +1,5 @@
 import Text "mo:base/Text";
-import Nft "./nft_interface";
+import Nft "./type/nft_interface";
 
 import HashMap "mo:base/HashMap";
 import List "mo:base/List";

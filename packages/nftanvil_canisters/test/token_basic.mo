@@ -5,7 +5,7 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
-import Nft  "../mo/nft_interface";
+import Nft  "../mo/type/nft_interface";
 import Account "../mo/account";
 
 import Dropship "../mo/nft";
