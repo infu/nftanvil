@@ -11,7 +11,9 @@ import Hex "mo:encoding/Hex";
 import Iter "mo:base/Iter";
 import Time "mo:base/Time";
 import Nat8 "mo:base/Nat8";
+import Nat16 "mo:base/Nat16";
 import Nat32 "mo:base/Nat32";
+import Nat64 "mo:base/Nat64";
 import Principal "mo:principal/Principal";
 import RawAccountId "mo:principal/AccountIdentifier";
 import Result "mo:base/Result";
@@ -47,7 +49,6 @@ module {
 
     public type AccountIdentifier = Blob; //32 bytes
     public type AccountIdentifierShort = Blob; //28bytes
-    public type SubAccount = Blob; //32 bytes
 
     public func OptValid<A>(v:?A, f: (A) -> Bool) : Bool {
         switch(v) { case (?z) f(z); case(null) true }
@@ -73,7 +74,7 @@ module {
             Blob.fromArray(Array_.drop<Nat8>(Blob.toArray(accountId), 4));
         };
 
-        public func fromShort(accountId: AccountIdentifierShort) :AccountIdentifier {
+        public func fromShort(accountId: AccountIdentifierShort) : AccountIdentifier {
             Blob.fromArray(Array.append<Nat8>(
                 Binary.BigEndian.fromNat32(CRC32.checksum(Blob.toArray(accountId))),
                 Blob.toArray(accountId),
@@ -120,6 +121,8 @@ module {
             fromArray(Blob.toArray(data), subAccount);
         };
 
+    
+
         public func fromArray(data : [Nat8], subAccount : ?SubAccount) : AccountIdentifier {
             let account : [Nat8] = switch (subAccount) {
                 case (null) { Array.freeze(Array.init<Nat8>(32, 0)); };
@@ -144,6 +147,16 @@ module {
             (fromPrincipal(can, ?subaccount), subaccount);
         };
     };
+    public type SubAccount = Blob; //32 bytes
+
+    public module SubAccount = {
+        public func fromNat(idx: Nat) : SubAccount {
+            Blob.fromArray(Array.append<Nat8>(
+                Array.freeze(Array.init<Nat8>(24, 0)),
+                Blob_.nat64ToBytes(Nat64.fromNat(idx))
+                ));
+            };
+    };
 
     // Balance refers to an amount of a particular token.
     public type Balance = Nat64;
@@ -159,7 +172,6 @@ module {
     // token resides as well as the index within the tokens container.
     public type TokenIdentifier = Text;
     public type TokenIdentifierBlob = Blob;
-
 
     public module TokenIdentifier = {
         private let prefix : [Nat8] = [10, 116, 105, 100]; // \x0A "tid"
@@ -519,9 +531,20 @@ module {
     };
     public type Share = Nat16;
     public module Share = {
+        public let NFTAnvilShare:Nat = 50; // 0.5%
+        public let LimitMarketplace:Nat = 3000; // 30%
+        public let LimitMinter:Nat = 200; // 2%
+        public let Max : Nat = 10000; // 100%
+
         public func validate(t : Share) : Bool {
-            t >= 0 and t <= 10000;
-        }
+            t >= 0 and t <= Nat16.fromNat(Max);
+        };
+
+        public func limit(s: Share, max:Nat) : Nat {
+           let c = Nat16.toNat(s);
+           if (c > max) return max;
+           return c;
+        };
     };
         
     public type Metadata = {

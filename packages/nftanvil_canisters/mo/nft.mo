@@ -411,15 +411,14 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                                                     purchaseAccount = purchaseAccountId; 
                                                 };
 
-                                                switch(await TREASURY.notifyTransfer(notifyRequest)) {
-                                                    case (#ok()) {
-                                                        #ok();
-                                                    };
-                                                    case (#err(e)) {
-                                                        //TODO: ADD to QUEUE for later notification attempt
-                                                        #err(#TreasuryNotifyFailed);
-                                                    }
+                                                try {
+                                                    await TREASURY.notifyTransfer(notifyRequest);
+                                                    #ok();
+                                                } catch (e) {
+                                                    //TODO: ADD to QUEUE for later notify attempt
+                                                    #err(#TreasuryNotifyFailed);
                                                 }
+                                               
                                             };
                                             case (#Err(e)) {
                                                 //TODO: ADD to QUEUE for later transfer attempt

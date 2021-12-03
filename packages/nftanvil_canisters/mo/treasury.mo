@@ -51,21 +51,39 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
   };
 
   public shared({caller}) func notifyTransfer(request: Treasury.NotifyTransferRequest): async Treasury.NotifyTransferResponse {
-      
+      //TODO: make sure caller is nft canister
+
       let total:Nat64 = request.amount.e8s;
-      let anvil_share:Nat64 = total * 50 / 100; // 0.5%
-      let minter_share:Nat64= total * request.minter.share / 100;
-      let marketplace_share:Nat64 = total * request.marketplace.share / 100;
-      let seller_share:Nat64 = total - anvil_share - minter_share - marketplace_share;
+      let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
+      let minter_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(request.minter.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
+      let marketplace_cut:Nat64 = total * Nat64.fromNat(Nft.Share.limit(request.marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
+      let seller_cut:Nat64 = total - anvil_cut - minter_cut - marketplace_cut;
 
       assert(total > 0);
-      assert((seller_share + marketplace_share + minter_share + anvil_share) == total);
+      assert((seller_cut + marketplace_cut + minter_cut + anvil_cut) == total);
 
+      let NFTAnvil_treasury_address = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(1) );
       // give to NFTAnvil
-      // give to Author
+      balanceAdd(NFTAnvil_treasury_address, anvil_cut);
+
+      // give to Minter
+      balanceAdd(request.minter.address, minter_cut);
+
       // give to Marketplace
+      balanceAdd(request.marketplace.address, marketplace_cut);
+
       // give to Seller
-      #ok();
+      balanceAdd(request.seller, seller_cut);
+
+  };
+
+  private func balanceAdd(aid:AccountIdentifier, bal: Balance) : () {
+      let current:Balance = switch(_balance.get(aid)) {
+        case (?a) a;
+        case (_) 0;
+      };
+
+      _balance.put(aid, current + bal);
   };
 
   public shared({caller}) func withdraw(request: Treasury.WithdrawRequest) : async Treasury.WithdrawResponse {

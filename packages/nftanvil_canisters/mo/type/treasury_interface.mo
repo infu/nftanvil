@@ -67,7 +67,5 @@ module {
             purchaseAccount : AccountIdentifier; 
     };
 
-    public type NotifyTransferResponse = Result.Result<(),{
-       
-    }>;
+    public type NotifyTransferResponse = ();
 }   
