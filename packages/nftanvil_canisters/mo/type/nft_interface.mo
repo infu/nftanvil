@@ -23,7 +23,7 @@ module {
     public type Interface = actor {
 
         // Returns the balance of a requested User.
-        balance    : query (request : BalanceRequest)   -> async BalanceResponse;
+        balance    : query (request : BalanceRequest) -> async BalanceResponse;
         // Returns an array of extensions that the canister supports.
 
         // Transfers an given amount of tokens between two users, from and to, with an optional memo.
@@ -34,28 +34,26 @@ module {
         // Returns the total supply of the token.
         supply   : query (token :  TokenIdentifier) -> async  SupplyResponse;
 
-
         // Returns the account that is linked to the given token.
-        bearer  : query (token :  TokenIdentifier)            -> async BearerResponse;
+        bearer  : query (token :  TokenIdentifier) -> async BearerResponse;
         // Mints a new NFT and assignes its owner to the given User.
         mintNFT : shared (request :  MintRequest) -> async  MintResponse;
 
-
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
-        allowance : query (request : Allowance.Request)         -> async Allowance.Response;
+        allowance : query (request : Allowance.Request) -> async Allowance.Response;
         // Allows the given spender to withdraw from your account multiple times, up to the given allowance.
         approve   : shared (request : Allowance.ApproveRequest) -> async Allowance.ApproveResponse;
     };
 
     public type AccountIdentifier = Blob; //32 bytes
     public type AccountIdentifierShort = Blob; //28bytes
-    public type SubAccount        = Blob; //32 bytes
+    public type SubAccount = Blob; //32 bytes
 
     public func OptValid<A>(v:?A, f: (A) -> Bool) : Bool {
-        switch(v) {case (?z) f(z); case(null) true }
+        switch(v) { case (?z) f(z); case(null) true }
     };
 
-    public module AccountIdentifier = { // AccountIdentifier code is collected from aviate-labs libraries
+    public module AccountIdentifier = { // Most AccountIdentifier code is collected from aviate-labs libraries
         private let prefix : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
 
         public func validate(a: AccountIdentifier) : Bool {
@@ -145,7 +143,6 @@ module {
 
             (fromPrincipal(can, ?subaccount), subaccount);
         };
-        
     };
 
     // Balance refers to an amount of a particular token.
@@ -252,95 +249,91 @@ module {
     };
 
 
-        public type BalanceRequest = { 
-            user  : User; 
-            token : TokenIdentifier;
-        };
+    public type BalanceRequest = { 
+        user  : User; 
+        token : TokenIdentifier;
+    };
 
-        public type BalanceResponse = Result.Result<
-            Balance,
-            CommonError
-        >;
+    public type BalanceResponse = Result.Result<
+        Balance,
+        CommonError
+    >;
 
-        public type BurnRequest = {
-            user       : User;
-            token      : TokenIdentifier;
-            amount     : Balance;
-            memo       : Memo;
-            subaccount : ?SubAccount;
-        };
-        
-        public type TransferRequest = {
-            from       : User;
-            to         : User;
-            token      : TokenIdentifier;
-            amount     : Balance;
-            memo       : Memo;
-            subaccount : ?SubAccount;
-        };
+    public type BurnRequest = {
+        user       : User;
+        token      : TokenIdentifier;
+        amount     : Balance;
+        memo       : Memo;
+        subaccount : ?SubAccount;
+    };
+    
+    public type TransferRequest = {
+        from       : User;
+        to         : User;
+        token      : TokenIdentifier;
+        amount     : Balance;
+        memo       : Memo;
+        subaccount : ?SubAccount;
+    };
 
-        public type UseRequest = {
-            user       : User;
-            subaccount : ?SubAccount;
-            token      : TokenIdentifier;
-            memo       : Memo;
-        };
-        
-        public type TransferLinkRequest = {
-            from       : User;
-            hash       : Blob;
-            token      : TokenIdentifier;
-            amount     : Balance;
-            subaccount : ?SubAccount;
-        };
+    public type UseRequest = {
+        user       : User;
+        subaccount : ?SubAccount;
+        token      : TokenIdentifier;
+        memo       : Memo;
+    };
+    
+    public type TransferLinkRequest = {
+        from       : User;
+        hash       : Blob;
+        token      : TokenIdentifier;
+        amount     : Balance;
+        subaccount : ?SubAccount;
+    };
 
-        public type TransferResponse = Result.Result<Balance, {
-            #Unauthorized : AccountIdentifier;
-            #InsufficientBalance;
-            #Rejected;
-            #NotTransferable;
-            #InvalidToken : TokenIdentifier;
-            #CannotNotify : AccountIdentifier;
-            #Other        : Text;
+    public type TransferResponse = Result.Result<Balance, {
+        #Unauthorized : AccountIdentifier;
+        #InsufficientBalance;
+        #Rejected;
+        #NotTransferable;
+        #InvalidToken : TokenIdentifier;
+        #CannotNotify : AccountIdentifier;
+        #Other        : Text;
+    }>;
+
+    public type BurnResponse = TransferResponse;
+
+    public type UseResponse = Result.Result<{
+        #consumed;
+        #cooldown: Nat32;
+    }, {
+        #Unauthorized : AccountIdentifier;
+        #InsufficientBalance;
+        #Rejected;
+        #InvalidToken : TokenIdentifier;
+        #OnCooldown;
+        #ExtensionError: Text;
+        #Other        : Text;
+    }>;
+
+    public type TransferLinkResponse = Result.Result<Nat32, {
+        #Unauthorized : AccountIdentifier;
+        #InsufficientBalance;
+        #Rejected;
+        #InvalidToken : TokenIdentifier;
+        #Other        : Text;
+    }>;
+
+    public type ClaimLinkRequest = {
+        to         : User;
+        key        : Blob;
+        token      : TokenIdentifier;
+    };
+
+    public type ClaimLinkResponse = Result.Result<(), {
+        #Rejected; // We wont supply a possible attacker with various errors
+        #Other: Text
         }>;
-
-        public type BurnResponse = TransferResponse;
-
-        public type UseResponse = Result.Result<{
-            #consumed;
-            #cooldown: Nat32;
-        }, {
-            #Unauthorized : AccountIdentifier;
-            #InsufficientBalance;
-            #Rejected;
-            #InvalidToken : TokenIdentifier;
-            #OnCooldown;
-            #ExtensionError: Text;
-            #Other        : Text;
-        }>;
-
-        public type TransferLinkResponse = Result.Result<Nat32, {
-            #Unauthorized : AccountIdentifier;
-            #InsufficientBalance;
-            #Rejected;
-            #InvalidToken : TokenIdentifier;
-            #Other        : Text;
-        }>;
-
-        public type ClaimLinkRequest = {
-            to         : User;
-            key        : Blob;
-            token      : TokenIdentifier;
-        };
-
-         public type ClaimLinkResponse = Result.Result<(), {
-            #Rejected; // We wont supply a possible attacker with various errors
-            #Other: Text
-         }>;
-
-
-
-
 
 
     public type CustomId = Text;

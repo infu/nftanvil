@@ -51,6 +51,16 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
   };
 
   public shared({caller}) func notifyTransfer(request: Treasury.NotifyTransferRequest): async Treasury.NotifyTransferResponse {
+      
+      let total:Nat64 = request.amount.e8s;
+      let anvil_share:Nat64 = total * 50 / 100; // 0.5%
+      let minter_share:Nat64= total * request.minter.share / 100;
+      let marketplace_share:Nat64 = total * request.marketplace.share / 100;
+      let seller_share:Nat64 = total - anvil_share - minter_share - marketplace_share;
+
+      assert(total > 0);
+      assert((seller_share + marketplace_share + minter_share + anvil_share) == total);
+
       // give to NFTAnvil
       // give to Author
       // give to Marketplace
