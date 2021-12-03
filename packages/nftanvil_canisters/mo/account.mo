@@ -17,8 +17,8 @@ import Nat8 "mo:base/Nat8";
 import Cycles "mo:base/ExperimentalCycles";
 import Buffer "mo:base/Buffer";
 import Blob "mo:base/Blob";
-import Array_ "../lib/vvv/src/Array";
-import HashSmash "../lib/vvv/src/HashSmash";
+import Array_ "./lib/Array";
+import HashSmash "./lib/HashSmash";
 
 import Prim "mo:prim"; 
 

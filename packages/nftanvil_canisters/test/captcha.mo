@@ -8,10 +8,10 @@ import Result "mo:base/Result";
 import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
 import Ext "../mo/nft_interface";
-import Array_ "../lib/vvv/src/Array";
+import Array_ "../mo/lib/Array";
 
 import AccessControl "../mo/access";
-import PseudoRandom "../lib/vvv/src/PseudoRandom";
+import PseudoRandom "../mo/lib/PseudoRandom";
 
 
 // let access = await AccessControl.AccessControl({_admin = Principal.fromText("aaaaa-aa") });

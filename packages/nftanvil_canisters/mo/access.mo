@@ -9,8 +9,8 @@ import Result "mo:base/Result";
 import Nft "../mo/nft_interface";
 
 
-import PseudoRandom "../lib/vvv/src/PseudoRandom";
-import Captcha "../lib/vvv/src/Captcha";
+import PseudoRandom "./lib/PseudoRandom";
+import Captcha "./lib/Captcha";
 import Cycles "mo:base/ExperimentalCycles";
 
 import Prim "mo:prim"; 

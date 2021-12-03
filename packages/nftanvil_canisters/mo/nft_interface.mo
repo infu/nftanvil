@@ -16,7 +16,7 @@ import Principal "mo:principal/Principal";
 import RawAccountId "mo:principal/AccountIdentifier";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
-import Blob_ "../lib/vvv/src/Blob";
+import Blob_ "./lib/Blob";
 
 
 module {

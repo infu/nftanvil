@@ -9,7 +9,7 @@ import Nft  "../mo/nft_interface";
 import Account "../mo/account";
 
 import Dropship "../mo/nft";
-import Array_ "../lib/vvv/src/Array"
+import Array_ "../mo/lib/Array"
 
 
 var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";

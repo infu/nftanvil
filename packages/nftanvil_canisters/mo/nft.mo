@@ -20,15 +20,15 @@ import CRC32 "mo:hash/CRC32";
 
 import Cycles "mo:base/ExperimentalCycles";
 
-import PseudoRandom "../lib/vvv/src/PseudoRandom";
+import PseudoRandom "./lib/PseudoRandom";
 import Blob "mo:base/Blob";
-import Array_ "../lib/vvv/src/Array";
+import Array_ "./lib/Array";
 import Prim "mo:prim"; 
 import AccessControl  "./access";
 import Hex "mo:encoding/Hex";
-import Blob_ "../lib/vvv/src/Blob";
-import Hash "../lib/vvv/src/Hash";
-import Painless "../lib/vvv/src/Painless";
+import Blob_ "./lib/Blob";
+import Hash "./lib/Hash";
+import Painless "./lib/Painless";
 import SHA256 "mo:sha/SHA256";
 import Ledger  "./ledger_interface";
 import Treasury  "./treasury_interface";

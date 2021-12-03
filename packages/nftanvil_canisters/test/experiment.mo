@@ -10,7 +10,7 @@ import Principal "mo:base/Principal";
 import Ext "../mo/nft_interface";
 
 import Nat "mo:base/Nat";
-import Hash "../lib/vvv/src/Hash";
+import Hash "../mo/lib/Hash";
 
 let p = Principal.fromText("qirxu-7bfb3-xxjvc-f2ixd-rnz2w-qwget-pryco-ssrzg-wtl7i-ka6t6-cqe");
 let a = Ext.AccountIdentifier.fromText("D1B158C1E1B8376761295F759F8907E29E10AAF6F556D7F90BE2C580A2E42DA1");

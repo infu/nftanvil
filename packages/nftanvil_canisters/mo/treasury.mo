@@ -1,5 +1,5 @@
 import Nft "./nft_interface";
-import Blob_ "../lib/vvv/src/Blob";
+import Blob_ "./lib/Blob";
 
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
