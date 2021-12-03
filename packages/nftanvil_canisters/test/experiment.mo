@@ -7,7 +7,7 @@ import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat32";
 import Text "mo:base/Text";
 import Principal "mo:base/Principal";
-import Ext "../lib/ext.std/src/Ext";
+import Ext "../mo/nft_interface";
 
 import Nat "mo:base/Nat";
 import Hash "../lib/vvv/src/Hash";

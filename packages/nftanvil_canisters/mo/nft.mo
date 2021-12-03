@@ -1,8 +1,7 @@
 // All rights reserved by 3V Interactive
 // Developer contributions are rewarded with stake
 
-import Ext "../lib/ext.std/src/Ext";
-import Interface "../lib/ext.std/src/Interface";
+import Nft "./nft_interface";
 import Text "mo:base/Text";
 import HashMap "mo:base/HashMap";
 import List "mo:base/List";
@@ -32,30 +31,31 @@ import Hash "../lib/vvv/src/Hash";
 import Painless "../lib/vvv/src/Painless";
 import SHA256 "mo:sha/SHA256";
 import Ledger  "./ledger_interface";
+import Treasury  "./treasury_interface";
+
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
 
 
-shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text]; _router:Principal;  _slot:Nat32; _debug_cannisterId:?Principal}) : async Interface.NonFungibleToken = this {
+shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text]; _router:Principal; _treasury:Principal; _slot:Nat32; _debug_cannisterId:?Principal}) : async Nft.Interface = this {
 
     // TYPE ALIASES
-    type AccountIdentifier = Ext.AccountIdentifier;
-    type Balance = Ext.Balance;
-    type TokenIdentifier = Ext.TokenIdentifier;
-    type TokenIdentifierBlob = Ext.TokenIdentifierBlob;
-    type TokenIndex = Ext.TokenIndex;
-    type User = Ext.User;
-    type CommonError = Ext.CommonError;
-    type Metadata = Ext.Metadata;
-    type Metavars = Ext.Metavars;
-    type MetavarsOut = Ext.MetavarsFrozen;
+    type AccountIdentifier = Nft.AccountIdentifier;
+    type Balance = Nft.Balance;
+    type TokenIdentifier = Nft.TokenIdentifier;
+    type TokenIdentifierBlob = Nft.TokenIdentifierBlob;
+    type TokenIndex = Nft.TokenIndex;
+    type User = Nft.User;
+    type CommonError = Nft.CommonError;
+    type Metadata = Nft.Metadata;
+    type Metavars = Nft.Metavars;
+    type MetavarsOut = Nft.MetavarsFrozen;
 
     private stable var _fee:Nat64 = 10000;
 
-
-    type BalanceRequest = Ext.Core.BalanceRequest;
-    type BalanceResponse = Ext.Core.BalanceResponse;
-    type TransferRequest = Ext.Core.TransferRequest;
-    type TransferResponse = Ext.Core.TransferResponse;
+    type BalanceRequest = Nft.BalanceRequest;
+    type BalanceResponse = Nft.BalanceResponse;
+    type TransferRequest = Nft.TransferRequest;
+    type TransferResponse = Nft.TransferResponse;
 
     // Internal types
     public type BalanceIntError = {
@@ -71,6 +71,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         reportOutOfMemory : shared () -> async ();
         isLegitimate : query (p:Principal) -> async Bool;
     };
+
+    let TREASURY = actor(Principal.toText(_treasury)) : Treasury.Interface;
+
+    let TREASURYAddress : AccountIdentifier = Nft.AccountIdentifier.fromPrincipal(_treasury, null);
+    
     
     private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
@@ -83,12 +88,12 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
 
     private func accountActor(aid: AccountIdentifier) : accountInterface {
-        let selected = _acclist[ Ext.AccountIdentifier.slot(aid, _acclist_size) ];
+        let selected = _acclist[ Nft.AccountIdentifier.slot(aid, _acclist_size) ];
         actor(selected): accountInterface;
     };
 
     private func accessActor(aid: AccountIdentifier) : AccessControl.AccessControl {
-        let selected = _accesslist[ Ext.AccountIdentifier.slot(aid, _accesslist_size) ];
+        let selected = _accesslist[ Nft.AccountIdentifier.slot(aid, _accesslist_size) ];
         actor(selected): AccessControl.AccessControl;
     };
 
@@ -96,19 +101,19 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     // STATE 
     private stable var _tmpBalance : [(TokenIndex, AccountIdentifier)] = [];
-    private var _balance : HashMap.HashMap<TokenIndex, AccountIdentifier> = HashMap.fromIter(_tmpBalance.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
+    private var _balance : HashMap.HashMap<TokenIndex, AccountIdentifier> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
     private stable var _tmpMeta : [(TokenIndex, Metadata)] = [];
-    private var _meta : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tmpMeta.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
+    private var _meta : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tmpMeta.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
     private stable var _tmpMetavars : [(TokenIndex, Metavars)] = [];
-    private var _metavars : HashMap.HashMap<TokenIndex, Metavars> = HashMap.fromIter(_tmpMetavars.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
+    private var _metavars : HashMap.HashMap<TokenIndex, Metavars> = HashMap.fromIter(_tmpMetavars.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
     private stable var _tmpAllowance : [(TokenIndex, Principal)] = [];
-    private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
+    private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
     private stable var _tmpToken2Link: [(TokenIndex, Blob)] = [];
-    private var _token2link : HashMap.HashMap<TokenIndex, Blob> = HashMap.fromIter(_tmpToken2Link.vals(), 0, Ext.TokenIndex.equal, Ext.TokenIndex.hash);
+    private var _token2link : HashMap.HashMap<TokenIndex, Blob> = HashMap.fromIter(_tmpToken2Link.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
 
     private stable var _tmpChunk : [(Nat32, Blob)] = [];
     private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
@@ -155,18 +160,18 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
          }
     };
     
-    public shared({caller}) func burn(request : Ext.Core.BurnRequest) : async Ext.Core.BurnResponse {
+    public shared({caller}) func burn(request : Nft.BurnRequest) : async Nft.BurnResponse {
 
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
         
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
-        if (Ext.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user, caller)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
-                 SNFT_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
-                 await ACC_burn(Ext.User.toAccountIdentifier(request.user), tokenIndex);
+            case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
+                 SNFT_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
+                 await ACC_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
 
                 return #ok(1);
             }; 
@@ -218,15 +223,15 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     //         Iter.toArray(_meta.entries())
     // };
 
-    public shared({caller}) func transfer_link(request : Ext.Core.TransferLinkRequest) : async Ext.Core.TransferLinkResponse {
+    public shared({caller}) func transfer_link(request : Nft.TransferLinkRequest) : async Nft.TransferLinkResponse {
         
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
-        if (Ext.User.validate(request.from) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.from) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
         switch ( balRequireOwner(balRequireMinimum(balGet({token = request.token; user = request.from}),1),caller_user)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+            case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
                  
                    switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
@@ -251,12 +256,12 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         };
     };
 
-    public shared({caller}) func claim_link(request : Ext.Core.ClaimLinkRequest) : async Ext.Core.ClaimLinkResponse {
+    public shared({caller}) func claim_link(request : Nft.ClaimLinkRequest) : async Nft.ClaimLinkResponse {
     
         let keyHash = Blob.fromArray(SHA256.sum224(Blob.toArray(request.key)));
-        if (Ext.User.validate(request.to) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.to) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
-        switch (Ext.TokenIdentifier.decode(request.token)) {
+        switch (Nft.TokenIdentifier.decode(request.token)) {
                 case (#ok(cannisterId, tokenIndex)) {
 
                     if (checkCorrectCannister(cannisterId) == false) return #err(#Rejected);
@@ -269,8 +274,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                 case (?from) {
                                     switch(getMeta(tokenIndex)) {
                                             case (#ok((meta,vars))) {
-                                                    SNFT_move(from,Ext.User.toAccountIdentifier(request.to), tokenIndex);
-                                                    await ACC_move(from,Ext.User.toAccountIdentifier(request.to), tokenIndex);
+                                                    SNFT_move(from,Nft.User.toAccountIdentifier(request.to), tokenIndex);
+                                                    await ACC_move(from,Nft.User.toAccountIdentifier(request.to), tokenIndex);
 
                                                     resetTransferBindings(meta, vars);
 
@@ -298,17 +303,17 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
     
     // Get accountid and exact ICP amount
-    public query func purchase_intent( request: Ext.PurchaseIntentRequest) : async Ext.PurchaseIntentResponse {
-        let toUserAID = Ext.User.toAccountIdentifier(request.user);
+    public query func purchase_intent( request: Nft.PurchaseIntentRequest) : async Nft.PurchaseIntentResponse {
+        let toUserAID = Nft.User.toAccountIdentifier(request.user);
 
-        switch (Ext.TokenIdentifier.decode(request.token)) {
+        switch (Nft.TokenIdentifier.decode(request.token)) {
                 case (#ok(cannisterId, tokenIndex)) {
 
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
                             if (vars.price == 0) return #err(#NotForSale);
 
-                            let (purchaseAccountId,_) = Ext.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
+                            let (purchaseAccountId,_) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
                             
                             #ok({
                                 paymentAddress = purchaseAccountId;
@@ -324,10 +329,10 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
 
     // Check accountid if its exact or more than asked. If something is wrong, refund. If more is sent, refund extra.
-    public shared({caller}) func purchase_claim(request: Ext.PurchaseClaimRequest) : async Ext.PurchaseClaimResponse {
+    public shared({caller}) func purchase_claim(request: Nft.PurchaseClaimRequest) : async Nft.PurchaseClaimResponse {
 
-        let toUserAID = Ext.User.toAccountIdentifier(request.user);
-        switch (Ext.TokenIdentifier.decode(request.token)) {
+        let toUserAID = Nft.User.toAccountIdentifier(request.user);
+        switch (Nft.TokenIdentifier.decode(request.token)) {
              case (#ok(cannisterId, tokenIndex)) {
 
                 switch(getMeta(tokenIndex)) {
@@ -337,7 +342,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
                                 if (vars.price == 0) return #err(#NotForSale);
 
-                                let (purchaseAccountId, purchaseSubAccount) = Ext.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
+                                let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
                                 
                                 let {e8s = payment} = await ledger.account_balance({
                                     account = purchaseAccountId
@@ -346,10 +351,10 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                         
                                 let purchaseOk = payment >= vars.price;
 
-                                let fullRefund = payment - _fee;
-                                let noRefund = 0;
+                                let fullRefund:Nat64 = payment - _fee;
+                                let noRefund:Nat64 = 0;
 
-                                let refundAmount = switch(purchaseOk) {
+                                let refundAmount:Nat64 = switch(purchaseOk) {
                                     case(true) {
 
                                         switch(SNFT_tidxGet(tokenIndex)) {
@@ -357,7 +362,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                                     try {
                                                         SNFT_move(fromAccount, toUserAID, tokenIndex);
                                                         vars.price := 0;
-                                                        try {
+                                                        ignore try {
                                                             await ACC_move(fromAccount, toUserAID, tokenIndex);
                                                             ()
                                                         } catch (e) {
@@ -388,15 +393,15 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                             amount;
                                             fee = {e8s = _fee};
                                             from_subaccount = ?purchaseSubAccount;
-                                            to = TreasuryAddress;
+                                            to = TREASURYAddress;
                                             created_at_time = null;
                                             };
 
                                         switch(await ledger.transfer(transfer)) {
                                             case (#Ok(blockIndex)) {
-                                                let minterAddress = Ext.AccountIdentifier.fromPrincipal(meta.minter, null);
-
-                                                TreasuryActor.notifyTransfer({
+                                                let minterAddress = Nft.AccountIdentifier.fromPrincipal(meta.minter, null);
+                                                
+                                                let notifyRequest = {
                                                     buyerAccount = toUserAID;
                                                     blockIndex;
                                                     amount;
@@ -404,12 +409,22 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                                     minter = {address=minterAddress; share=meta.minterShare};
                                                     marketplace = request.marketplace;
                                                     purchaseAccount = purchaseAccountId; 
-                                                })
-                                                // notify Treasury of transaction and splits
+                                                };
+
+                                                switch(await TREASURY.notifyTransfer(notifyRequest)) {
+                                                    case (#ok()) {
+                                                        #ok();
+                                                    };
+                                                    case (#err(e)) {
+                                                        //TODO: ADD to QUEUE for later notification attempt
+                                                        #err(#TreasuryNotifyFailed);
+                                                    }
+                                                }
                                             };
                                             case (#Err(e)) {
-                                                if (purchaseOk == false) return #err(#ErrorWhileRefunding);
-                                            }
+                                                //TODO: ADD to QUEUE for later transfer attempt
+                                                return #err(#ErrorWhileRefunding);
+                                            };
                                         };
                                     };
 
@@ -431,7 +446,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                                     #err(#Refunded)
                                                 };
                                                 case (#Err(e)) {
-                                                    if (purchaseOk == false) return #err(#ErrorWhileRefunding);
+                                                    #err(#ErrorWhileRefunding);
                                                 }
                                             };
                                         
@@ -452,16 +467,16 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
   
     }; 
 
-    public shared({caller}) func set_price(request: Ext.SetPriceRequest) : async Ext.SetPriceResponse {
+    public shared({caller}) func set_price(request: Nft.SetPriceRequest) : async Nft.SetPriceResponse {
             if (request.price < 100000) return #err(#TooLow);
             if (request.price > 100000000000) return #err(#TooHigh);
 
-            if (Ext.User.validate(request.user) == false) return #err(#Other("Invalid user"));
+            if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid user"));
             
-            let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+            let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
             switch ( balRequireOwner(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+            case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
@@ -491,21 +506,21 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
 
-        if (Ext.User.validate(request.from) == false) return #err(#Other("Invalid from"));
-        if (Ext.User.validate(request.to) == false) return #err(#Other("Invalid to"));
+        if (Nft.User.validate(request.from) == false) return #err(#Other("Invalid from"));
+        if (Nft.User.validate(request.to) == false) return #err(#Other("Invalid to"));
 
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.from}),1),caller_user, caller)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+            case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
                             if (isTransferBound(caller, meta, vars) == true) return #err(#NotTransferable);
                             
-                            SNFT_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
-                            await ACC_move(Ext.User.toAccountIdentifier(request.from),Ext.User.toAccountIdentifier(request.to), tokenIndex);
+                            SNFT_move(Nft.User.toAccountIdentifier(request.from),Nft.User.toAccountIdentifier(request.to), tokenIndex);
+                            await ACC_move(Nft.User.toAccountIdentifier(request.from),Nft.User.toAccountIdentifier(request.to), tokenIndex);
 
                             resetTransferBindings(meta, vars);
 
@@ -530,7 +545,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         nftanvil_use: shared ({
             token:TokenIdentifier;
             aid:AccountIdentifier;
-            memo:Ext.Memo;
+            memo:Nft.Memo;
             useId: Text;
         }) -> async Result.Result<(), Text>
     };
@@ -538,14 +553,14 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
 
 
-    public shared({caller}) func use(request : Ext.Core.UseRequest) : async Ext.Core.UseResponse {
+    public shared({caller}) func use(request : Nft.UseRequest) : async Nft.UseResponse {
 
-        if (Ext.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
         switch (balRequireOwner(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+            case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
@@ -553,7 +568,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                         switch(meta.extensionCanister) {
                             case (?canPrincipal) {
                                 let can = actor(Principal.toText(canPrincipal)): ExtensionCanister;
-                                let aid = Ext.User.toAccountIdentifier(holder);
+                                let aid = Nft.User.toAccountIdentifier(holder);
 
                                 switch(meta.use) {
                                     case (?#cooldown(use)) {
@@ -642,8 +657,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         }
     };
 
-    public query func metadata(token : Ext.TokenIdentifier) : async Ext.MetadataResponse {
-        switch (Ext.TokenIdentifier.decode(token)) {
+    public query func metadata(token : Nft.TokenIdentifier) : async Nft.MetadataResponse {
+        switch (Nft.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
                
                 if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
@@ -656,7 +671,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                     #ok({
                                     bearer = bearer;
                                     data = m; 
-                                    vars = Ext.MetavarsFreeze(v)
+                                    vars = Nft.MetavarsFreeze(v)
                                     });
                             };
                             case (#err()) {
@@ -678,8 +693,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         };
     };
  
-    public query func supply(token : Ext.TokenIdentifier) : async Ext.SupplyResponse {
-        switch (Ext.TokenIdentifier.decode(token)) {
+    public query func supply(token : Nft.TokenIdentifier) : async Nft.SupplyResponse {
+        switch (Nft.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
                 if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
 
@@ -700,7 +715,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
 
 
-    public shared({caller}) func uploadChunk(request: Ext.NonFungible.UploadChunkRequest) : async () {
+    public shared({caller}) func uploadChunk(request: Nft.UploadChunkRequest) : async () {
 
         assert((switch(getMeta(request.tokenIndex)) {
                     case (#ok((meta,vars))) {
@@ -746,7 +761,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         )
     };
 
-    public shared({caller}) func fetchChunk(request: Ext.NonFungible.FetchChunkRequest) : async ?Blob {
+    public shared({caller}) func fetchChunk(request: Nft.FetchChunkRequest) : async ?Blob {
 
         let ctype: Nat32 = switch(request.position) {
             case (#content) 0;
@@ -767,8 +782,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                      case (true) {
                             switch(SNFT_tidxGet(request.tokenIndex)) {
                                 case (?ownerAid) {
-                                     let callerAid = Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount);
-                                     Ext.AccountIdentifier.equal(ownerAid,callerAid);
+                                     let callerAid = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
+                                     Nft.AccountIdentifier.equal(ownerAid,callerAid);
                                 };
                                 case (_) {
                                     // shouldn't be possible if db is correct
@@ -850,7 +865,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                            
                              if (ctype == 0 and meta.secret) return Painless.NotFound("Secret content can't be retrieved with http request");
 
-                            let target : ? Ext.Content = switch(ctype) {
+                            let target : ? Nft.Content = switch(ctype) {
                                 case (0) meta.content;
                                 case (1) ?meta.thumb;
                                 case (_) null
@@ -906,9 +921,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)/60);
     };
 
-    private func SNFT_mint(caller:Principal, request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
+    private func SNFT_mint(caller:Principal, request: Nft.MintRequest) : async Nft.MintResponse {
 
-        let receiver = Ext.User.toAccountIdentifier(request.to);
+        let receiver = Nft.User.toAccountIdentifier(request.to);
 
         // INFO:
         // 13 bits used for local token index (max 8191)
@@ -925,27 +940,29 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         // Get class info, check if principal is allowed to mint
         let m = request.metadata;
 
-        if (Ext.MetadataInput.validate(m) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
+        if (Nft.MetadataInput.validate(m) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
 
         if (m.quality > 1) return #err(#Invalid("Higher than 1 quality not implemented"));
+        if (Nft.Share.validate(m.minterShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
         let md : Metadata = {
-            domain=m.domain;
-            name= m.name;
-            lore= m.lore;
-            quality= m.quality;
-            use= m.use;
-            hold= m.hold;
+            domain = m.domain;
+            name = m.name;
+            lore = m.lore;
+            quality = m.quality;
+            use = m.use;
+            hold = m.hold;
             transfer = m.transfer;
-            ttl= m.ttl; // time to live
-            secret= m.secret;
+            ttl = m.ttl; // time to live
+            secret = m.secret;
             attributes = m.attributes;
             tags = m.tags;
             custom = m.custom;
             content = m.content;
             thumb = m.thumb; 
             extensionCanister = m.extensionCanister;
-            minter= caller;
+            minter = caller;
+            minterShare = m.minterShare;
             created = timestamp;
             updated = timestamp;
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
@@ -1012,9 +1029,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
 
 
-    public shared({caller}) func mintNFT(request: Ext.NonFungible.MintRequest) : async Ext.NonFungible.MintResponse {
+    public shared({caller}) func mintNFT(request: Nft.MintRequest) : async Nft.MintResponse {
 
-        if (Ext.User.validate(request.to) == false) return #err(#Invalid("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.to) == false) return #err(#Invalid("Invalid User. Account identifiers must be all uppercase"));
 
         if (_available == false) { return #err(#OutOfMemory) };
 
@@ -1031,24 +1048,24 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
 
     // Calls func socket on the target token
-    public shared({caller}) func plug(request: Ext.PlugRequest) : async Ext.PlugResponse {
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+    public shared({caller}) func plug(request: Nft.PlugRequest) : async Nft.PlugResponse {
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.plug; user = request.user}),1),caller_user, caller)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+            case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                            switch (Ext.TokenIdentifier.decode(request.socket)) {
+                            switch (Nft.TokenIdentifier.decode(request.socket)) {
                                 case (#ok(socketCanister, _)) {
 
-                                    let socketActor = actor (Principal.toText(socketCanister)) : NFT;
+                                    let socketActor = actor (Principal.toText(socketCanister)) : Class;
                                     switch(await socketActor.socket(request)) {
                                         case (#ok()) {
-                                            let to = Ext.User.toAccountIdentifier( #principal(socketCanister) );
-                                            SNFT_move(Ext.User.toAccountIdentifier(request.user), to, tokenIndex);
-                                            await ACC_move(Ext.User.toAccountIdentifier(request.user), to, tokenIndex);
+                                            let to = Nft.User.toAccountIdentifier( #principal(socketCanister) );
+                                            SNFT_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
+                                            await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
 
                                             #ok(());
                                         };
@@ -1077,18 +1094,18 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
 
     // Calls the extension canister and asks if it accepts the plug
-    public shared({caller}) func socket(request: Ext.SocketRequest) : async Ext.SocketResponse {
+    public shared({caller}) func socket(request: Nft.SocketRequest) : async Nft.SocketResponse {
         
-        if (Ext.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
-        let plugBlob = Ext.TokenIdentifier.toBlob(request.plug);
+        if (Nft.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
+        let plugBlob = Nft.TokenIdentifier.toBlob(request.plug);
 
 
         if ((await ROUTER.isLegitimate(caller)) == false) return #err(#NotLegitimateCaller);
         
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
         switch ( balRequireOwner(balRequireMinimum(balGet({token = request.socket; user = request.user}),1),request.user)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+            case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
@@ -1096,7 +1113,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                         switch(switch(meta.extensionCanister) {
                             case (?extCan) {
                                 let extensionActor = actor (Principal.toText(extCan)) : actor {
-                                    socketAllow : query (request: Ext.SocketRequest) -> async Result.Result<
+                                    socketAllow : query (request: Nft.SocketRequest) -> async Result.Result<
                                         (),
                                         {#Other: Text}
                                         >;
@@ -1139,15 +1156,15 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     };
 
     // Unsockets and returns it to owner
-    public shared({caller}) func unsocket(request: Ext.UnsocketRequest) : async Ext.UnsocketResponse {
+    public shared({caller}) func unsocket(request: Nft.UnsocketRequest) : async Nft.UnsocketResponse {
 
-        if (Ext.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
-        let plugBlob = Ext.TokenIdentifier.toBlob(request.plug);
+        if (Nft.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
+        let plugBlob = Nft.TokenIdentifier.toBlob(request.plug);
 
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     
             switch (balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.socket; user = request.user}),1),caller_user, caller)) {
-                case (#ok(holder, tokenIndex, bal:Ext.Balance,allowance)) {
+                case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
         
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
@@ -1155,7 +1172,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                             switch(switch(meta.extensionCanister) {
                                 case (?extCan) {
                                     let extensionActor = actor (Principal.toText(extCan)) : actor {
-                                        unsocketAllow : query (request: Ext.UnsocketRequest) -> async Result.Result<
+                                        unsocketAllow : query (request: Nft.UnsocketRequest) -> async Result.Result<
                                             (),
                                             {#Other: Text}
                                             >;
@@ -1175,9 +1192,9 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
                                 }
                             }) {
                                 case (#ok()) {
-                                   switch (Ext.TokenIdentifier.decode(request.plug)) {
+                                   switch (Nft.TokenIdentifier.decode(request.plug)) {
                                     case (#ok(plugCanister, _)) {
-                                        let plugActor = actor (Principal.toText(plugCanister)) : NFT;
+                                        let plugActor = actor (Principal.toText(plugCanister)) : Class;
                                         switch(await plugActor.unplug(request)) {
                                             case (#ok()) {
                                                 
@@ -1215,18 +1232,18 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
 
 // Unsockets and returns it to owner
-    public shared({caller}) func unplug(request: Ext.UnsocketRequest) : async Ext.UnplugResponse {
+    public shared({caller}) func unplug(request: Nft.UnsocketRequest) : async Nft.UnplugResponse {
         if ((await ROUTER.isLegitimate(caller)) == false) return #err(#NotLegitimateCaller);
 
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     
             switch (balRequireOwner(balRequireMinimum(balGet({token = request.plug; user = caller_user}),1),caller_user)) {
-                case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
+                case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
         
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
-                            SNFT_move(Ext.User.toAccountIdentifier(#principal(caller)),Ext.User.toAccountIdentifier(request.user), tokenIndex);
-                            await ACC_move(Ext.User.toAccountIdentifier(#principal(caller)),Ext.User.toAccountIdentifier(request.user), tokenIndex);
+                            SNFT_move(Nft.User.toAccountIdentifier(#principal(caller)),Nft.User.toAccountIdentifier(request.user), tokenIndex);
+                            await ACC_move(Nft.User.toAccountIdentifier(#principal(caller)),Nft.User.toAccountIdentifier(request.user), tokenIndex);
 
                             #ok();
                         };
@@ -1243,8 +1260,8 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
 
     };
 
-    public query func bearer(token : Ext.TokenIdentifier) : async Ext.NonFungible.BearerResponse {
-           switch (Ext.TokenIdentifier.decode(token)) {
+    public query func bearer(token : Nft.TokenIdentifier) : async Nft.BearerResponse {
+           switch (Nft.TokenIdentifier.decode(token)) {
             case (#ok(cannisterId, tokenIndex)) {
                 if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
                
@@ -1263,11 +1280,11 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
         };
     };
 
-    public query func allowance(request : Ext.Allowance.Request) : async Ext.Allowance.Response {
-        if (Ext.User.validate(request.owner) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+    public query func allowance(request : Nft.Allowance.Request) : async Nft.Allowance.Response {
+        if (Nft.User.validate(request.owner) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
         switch ( balGetAllowance(balGet({token = request.token; user = request.owner}),request.spender)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
+            case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
                 return #ok(allowance);
             };
             case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
@@ -1277,14 +1294,14 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     
     // NOTE: Currently approve allows only one principal to be allowed, which means, 
     // the owner can't list NFT in multiple marketplaces. This will be changed.
-    public shared({caller}) func approve(request : Ext.Allowance.ApproveRequest) : async Ext.Allowance.ApproveResponse {
+    public shared({caller}) func approve(request : Nft.Allowance.ApproveRequest) : async Nft.Allowance.ApproveResponse {
 
-        let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
         
         if (request.allowance != 1) return #err(#Other("NFT allowance has to be 1"));
 
         switch ( balRequireOwner(balRequireMinimum(balGet({token = request.token; user = caller_user}),1),caller_user)) {
-            case (#ok(holder, tokenIndex, bal:Ext.Balance, allowance)) {
+            case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
                 
                 // caller being same as spender will remove previously approved spender
                 if (Principal.equal(caller, request.spender)) {
@@ -1346,7 +1363,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     // Internal functions which help for better code reusability
 
     private func consumeAccessTokens(caller:Principal, count:Nat) : async Bool {
-        let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
+        let aid = Nft.AccountIdentifier.fromPrincipal(caller, null);
         let accessControl = accessActor(aid);
         // let atokens = await accessControl.getBalance(aid);
         // if (atokens < count) return false;
@@ -1416,7 +1433,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     // ***** Balance 
     private func balGet(request : BalanceRequest) : BalanceInt {
 
-       switch (Ext.TokenIdentifier.decode(request.token)) {
+       switch (Nft.TokenIdentifier.decode(request.token)) {
             case (#ok(cannisterId, tokenIndex)) {
                 if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(request.token));
                 
@@ -1424,7 +1441,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
      
                     case (?holder_stored) {
                         let holder = request.user;
-                        if (Ext.AccountIdentifier.equal(holder_stored, Ext.User.toAccountIdentifier(holder)) == true) {
+                        if (Nft.AccountIdentifier.equal(holder_stored, Nft.User.toAccountIdentifier(holder)) == true) {
                             #ok(holder, tokenIndex,1,0);
                         } else {
                             #ok(holder, tokenIndex,0,0);
@@ -1455,7 +1472,7 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     private func balRequireOwner(bal : BalanceInt, caller:User) :  BalanceInt {
         switch (bal) {
             case (#ok(holder, tokenIndex, bal, allowance)) {
-                 if (Ext.User.equal(caller,holder) == false) return #err(#Unauthorized(Ext.User.toAccountIdentifier(holder)));
+                 if (Nft.User.equal(caller,holder) == false) return #err(#Unauthorized(Nft.User.toAccountIdentifier(holder)));
                 #ok(holder, tokenIndex, bal, allowance); 
             };
             case (#err(e)) #err(e);
@@ -1486,10 +1503,10 @@ shared({caller = _owner}) actor class NFT({_acclist: [Text]; _accesslist:[Text];
     private func balRequireOwnerOrAllowance(bal : BalanceInt, owner:User, caller:Principal) :  BalanceInt {
         switch (balGetAllowance(bal, caller)) {
             case (#ok(holder, tokenIndex, bal, allowance)) {
-                 let errResult = #err(#Unauthorized(Ext.User.toAccountIdentifier(holder)));
+                 let errResult = #err(#Unauthorized(Nft.User.toAccountIdentifier(holder)));
                  let okResult = #ok(holder, tokenIndex, bal, allowance);
 
-                 if (Ext.User.equal(owner,holder) == true) return okResult;
+                 if (Nft.User.equal(owner,holder) == true) return okResult;
                  switch (_allowance.get(tokenIndex)) {
                       case (?allowed_principal) {
                           if (allowed_principal == caller) {

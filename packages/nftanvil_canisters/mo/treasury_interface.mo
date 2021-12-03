@@ -9,45 +9,51 @@ import SHA256 "mo:sha/SHA256";
 import Hash "mo:base/Hash";
 import Hex "mo:encoding/Hex";
 import Iter "mo:base/Iter";
+import Result "mo:base/Result";
 import Time "mo:base/Time";
 import Nat8 "mo:base/Nat8";
 import Nat32 "mo:base/Nat32";
 import Principal "mo:principal/Principal";
 import RawAccountId "mo:principal/AccountIdentifier";
-import Result "mo:base/Result";
 import Text "mo:base/Text";
-import Blob_ "../../vvv/src/Blob";
-import Ext "../lib/ext.std/src/Ext";
+import Nft "./nft_interface";
+import Ledger "./ledger_interface"
 
 module {
-    public type AccountIdentifier = Ext.AccountIdentifier;
-    public type Share = Ext.Share;
-    public type Balance = Ext.Balance;
+    public type Interface = actor {
+        withdraw        : WithdrawRequest       -> async WithdrawResponse;
+        notifyTransfer  : NotifyTransferRequest -> async NotifyTransferResponse;
+        balance         : BalanceRequest        -> async BalanceResponse;
+    };
+
+    public type AccountIdentifier = Nft.AccountIdentifier;
+    public type Share = Nft.Share;
+    public type Balance = Nft.Balance;
 
     public type BalanceRequest = {
-        user: Ext.User;
-        subaccount : ?Ext.SubAccount
-    }
+        user: Nft.User;
+        subaccount : ?Nft.SubAccount
+    };
 
     public type BalanceResponse = Balance;
 
     public type WithdrawRequest = {
-        user: Ext.User;
-        subaccount : ?Ext.SubAccount
+        user: Nft.User;
+        subaccount : ?Nft.SubAccount
     };
 
-    public type WithdrawResponse = Result<Balance,{
+    public type WithdrawResponse = Result.Result<Balance,{
         #TransferFailed;
         #NotEnoughForTransfer;
     }>;
 
     public type NotifyTransferRequest = {
-            buyerAccount; AccountIdentifier;
-            blockIndex;
-            amount:Nat64;
+            buyerAccount : AccountIdentifier;
+            blockIndex : Ledger.BlockIndex;
+            amount : Ledger.ICP;
 
             seller : AccountIdentifier;
-            
+
             minter : {
                 address : AccountIdentifier;
                 share : Share
@@ -58,10 +64,10 @@ module {
                 share : Share
                 };
 
-            purchaseAccount = AccountIdentifier; 
+            purchaseAccount : AccountIdentifier; 
     };
 
-    public type NotifyTransferResponse = Result<(),{
+    public type NotifyTransferResponse = Result.Result<(),{
        
     }>;
 }   

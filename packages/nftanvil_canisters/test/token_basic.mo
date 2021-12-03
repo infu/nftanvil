@@ -5,8 +5,7 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
-import Ext "../lib/ext.std/src/Ext";
-import Interface "../lib/ext.std/src/Interface";
+import Nft  "../mo/nft_interface";
 import Account "../mo/account";
 
 import Dropship "../mo/nft";
@@ -18,10 +17,9 @@ var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
 var someMeta = Blob.fromArray([116, 116, 105, 100]);
 var someMemo:Nat64 = 0;
 
-let nft = await Dropship.NFT({_acclist = []; _slot=3; _router=Principal.fromText("aaaaa-aa"); _accesslist=[]; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
+let nft = await Dropship.Class({_acclist = []; _slot = 3; _treasury = Principal.fromText("aaaaa-aa"); _router = Principal.fromText("aaaaa-aa"); _accesslist = []; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
 
 
-// Debug.print(Principal.toText(Principal.fromActor(nft))); // BUG: this is not working when we run it from moc command line
 actor class WHOWHO() {
     public shared({caller}) func whoAmI() : async Principal {
         return caller;
@@ -33,32 +31,32 @@ let whoiswho = await WHOWHO();
 let user_john_principal:Principal = await whoiswho.whoAmI();
 
 
-let user_john : Ext.User = #principal(user_john_principal);
+let user_john : Nft.User = #principal(user_john_principal);
 let user_peter_principal = Principal.fromText("ks5fw-csuji-57tsx-mqld6-bjip7-anp4q-pecol-5k6vo-vzcmw-3wuo2-qqe");
-let user_peter : Ext.User = #principal(user_peter_principal);
+let user_peter : Nft.User = #principal(user_peter_principal);
 
 
 
-let user_john_sub1 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?Blob.fromArray([1])));
-let user_john_sub2 : Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?Blob.fromArray([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,210])));
+let user_john_sub1 : Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?Blob.fromArray([1])));
+let user_john_sub2 : Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?Blob.fromArray([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,210])));
 
-let token_one : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 0);
-let token_two : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 1);
-let token_three : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 2);
-let token_for_burning : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 3);
+let token_one : Nft.TokenIdentifier = Nft.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 0);
+let token_two : Nft.TokenIdentifier = Nft.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 1);
+let token_three : Nft.TokenIdentifier = Nft.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 2);
+let token_for_burning : Nft.TokenIdentifier = Nft.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 3);
 
-let token_bad : Ext.TokenIdentifier = Ext.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 99);
+let token_bad : Nft.TokenIdentifier = Nft.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 99);
 
-let minter_one = user_john_principal; //Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
-let minter_two = user_john_principal; // Ext.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
+let minter_one = user_john_principal; //Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
+let minter_two = user_john_principal; // Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
 
 Debug.print("john  & current script principal: " # Principal.toText(user_john_principal));
 Debug.print("NFTcanisterId: " # NFTcanisterId);
 Debug.print("Token one: " # token_one);
 Debug.print("Token two: " # token_two);
 
-Debug.print("User john Account Identifier: " # Ext.AccountIdentifier.toText(Ext.User.toAccountIdentifier(user_john)));
-Debug.print("User john Account Identifier sub2: " # Ext.AccountIdentifier.toText(Ext.User.toAccountIdentifier(user_john_sub2)));
+Debug.print("User john Account Identifier: " # Nft.AccountIdentifier.toText(Nft.User.toAccountIdentifier(user_john)));
+Debug.print("User john Account Identifier sub2: " # Nft.AccountIdentifier.toText(Nft.User.toAccountIdentifier(user_john_sub2)));
 
 
 // -- Check Minting & balances
@@ -85,6 +83,7 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             secret=false;
             custom=null;
             tags=[];
+            minterShare=0;
 
             }})
             ) == #ok(0));
@@ -105,6 +104,7 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             extensionCanister = null; 
             custom=null;
             tags=[];
+                minterShare=0;
             secret=false
 }})) == #ok(1));
 
@@ -125,6 +125,7 @@ switch(await nft.mintNFT({to = user_john; metadata = {
             extensionCanister = null;
             secret=false;
             custom=null;
+                minterShare=0;
             tags=[];
             }})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
@@ -146,6 +147,7 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             attributes=[];
             extensionCanister = null;
             custom=null;
+                minterShare=0;
             tags=[];
         secret=false
 }})) == #ok(3));
@@ -227,7 +229,7 @@ assert( (await nft.balance({ user  = user_john; token = token_two;})) == #ok(1))
 
 // -- We simulate different caller, so we do some proper checks of methods like 'transfer' and 'approve' which depend on it
 
-var user_infu : Ext.User = user_john;  // Infu is John's brother. He will hack a bit and spoof caller.
+var user_infu : Nft.User = user_john;  // Infu is John's brother. He will hack a bit and spoof caller.
 var user_infu_principal : Principal = user_john_principal; 
 
 
@@ -237,8 +239,8 @@ actor class Infu() { // all methods in this actor will have their own principal 
         user_infu_principal := await whoiswho.whoAmI();
         Debug.print("Infu's Principal: " # Principal.toText(user_infu_principal));
  
-        user_infu := #address(Ext.AccountIdentifier.fromPrincipal(user_infu_principal, null));
-        Debug.print("Infu's AccountIdentifier: " #  Ext.AccountIdentifier.toText(Ext.User.toAccountIdentifier(user_infu)));
+        user_infu := #address(Nft.AccountIdentifier.fromPrincipal(user_infu_principal, null));
+        Debug.print("Infu's AccountIdentifier: " #  Nft.AccountIdentifier.toText(Nft.User.toAccountIdentifier(user_infu)));
     };
 
     public shared({caller}) func run_two () : async () {
@@ -281,13 +283,13 @@ assert( (await nft.balance({ user  = user_peter; token = token_two;})) == #ok(1)
 
 // -- Bearer 
 // check token two it must be in peter
-assert( (await nft.bearer(token_two)) == #ok(Ext.User.toAccountIdentifier(user_peter)));
+assert( (await nft.bearer(token_two)) == #ok(Nft.User.toAccountIdentifier(user_peter)));
 
 // check token one it must be in peter too
-assert( (await nft.bearer(token_one)) == #ok(Ext.User.toAccountIdentifier(user_peter)));
+assert( (await nft.bearer(token_one)) == #ok(Nft.User.toAccountIdentifier(user_peter)));
 
 // check token one it must be in john
-assert( (await nft.bearer(token_three)) == #ok(Ext.User.toAccountIdentifier(user_john)));
+assert( (await nft.bearer(token_three)) == #ok(Nft.User.toAccountIdentifier(user_john)));
 
 // check bearer of token index 99 which doesn't exist
 assert( (await nft.bearer(token_bad)) == #err(#InvalidToken(token_bad)));
@@ -356,12 +358,12 @@ assert( (await nft.bearer(token_for_burning)) == #err(#InvalidToken(token_for_bu
 
 //  }));
 // Debug.print(debug_show(aaa));
-// let batch = Iter.map<Nat,Ext.NonFungible.MintRequest>( Iter.range(0,2), func (x : Nat) : Ext.NonFungible.MintRequest { 
+// let batch = Iter.map<Nat,Nft.NonFungible.MintRequest>( Iter.range(0,2), func (x : Nat) : Nft.NonFungible.MintRequest { 
 //      return {to = user_john; minter = minter_one; metadata = someMeta; TTL = null};
    
 //     });
 
-// let batch = Array_.amap<Ext.NonFungible.MintRequest>(50, func(x) { {to = user_john; minter = minter_one; metadata = someMeta; TTL = null}  });
+// let batch = Array_.amap<Nft.NonFungible.MintRequest>(50, func(x) { {to = user_john; minter = minter_one; metadata = someMeta; TTL = null}  });
 
 // let minted = await nft.mintNFT_batch(batch);
 // ignore await nft.mintNFT_batch(batch);

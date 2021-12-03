@@ -7,8 +7,7 @@ import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
 import Iter "mo:base/Iter";
-import Ext "../lib/ext.std/src/Ext";
-import Interface "../lib/ext.std/src/Interface";
+import Ext "../mo/nft_interface";
 import Array_ "../lib/vvv/src/Array";
 
 import AccessControl "../mo/access";

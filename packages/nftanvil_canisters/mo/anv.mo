@@ -1,5 +1,4 @@
-import Ext "../lib/ext.std/src/Ext";
-import Interface "../lib/ext.std/src/Interface";
+import Nft "./nft_interface";
 import Blob_ "../lib/vvv/src/Blob";
 
 import HashMap "mo:base/HashMap";
@@ -15,17 +14,17 @@ import Blob "mo:base/Blob";
 
 shared({caller = _installer}) actor class ANV() = this {
 
-  public type Balance = Ext.Balance;
-  public type AccountIdentifier = Ext.AccountIdentifier;
-  public type TokenIdentifier = Ext.TokenIdentifier;
+  public type Balance = Nft.Balance;
+  public type AccountIdentifier = Nft.AccountIdentifier;
+  public type TokenIdentifier = Nft.TokenIdentifier;
  
   private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [];
-  private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
+  private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
   
   public type BlockIndex = Nat32;
   public type BlockHash = Blob;
   public type BlockTimestamp = Time.Time;
-  public type TransactionAmount = Nat;
+  public type TransactionAmount = Nft.Balance;
   public type TransactionFrom = AccountIdentifier;
   public type TransactionTo = AccountIdentifier;
   public type Block = (TransactionFrom, TransactionTo, TransactionAmount, BlockTimestamp, BlockHash);
@@ -46,17 +45,17 @@ shared({caller = _installer}) actor class ANV() = this {
   };
 
   private func myTokenId() : TokenIdentifier {
-    Ext.TokenIdentifier.encode( Principal.fromActor(this), 0);
+    Nft.TokenIdentifier.encode( Principal.fromActor(this), 0);
   };
 
   public query func tokenId() : async TokenIdentifier {
     myTokenId();
   };
 
-  public query func balance(request: Ext.Core.BalanceRequest) : async Ext.Core.BalanceResponse {
+  public query func balance(request: Nft.BalanceRequest) : async Nft.BalanceResponse {
     if (request.token != myTokenId()) return #err(#InvalidToken(request.token));
     
-    let aid = Ext.User.toAccountIdentifier(request.user);
+    let aid = Nft.User.toAccountIdentifier(request.user);
     switch(_balance.get(aid)) {
         case (?a) #ok(a);
         case (_) #ok(0);
@@ -71,11 +70,11 @@ shared({caller = _installer}) actor class ANV() = this {
       Iter.toArray(_blockchain.entries());
   };
 
-  public shared({caller}) func adminAllocate({user:Ext.User; amount:TransactionAmount}) : async (BlockIndex, Block) {
-      let aid = Ext.User.toAccountIdentifier(user);
+  public shared({caller}) func adminAllocate({user:Nft.User; amount:TransactionAmount}) : async (BlockIndex, Block) {
+      let aid = Nft.User.toAccountIdentifier(user);
 
       assert(caller == _installer);
-      let current = switch(_balance.get(aid)) {
+      let current:Nat64 = switch(_balance.get(aid)) {
           case (?a) a;
           case (_) 0;
       };
@@ -93,7 +92,7 @@ shared({caller = _installer}) actor class ANV() = this {
       let time = Time.now();
       let a = Blob.toArray(from);
       let b = Blob.toArray(to);
-      let c = Blob_.nat64ToBytes(Nat64.fromNat(amount));
+      let c = Blob_.nat64ToBytes(amount);
       let d = Blob_.nat64ToBytes(Nat64.fromIntWrap(time));
       let e = switch(_blockchain.get(newBlockIndex - 1 )) {
           case (?a) Blob.toArray(a.4);

@@ -1,5 +1,4 @@
-import Ext "../lib/ext.std/src/Ext";
-import Interface "../lib/ext.std/src/Interface";
+import Nft "./nft_interface";
 import Blob_ "../lib/vvv/src/Blob";
 
 import HashMap "mo:base/HashMap";
@@ -12,18 +11,20 @@ import Time "mo:base/Time";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
-import TRE "./treasury_interface";
+import Treasury "./treasury_interface";
+import Ledger  "./ledger_interface";
 
-shared({caller = _installer}) actor class TREASURY({_admin: Principal; _router: Principal}) = this {
+shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal}) = this {
 
-
-  public type Balance = Ext.Balance;
-  public type AccountIdentifier = Ext.AccountIdentifier;
+  public type Balance = Nft.Balance;
+  public type AccountIdentifier = Nft.AccountIdentifier;
  
   private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [];
-  private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
+  private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
   
   private stable var _fee:Nat64 = 10000;
+
+  private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
   system func preupgrade() {
     _tmpBalance := Iter.toArray(_balance.entries());
@@ -37,37 +38,39 @@ shared({caller = _installer}) actor class TREASURY({_admin: Principal; _router: 
       Iter.toArray(_balance.entries());
   };
 
-  public query func balance(request: TRE.BalanceRequest) : async TRE.BalanceResponse {
+  public query func balance(request: Treasury.BalanceRequest) : async Treasury.BalanceResponse {
     
-    let aid = Ext.User.toAccountIdentifier(request.user);
+    let aid = Nft.User.toAccountIdentifier(request.user);
+
     switch(_balance.get(aid)) {
-        case (?a) #ok(a);
-        case (_) #ok(0);
+        case (?a) a;
+        case (_) 0;
      };
   };
 
-  public shared({caller}) func notifyTransfer(request: TRE.NotifyTransferRequest): async TRE.NotifyTransferResponse {
-      // give to NFTAnvil 
+  public shared({caller}) func notifyTransfer(request: Treasury.NotifyTransferRequest): async Treasury.NotifyTransferResponse {
+      // give to NFTAnvil
       // give to Author
       // give to Marketplace
       // give to Seller
+      #ok();
   };
 
-  public shared({caller}) func withdraw(request: TRE.WithdrawRequest) : async TRE.WithdrawResponse {
-    let caller_user:Ext.User = #address(Ext.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+  public shared({caller}) func withdraw(request: Treasury.WithdrawRequest) : async Treasury.WithdrawResponse {
+    let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
-    let aid = Ext.User.toAccountIdentifier(request.user);
+    let aid = Nft.User.toAccountIdentifier(request.user);
 
     switch(_balance.get(aid)) {
         case (?bal) {
 
             if (bal <= _fee) return #err(#NotEnoughForTransfer);
             let amount = bal - _fee;
-            _balance.delete(aid);
+            _balance.delete(aid); // If we don't do that, async requests may sneak in
 
             let transfer : Ledger.TransferArgs = {
                 memo = 0;
-                amount;
+                amount = {e8s = amount};
                 fee = {e8s = _fee};
                 from_subaccount = null;
                 to = aid;
@@ -80,7 +83,7 @@ shared({caller = _installer}) actor class TREASURY({_admin: Principal; _router: 
                 };
 
                 case (#Err(e)) {
-                    _balance.put(aid, bal);
+                    _balance.put(aid, bal - _fee); // Its uknown if Ledger wont take us the fee even after returning error.
                      #err(#TransferFailed);
                 }
             };

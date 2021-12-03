@@ -6,7 +6,7 @@ import Iter "mo:base/Iter";
 import Principal "mo:base/Principal";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
-import Ext "../lib/ext.std/src/Ext";
+import Nft "../mo/nft_interface";
 
 
 import PseudoRandom "../lib/vvv/src/PseudoRandom";
@@ -18,7 +18,7 @@ import Prim "mo:prim";
  
 shared({caller = installer}) actor class AccessControl({_admin: Principal; _router: Principal}) {
   
-    type AccountIdentifier = Ext.AccountIdentifier;
+    type AccountIdentifier = Nft.AccountIdentifier;
 
     public type User = {
         solution  : Text; 
@@ -35,11 +35,11 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     var rand = PseudoRandom.PseudoRandom();
 
     private stable var _tmpAccount : [(AccountIdentifier, User)] = [];
-    private var _account : HashMap.HashMap<AccountIdentifier, User> = HashMap.fromIter(_tmpAccount.vals(), 0, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash);
-    
+    private var _account : HashMap.HashMap<AccountIdentifier, User> = HashMap.fromIter(_tmpAccount.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
+
     private stable var _tmpConsumers : [(Principal, Bool)] = [];
     private var _consumers : HashMap.HashMap<Principal, Bool> = HashMap.fromIter(_tmpConsumers.vals(), 0, Principal.equal, Principal.hash );
-   
+
     private stable var _reward:Nat = 10;
 
     //Handle canister upgrades
@@ -106,7 +106,7 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     // When a principal wants to earn access tokens, they get a challege, which they need to solve and return to sendChallenge
     public shared({caller}) func getChallenge(): async [Nat32] {
       let (correct, bitmap) = Captcha.randCaptcha(rand, 5);
-      let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
+      let aid = Nft.AccountIdentifier.fromPrincipal(caller, null);
 
       let newData = switch(_account.get(aid)) {
         case (?a) {
@@ -130,7 +130,7 @@ shared({caller = installer}) actor class AccessControl({_admin: Principal; _rout
     // User sends solution to the challenge given to them and if correct, they recieve access tokens
     public shared({caller}) func sendSolution(solution:Text): async Result.Result<Nat, CommonError> {
 
-     let aid = Ext.AccountIdentifier.fromPrincipal(caller, null);
+     let aid = Nft.AccountIdentifier.fromPrincipal(caller, null);
 
      switch(_account.get(aid)) {
         case (?a) {

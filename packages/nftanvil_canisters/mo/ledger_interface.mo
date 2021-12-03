@@ -7,6 +7,11 @@ import Blob_ "mo:vvv/Blob";
 import Result "mo:base/Result";
 
 module {
+    public type Interface = actor {
+        transfer        : TransferArgs       -> async TransferResult;
+        account_balance : AccountBalanceArgs -> async ICP;
+    };
+
     // Amount of ICP tokens, measured in 10^-8 of a token.
     public type ICP = {
         e8s : Nat64;
@@ -82,10 +87,7 @@ module {
         account : AccountIdentifier;
     };
 
-    public type Interface = actor {
-        transfer        : TransferArgs       -> async TransferResult;
-        account_balance : AccountBalanceArgs -> async ICP;
-    };
+ 
 
  
 };

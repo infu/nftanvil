@@ -1,5 +1,5 @@
 import Text "mo:base/Text";
-import Ext "../lib/ext.std/src/Ext";
+import Nft "./nft_interface";
 
 import HashMap "mo:base/HashMap";
 import List "mo:base/List";
@@ -22,12 +22,12 @@ import HashSmash "../lib/vvv/src/HashSmash";
 
 import Prim "mo:prim"; 
 
-
 shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
+
      // TYPE ALIASES
-    type AccountIdentifier = Ext.AccountIdentifier;
-    type TokenIdentifier = Ext.TokenIdentifier;
-    type TokenIndex = Ext.TokenIndex;
+    type AccountIdentifier = Nft.AccountIdentifier;
+    type TokenIdentifier = Nft.TokenIdentifier;
+    type TokenIndex = Nft.TokenIndex;
     type TokenStore = HashMap.HashMap<TokenIndex, Bool>;
     type Slot = Nat32;
 
@@ -36,9 +36,9 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
    
     private stable var _tmpIdx2can: [(Slot, Principal)] = [];
     private var _idx2can : HashMap.HashMap<Slot, Principal> = HashMap.fromIter(_tmpIdx2can.vals(), 0, Nat32.equal, func (x:Nat32):Nat32 {x} );
-  
+
     private stable var _tmpAccount: [(AccountIdentifier, [TokenIndex])] = [];
-    private var _account: HashMap.HashMap<AccountIdentifier, TokenStore> =  HashSmash.init<AccountIdentifier,TokenIndex>(_tmpAccount, Ext.AccountIdentifier.equal, Ext.AccountIdentifier.hash, Nat32.equal, func(x:Nat32):Nat32 {x} );
+    private var _account: HashMap.HashMap<AccountIdentifier, TokenStore> =  HashSmash.init<AccountIdentifier,TokenIndex>(_tmpAccount, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Nat32.equal, func(x:Nat32):Nat32 {x} );
   
     
     //Handle canister upgrades
@@ -46,30 +46,24 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
         _tmpAccount := HashSmash.pre(_account);
         _tmpCan2idx := Iter.toArray(_can2idx.entries());
         _tmpIdx2can := Iter.toArray(_idx2can.entries());
-
     };
 
     system func postupgrade() {
         _tmpAccount := [];
         _tmpCan2idx := [];
         _tmpIdx2can := [];
-
     };
 
-   
-  
     // list of allowed nft canisters which can add/rem to account                                     
     public shared ({caller}) func addAllowed(p: Principal, slot:Nat32) : async () {
         assert(caller == _router);
 
         _can2idx.put(p, slot);
         _idx2can.put(slot, p);
-
     };
 
-
     public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex) : async () {
-        assert(Ext.User.validate(#address(aid)) == true);
+        assert(Nft.User.validate(#address(aid)) == true);
 
         switch(_can2idx.get(caller)) {
             case (?a) { 
@@ -80,7 +74,7 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
     };
 
     public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex) : async () {
-        assert(Ext.User.validate(#address(aid)) == true);
+        assert(Nft.User.validate(#address(aid)) == true);
 
         switch(_can2idx.get(caller)) {
             case (?a) { 
@@ -91,7 +85,7 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
     };
 
     public query func list(aid: AccountIdentifier, page:Nat) : async [TokenIdentifier] {
-        assert(Ext.User.validate(#address(aid)) == true); 
+        assert(Nft.User.validate(#address(aid)) == true); 
 
         let rez:[var TokenIdentifier] = Array.init<TokenIdentifier>(100,"");
         let it = HashSmash.list<AccountIdentifier>(_account, aid);
@@ -116,7 +110,7 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
             let idx:Nat32 = gid; 
             switch(_idx2can.get(slot)) {
                 case (?nftcan) {
-                    Ext.TokenIdentifier.encode(nftcan, idx);
+                    Nft.TokenIdentifier.encode(nftcan, idx);
                 };
                 case (_) "NoK"
             }
