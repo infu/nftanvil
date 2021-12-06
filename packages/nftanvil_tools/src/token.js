@@ -81,7 +81,7 @@ export const encodeChunkId = (tokenIndex, chunkIndex, ctype) => {
 let proxyInfo = false;
 
 export const ipfsTokenUrl = (cid) => {
-  return "https://nftpkg.com/ipfs/" + cid;
+  return "https://ipfs.io/ipfs/" + cid;
 };
 
 export const tokenUrl = (tid, type) => {

@@ -1,6 +1,6 @@
 import React from "react";
 import { mint } from "../reducers/nft";
-import { proSet } from "../reducers/user";
+import { proSet, setNftSotrageModal } from "../reducers/user";
 import { LoginRequired } from "./LoginRequired";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -37,7 +37,7 @@ import {
   Stack,
 } from "@chakra-ui/react";
 
-import { SmallCloseIcon, InfoOutlineIcon } from "@chakra-ui/icons";
+import { SmallCloseIcon, InfoOutlineIcon, CheckIcon } from "@chakra-ui/icons";
 
 import { AnvilIcon } from "../icons";
 
@@ -104,6 +104,7 @@ export const MintForm = () => {
 
   const dispatch = useDispatch();
   const pro = useSelector((state) => state.user.pro);
+  const NFTStorageAPIKey = useSelector((state) => state.user.key_nftstorage);
 
   const form2record = (v) => {
     let a = {
@@ -1016,6 +1017,29 @@ export const MintForm = () => {
                   ) : null}
                 </Stack>
 
+                {props.values.content_storage === "ipfs" ||
+                props.values.thumb_storage === "ipfs" ? (
+                  <Button
+                    mt={4}
+                    w={"100%"}
+                    size="sm"
+                    {...(NFTStorageAPIKey?.length
+                      ? {
+                          rightIcon: <CheckIcon color="teal.200" />,
+                        }
+                      : {
+                          colorScheme: "orange",
+                        })}
+                    onClick={() => {
+                      dispatch(setNftSotrageModal(true));
+                    }}
+                  >
+                    {NFTStorageAPIKey?.length
+                      ? "NFT.Storage API Key"
+                      : "You need to set NFT.Storage API Key"}
+                  </Button>
+                ) : null}
+
                 <LoginRequired label="Authenticate to mint">
                   <Button
                     mt={4}
@@ -1035,13 +1059,16 @@ export const MintForm = () => {
                     For more options turn on <ProToggle />
                   </Box>
                 ) : null}
-                <Button
-                  mt={4}
-                  size="xs"
-                  onClick={() => devGetRecord(props.values)}
-                >
-                  Print structure in console
-                </Button>
+
+                {pro ? (
+                  <Button
+                    mt={4}
+                    size="xs"
+                    onClick={() => devGetRecord(props.values)}
+                  >
+                    Print structure in console
+                  </Button>
+                ) : null}
               </Form>
             </Box>
 

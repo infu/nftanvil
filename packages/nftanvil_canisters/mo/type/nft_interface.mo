@@ -718,6 +718,8 @@ module {
   public type PurchaseIntentRequest = {
         token : TokenIdentifier;
         user : User;
+        subaccount: ?SubAccount;
+
     };
 
     public type SetPriceRequest = {
@@ -756,6 +758,8 @@ module {
     public type PurchaseClaimRequest = {
         token : TokenIdentifier;
         user : User;
+        subaccount : ?SubAccount;
+
         marketplace: {
             address: AccountIdentifier;
             share:Share;

@@ -54,6 +54,7 @@ import { Switch, Route, Redirect } from "react-router";
 
 import { Link } from "react-router-dom";
 import { Challenge } from "./components/Challenge";
+import { Nftstorage } from "./components/Nftstorage";
 
 import { Mint } from "./components/Mint";
 import { Inventory } from "./components/Inventory";
@@ -482,6 +483,7 @@ function App() {
         </Center>
       </Box>
       <Challenge />
+      <Nftstorage />
       <ToastContainer theme={useColorModeValue("light", "dark")} />
     </>
   );

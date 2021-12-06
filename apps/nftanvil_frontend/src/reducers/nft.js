@@ -19,11 +19,12 @@ import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { Principal } from "@dfinity/principal";
 
 import { push } from "connected-react-router";
-import { challenge } from "./user";
+import { challenge, setNftSotrageModal } from "./user";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TokenIdentifier from "@vvv-interactive/nftanvil-tools/cjs/tokenidentifier.js";
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 
+import { NFTStorage } from "nft.storage/dist/bundle.esm.min.js";
 import { toast } from "react-toastify";
 
 export const nftSlice = createSlice({
@@ -397,38 +398,45 @@ export const transfer_link =
     return code;
   };
 
-export const uploadIPFS = async (up) => {
-  if (typeof up === "string" && up.indexOf("blob:") === 0)
-    up = await fetch(up).then((r) => r.blob());
-
-  return fetch("https://nftpkg.com/nft/upload", {
-    method: "POST",
-    mode: "cors",
-    body: up,
-  })
-    .then((d) => {
-      return d.json();
-    })
-    .then((x) => {
-      return x;
-    });
+export const uploadIPFS = async (token, up) => {
+  let blob = await fetch(up).then((r) => r.blob());
+  const client = new NFTStorage({ token });
+  const cid = await client.storeBlob(blob);
+  return cid;
 };
+// export const uploadIPFS = async (up) => {
 
-export const pinIPFS = async (tokenid, cid, secret) => {
-  return fetch(
-    "https://nftpkg.com/nft/pin/" + tokenid + "/" + cid + "/" + secret,
-    {
-      method: "POST",
-      mode: "cors",
-    }
-  )
-    .then((d) => {
-      return d.json();
-    })
-    .then((x) => {
-      return x;
-    });
-};
+//   if (typeof up === "string" && up.indexOf("blob:") === 0)
+//     up = await fetch(up).then((r) => r.blob());
+
+//   return fetch("https://nftpkg.com/nft/upload", {
+//     method: "POST",
+//     mode: "cors",
+//     body: up,
+//   })
+//     .then((d) => {
+//       return d.json();
+//     })
+//     .then((x) => {
+//       return x;
+//     });
+// };
+
+// export const pinIPFS = async (tokenid, cid, secret) => {
+//   return fetch(
+//     "https://nftpkg.com/nft/pin/" + tokenid + "/" + cid + "/" + secret,
+//     {
+//       method: "POST",
+//       mode: "cors",
+//     }
+//   )
+//     .then((d) => {
+//       return d.json();
+//     })
+//     .then((x) => {
+//       return x;
+//     });
+// };
 
 export const claim_link =
   ({ code }) =>
@@ -463,19 +471,45 @@ export const nftEnterCode = (code) => async (dispatch, getState) => {
 };
 
 export const mint = (vals) => async (dispatch, getState) => {
-  // const key = "sdfsdf";
-  // await uploadIPFS(vals.content[0].internal.url, key);
-  let ipfs_pins = [];
+  let s = getState();
+  const key_nftstorage = s.user.key_nftstorage;
+
+  let toastId = toast("", {
+    isLoading: true,
+    type: toast.TYPE.INFO,
+    position: "bottom-right",
+    autoClose: false,
+    hideProgressBar: false,
+    closeOnClick: false,
+    pauseOnHover: true,
+    draggable: false,
+  });
+
+  if (
+    (vals?.content[0]?.ipfs?.url || vals?.thumb?.ipfs?.url) &&
+    !key_nftstorage?.length
+  ) {
+    dispatch(setNftSotrageModal(true));
+    return;
+  }
+
   if (vals?.content[0]?.ipfs?.url) {
-    let { ok, cid, secret } = await uploadIPFS(vals.content[0].ipfs.url);
-    ipfs_pins.push({ cid, secret });
-    vals.content[0].ipfs.cid = cid;
+    toast.update(toastId, {
+      render: "Uploading content...",
+    });
+
+    vals.content[0].ipfs.cid = await uploadIPFS(
+      key_nftstorage,
+      vals.content[0].ipfs.url
+    );
   }
 
   if (vals?.thumb?.ipfs?.url) {
-    let { ok, cid, secret } = await uploadIPFS(vals.thumb.ipfs.url);
-    ipfs_pins.push({ cid, secret });
-    vals.thumb.ipfs.cid = cid;
+    toast.update(toastId, {
+      render: "Uploading thumb...",
+    });
+
+    vals.thumb.ipfs.cid = await uploadIPFS(key_nftstorage, vals.thumb.ipfs.url);
   }
 
   let available = await router.getAvailable();
@@ -486,30 +520,20 @@ export const mint = (vals) => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
   let nft = nftCanister(canisterId, { agentOptions: { identity } });
 
-  let s = getState();
-
   let address = s.user.address;
 
   if (!address) throw Error("Annonymous cant mint"); // Wont let annonymous mint
 
-  let toastId = toast(
-    <div>
-      <div>Minting request sent.</div>
-      <div style={{ fontSize: "10px" }}>Waiting for response...</div>
-    </div>,
-    {
-      isLoading: true,
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    }
-  );
-
   try {
+    toast.update(toastId, {
+      render: (
+        <div>
+          <div>Minting request sent.</div>
+          <div style={{ fontSize: "10px" }}>Waiting for response...</div>
+        </div>
+      ),
+    });
+
     let mint = await nft.mintNFT({
       to: { address: AccountIdentifier.TextToArray(address) },
       metadata: vals,
@@ -524,31 +548,30 @@ export const mint = (vals) => async (dispatch, getState) => {
     let tokenIndex = mint.ok;
     let tid = encodeTokenId(canisterId.toText(), tokenIndex);
 
-    for (let { cid, secret } of ipfs_pins) {
-      let { ok, err } = await pinIPFS(tid, cid, secret);
-      if (err) throw Error("Couldn't pin to IPFS");
-    }
-
-    toast.update(toastId, {
-      render: "Uploading files...",
-    });
-
     // Upload Internal
-    if (vals?.content[0]?.internal?.url)
+    if (vals?.content[0]?.internal?.url) {
+      toast.update(toastId, {
+        render: "Uploading content...",
+      });
       await uploadFile(
         nft,
         tokenIndex,
         "content",
         await chunkBlob(vals.content[0].internal.url)
       );
+    }
 
-    if (vals?.thumb?.internal?.url)
+    if (vals?.thumb?.internal?.url) {
+      toast.update(toastId, {
+        render: "Uploading thumb...",
+      });
       await uploadFile(
         nft,
         tokenIndex,
         "thumb",
         await chunkBlob(vals.thumb.internal.url)
       );
+    }
 
     toast.update(toastId, {
       type: toast.TYPE.SUCCESS,

@@ -330,10 +330,19 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
     // Check accountid if its exact or more than asked. If something is wrong, refund. If more is sent, refund extra.
     public shared({caller}) func purchase_claim(request: Nft.PurchaseClaimRequest) : async Nft.PurchaseClaimResponse {
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        assert(caller_user == request.user);
 
         let toUserAID = Nft.User.toAccountIdentifier(request.user);
+        
         switch (Nft.TokenIdentifier.decode(request.token)) {
              case (#ok(cannisterId, tokenIndex)) {
+
+                let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
+                
+                let {e8s = payment} = await ledger.account_balance({
+                    account = purchaseAccountId
+                });
 
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
@@ -342,13 +351,6 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
                                 if (vars.price == 0) return #err(#NotForSale);
 
-                                let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
-                                
-                                let {e8s = payment} = await ledger.account_balance({
-                                    account = purchaseAccountId
-                                });
-
-                        
                                 let purchaseOk = payment >= vars.price;
 
                                 let fullRefund:Nat64 = payment - _fee;
@@ -529,7 +531,6 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                          #err(#InvalidToken(request.token));
                     }
                 }
-           
             }; 
             case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));

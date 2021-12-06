@@ -3,6 +3,7 @@ import { AuthClient } from "@dfinity/auth-client";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { accessCanister } from "@vvv-interactive/nftanvil-canisters/cjs/accesscontrol.js";
 import { ledger } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
+import Cookies from "js-cookie";
 
 import authentication from "../auth";
 
@@ -27,6 +28,8 @@ export const userSlice = createSlice({
     acccan: "",
     accesslist: [],
     pro: false,
+    modal_nftstorage: false,
+    key_nftstorage: null,
   },
   reducers: {
     challengeSet: (state, action) => {
@@ -61,6 +64,18 @@ export const userSlice = createSlice({
         ...(acclist ? { acclist, acccan, accesslist } : {}),
       };
     },
+    setNftSotrageModal: (state, action) => {
+      return {
+        ...state,
+        modal_nftstorage: action.payload,
+      };
+    },
+    setNftSotrageKey: (state, action) => {
+      return {
+        ...state,
+        key_nftstorage: action.payload,
+      };
+    },
   },
 });
 
@@ -73,6 +88,8 @@ export const {
   icpSet,
   accessTokensAdd,
   acclistSet,
+  setNftSotrageModal,
+  setNftSotrageKey,
 } = userSlice.actions;
 
 export const login = () => (dispatch) => {
@@ -106,6 +123,8 @@ export const auth =
     let address =
       !anonymous && principalToAccountIdentifier(principal).toUpperCase();
 
+    dispatch(loadNftStorageKey());
+
     console.log("ROUTER", process.env.REACT_APP_ROUTER_CANISTER_ID);
 
     router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
@@ -123,6 +142,16 @@ export const auth =
 
     dispatch(getAccessTokenBalance());
   };
+
+export const loadNftStorageKey = () => async (dispatch, getState) => {
+  let key = Cookies.get("nftstoragekey");
+  dispatch(setNftSotrageKey(key));
+};
+
+export const saveNftStorageKey = (key) => async (dispatch, getState) => {
+  Cookies.set("nftstoragekey", key);
+  dispatch(setNftSotrageKey(key));
+};
 
 export const logout = () => async (dispatch, getState) => {
   var authClient = await AuthClient.create();

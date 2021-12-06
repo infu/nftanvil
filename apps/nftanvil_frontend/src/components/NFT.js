@@ -722,7 +722,7 @@ export const NFT = ({ id }) => {
 
   useEffect(() => {
     dispatch(nftFetch(id));
-  }, [id]);
+  }, [id, dispatch]);
 
   return (
     <Thumb
@@ -736,9 +736,9 @@ export const NFT = ({ id }) => {
     >
       <Link to={"/nft/" + id}>
         {meta?.thumb?.ipfs?.url ? (
-          <img className="custom" src={meta.thumb.ipfs.url} />
+          <img alt="" className="custom" src={meta.thumb.ipfs.url} />
         ) : meta?.thumb?.internal?.url ? (
-          <img className="custom" src={meta.thumb.internal.url} />
+          <img alt="" className="custom" src={meta.thumb.internal.url} />
         ) : (
           ""
         )}

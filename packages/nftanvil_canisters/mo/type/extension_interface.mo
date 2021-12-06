@@ -7,9 +7,6 @@ module {
                 // NFTAnvil asks if a principal is allowed to mint
                 nftanvil_minter_allow : query (minter : Principal) -> async AllowResponse;
 
-                // NFTAnvil -> Extension -> Notify target
-                nftanvil_use: shared (UseRequest) -> async UseResponse;
-
                 // NFTAnvil asks if an nft can be unsocketed
                 nftanvil_unsocket_allow : query (request: Nft.UnsocketRequest) -> async AllowResponse;
 
@@ -20,13 +17,7 @@ module {
                 nftanvil_app_metadata : query (request: InfoRequest) -> async InfoResponse
         };
 
-        public type UseRequest = {
-                token:TokenIdentifier;
-                aid:AccountIdentifier;
-                memo:Nft.Memo;
-                useId: Text;
-        };
-        
+  
         public type InfoRequest = {
                 app: ?Principal;
         };
@@ -38,8 +29,6 @@ module {
 
         public type InfoResponse = Result.Result<Info, Text>
 
-        public type UseResponse = Result.Result<(), Text>
-        public type BurnResponse = Result.Result<(), Text>
 
         public type AllowResponse = Result.Result<
                 (),
