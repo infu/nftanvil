@@ -8,7 +8,9 @@ NPM Packages: https://www.npmjs.com/org/vvv-interactive
 
 Made by VVV Interactive
 
-Powered by the Internet Computer https://dfinity.org/
+Technologies Used:
+Smart contracts & storage option by Internet Computer https://dfinity.org/
+IPFS storage option with Filecoin redundancy from NFT.storage made by Protocol Labs
 
 LINCENSING: 
 + IC Smart contracts (in Motoko) are All Rights Reserved.
