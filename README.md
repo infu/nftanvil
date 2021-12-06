@@ -8,11 +8,10 @@ NPM Packages: https://www.npmjs.com/org/vvv-interactive
 
 Made by VVV Interactive
 
-Technologies Used:
+Blockchain Technologies Used:
 
-Smart contracts & storage option by Internet Computer
-
-IPFS storage option with Filecoin redundancy from NFT.storage made by Protocol Labs
++ Smart contracts & storage option by Internet Computer
++ IPFS storage option with Filecoin redundancy from NFT.storage made by Protocol Labs
 
 
 
