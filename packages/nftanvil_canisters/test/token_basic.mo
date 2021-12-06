@@ -17,7 +17,7 @@ var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
 var someMeta = Blob.fromArray([116, 116, 105, 100]);
 var someMemo:Nat64 = 0;
 
-let nft = await Dropship.Class({_acclist = []; _slot = 3; _treasury = Principal.fromText("aaaaa-aa"); _router = Principal.fromText("aaaaa-aa"); _accesslist = []; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
+let nft = await Dropship.Class({_acclist = []; _slot = 3; _anvilclass = Principal.fromText("aaaaa-aa"); _treasury = Principal.fromText("aaaaa-aa"); _router = Principal.fromText("aaaaa-aa"); _accesslist = []; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
 
 
 actor class WHOWHO() {
@@ -67,19 +67,16 @@ Result.assertErr(await nft.balance({ user  = user_john; token = token_one;}));
 
 
 // mint token with index 0
-assert((await nft.mintNFT({to = user_john; metadata = {
-            domain = ?"tralala.com";
+assert((await nft.mintNFT({to = user_john; subaccount=null; metadata = {
             name = ?"Some";
             lore = ?"Other";
             quality= 1;
-            use= null;
-            hold= null;
+            classId=null;
             transfer= #unrestricted;
             ttl= null; // time to live
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
-            extensionCanister = null;
             secret=false;
             custom=null;
             tags=[];
@@ -89,19 +86,17 @@ assert((await nft.mintNFT({to = user_john; metadata = {
             ) == #ok(0));
 
 // mint token with index 1
-assert((await nft.mintNFT({to = user_john; metadata = {
-            domain = ?"tralala.com";
+assert((await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
             name = ?"Some";
             lore = ?"Other";
             quality= 1;
-            use= null;
-            hold= null;
+            classId=null;
+
             transfer= #unrestricted;
             ttl= null; // time to live
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
-            extensionCanister = null; 
             custom=null;
             tags=[];
                 minterShare=0;
@@ -110,19 +105,17 @@ assert((await nft.mintNFT({to = user_john; metadata = {
 
 
 // mint token with index 2 to peter
-switch(await nft.mintNFT({to = user_john; metadata = {
-            domain = ?"tralala.com";
+switch(await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
             name = ?"Some";
             lore = ?"Other";
             quality= 1;
-            use= null;
-            hold= null;
+            classId=null;
+
             transfer= #unrestricted;
             ttl= null; // time to live
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
-            extensionCanister = null;
             secret=false;
             custom=null;
                 minterShare=0;
@@ -133,19 +126,18 @@ switch(await nft.mintNFT({to = user_john; metadata = {
 };
 
 // mint token for burning later
-assert((await nft.mintNFT({to = user_john; metadata = {
-            domain = ?"tralala.com";
+assert((await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
+            classId=null;
+
             name = ?"Some";
             lore = ?"Other";
             quality= 1;
-            use= null;
-            hold= null;
+    
             transfer= #unrestricted;
             ttl= null; // time to live
             content= null;
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
-            extensionCanister = null;
             custom=null;
                 minterShare=0;
             tags=[];

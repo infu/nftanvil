@@ -11,6 +11,7 @@ import NFT "./nft";
 import AccessControl "./access";
 import Account "./account";
 import Treasury "./treasury";
+import AnvilClass "./anvilclass";
 
 
 shared({caller = owner}) actor class Router() = this {
@@ -23,6 +24,7 @@ shared({caller = owner}) actor class Router() = this {
     private stable var _access_canisters : [AccessControl.AccessControl] = [];
 
     private stable var _treasury_canisters : [Treasury.Class] = [];
+    private stable var _anvilclass_canisters : [AnvilClass.Class] = [];
 
     let IC = actor "aaaaa-aa" : AAA.Interface;
 
@@ -55,6 +57,7 @@ shared({caller = owner}) actor class Router() = this {
         _access_canisters_next_id := 0;
         _access_canisters := [];
 
+        await addAnvilClassCanister();
         await addTreasuryCanister();
         await addAccessCanister();
         // await addAccessCanister();
@@ -122,7 +125,7 @@ shared({caller = owner}) actor class Router() = this {
             let slot = _nft_canisters_next_id;
             _nft_canisters_next_id := _nft_canisters_next_id + 1;
 
-            let new = await NFT.Class({_acclist = getAccountCanisters(); _treasury = Principal.fromActor(_treasury_canisters[0]); _router = Principal.fromActor(this); _accesslist=getAccessCanisters(); _slot= slot; _debug_cannisterId=null});
+            let new = await NFT.Class({_acclist = getAccountCanisters(); _anvilclass= Principal.fromActor(_anvilclass_canisters[0]); _treasury = Principal.fromActor(_treasury_canisters[0]); _router = Principal.fromActor(this); _accesslist=getAccessCanisters(); _slot= slot; _debug_cannisterId=null});
             let principal = Principal.fromActor(new);
 
             await IC.update_settings({
@@ -188,6 +191,24 @@ shared({caller = owner}) actor class Router() = this {
             });
 
             _treasury_canisters := [new];
+    };
+
+    private func addAnvilClassCanister() : async () {
+            Cycles.add(cyclesForNewCanister);
+            let new = await AnvilClass.Class({_admin = owner; _router = Principal.fromActor(this)});
+            let principal = Principal.fromActor(new);
+
+            await IC.update_settings({
+            canister_id = principal;
+            settings = {
+                controllers = ?[owner, Principal.fromActor(this)];
+                compute_allocation = null;
+                memory_allocation = null;
+                freezing_threshold = ?31_540_000
+                }
+            });
+
+            _anvilclass_canisters := [new];
     };
 
     private func addAccessCanister() : async () {

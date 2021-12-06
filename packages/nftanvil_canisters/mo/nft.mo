@@ -32,11 +32,12 @@ import Painless "./lib/Painless";
 import SHA256 "mo:sha/SHA256";
 import Ledger  "./type/ledger_interface";
 import Treasury  "./type/treasury_interface";
+import AnvilClass  "./type/class_interface";
 
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
 
 
-shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text]; _router:Principal; _treasury:Principal; _slot:Nat32; _debug_cannisterId:?Principal}) : async Nft.Interface = this {
+shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text]; _router:Principal; _anvilclass:Principal; _treasury:Principal; _slot:Nat32; _debug_cannisterId:?Principal}) : async Nft.Interface = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -71,6 +72,8 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
         reportOutOfMemory : shared () -> async ();
         isLegitimate : query (p:Principal) -> async Bool;
     };
+
+    let ANVILCLASS = actor(Principal.toText(_anvilclass)) : AnvilClass.Interface;
 
     let TREASURY = actor(Principal.toText(_treasury)) : Treasury.Interface;
 
@@ -183,7 +186,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
         
     };
 
-    private func isTransferBound(caller: Principal, meta :Metadata, vars: Metavars) : Bool {
+    private func isTransferBound(caller: AccountIdentifier, meta :Metadata, vars: Metavars) : Bool {
             switch( caller == meta.minter ) { 
                 case (false) {
                     switch(meta.transfer) {
@@ -236,7 +239,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                    switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                            if (isTransferBound(caller, meta, vars) == true) return #err(#Rejected);
+                            if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#Rejected);
                             
                             _token2link.put(tokenIndex, request.hash);
 
@@ -401,14 +404,13 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
                                         switch(await ledger.transfer(transfer)) {
                                             case (#Ok(blockIndex)) {
-                                                let minterAddress = Nft.AccountIdentifier.fromPrincipal(meta.minter, null);
                                                 
                                                 let notifyRequest = {
                                                     buyerAccount = toUserAID;
                                                     blockIndex;
                                                     amount;
                                                     seller;
-                                                    minter = {address=minterAddress; share=meta.minterShare};
+                                                    minter = {address=meta.minter; share=meta.minterShare};
                                                     marketplace = request.marketplace;
                                                     purchaseAccount = purchaseAccountId; 
                                                 };
@@ -482,7 +484,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                            if (isTransferBound(caller, meta, vars) == true) return #err(#NotTransferable);
+                            if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#NotTransferable);
 
                             vars.price := request.price;
 
@@ -518,7 +520,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                            if (isTransferBound(caller, meta, vars) == true) return #err(#NotTransferable);
+                            if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#NotTransferable);
                             
                             SNFT_move(Nft.User.toAccountIdentifier(request.from),Nft.User.toAccountIdentifier(request.to), tokenIndex);
                             await ACC_move(Nft.User.toAccountIdentifier(request.from),Nft.User.toAccountIdentifier(request.to), tokenIndex);
@@ -565,64 +567,31 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
                         
-                        switch(meta.extensionCanister) {
-                            case (?canPrincipal) {
-                                let can = actor(Principal.toText(canPrincipal)): ExtensionCanister;
+           
                                 let aid = Nft.User.toAccountIdentifier(holder);
 
-                                switch(meta.use) {
-                                    case (?#cooldown(use)) {
-                                        let isOnCooldown = switch(vars.cooldownUntil) {
-                                            case (?a) timeInMinutes() <= a;
-                                            case (null) false;
-                                        };
-                                        if (isOnCooldown) return #err(#OnCooldown);
+                                // switch(meta.use) {
+                                //     case (?#cooldown(use)) {
+                                //         let isOnCooldown = switch(vars.cooldownUntil) {
+                                //             case (?a) timeInMinutes() <= a;
+                                //             case (null) false;
+                                //         };
+                                //         if (isOnCooldown) return #err(#OnCooldown);
                                         
-                                        switch(await can.nftanvil_use({
-                                            aid = aid;
-                                            token = request.token;
-                                            memo = request.memo;
-                                            useId = use.useId;
-                                            })) {
-                                                case (#ok()) {
-                                                    let cooldown = (timeInMinutes() + use.duration);
-                                                    vars.cooldownUntil := ?cooldown;
-                                                    return #ok(#cooldown(cooldown));
-                                                };
-                                                case (#err(e)) {
-                                                    #err(#ExtensionError(e));
-                                                }
-                                            };
+                                //         // Cooldown USE save to History
                                                 
-                                    };
-                                    case(?#consumable(use)) {
-                                        switch(await can.nftanvil_use({
-                                            aid = aid;
-                                            token = request.token;
-                                            memo = request.memo;
-                                            useId = use.useId;
-                                            })) {
-                                                case (#ok()) {
-                                                    SNFT_burn(aid, tokenIndex);
-                                                    await ACC_burn(aid, tokenIndex);
-                                                    return #ok(#consumed);
-                                                };
-                                                case (#err(e)) {
-                                                    #err(#ExtensionError(e));
-                                                }
-                                            };
-                                    };
-                                    case(null) {
-                                        #err(#Other("Spec not specifying any use"));
-                                    }
-                                }
+                                //     };
+                                //     case(?#consumable(use)) {
+                                //          // Consumable USE save to History
+                                //     };
 
-                    
-                            };
-                            case (null) {
-                                #err(#Other("No extension canister specified"));
-                            }
-                        }
+                                //     case(null) {
+                                //         #err(#Other("Spec not specifying any use"));
+                                //     }
+                                // }
+
+                                #ok(#consumed);
+                         
                            
                     };
                     case (#err()) {
@@ -716,10 +685,11 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
 
     public shared({caller}) func uploadChunk(request: Nft.UploadChunkRequest) : async () {
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
         assert((switch(getMeta(request.tokenIndex)) {
                     case (#ok((meta,vars))) {
-                          (meta.minter == caller) and ((meta.created + 10) > timeInMinutes()); // allows upload of assets up to 10min after minting
+                          (meta.minter == Nft.User.toAccountIdentifier(caller_user)) and ((meta.created + 10) > timeInMinutes()); // allows upload of assets up to 10min after minting
                     };
                     case (#err()) {
                        false
@@ -921,7 +891,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
         return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)/60);
     };
 
-    private func SNFT_mint(caller:Principal, request: Nft.MintRequest) : async Nft.MintResponse {
+    private func SNFT_mint(minter:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
         let receiver = Nft.User.toAccountIdentifier(request.to);
 
@@ -935,7 +905,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
         let tokenIndex:TokenIndex = (_slot<<13) | _nextTokenId;
         _nextTokenId := _nextTokenId + 1;
 
-         let timestamp:Nat32 = timeInMinutes();
+        let timestamp:Nat32 = timeInMinutes();
 
         // Get class info, check if principal is allowed to mint
         let m = request.metadata;
@@ -945,13 +915,22 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
         if (m.quality > 1) return #err(#Invalid("Higher than 1 quality not implemented"));
         if (Nft.Share.validate(m.minterShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
+        let classIndex: ?Nft.AnvilClassIndex = switch(m.classId) {
+           case (?classId) {
+                switch(await ANVILCLASS.mint_nextId(minter, classId)) {
+                    case (#ok(index)) ?index;
+                    case (#err(e)) return #err(#ClassError(e)) 
+                };
+            };
+           case (_) null
+        };
+        
         let md : Metadata = {
-            domain = m.domain;
+            classId = m.classId;
+            classIndex;
             name = m.name;
             lore = m.lore;
             quality = m.quality;
-            use = m.use;
-            hold = m.hold;
             transfer = m.transfer;
             ttl = m.ttl; // time to live
             secret = m.secret;
@@ -960,44 +939,13 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
             custom = m.custom;
             content = m.content;
             thumb = m.thumb; 
-            extensionCanister = m.extensionCanister;
-            minter = caller;
+            minter;
             minterShare = m.minterShare;
             created = timestamp;
             updated = timestamp;
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
         };
 
-        // validity checks
-        if (md.secret == true) switch (md.content) {
-            case (?#external(_)) {
-                return #err(#Invalid("Can't have secret external content"));
-            };
-            case (?#ipfs(_)) {
-                return #err(#Invalid("Can't have secret IPFS content"));
-            };
-            case (_) ();
-        };
-
-        switch(md.extensionCanister) {
-            case (?can) {
-                ()
-            };
-            case (null) {
-                 switch(md.use) {
-                    case(?use) return #err(#Invalid("extensionCanister required if use is specified"));
-                    case (null) ()
-                 };
-                 switch(md.content) {
-                    case(?#external(_)) return #err(#Invalid("extensionCanister required if external content is specified"));
-                    case (_) ()
-                 };
-                 switch(md.thumb) {
-                    case(#external(_)) return #err(#Invalid("extensionCanister required if external thumb is specified"));
-                    case (_) ()
-                 };
-            };
-        };
         
         let mvar : Metavars = {
              var boundUntil = switch (md.transfer) {
@@ -1031,7 +979,9 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
     public shared({caller}) func mintNFT(request: Nft.MintRequest) : async Nft.MintResponse {
 
-        if (Nft.User.validate(request.to) == false) return #err(#Invalid("Invalid User. Account identifiers must be all uppercase"));
+        let minter:AccountIdentifier = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
+
+        if (Nft.User.validate(request.to) == false) return #err(#Invalid("Invalid To User"));
 
         if (_available == false) { return #err(#OutOfMemory) };
 
@@ -1041,9 +991,49 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
             return #err(#OutOfMemory);
             };
 
-        if ((await consumeAccessTokens(caller, 1)) == false) return #err(#InsufficientBalance);
+        switch(request.metadata.classId) {
+                case (?classId) {
 
-        await SNFT_mint(caller, request);
+                    switch (await ANVILCLASS.minter_allow(minter, classId)) {
+                        case (#ok()) {                                        
+                            ()
+                        };
+                        case (#err(e)) return #err(#ClassError("Unauthorized minter"));
+                    };
+                };
+                case (null) ();
+            };
+
+        // validity checks
+        if (request.metadata.secret == true) switch (request.metadata.content) {
+            case (?#external(_)) {
+                return #err(#Invalid("Can't have secret external content"));
+            };
+            case (?#ipfs(_)) {
+                return #err(#Invalid("Can't have secret IPFS content"));
+            };
+            case (_) ();
+        };
+
+        switch(request.metadata.classId) {
+            case (?can) {
+                ()
+            };
+            case (null) {
+                 switch(request.metadata.content) {
+                    case(?#external(_)) return #err(#Invalid("classId required if external content is specified"));
+                    case (_) ()
+                 };
+                 switch(request.metadata.thumb) {
+                    case(#external(_)) return #err(#Invalid("classId required if external thumb is specified"));
+                    case (_) ()
+                 };
+            };
+        };
+
+        if ((await consumeAccessTokens(minter, 1)) == false) return #err(#InsufficientBalance);
+
+        await SNFT_mint(minter, request);
 
     };
 
@@ -1110,25 +1100,19 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                        switch(switch(meta.extensionCanister) {
-                            case (?extCan) {
-                                let extensionActor = actor (Principal.toText(extCan)) : actor {
-                                    socketAllow : query (request: Nft.SocketRequest) -> async Result.Result<
-                                        (),
-                                        {#Other: Text}
-                                        >;
-                                };
+                        switch(switch(meta.classId) {
+                            case (?classId) {
 
-                                // get permission from extension canister
-                                switch (await extensionActor.socketAllow(request)) {
+                                // get permission from class canister
+                                switch (await ANVILCLASS.socket_allow(request, classId)) {
                                     case (#ok()) {                                        
                                         #ok()
                                     };
-                                    case (#err(e)) #err(e);
+                                    case (#err(e)) #err(#ClassError(e));
                                 };
                             };
                             case (null) {
-                                // canisters without extension don't need permission
+                                // canisters without class don't need permission
                                 #ok()
                             }
                         }) {
@@ -1140,7 +1124,6 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                             case (#err(e)) #err(e);
                         }
                         
-                    
                     };
                     case (#err()) {
                          #err(#InvalidToken(request.plug));
@@ -1169,30 +1152,8 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
 
-                            switch(switch(meta.extensionCanister) {
-                                case (?extCan) {
-                                    let extensionActor = actor (Principal.toText(extCan)) : actor {
-                                        unsocketAllow : query (request: Nft.UnsocketRequest) -> async Result.Result<
-                                            (),
-                                            {#Other: Text}
-                                            >;
-                                    };
-
-                                    // get permission from extension canister
-                                    switch (await extensionActor.unsocketAllow(request)) {
-                                        case (#ok()) {
-                                            #ok()
-                                        };
-                                        case (#err(e)) #err(e);
-                                    };
-                                };
-                                case (null) {
-                                    // canisters without extension don't need permission
-                                    #ok()
-                                }
-                            }) {
-                                case (#ok()) {
-                                   switch (Nft.TokenIdentifier.decode(request.plug)) {
+                        
+                                switch (Nft.TokenIdentifier.decode(request.plug)) {
                                     case (#ok(plugCanister, _)) {
                                         let plugActor = actor (Principal.toText(plugCanister)) : Class;
                                         switch(await plugActor.unplug(request)) {
@@ -1209,11 +1170,8 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                                         }
                                     };
                                     case (#err(e)) #err(#InvalidToken(request.socket));
-                                    }
-                                    
-                                };
-                                case (#err(e)) #err(e);
-                            }
+                                }
+                              
                             
                         };
                         case (#err()) {
@@ -1362,8 +1320,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
     // Internal functions which help for better code reusability
 
-    private func consumeAccessTokens(caller:Principal, count:Nat) : async Bool {
-        let aid = Nft.AccountIdentifier.fromPrincipal(caller, null);
+    private func consumeAccessTokens(aid:AccountIdentifier, count:Nat) : async Bool {
         let accessControl = accessActor(aid);
         // let atokens = await accessControl.getBalance(aid);
         // if (atokens < count) return false;

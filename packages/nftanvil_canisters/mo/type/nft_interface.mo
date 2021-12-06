@@ -444,10 +444,10 @@ module {
     };
 
     public type ItemHold = {
-            #external: {
-            desc: EffectDesc;
-            holdId: CustomId;
-            }
+        #external: {
+        desc: EffectDesc;
+        holdId: CustomId;
+        }
     };
 
     public module ItemHold = {
@@ -546,19 +546,37 @@ module {
            return c;
         };
     };
-        
-    public type Metadata = {
+    
+    public type AnvilClassId = Nat32;
+
+    public type AnvilClassStored = {
         domain: ?DomainName;
+        minters: [AccountIdentifier];
+        socketable:[AnvilClassId];
+        max: Nat32;
+        var lastIdx: Nat32;
+    };
+
+    public type AnvilClassIndex = Nat32;
+
+    public type AnvilClass = {
+        domain: ?DomainName;
+        minters: [AccountIdentifier];
+        socketable:[AnvilClassId];
+        max: AnvilClassIndex;
+        lastIdx: AnvilClassIndex;
+    };
+
+    public type Metadata = {
+        classId: ?AnvilClassId;
+        classIndex: ?AnvilClassIndex;
         name: ?ItemName;
         lore: ?ItemLore;
         quality: Nat8;
-        use: ?ItemUse;
-        hold: ?ItemHold;
         transfer: ItemTransfer;
         ttl: ?Nat32; // time to live
-        minter: Principal;
+        minter: AccountIdentifier;
         minterShare: Share; // min 0 ; max 10000 - which is 100%
-        extensionCanister: ?Principal;
         secret: Bool;
         content: ?Content;
         thumb: Content; // may overwrite class
@@ -578,18 +596,15 @@ module {
     };
 
     public type MetadataInput = {
-        domain: ?Text;
+        classId: ?AnvilClassId;
         name: ?Text;
         lore: ?Text;
         quality: Nat8;
-        use: ?ItemUse;
-        hold: ?ItemHold;
         secret: Bool;
         transfer: ItemTransfer;
         ttl: ?Nat32;
         content: ?Content;
         thumb: Content;
-        extensionCanister: ?Principal;
         attributes: Attributes;
         tags: Tags;
         custom: ?CustomData;
@@ -598,11 +613,8 @@ module {
 
     public module MetadataInput = {
         public func validate(m : MetadataInput) : Bool {
-            OptValid(m.domain, DomainName.validate)
-            and OptValid(m.name, ItemName.validate)
+             OptValid(m.name, ItemName.validate)
             and OptValid(m.lore, ItemLore.validate)
-            and OptValid(m.use, ItemUse.validate)
-            and OptValid(m.hold, ItemHold.validate)
             and OptValid(m.content, Content.validate)
             and Content.validate(m.thumb)
             and Attributes.validate(m.attributes)
@@ -674,6 +686,7 @@ module {
         #InsufficientBalance;
         #Other : Text;
         #NotLegitimateCaller;
+        #ClassError : Text;
         #SocketsFull;
         #InvalidToken :TokenIdentifier;
         #Unauthorized :AccountIdentifier;
@@ -783,6 +796,7 @@ module {
         >;
 
         public type UploadChunkRequest =  {
+           subaccount : ?SubAccount;
            tokenIndex: TokenIndex;
            position : {#content; #thumb};
            chunkIdx : Nat32;
@@ -797,7 +811,8 @@ module {
         };
 
         public type MintRequest = {
-            to       : User;
+            to         : User;
+            subaccount : ?SubAccount;
             metadata : MetadataInput;
         };
 
@@ -805,8 +820,10 @@ module {
            TokenIndex, {
             #Rejected;
             #InsufficientBalance;
+            #ClassError: Text;
             #Invalid: Text;
             #OutOfMemory;
+            #Unauthorized;
           }
         >;
 
