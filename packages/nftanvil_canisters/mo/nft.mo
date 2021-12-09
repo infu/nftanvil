@@ -24,7 +24,6 @@ import PseudoRandom "./lib/PseudoRandom";
 import Blob "mo:base/Blob";
 import Array_ "./lib/Array";
 import Prim "mo:prim"; 
-import AccessControl  "./access";
 import Hex "mo:encoding/Hex";
 import Blob_ "./lib/Blob";
 import Hash "./lib/Hash";
@@ -37,7 +36,7 @@ import AnvilClass  "./type/class_interface";
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
 
 
-shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text]; _router:Principal; _anvilclass:Principal; _treasury:Principal; _slot:Nat32; _debug_cannisterId:?Principal}) : async Nft.Interface = this {
+shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principal; _anvilclass:Principal; _treasury:Principal; _slot:Nat32; _debug_cannisterId:?Principal}) : async Nft.Interface = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -83,7 +82,6 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
     private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
     private let _acclist_size = Iter.size(Iter.fromArray(_acclist));
-    private let _accesslist_size = Iter.size(Iter.fromArray(_accesslist));
 
     type accountInterface = actor {
         add : shared (aid: AccountIdentifier, idx:TokenIndex) -> async ();
@@ -95,10 +93,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
         actor(selected): accountInterface;
     };
 
-    private func accessActor(aid: AccountIdentifier) : AccessControl.AccessControl {
-        let selected = _accesslist[ Nft.AccountIdentifier.slot(aid, _accesslist_size) ];
-        actor(selected): AccessControl.AccessControl;
-    };
+ 
 
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
 
@@ -187,7 +182,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
     };
 
     private func isTransferBound(caller: AccountIdentifier, meta :Metadata, vars: Metavars) : Bool {
-            switch( caller == meta.minter ) { 
+            switch( caller == meta.author ) { 
                 case (false) {
                     switch(meta.transfer) {
                         case (#unrestricted) { false };
@@ -306,15 +301,18 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
     };
     
     // Get accountid and exact ICP amount
-    public query func purchase_intent( request: Nft.PurchaseIntentRequest) : async Nft.PurchaseIntentResponse {
+    public shared({caller}) func purchase_intent( request: Nft.PurchaseIntentRequest) : async Nft.PurchaseIntentResponse {
         let toUserAID = Nft.User.toAccountIdentifier(request.user);
+
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        assert(caller_user == request.user);
 
         switch (Nft.TokenIdentifier.decode(request.token)) {
                 case (#ok(cannisterId, tokenIndex)) {
 
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
-                            if (vars.price == 0) return #err(#NotForSale);
+                            if (vars.price.amount == 0) return #err(#NotForSale);
 
                             let (purchaseAccountId,_) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
                             
@@ -352,12 +350,12 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                         switch(SNFT_tidxGet(tokenIndex)) {
                             case(?seller) {
 
-                                if (vars.price == 0) return #err(#NotForSale);
+                                if (vars.price.amount == 0) return #err(#NotForSale);
 
-                                let purchaseOk = payment >= vars.price;
+                                let purchaseOk = payment >= vars.price.amount;
 
-                                let fullRefund:Nat64 = payment - _fee;
-                                let noRefund:Nat64 = 0;
+                                let fullRefund : Nat64 = payment - _fee;
+                                let noRefund : Nat64 = 0;
 
                                 let refundAmount:Nat64 = switch(purchaseOk) {
                                     case(true) {
@@ -366,7 +364,11 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                                                 case(?fromAccount) {
                                                     try {
                                                         SNFT_move(fromAccount, toUserAID, tokenIndex);
-                                                        vars.price := 0;
+                                                        vars.price := {
+                                                            amount=0;
+                                                            marketplace=null;
+                                                            affiliate=null;
+                                                        };
                                                         ignore try {
                                                             await ACC_move(fromAccount, toUserAID, tokenIndex);
                                                             ()
@@ -410,18 +412,22 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                                                     blockIndex;
                                                     amount;
                                                     seller;
-                                                    minter = {address=meta.minter; share=meta.minterShare};
-                                                    marketplace = request.marketplace;
+                                                    author = {address=meta.author; share=meta.authorShare};
+                                                    marketplace = vars.price.marketplace;
+                                                    affiliate = vars.price.affiliate;
                                                     purchaseAccount = purchaseAccountId; 
                                                 };
 
-                                                try {
-                                                    await TREASURY.notifyTransfer(notifyRequest);
-                                                    #ok();
-                                                } catch (e) {
-                                                    //TODO: ADD to QUEUE for later notify attempt
-                                                    #err(#TreasuryNotifyFailed);
-                                                }
+                                                switch(await TREASURY.notifyTransfer(notifyRequest)) {
+                                                    case (#ok()) {
+                                                        #ok();
+                                                    };
+                                                    case (#err(e)) {
+                                                        //TODO: ADD to QUEUE for later notify attempt
+                                                        #err(#TreasuryNotifyFailed);
+                                                    }
+                                                };
+                                            
                                                
                                             };
                                             case (#Err(e)) {
@@ -471,8 +477,8 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
     }; 
 
     public shared({caller}) func set_price(request: Nft.SetPriceRequest) : async Nft.SetPriceResponse {
-            if (request.price < 100000) return #err(#TooLow);
-            if (request.price > 100000000000) return #err(#TooHigh);
+            if (request.price.amount < 100000) return #err(#TooLow);
+            if (request.price.amount > 100000000000) return #err(#TooHigh);
 
             if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid user"));
             
@@ -689,7 +695,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
         assert((switch(getMeta(request.tokenIndex)) {
                     case (#ok((meta,vars))) {
-                          (meta.minter == Nft.User.toAccountIdentifier(caller_user)) and ((meta.created + 10) > timeInMinutes()); // allows upload of assets up to 10min after minting
+                          (meta.author == Nft.User.toAccountIdentifier(caller_user)) and ((meta.created + 10) > timeInMinutes()); // allows upload of assets up to 10min after minting
                     };
                     case (#err()) {
                        false
@@ -891,7 +897,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
         return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)/60);
     };
 
-    private func SNFT_mint(minter:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
+    private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
         let receiver = Nft.User.toAccountIdentifier(request.to);
 
@@ -912,12 +918,12 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
         if (Nft.MetadataInput.validate(m) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
 
-        if (m.quality > 1) return #err(#Invalid("Higher than 1 quality not implemented"));
-        if (Nft.Share.validate(m.minterShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
+        
+        if (Nft.Share.validate(m.authorShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
         let classIndex: ?Nft.AnvilClassIndex = switch(m.classId) {
            case (?classId) {
-                switch(await ANVILCLASS.mint_nextId(minter, classId)) {
+                switch(await ANVILCLASS.mint_nextId(author, classId)) {
                     case (#ok(index)) ?index;
                     case (#err(e)) return #err(#ClassError(e)) 
                 };
@@ -939,8 +945,8 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
             custom = m.custom;
             content = m.content;
             thumb = m.thumb; 
-            minter;
-            minterShare = m.minterShare;
+            author;
+            authorShare = m.authorShare;
             created = timestamp;
             updated = timestamp;
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
@@ -957,7 +963,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
                 }; 
              var cooldownUntil = null; // in minutes
              var sockets = [];
-             var price = 0;
+             var price = m.price;
         };
 
         assert(switch(_meta.get(tokenIndex)) { // make some memory integrity checks
@@ -979,7 +985,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
 
     public shared({caller}) func mintNFT(request: Nft.MintRequest) : async Nft.MintResponse {
 
-        let minter:AccountIdentifier = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
+        let author:AccountIdentifier = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
 
         if (Nft.User.validate(request.to) == false) return #err(#Invalid("Invalid To User"));
 
@@ -994,11 +1000,11 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
         switch(request.metadata.classId) {
                 case (?classId) {
 
-                    switch (await ANVILCLASS.minter_allow(minter, classId)) {
+                    switch (await ANVILCLASS.author_allow(author, classId)) {
                         case (#ok()) {                                        
                             ()
                         };
-                        case (#err(e)) return #err(#ClassError("Unauthorized minter"));
+                        case (#err(e)) return #err(#ClassError("Unauthorized author"));
                     };
                 };
                 case (null) ();
@@ -1031,9 +1037,8 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
             };
         };
 
-        if ((await consumeAccessTokens(minter, 1)) == false) return #err(#InsufficientBalance);
 
-        await SNFT_mint(minter, request);
+        await SNFT_mint(author, request);
 
     };
 
@@ -1319,14 +1324,6 @@ shared({caller = _owner}) actor class Class({_acclist: [Text]; _accesslist:[Text
     };
 
     // Internal functions which help for better code reusability
-
-    private func consumeAccessTokens(aid:AccountIdentifier, count:Nat) : async Bool {
-        let accessControl = accessActor(aid);
-        // let atokens = await accessControl.getBalance(aid);
-        // if (atokens < count) return false;
-        if ((await accessControl.consumeAccess(aid, count)) == #ok(true)) return true;
-        return false;
-    };
 
     // ***** Storage layer
     private func SNFT_put(aid: AccountIdentifier, tidx: TokenIndex) :  () { 

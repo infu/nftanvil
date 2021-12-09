@@ -14,10 +14,7 @@ type Router =
    debug_reset: () -> ();
    fetchNFTCan: (nat) -> (text) query;
    fetchNFTCanisters: () -> (vec text) query;
-   fetchSetup: () -> (record {
-                        accesslist: vec text;
-                        acclist: vec text;
-                      }) query;
+   fetchSetup: () -> (record {acclist: vec text;}) query;
    getAvailable: () -> (vec text) query;
    isLegitimate: (principal) -> (bool) query;
    reportOutOfMemory: () -> ();

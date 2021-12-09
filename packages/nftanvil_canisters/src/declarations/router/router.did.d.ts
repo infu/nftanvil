@@ -4,9 +4,7 @@ export interface Router {
   'debug_reset' : () => Promise<undefined>,
   'fetchNFTCan' : (arg_0: bigint) => Promise<string>,
   'fetchNFTCanisters' : () => Promise<Array<string>>,
-  'fetchSetup' : () => Promise<
-      { 'accesslist' : Array<string>, 'acclist' : Array<string> }
-    >,
+  'fetchSetup' : () => Promise<{ 'acclist' : Array<string> }>,
   'getAvailable' : () => Promise<Array<string>>,
   'isLegitimate' : (arg_0: Principal) => Promise<boolean>,
   'reportOutOfMemory' : () => Promise<undefined>,

@@ -19,7 +19,7 @@ import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { Principal } from "@dfinity/principal";
 
 import { push } from "connected-react-router";
-import { challenge, setNftSotrageModal } from "./user";
+import { setNftSotrageModal } from "./user";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TokenIdentifier from "@vvv-interactive/nftanvil-tools/cjs/tokenidentifier.js";
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
@@ -68,28 +68,27 @@ export const nftFetch = (id) => async (dispatch, getState) => {
 
     // data
     ttl: data.ttl[0],
-    use: data.use[0],
+    // domain: data.domain[0],
+    // use: data.use[0],
+    // hold: data.hold[0],
     thumb: data.thumb,
     content: data.content[0],
     created: data.created,
-    extensionCanister:
-      data.extensionCanister[0] && data.extensionCanister[0].toText(),
     quality: data.quality,
-    hold: data.hold[0],
     lore: data.lore[0],
     name: data.name[0],
-    minter: data.minter.toText(),
+    author: AccountIdentifier.ArrayToText(data.author),
     secret: data.secret,
     entropy: data.entropy,
     attributes: data.attributes,
     transfer: data.transfer,
-    domain: data.domain[0],
+    authorShare: data.authorShare,
     tags: data.tags,
     //vars
     cooldownUntil: vars.cooldownUntil[0],
     boundUntil: vars.boundUntil[0],
     sockets: vars.sockets.map((x) => TokenIdentifier.ArrayToText(x)),
-    price: vars.price.toString(),
+    price: { ...vars.price, amount: vars.price.amount.toString() },
   };
 
   meta.transferable =
@@ -99,6 +98,8 @@ export const nftFetch = (id) => async (dispatch, getState) => {
   if (meta.thumb.internal) meta.thumb.internal.url = tokenUrl(id, "thumb");
   if (meta.thumb.ipfs) meta.thumb.ipfs.url = ipfsTokenUrl(meta.thumb.ipfs.cid);
 
+  let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+
   if (meta.content?.internal) {
     if (meta.secret)
       meta.content.internal.url = await nftMediaGet({
@@ -106,7 +107,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
         contentType: meta.content.internal.contentType,
         size: meta.content.internal.size,
         position: "content",
-        subaccount: s.user.subaccount,
+        subaccount,
       });
     else meta.content.internal.url = tokenUrl(id, "content");
   }
@@ -161,7 +162,7 @@ const fetchFile = async (
           tokenIndex,
           chunkIdx,
           position: { [position]: null },
-          subaccount: subaccount ? [subaccount] : [],
+          subaccount: subaccount ? subaccount : [],
         });
       })
   ).then((chunks) => {
@@ -187,23 +188,27 @@ export const buy =
     let s = getState();
 
     let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+
     console.log("BUYING", id, intent);
 
     let ledger = ledgerCanister({ agentOptions: { identity } });
 
     let trez = await ledger.transfer({
       memo: 0,
-      amount: { e8s: intent.price },
+      amount: { e8s: intent.price.amount },
       fee: { e8s: 10000n },
-      from_subaccount: [],
+      from_subaccount: subaccount,
       to: intent.paymentAddress,
       created_at_time: [],
     });
+
     console.log("TREZ", trez);
 
     let claim = await nftcan.purchase_claim({
       token: id,
       user: { address: AccountIdentifier.TextToArray(address) },
+      subaccount,
     });
 
     console.log("CLAIM", claim);
@@ -228,10 +233,12 @@ export const purchase_intent =
     let s = getState();
 
     let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
     let t = await nftcan.purchase_intent({
       user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
+      subaccount,
     });
 
     if (!("ok" in t)) throw t;
@@ -243,22 +250,20 @@ export const set_price =
   ({ id, price }) =>
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
-
-    let e8s = BigInt(parseFloat(price) * 100000000);
-    console.log("E8S", e8s);
-
+    console.log("Setting price", price);
     let { canister } = decodeTokenId(id);
 
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
     let s = getState();
 
     let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
     let t = await nftcan.set_price({
       user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
-      price: e8s,
-      subaccount: [],
+      price: price,
+      subaccount,
     });
 
     if (!("ok" in t)) throw t;
@@ -298,10 +303,11 @@ export const plug =
     let s = getState();
 
     let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
     let t = await nftcan.plug({
       user: { address: AccountIdentifier.TextToArray(address) },
-      subaccount: [],
+      subaccount,
       plug: plug_id,
       socket: socket_id,
     });
@@ -319,10 +325,11 @@ export const unsocket =
     let s = getState();
 
     let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
     let t = await nftcan.unsocket({
       user: { address: AccountIdentifier.TextToArray(address) },
-      subaccount: [],
+      subaccount,
       plug: plug_id,
       socket: socket_id,
     });
@@ -340,13 +347,14 @@ export const burn =
     let s = getState();
 
     let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
     await nftcan.burn({
       user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
       amount: 1,
       memo: 0,
-      subaccount: [],
+      subaccount,
     });
   };
 
@@ -361,12 +369,13 @@ export const use =
     let s = getState();
 
     let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
     await nftcan.use({
       user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
       memo: 0,
-      subaccount: [],
+      subaccount,
     });
   };
 
@@ -381,6 +390,7 @@ export const transfer_link =
     let s = getState();
 
     let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
     let { key, hash } = generateKeyHashPair();
 
@@ -389,7 +399,7 @@ export const transfer_link =
       hash: Array.from(hash),
       token: id,
       amount: 1,
-      subaccount: [],
+      subaccount,
     });
     slot = slot.ok;
 
@@ -521,6 +531,7 @@ export const mint = (vals) => async (dispatch, getState) => {
   let nft = nftCanister(canisterId, { agentOptions: { identity } });
 
   let address = s.user.address;
+  let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
   if (!address) throw Error("Annonymous cant mint"); // Wont let annonymous mint
 
@@ -536,11 +547,11 @@ export const mint = (vals) => async (dispatch, getState) => {
 
     let mint = await nft.mintNFT({
       to: { address: AccountIdentifier.TextToArray(address) },
+      subaccount,
       metadata: vals,
     });
 
     if (mint?.err?.InsufficientBalance === null) {
-      dispatch(challenge());
       throw Error("Insufficient Balance");
     }
     if (!("ok" in mint)) throw Error(JSON.stringify(mint.err));

@@ -380,10 +380,7 @@ module {
             contentType: ContentType;
             size: Nat32;
             };
-        #external: {
-            contentType: ContentType;
-            idx: Nat32;
-            };
+        #external;
         };
 
     public module Content = {
@@ -392,8 +389,8 @@ module {
                 case (#internal({contentType; size})) {
                     ContentType.validate(contentType)
                 };
-                case (#external({contentType; idx})) {
-                        ContentType.validate(contentType)
+                case (#external) {
+                        true
                 };
                 case (#ipfs({contentType; cid})) {
                         ContentType.validate(contentType)
@@ -533,6 +530,7 @@ module {
     public module Share = {
         public let NFTAnvilShare:Nat = 50; // 0.5%
         public let LimitMarketplace:Nat = 3000; // 30%
+        public let LimitAffiliate:Nat = 3000; // 30%
         public let LimitMinter:Nat = 200; // 2%
         public let Max : Nat = 10000; // 100%
 
@@ -551,20 +549,43 @@ module {
 
     public type AnvilClassStored = {
         domain: ?DomainName;
-        minters: [AccountIdentifier];
+        authors: [AccountIdentifier];
         socketable:[AnvilClassId];
         max: Nat32;
         var lastIdx: Nat32;
+        renderer: ?Renderer;
     };
 
     public type AnvilClassIndex = Nat32;
 
     public type AnvilClass = {
         domain: ?DomainName;
-        minters: [AccountIdentifier];
+        authors: [AccountIdentifier];
         socketable:[AnvilClassId];
         max: AnvilClassIndex;
         lastIdx: AnvilClassIndex;
+        renderer: ?Renderer;
+        contentType: ContentType;
+
+    };
+
+    public type ICPath = Text;
+    public module ICPath = {
+        public func validate(t : ICPath) : Bool {
+            //TODO:
+            //Must match this pattern ic://principal/path
+            t.size() < 255;
+        };
+    };
+
+    public type Renderer = {
+        #canister : {
+           contentType: ContentType;
+        };
+        #wasm : {
+            #ipfs: IPFS_CID;
+            #ic: ICPath; // ic://principal/path
+        };
     };
 
     public type Metadata = {
@@ -575,8 +596,8 @@ module {
         quality: Nat8;
         transfer: ItemTransfer;
         ttl: ?Nat32; // time to live
-        minter: AccountIdentifier;
-        minterShare: Share; // min 0 ; max 10000 - which is 100%
+        author: AccountIdentifier;
+        authorShare: Share; // min 0 ; max 10000 - which is 100%
         secret: Bool;
         content: ?Content;
         thumb: Content; // may overwrite class
@@ -608,7 +629,21 @@ module {
         attributes: Attributes;
         tags: Tags;
         custom: ?CustomData;
-        minterShare: Share;
+        authorShare: Share;
+        price: Price;
+    };
+
+    public type Price = {
+        amount : Nat64;
+        marketplace : ?{
+                address : AccountIdentifier;
+                share : Share
+                };
+                
+        affiliate : ?{
+                address : AccountIdentifier;
+                share : Share
+                };
     };
 
     public module MetadataInput = {
@@ -627,14 +662,14 @@ module {
         var boundUntil: ?Nat32; // in minutes
         var cooldownUntil: ?Nat32; // in minutes
         var sockets: Sockets;
-        var price: Nat64;
+        var price: Price;
     };
 
     public type MetavarsFrozen = {
             boundUntil: ?Nat32; 
             cooldownUntil: ?Nat32; 
             sockets: Sockets;
-            price: Nat64;
+            price: Price;
     };
 
     public func MetavarsFreeze(a:Metavars) : MetavarsFrozen {
@@ -739,7 +774,7 @@ module {
         token : TokenIdentifier;
         user : User;
         subaccount: ?SubAccount;
-        price : Nat64;
+        price : Price;
     };
 
 
@@ -753,7 +788,6 @@ module {
             #Unauthorized : AccountIdentifier;
             #CannotNotify : AccountIdentifier;
             #Other        : Text;
-
         }
     >;
 
@@ -761,7 +795,7 @@ module {
     public type PurchaseIntentResponse = Result.Result<
         {
             paymentAddress: AccountIdentifier;
-            price: Nat64;
+            price: Price;
         }, {
             #InvalidToken :TokenIdentifier;
             #NotForSale;
@@ -772,11 +806,6 @@ module {
         token : TokenIdentifier;
         user : User;
         subaccount : ?SubAccount;
-
-        marketplace: {
-            address: AccountIdentifier;
-            share:Share;
-            }
     };
 
     public type PurchaseClaimResponse = Result.Result<

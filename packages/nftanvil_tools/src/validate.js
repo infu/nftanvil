@@ -54,11 +54,6 @@ export function validateUseId(v) {
     return "Can only contain lowercase characters without spaces";
 }
 
-export function validateQuality(val) {
-  if (val > 1) return "Currently 'common' is the maximum quality allowed";
-  return null;
-}
-
 export function validateDescription(val) {
   if (typeof val !== "string") return null;
   if (val.length < 10 || val.length > 256)

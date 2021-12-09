@@ -124,7 +124,7 @@ export const NFTMenu = ({ id, meta, owner }) => {
         </Wrap>
       ) : (
         <Wrap>
-          {meta.transferable && meta.price !== "0" ? (
+          {meta.transferable && meta.price.amount !== "0" ? (
             <LoginRequired label="Authenticate to buy">
               <BuyButton id={id} meta={meta} />
             </LoginRequired>
@@ -143,7 +143,11 @@ function SetPriceButton({ id }) {
   const initialRef = React.useRef();
 
   const setPriceOk = async () => {
-    let price = initialRef.current.value;
+    let price = {
+      amount: AccountIdentifier.icpToE8s(parseFloat(initialRef.current.value)),
+      marketplace: [],
+      affiliate: [],
+    };
 
     onClose();
     let toastId = toast("Setting price...", {
@@ -155,6 +159,7 @@ function SetPriceButton({ id }) {
       pauseOnHover: true,
       draggable: false,
     });
+
     try {
       await dispatch(set_price({ id, price }));
 
@@ -635,7 +640,8 @@ export const BuyButton = ({ id, meta }) => {
               </AlertDialogHeader>
 
               <AlertDialogBody>
-                Buy for {AccountIdentifier.e8sToIcp(purchaseIntent.price)} ICP ?
+                Buy for{" "}
+                {AccountIdentifier.e8sToIcp(purchaseIntent.price.amount)} ICP ?
               </AlertDialogBody>
 
               <AlertDialogFooter>
@@ -927,7 +933,7 @@ const verifyDomain = lodash.debounce((meta, cb) => {
     .then((response) => response.json())
     .then((data) => {
       try {
-        if (data.allowed.indexOf(meta.minter) !== -1) {
+        if (data.allowed.indexOf(meta.author) !== -1) {
           cb(true);
         }
       } catch (e) {
@@ -1052,8 +1058,8 @@ export const NFTInfo = ({ meta }) => {
             ))}
           </Wrap>
         ) : null}
-        {meta.price && meta.price !== "0" ? (
-          <Text>{AccountIdentifier.e8sToIcp(meta.price)} ICP</Text>
+        {meta.price.amount && meta.price.amount !== "0" ? (
+          <Text>{AccountIdentifier.e8sToIcp(meta.price.amount)} ICP</Text>
         ) : null}
       </Stack>
     </Box>

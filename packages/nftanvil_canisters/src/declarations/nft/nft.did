@@ -35,6 +35,7 @@ type UploadChunkRequest =
                content;
                thumb;
              };
+   subaccount: opt SubAccount;
    tokenIndex: TokenIndex;
  };
 type UnsocketResponse = 
@@ -166,6 +167,7 @@ type SocketRequest =
  };
 type SocketError = 
  variant {
+   ClassError: text;
    InsufficientBalance;
    InvalidToken: TokenIdentifier;
    NotLegitimateCaller;
@@ -174,6 +176,7 @@ type SocketError =
    SocketsFull;
    Unauthorized: AccountIdentifier;
  };
+type Share = nat16;
 type SetPriceResponse = 
  variant {
    err:
@@ -191,7 +194,7 @@ type SetPriceResponse =
  };
 type SetPriceRequest = 
  record {
-   price: nat64;
+   price: Price;
    subaccount: opt SubAccount;
    token: TokenIdentifier;
    user: User;
@@ -229,11 +232,12 @@ type PurchaseIntentResponse =
         };
    ok: record {
          paymentAddress: AccountIdentifier;
-         price: nat64;
+         price: Price;
        };
  };
 type PurchaseIntentRequest = 
  record {
+   subaccount: opt SubAccount;
    token: TokenIdentifier;
    user: User;
  };
@@ -246,13 +250,27 @@ type PurchaseClaimResponse =
       NotEnoughToRefund;
       NotForSale;
       Refunded;
+      TreasuryNotifyFailed;
     };
    ok;
  };
 type PurchaseClaimRequest = 
  record {
+   subaccount: opt SubAccount;
    token: TokenIdentifier;
    user: User;
+ };
+type Price = 
+ record {
+   affiliate: opt record {
+                    address: AccountIdentifier;
+                    share: Share;
+                  };
+   amount: nat64;
+   marketplace: opt record {
+                      address: AccountIdentifier;
+                      share: Share;
+                    };
  };
 type PlugResponse = 
  variant {
@@ -274,55 +292,30 @@ type PlugRequest =
    subaccount: opt SubAccount;
    user: User;
  };
-type NFT = 
- service {
-   allowance: (Request__1) -> (Response__1) query;
-   approve: (ApproveRequest) -> (ApproveResponse);
-   balance: (BalanceRequest) -> (BalanceResponse) query;
-   bearer: (TokenIdentifier) -> (BearerResponse) query;
-   burn: (BurnRequest) -> (BurnResponse);
-   claim_link: (ClaimLinkRequest) -> (ClaimLinkResponse);
-   cyclesAccept: () -> ();
-   cyclesBalance: () -> (nat) query;
-   fetchChunk: (FetchChunkRequest) -> (opt blob);
-   http_request: (Request) -> (Response) query;
-   http_request_streaming_callback: (Token) -> (Callback) query;
-   metadata: (TokenIdentifier) -> (MetadataResponse) query;
-   mintNFT: (MintRequest) -> (MintResponse);
-   plug: (PlugRequest) -> (PlugResponse);
-   purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
-   purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse) query;
-   set_price: (SetPriceRequest) -> (SetPriceResponse);
-   socket: (SocketRequest) -> (SocketResponse);
-   stats: () -> (StatsResponse) query;
-   supply: (TokenIdentifier) -> (SupplyResponse) query;
-   transfer: (TransferRequest) -> (TransferResponse);
-   transfer_link: (TransferLinkRequest) -> (TransferLinkResponse);
-   unplug: (UnsocketRequest) -> (UnplugResponse);
-   unsocket: (UnsocketRequest) -> (UnsocketResponse);
-   uploadChunk: (UploadChunkRequest) -> ();
-   use: (UseRequest) -> (UseResponse);
- };
 type MintResponse = 
  variant {
-   err: variant {
-          InsufficientBalance;
-          Invalid: text;
-          OutOfMemory;
-          Rejected;
-        };
+   err:
+    variant {
+      ClassError: text;
+      InsufficientBalance;
+      Invalid: text;
+      OutOfMemory;
+      Rejected;
+      Unauthorized;
+    };
    ok: TokenIndex;
  };
 type MintRequest = 
  record {
    metadata: MetadataInput;
+   subaccount: opt SubAccount;
    to: User;
  };
 type MetavarsFrozen = 
  record {
    boundUntil: opt nat32;
    cooldownUntil: opt nat32;
-   price: nat64;
+   price: Price;
    sockets: Sockets;
  };
 type MetadataResponse = 
@@ -338,33 +331,32 @@ type MetadataResponse =
 type MetadataInput = 
  record {
    attributes: Attributes;
+   authorShare: Share;
+   classId: opt AnvilClassId;
    content: opt Content;
    custom: opt CustomData;
-   domain: opt text;
-   extensionCanister: opt principal;
-   hold: opt ItemHold;
    lore: opt text;
    name: opt text;
+   price: Price;
    quality: nat8;
    secret: bool;
    tags: Tags;
    thumb: Content;
    transfer: ItemTransfer;
    ttl: opt nat32;
-   use: opt ItemUse;
  };
 type Metadata = 
  record {
    attributes: Attributes;
+   author: AccountIdentifier;
+   authorShare: Share;
+   classId: opt AnvilClassId;
+   classIndex: opt AnvilClassIndex;
    content: opt Content;
    created: nat32;
    custom: opt CustomData;
-   domain: opt DomainName;
    entropy: blob;
-   extensionCanister: opt principal;
-   hold: opt ItemHold;
    lore: opt ItemLore;
-   minter: principal;
    name: opt ItemName;
    quality: nat8;
    secret: bool;
@@ -372,21 +364,8 @@ type Metadata =
    thumb: Content;
    transfer: ItemTransfer;
    ttl: opt nat32;
-   use: opt ItemUse;
  };
 type Memo = nat64;
-type ItemUse = 
- variant {
-   consumable: record {
-                 desc: EffectDesc;
-                 useId: CustomId;
-               };
-   cooldown: record {
-               desc: EffectDesc;
-               duration: Cooldown;
-               useId: CustomId;
-             };
- };
 type ItemTransfer = 
  variant {
    bindsDuration: nat32;
@@ -395,11 +374,6 @@ type ItemTransfer =
  };
 type ItemName = text;
 type ItemLore = text;
-type ItemHold = variant {
-                  external: record {
-                              desc: EffectDesc;
-                              holdId: CustomId;
-                            };};
 type IPFS_CID = text;
 type HeaderField = 
  record {
@@ -416,18 +390,11 @@ type FetchChunkRequest =
    subaccount: opt SubAccount;
    tokenIndex: TokenIndex;
  };
-type EffectDesc = text;
-type DomainName = text;
-type CustomId = text;
 type CustomData = blob;
-type Cooldown = nat32;
 type ContentType = text;
 type Content = 
  variant {
-   external: record {
-               contentType: ContentType;
-               idx: nat32;
-             };
+   external;
    internal: record {
                contentType: ContentType;
                size: nat32;
@@ -442,6 +409,35 @@ type CommonError =
  variant {
    InvalidToken: TokenIdentifier;
    Other: text;
+ };
+type Class = 
+ service {
+   allowance: (Request__1) -> (Response__1) query;
+   approve: (ApproveRequest) -> (ApproveResponse);
+   balance: (BalanceRequest) -> (BalanceResponse) query;
+   bearer: (TokenIdentifier) -> (BearerResponse) query;
+   burn: (BurnRequest) -> (BurnResponse);
+   claim_link: (ClaimLinkRequest) -> (ClaimLinkResponse);
+   cyclesAccept: () -> ();
+   cyclesBalance: () -> (nat) query;
+   fetchChunk: (FetchChunkRequest) -> (opt blob);
+   http_request: (Request) -> (Response) query;
+   http_request_streaming_callback: (Token) -> (Callback) query;
+   metadata: (TokenIdentifier) -> (MetadataResponse) query;
+   mintNFT: (MintRequest) -> (MintResponse);
+   plug: (PlugRequest) -> (PlugResponse);
+   purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
+   purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
+   set_price: (SetPriceRequest) -> (SetPriceResponse);
+   socket: (SocketRequest) -> (SocketResponse);
+   stats: () -> (StatsResponse) query;
+   supply: (TokenIdentifier) -> (SupplyResponse) query;
+   transfer: (TransferRequest) -> (TransferResponse);
+   transfer_link: (TransferLinkRequest) -> (TransferLinkResponse);
+   unplug: (UnsocketRequest) -> (UnplugResponse);
+   unsocket: (UnsocketRequest) -> (UnsocketResponse);
+   uploadChunk: (UploadChunkRequest) -> ();
+   use: (UseRequest) -> (UseResponse);
  };
 type ClaimLinkResponse = 
  variant {
@@ -500,7 +496,7 @@ type BalanceRequest =
    token: TokenIdentifier;
    user: User;
  };
-type Balance = nat;
+type Balance = nat64;
 type Attributes = vec Attribute;
 type Attribute = 
  record {
@@ -525,11 +521,14 @@ type ApproveRequest =
    subaccount: opt SubAccount;
    token: TokenIdentifier;
  };
+type AnvilClassIndex = nat32;
+type AnvilClassId = nat32;
 type AccountIdentifier = blob;
 service : (record {
-             _accesslist: vec text;
              _acclist: vec text;
+             _anvilclass: principal;
              _debug_cannisterId: opt principal;
              _router: principal;
              _slot: nat32;
-           }) -> NFT
+             _treasury: principal;
+           }) -> Class

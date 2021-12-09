@@ -20,13 +20,12 @@ import AnvilClass "./type/class_interface"
 shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal}) : async AnvilClass.Interface = this {
 
 
-    public query func minter_allow(minter: Nft.AccountIdentifier, classId: Nft.AnvilClassId) : async AnvilClass.AllowResponse {
+    public query func author_allow(author: Nft.AccountIdentifier, classId: Nft.AnvilClassId) : async AnvilClass.AllowResponse {
         #err("Not implemented");
     };
 
-    public shared({caller}) func mint_nextId(minter: Nft.AccountIdentifier, classId: Nft.AnvilClassId) : async AnvilClass.MintNextIdResponse {
+    public shared({caller}) func mint_nextId(author: Nft.AccountIdentifier, classId: Nft.AnvilClassId) : async AnvilClass.MintNextIdResponse {
         #err("Not implemented");
-
     };
 
     public query func socket_allow(request: Nft.SocketRequest, classId:Nft.AnvilClassId) : async AnvilClass.AllowResponse {

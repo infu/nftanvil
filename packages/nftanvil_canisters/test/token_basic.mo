@@ -47,8 +47,8 @@ let token_for_burning : Nft.TokenIdentifier = Nft.TokenIdentifier.encode(Princip
 
 let token_bad : Nft.TokenIdentifier = Nft.TokenIdentifier.encode(Principal.fromText(NFTcanisterId), 99);
 
-let minter_one = user_john_principal; //Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
-let minter_two = user_john_principal; // Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
+let author_one = user_john_principal; //Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?[1]);
+let author_two = user_john_principal; // Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?[2]);
 
 Debug.print("john  & current script principal: " # Principal.toText(user_john_principal));
 Debug.print("NFTcanisterId: " # NFTcanisterId);
@@ -80,8 +80,8 @@ assert((await nft.mintNFT({to = user_john; subaccount=null; metadata = {
             secret=false;
             custom=null;
             tags=[];
-            minterShare=0;
-
+            authorShare=0;
+            price={amount=0;marketplace=null;affiliate=null};
             }})
             ) == #ok(0));
 
@@ -99,8 +99,9 @@ assert((await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
             attributes=[];
             custom=null;
             tags=[];
-                minterShare=0;
-            secret=false
+                authorShare=0;
+            secret=false;
+          price={amount=0;marketplace=null;affiliate=null};
 }})) == #ok(1));
 
 
@@ -118,8 +119,9 @@ switch(await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
             attributes=[];
             secret=false;
             custom=null;
-                minterShare=0;
+                authorShare=0;
             tags=[];
+           price={amount=0;marketplace=null;affiliate=null};
             }})) {
     case (#ok(x)) if (x != 2) Debug.print(debug_show(x));
     case (#err(e)) Debug.print(debug_show(e));
@@ -139,8 +141,9 @@ assert((await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
             thumb= #internal({contentType="image/jpeg"; size=123123;idx = null}); 
             attributes=[];
             custom=null;
-                minterShare=0;
+                authorShare=0;
             tags=[];
+           price={amount=0;marketplace=null;affiliate=null};
         secret=false
 }})) == #ok(3));
 
@@ -346,16 +349,16 @@ assert( (await nft.bearer(token_for_burning)) == #err(#InvalidToken(token_for_bu
 // Debug.print(debug_show( amap<Nat>(10, func (x:Nat) :Nat {x *1 }) ))
 
 // let aaa = Iter.toArray(Iter.map(Iter.range(1, 3), func (x : Nat) : Nat { 
-// {to = user_john; minter = minter_one; metadata = someMeta; TTL = null}
+// {to = user_john; author = author_one; metadata = someMeta; TTL = null}
 
 //  }));
 // Debug.print(debug_show(aaa));
 // let batch = Iter.map<Nat,Nft.NonFungible.MintRequest>( Iter.range(0,2), func (x : Nat) : Nft.NonFungible.MintRequest { 
-//      return {to = user_john; minter = minter_one; metadata = someMeta; TTL = null};
+//      return {to = user_john; author = author_one; metadata = someMeta; TTL = null};
    
 //     });
 
-// let batch = Array_.amap<Nft.NonFungible.MintRequest>(50, func(x) { {to = user_john; minter = minter_one; metadata = someMeta; TTL = null}  });
+// let batch = Array_.amap<Nft.NonFungible.MintRequest>(50, func(x) { {to = user_john; author = author_one; metadata = someMeta; TTL = null}  });
 
 // let minted = await nft.mintNFT_batch(batch);
 // ignore await nft.mintNFT_batch(batch);

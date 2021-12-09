@@ -15,12 +15,7 @@ export const idlFactory = ({ IDL }) => {
     'fetchNFTCanisters' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'fetchSetup' : IDL.Func(
         [],
-        [
-          IDL.Record({
-            'accesslist' : IDL.Vec(IDL.Text),
-            'acclist' : IDL.Vec(IDL.Text),
-          }),
-        ],
+        [IDL.Record({ 'acclist' : IDL.Vec(IDL.Text) })],
         ['query'],
       ),
     'getAvailable' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),

@@ -10,7 +10,7 @@ export const idlFactory = ({ IDL }) => {
     'owner' : User,
     'spender' : IDL.Principal,
   });
-  const Balance = IDL.Nat;
+  const Balance = IDL.Nat64;
   const CommonError = IDL.Variant({
     'InvalidToken' : TokenIdentifier,
     'Other' : IDL.Text,
@@ -104,17 +104,7 @@ export const idlFactory = ({ IDL }) => {
     'token' : IDL.Opt(Token),
     'body' : IDL.Vec(IDL.Nat8),
   });
-  const EffectDesc = IDL.Text;
-  const CustomId = IDL.Text;
-  const Cooldown = IDL.Nat32;
-  const ItemUse = IDL.Variant({
-    'consumable' : IDL.Record({ 'desc' : EffectDesc, 'useId' : CustomId }),
-    'cooldown' : IDL.Record({
-      'duration' : Cooldown,
-      'desc' : EffectDesc,
-      'useId' : CustomId,
-    }),
-  });
+  const AnvilClassIndex = IDL.Nat32;
   const ContentType = IDL.Text;
   const IPFS_CID = IDL.Text;
   const Content = IDL.Variant({
@@ -127,17 +117,15 @@ export const idlFactory = ({ IDL }) => {
       'contentType' : ContentType,
       'size' : IDL.Nat32,
     }),
-    'external' : IDL.Record({ 'idx' : IDL.Nat32, 'contentType' : ContentType }),
+    'external' : IDL.Null,
   });
-  const DomainName = IDL.Text;
+  const Share = IDL.Nat16;
   const CustomData = IDL.Vec(IDL.Nat8);
-  const ItemHold = IDL.Variant({
-    'external' : IDL.Record({ 'desc' : EffectDesc, 'holdId' : CustomId }),
-  });
   const ItemLore = IDL.Text;
   const ItemName = IDL.Text;
   const Tag = IDL.Text;
   const Tags = IDL.Vec(Tag);
+  const AnvilClassId = IDL.Nat32;
   const Attribute = IDL.Tuple(IDL.Text, IDL.Nat16);
   const Attributes = IDL.Vec(Attribute);
   const ItemTransfer = IDL.Variant({
@@ -147,31 +135,39 @@ export const idlFactory = ({ IDL }) => {
   });
   const Metadata = IDL.Record({
     'ttl' : IDL.Opt(IDL.Nat32),
-    'use' : IDL.Opt(ItemUse),
+    'classIndex' : IDL.Opt(AnvilClassIndex),
     'thumb' : Content,
     'created' : IDL.Nat32,
     'content' : IDL.Opt(Content),
-    'domain' : IDL.Opt(DomainName),
-    'extensionCanister' : IDL.Opt(IDL.Principal),
+    'authorShare' : Share,
     'custom' : IDL.Opt(CustomData),
     'quality' : IDL.Nat8,
-    'hold' : IDL.Opt(ItemHold),
     'lore' : IDL.Opt(ItemLore),
     'name' : IDL.Opt(ItemName),
     'tags' : Tags,
-    'minter' : IDL.Principal,
     'secret' : IDL.Bool,
+    'classId' : IDL.Opt(AnvilClassId),
+    'author' : AccountIdentifier,
     'entropy' : IDL.Vec(IDL.Nat8),
     'attributes' : Attributes,
     'transfer' : ItemTransfer,
   });
   const TokenIdentifierBlob = IDL.Vec(IDL.Nat8);
   const Sockets = IDL.Vec(TokenIdentifierBlob);
+  const Price = IDL.Record({
+    'marketplace' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+    ),
+    'affiliate' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+    ),
+    'amount' : IDL.Nat64,
+  });
   const MetavarsFrozen = IDL.Record({
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
     'sockets' : Sockets,
-    'price' : IDL.Nat64,
+    'price' : Price,
   });
   const MetadataResponse = IDL.Variant({
     'ok' : IDL.Record({
@@ -183,28 +179,33 @@ export const idlFactory = ({ IDL }) => {
   });
   const MetadataInput = IDL.Record({
     'ttl' : IDL.Opt(IDL.Nat32),
-    'use' : IDL.Opt(ItemUse),
     'thumb' : Content,
     'content' : IDL.Opt(Content),
-    'domain' : IDL.Opt(IDL.Text),
-    'extensionCanister' : IDL.Opt(IDL.Principal),
+    'authorShare' : Share,
     'custom' : IDL.Opt(CustomData),
     'quality' : IDL.Nat8,
-    'hold' : IDL.Opt(ItemHold),
     'lore' : IDL.Opt(IDL.Text),
     'name' : IDL.Opt(IDL.Text),
     'tags' : Tags,
     'secret' : IDL.Bool,
+    'classId' : IDL.Opt(AnvilClassId),
     'attributes' : Attributes,
+    'price' : Price,
     'transfer' : ItemTransfer,
   });
-  const MintRequest = IDL.Record({ 'to' : User, 'metadata' : MetadataInput });
+  const MintRequest = IDL.Record({
+    'to' : User,
+    'metadata' : MetadataInput,
+    'subaccount' : IDL.Opt(SubAccount),
+  });
   const MintResponse = IDL.Variant({
     'ok' : TokenIndex,
     'err' : IDL.Variant({
       'Invalid' : IDL.Text,
       'InsufficientBalance' : IDL.Null,
       'Rejected' : IDL.Null,
+      'Unauthorized' : IDL.Null,
+      'ClassError' : IDL.Text,
       'OutOfMemory' : IDL.Null,
     }),
   });
@@ -220,6 +221,7 @@ export const idlFactory = ({ IDL }) => {
     'InvalidToken' : TokenIdentifier,
     'Rejected' : IDL.Null,
     'Unauthorized' : AccountIdentifier,
+    'ClassError' : IDL.Text,
     'Other' : IDL.Text,
     'SocketsFull' : IDL.Null,
   });
@@ -237,10 +239,12 @@ export const idlFactory = ({ IDL }) => {
   const PurchaseClaimRequest = IDL.Record({
     'token' : TokenIdentifier,
     'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
   });
   const PurchaseClaimResponse = IDL.Variant({
     'ok' : IDL.Null,
     'err' : IDL.Variant({
+      'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,
       'ErrorWhileRefunding' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
@@ -251,11 +255,12 @@ export const idlFactory = ({ IDL }) => {
   const PurchaseIntentRequest = IDL.Record({
     'token' : TokenIdentifier,
     'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
   });
   const PurchaseIntentResponse = IDL.Variant({
     'ok' : IDL.Record({
       'paymentAddress' : AccountIdentifier,
-      'price' : IDL.Nat64,
+      'price' : Price,
     }),
     'err' : IDL.Variant({
       'InvalidToken' : TokenIdentifier,
@@ -266,7 +271,7 @@ export const idlFactory = ({ IDL }) => {
     'token' : TokenIdentifier,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
-    'price' : IDL.Nat64,
+    'price' : Price,
   });
   const SetPriceResponse = IDL.Variant({
     'ok' : IDL.Null,
@@ -367,6 +372,7 @@ export const idlFactory = ({ IDL }) => {
   const UploadChunkRequest = IDL.Record({
     'tokenIndex' : TokenIndex,
     'data' : IDL.Vec(IDL.Nat8),
+    'subaccount' : IDL.Opt(SubAccount),
     'chunkIdx' : IDL.Nat32,
     'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
   });
@@ -388,7 +394,7 @@ export const idlFactory = ({ IDL }) => {
       'OnCooldown' : IDL.Null,
     }),
   });
-  const NFT = IDL.Service({
+  const Class = IDL.Service({
     'allowance' : IDL.Func([Request__1], [Response__1], ['query']),
     'approve' : IDL.Func([ApproveRequest], [ApproveResponse], []),
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
@@ -419,7 +425,7 @@ export const idlFactory = ({ IDL }) => {
     'purchase_intent' : IDL.Func(
         [PurchaseIntentRequest],
         [PurchaseIntentResponse],
-        ['query'],
+        [],
       ),
     'set_price' : IDL.Func([SetPriceRequest], [SetPriceResponse], []),
     'socket' : IDL.Func([SocketRequest], [SocketResponse], []),
@@ -436,14 +442,15 @@ export const idlFactory = ({ IDL }) => {
     'uploadChunk' : IDL.Func([UploadChunkRequest], [], []),
     'use' : IDL.Func([UseRequest], [UseResponse], []),
   });
-  return NFT;
+  return Class;
 };
 export const init = ({ IDL }) => {
   return [
     IDL.Record({
       '_debug_cannisterId' : IDL.Opt(IDL.Principal),
+      '_anvilclass' : IDL.Principal,
       '_router' : IDL.Principal,
-      '_accesslist' : IDL.Vec(IDL.Text),
+      '_treasury' : IDL.Principal,
       '_acclist' : IDL.Vec(IDL.Text),
       '_slot' : IDL.Nat32,
     }),

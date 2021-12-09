@@ -1,5 +1,7 @@
 import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
+export type AnvilClassId = number;
+export type AnvilClassIndex = number;
 export interface ApproveRequest {
   'token' : TokenIdentifier,
   'subaccount' : [] | [SubAccount],
@@ -47,109 +49,7 @@ export interface ClaimLinkRequest {
 }
 export type ClaimLinkResponse = { 'ok' : null } |
   { 'err' : { 'Rejected' : null } | { 'Other' : string } };
-export type CommonError = { 'InvalidToken' : TokenIdentifier } |
-  { 'Other' : string };
-export type Content = {
-    'internal' : { 'contentType' : ContentType, 'size' : number }
-  } |
-  {
-    'ipfs' : { 'cid' : IPFS_CID, 'contentType' : ContentType, 'size' : number }
-  } |
-  { 'external' : { 'idx' : number, 'contentType' : ContentType } };
-export type ContentType = string;
-export type Cooldown = number;
-export type CustomData = Array<number>;
-export type CustomId = string;
-export type DomainName = string;
-export type EffectDesc = string;
-export interface FetchChunkRequest {
-  'tokenIndex' : TokenIndex,
-  'subaccount' : [] | [SubAccount],
-  'chunkIdx' : number,
-  'position' : { 'thumb' : null } |
-    { 'content' : null },
-}
-export type HeaderField = [string, string];
-export type IPFS_CID = string;
-export type ItemHold = {
-    'external' : { 'desc' : EffectDesc, 'holdId' : CustomId }
-  };
-export type ItemLore = string;
-export type ItemName = string;
-export type ItemTransfer = { 'unrestricted' : null } |
-  { 'bindsForever' : null } |
-  { 'bindsDuration' : number };
-export type ItemUse = {
-    'consumable' : { 'desc' : EffectDesc, 'useId' : CustomId }
-  } |
-  {
-    'cooldown' : {
-      'duration' : Cooldown,
-      'desc' : EffectDesc,
-      'useId' : CustomId,
-    }
-  };
-export type Memo = bigint;
-export interface Metadata {
-  'ttl' : [] | [number],
-  'use' : [] | [ItemUse],
-  'thumb' : Content,
-  'created' : number,
-  'content' : [] | [Content],
-  'domain' : [] | [DomainName],
-  'extensionCanister' : [] | [Principal],
-  'custom' : [] | [CustomData],
-  'quality' : number,
-  'hold' : [] | [ItemHold],
-  'lore' : [] | [ItemLore],
-  'name' : [] | [ItemName],
-  'tags' : Tags,
-  'minter' : Principal,
-  'secret' : boolean,
-  'entropy' : Array<number>,
-  'attributes' : Attributes,
-  'transfer' : ItemTransfer,
-}
-export interface MetadataInput {
-  'ttl' : [] | [number],
-  'use' : [] | [ItemUse],
-  'thumb' : Content,
-  'content' : [] | [Content],
-  'domain' : [] | [string],
-  'extensionCanister' : [] | [Principal],
-  'custom' : [] | [CustomData],
-  'quality' : number,
-  'hold' : [] | [ItemHold],
-  'lore' : [] | [string],
-  'name' : [] | [string],
-  'tags' : Tags,
-  'secret' : boolean,
-  'attributes' : Attributes,
-  'transfer' : ItemTransfer,
-}
-export type MetadataResponse = {
-    'ok' : {
-      'data' : Metadata,
-      'vars' : MetavarsFrozen,
-      'bearer' : AccountIdentifier,
-    }
-  } |
-  { 'err' : CommonError };
-export interface MetavarsFrozen {
-  'cooldownUntil' : [] | [number],
-  'boundUntil' : [] | [number],
-  'sockets' : Sockets,
-  'price' : bigint,
-}
-export interface MintRequest { 'to' : User, 'metadata' : MetadataInput }
-export type MintResponse = { 'ok' : TokenIndex } |
-  {
-    'err' : { 'Invalid' : string } |
-      { 'InsufficientBalance' : null } |
-      { 'Rejected' : null } |
-      { 'OutOfMemory' : null }
-  };
-export interface NFT {
+export interface Class {
   'allowance' : (arg_0: Request__1) => Promise<Response__1>,
   'approve' : (arg_0: ApproveRequest) => Promise<ApproveResponse>,
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
@@ -183,6 +83,95 @@ export interface NFT {
   'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
   'use' : (arg_0: UseRequest) => Promise<UseResponse>,
 }
+export type CommonError = { 'InvalidToken' : TokenIdentifier } |
+  { 'Other' : string };
+export type Content = {
+    'internal' : { 'contentType' : ContentType, 'size' : number }
+  } |
+  {
+    'ipfs' : { 'cid' : IPFS_CID, 'contentType' : ContentType, 'size' : number }
+  } |
+  { 'external' : null };
+export type ContentType = string;
+export type CustomData = Array<number>;
+export interface FetchChunkRequest {
+  'tokenIndex' : TokenIndex,
+  'subaccount' : [] | [SubAccount],
+  'chunkIdx' : number,
+  'position' : { 'thumb' : null } |
+    { 'content' : null },
+}
+export type HeaderField = [string, string];
+export type IPFS_CID = string;
+export type ItemLore = string;
+export type ItemName = string;
+export type ItemTransfer = { 'unrestricted' : null } |
+  { 'bindsForever' : null } |
+  { 'bindsDuration' : number };
+export type Memo = bigint;
+export interface Metadata {
+  'ttl' : [] | [number],
+  'classIndex' : [] | [AnvilClassIndex],
+  'thumb' : Content,
+  'created' : number,
+  'content' : [] | [Content],
+  'authorShare' : Share,
+  'custom' : [] | [CustomData],
+  'quality' : number,
+  'lore' : [] | [ItemLore],
+  'name' : [] | [ItemName],
+  'tags' : Tags,
+  'secret' : boolean,
+  'classId' : [] | [AnvilClassId],
+  'author' : AccountIdentifier,
+  'entropy' : Array<number>,
+  'attributes' : Attributes,
+  'transfer' : ItemTransfer,
+}
+export interface MetadataInput {
+  'ttl' : [] | [number],
+  'thumb' : Content,
+  'content' : [] | [Content],
+  'authorShare' : Share,
+  'custom' : [] | [CustomData],
+  'quality' : number,
+  'lore' : [] | [string],
+  'name' : [] | [string],
+  'tags' : Tags,
+  'secret' : boolean,
+  'classId' : [] | [AnvilClassId],
+  'attributes' : Attributes,
+  'price' : Price,
+  'transfer' : ItemTransfer,
+}
+export type MetadataResponse = {
+    'ok' : {
+      'data' : Metadata,
+      'vars' : MetavarsFrozen,
+      'bearer' : AccountIdentifier,
+    }
+  } |
+  { 'err' : CommonError };
+export interface MetavarsFrozen {
+  'cooldownUntil' : [] | [number],
+  'boundUntil' : [] | [number],
+  'sockets' : Sockets,
+  'price' : Price,
+}
+export interface MintRequest {
+  'to' : User,
+  'metadata' : MetadataInput,
+  'subaccount' : [] | [SubAccount],
+}
+export type MintResponse = { 'ok' : TokenIndex } |
+  {
+    'err' : { 'Invalid' : string } |
+      { 'InsufficientBalance' : null } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : null } |
+      { 'ClassError' : string } |
+      { 'OutOfMemory' : null }
+  };
 export interface PlugRequest {
   'socket' : TokenIdentifier,
   'plug' : TokenIdentifier,
@@ -198,13 +187,20 @@ export type PlugResponse = { 'ok' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'Other' : string }
   };
+export interface Price {
+  'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'amount' : bigint,
+}
 export interface PurchaseClaimRequest {
   'token' : TokenIdentifier,
   'user' : User,
+  'subaccount' : [] | [SubAccount],
 }
 export type PurchaseClaimResponse = { 'ok' : null } |
   {
-    'err' : { 'Refunded' : null } |
+    'err' : { 'TreasuryNotifyFailed' : null } |
+      { 'Refunded' : null } |
       { 'ErrorWhileRefunding' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'NotForSale' : null } |
@@ -213,9 +209,10 @@ export type PurchaseClaimResponse = { 'ok' : null } |
 export interface PurchaseIntentRequest {
   'token' : TokenIdentifier,
   'user' : User,
+  'subaccount' : [] | [SubAccount],
 }
 export type PurchaseIntentResponse = {
-    'ok' : { 'paymentAddress' : AccountIdentifier, 'price' : bigint }
+    'ok' : { 'paymentAddress' : AccountIdentifier, 'price' : Price }
   } |
   { 'err' : { 'InvalidToken' : TokenIdentifier } | { 'NotForSale' : null } };
 export interface Request {
@@ -241,7 +238,7 @@ export interface SetPriceRequest {
   'token' : TokenIdentifier,
   'user' : User,
   'subaccount' : [] | [SubAccount],
-  'price' : bigint,
+  'price' : Price,
 }
 export type SetPriceResponse = { 'ok' : null } |
   {
@@ -254,11 +251,13 @@ export type SetPriceResponse = { 'ok' : null } |
       { 'TooLow' : null } |
       { 'Other' : string }
   };
+export type Share = number;
 export type SocketError = { 'InsufficientBalance' : null } |
   { 'NotLegitimateCaller' : null } |
   { 'InvalidToken' : TokenIdentifier } |
   { 'Rejected' : null } |
   { 'Unauthorized' : AccountIdentifier } |
+  { 'ClassError' : string } |
   { 'Other' : string } |
   { 'SocketsFull' : null };
 export interface SocketRequest {
@@ -358,6 +357,7 @@ export type UnsocketResponse = { 'ok' : null } |
 export interface UploadChunkRequest {
   'tokenIndex' : TokenIndex,
   'data' : Array<number>,
+  'subaccount' : [] | [SubAccount],
   'chunkIdx' : number,
   'position' : { 'thumb' : null } |
     { 'content' : null },
@@ -383,4 +383,4 @@ export type UseResponse = {
   };
 export type User = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
-export interface _SERVICE extends NFT {}
+export interface _SERVICE extends Class {}

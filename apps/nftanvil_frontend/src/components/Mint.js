@@ -36,7 +36,12 @@ import {
   NumberDecrementStepper,
   Stack,
 } from "@chakra-ui/react";
-
+import {
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+} from "@chakra-ui/react";
 import { SmallCloseIcon, InfoOutlineIcon, CheckIcon } from "@chakra-ui/icons";
 
 import { AnvilIcon } from "../icons";
@@ -61,7 +66,6 @@ import {
   validateExtensionCanister,
   validateHoldId,
   validateUseId,
-  validateQuality,
   validateDescription,
   validateThumbInternal,
   validateContentInternal,
@@ -75,6 +79,9 @@ import {
   validateDomain,
   validateTagName,
 } from "@vvv-interactive/nftanvil-tools/cjs/validate.js";
+
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+
 export const Mint = () => {
   return <MintForm />;
 };
@@ -100,7 +107,7 @@ export const ProToggle = () => {
 export const MintForm = () => {
   const { width, height } = useWindowSize();
   const isDesktop = width > 480;
-  const principal = useSelector((state) => state.user.principal);
+  const address = useSelector((state) => state.user.address);
 
   const dispatch = useDispatch();
   const pro = useSelector((state) => state.user.pro);
@@ -108,34 +115,22 @@ export const MintForm = () => {
 
   const form2record = (v) => {
     let a = {
-      minter: principal, // not sent to minting, temporary here for the preview
-
+      author: AccountIdentifier.TextToArray(address), // not sent to minting, temporary here for the preview
+      price: {
+        amount: AccountIdentifier.icpToE8s(v.price),
+        marketplace: [],
+        affiliate: [],
+      },
+      authorShare: v.authorShare,
       name: v.name,
-      domain: v.domain,
       lore: v.lore,
-      use: v.use
-        ? {
-            [v.use]: {
-              desc: v.use_desc,
-              duration: parseInt(v.use_duration, 10),
-              useId: v.use_id,
-            },
-          }
-        : null,
       transfer: {
         [v.transfer]:
           v.transfer === "bindsDuration"
             ? parseInt(v.transfer_bind_duration, 10)
             : null,
       },
-      hold: v.hold
-        ? {
-            [v.hold]: {
-              desc: v.hold_desc,
-              holdId: v.hold_id,
-            },
-          }
-        : null,
+
       quality: parseInt(v.quality, 10),
       ttl: parseInt(v.ttl, 10),
       attributes: v.attributes.map((x) => [
@@ -162,10 +157,7 @@ export const MintForm = () => {
             }
           : v.content_storage === "external"
           ? {
-              external: {
-                idx: parseInt(v.content_external_idx, 10),
-                contentType: v.content_external_type,
-              },
+              external: null,
             }
           : null,
 
@@ -188,13 +180,9 @@ export const MintForm = () => {
             }
           : v.thumb_storage === "external"
           ? {
-              external: {
-                idx: parseInt(v.thumb_external_idx, 10),
-                contentType: v.thumb_external_type,
-              },
+              external: null,
             }
           : null,
-      extensionCanister: v.extensionCanister,
       secret: v.secret,
     };
     return a;
@@ -202,12 +190,12 @@ export const MintForm = () => {
 
   const record2request = (v) => {
     let a = {
-      domain: [v.domain].filter(Boolean),
+      price: v.price,
+      authorShare: Math.round(v.authorShare * 100),
+      classId: v.classId ? v.classId : [],
       name: [v.name].filter(Boolean),
       lore: [v.lore].filter(Boolean),
-      use: [v.use].filter(Boolean),
       transfer: v.transfer,
-      hold: [v.hold].filter(Boolean),
       quality: v.quality,
       ttl: [v.ttl].filter(Boolean),
       attributes: v.attributes.filter(Boolean),
@@ -215,12 +203,8 @@ export const MintForm = () => {
       content: [v.content].filter(Boolean),
       thumb: v.thumb,
       secret: v.secret,
-      extensionCanister: [
-        v.extensionCanister ? Principal.fromText(v.extensionCanister) : null,
-      ].filter(Boolean),
       custom: [],
     };
-
     return a;
   };
 
@@ -236,8 +220,9 @@ export const MintForm = () => {
     <Formik
       validate={mintFormValidate}
       initialValues={{
-        domain: "",
-        extensionCanister: "",
+        classId: null,
+        authorShare: 0.5,
+        price: 0.0,
         name: "",
         quality: 1,
         transfer: "unrestricted",
@@ -250,9 +235,7 @@ export const MintForm = () => {
         maxChildren: 0,
         attributes: [],
         content_storage: "ipfs",
-        content_external_idx: 0,
         thumb_storage: "ipfs",
-        thumb_external_idx: 0,
         secret: false,
         tags: [],
       }}
@@ -322,55 +305,6 @@ export const MintForm = () => {
                   ""
                 )} */}
 
-                  {pro ? (
-                    <Field name="domain" validate={validateDomain}>
-                      {({ field, form }) => (
-                        <FormControl
-                          isInvalid={form.errors.domain && form.touched.domain}
-                        >
-                          <FormLabel htmlFor="domain">
-                            <FormTip text="Verify domain by placing /.well-known/nftanvil.json with {allowed:[allowed minter principal ids]}">
-                              Verified domain
-                            </FormTip>
-                          </FormLabel>
-                          <Input
-                            {...field}
-                            id="domain"
-                            placeholder="yourdomain.com"
-                            variant="filled"
-                          />
-                          <FormErrorMessage>
-                            {form.errors.domain}
-                          </FormErrorMessage>
-                        </FormControl>
-                      )}
-                    </Field>
-                  ) : null}
-                  {pro ? (
-                    <Field
-                      name="extensionCanister"
-                      validate={validateExtensionCanister}
-                    >
-                      {({ field, form }) => (
-                        <FormControl isInvalid={form.errors.extensionCanister}>
-                          <FormLabel htmlFor="extensionCanister">
-                            <FormTip text="Used by developers to extend the functionality and customize their tokens">
-                              Extension canister
-                            </FormTip>
-                          </FormLabel>
-                          <Input
-                            {...field}
-                            id="extensionCanister"
-                            placeholder="acvs-efwe..."
-                            variant="filled"
-                          />
-                          <FormErrorMessage>
-                            {form.errors.extensionCanister}
-                          </FormErrorMessage>
-                        </FormControl>
-                      )}
-                    </Field>
-                  ) : null}
                   <File
                     form={props}
                     name="content"
@@ -620,7 +554,7 @@ export const MintForm = () => {
                   </FieldArray>
 
                   {pro ? (
-                    <Field name="quality" validate={validateQuality}>
+                    <Field name="quality">
                       {({ field, form }) => (
                         <FormControl
                           isInvalid={
@@ -647,6 +581,7 @@ export const MintForm = () => {
                       )}
                     </Field>
                   ) : null}
+
                   {pro ? (
                     <Text
                       fontSize="28px"
@@ -656,238 +591,86 @@ export const MintForm = () => {
                         fontFamily: "Greycliff",
                       }}
                     >
-                      Effects
+                      Pricing
                     </Text>
                   ) : null}
+
                   {pro ? (
-                    <Box
-                      {...(props.values.hold
-                        ? {
-                            borderWidth: "1px",
-                            p: "3",
-                            borderRadius: "10",
-                            mt: "3",
+                    <Field name="authorShare">
+                      {({ field, form }) => (
+                        <FormControl
+                          isInvalid={
+                            form.errors.authorShare && form.touched.authorShare
                           }
-                        : {})}
-                    >
-                      <Stack spacing="2">
-                        <Field name="hold">
-                          {({ field, form }) => (
-                            <FormControl
-                              isInvalid={form.errors.hold && form.touched.hold}
+                        >
+                          <FormLabel htmlFor="authorShare">
+                            <FormTip text="The % of subsequent sales the author recieves">
+                              Subsequent sales share
+                            </FormTip>
+                          </FormLabel>
+                          <Stack direction="horizontal">
+                            <Slider
+                              onChange={(v) => {
+                                props.setFieldValue("authorShare", v);
+                              }}
+                              value={field.value}
+                              min={0}
+                              max={1.5}
+                              step={0.1}
                             >
-                              <FormLabel htmlFor="hold">
-                                <FormTip text="External system or canister can check who is the holder at any moment and reward them">
-                                  Hold
-                                </FormTip>
-                              </FormLabel>
-
-                              <Select
-                                {...field}
-                                placeholder="None"
-                                variant="filled"
-                              >
-                                {itemHold.map((x) => (
-                                  <option key={x.val} value={x.val}>
-                                    {x.label}
-                                  </option>
-                                ))}
-                              </Select>
-                              <FormErrorMessage>
-                                {form.errors.hold}
-                              </FormErrorMessage>
-                            </FormControl>
-                          )}
-                        </Field>
-
-                        {props.values.hold ? (
-                          <Field
-                            name="hold_desc"
-                            validate={validateDescriptionOrNone}
-                          >
-                            {({ field, form }) => (
-                              <FormControl
-                                isInvalid={
-                                  form.errors.hold_desc &&
-                                  form.touched.hold_desc
-                                }
-                              >
-                                <FormLabel htmlFor="hold_desc">
-                                  Description
-                                </FormLabel>
-                                <Textarea
-                                  variant="filled"
-                                  {...field}
-                                  resize="none"
-                                  maxLength={256}
-                                  id="hold_desc"
-                                  placeholder="Holding it attracts airdrops"
-                                />
-                                <FormErrorMessage>
-                                  {form.errors.hold_desc}
-                                </FormErrorMessage>
-                              </FormControl>
-                            )}
-                          </Field>
-                        ) : null}
-
-                        {props.values.hold ? (
-                          <Field name="hold_id" validate={validateHoldId}>
-                            {({ field, form }) => (
-                              <FormControl
-                                isInvalid={
-                                  form.errors.hold_id && form.touched.hold_id
-                                }
-                              >
-                                <FormLabel htmlFor="hold_id">
-                                  <FormTip text="Custom id used by the Extension canister">
-                                    Hold Id
-                                  </FormTip>
-                                </FormLabel>
-                                <Input
-                                  {...field}
-                                  id="hold_id"
-                                  placeholder="myholdbonus"
-                                  variant="filled"
-                                />
-                                <FormErrorMessage>
-                                  {form.errors.hold_id}
-                                </FormErrorMessage>
-                              </FormControl>
-                            )}
-                          </Field>
-                        ) : null}
-                      </Stack>
-                    </Box>
+                              <SliderTrack>
+                                <Box position="relative" right={10} />
+                                <SliderFilledTrack />
+                              </SliderTrack>
+                              <SliderThumb boxSize={6} />
+                            </Slider>
+                            <Text w={"60px"} align="right">
+                              {field.value}%
+                            </Text>
+                          </Stack>
+                          <FormErrorMessage>
+                            {form.errors.authorShare}
+                          </FormErrorMessage>
+                        </FormControl>
+                      )}
+                    </Field>
                   ) : null}
 
                   {pro ? (
-                    <Box
-                      {...(props.values.use
-                        ? {
-                            borderWidth: "1px",
-                            p: "3",
-                            borderRadius: "10",
-                            mt: "3",
-                          }
-                        : {})}
-                    >
-                      <Stack spacing="2">
-                        <Field name="use">
-                          {({ field, form }) => (
-                            <FormControl
-                              isInvalid={form.errors.use && form.touched.use}
+                    <Field name="price">
+                      {({ field, form }) => (
+                        <FormControl
+                          isInvalid={form.errors.price && form.touched.price}
+                        >
+                          <FormLabel htmlFor="price">Price</FormLabel>
+                          <Stack direction="horizontal">
+                            <NumberInput
+                              {...field}
+                              onChange={(num) => {
+                                props.setFieldValue("price", num);
+                              }}
+                              w={"100%"}
+                              precision={4}
+                              step={0.01}
+                              variant="filled"
                             >
-                              <FormLabel htmlFor="use">
-                                <FormTip text="When used, the item will send message to the Extension canister">
-                                  Use
-                                </FormTip>
-                              </FormLabel>
+                              <NumberInputField />
+                              <NumberInputStepper>
+                                <NumberIncrementStepper />
+                                <NumberDecrementStepper />
+                              </NumberInputStepper>
+                            </NumberInput>
+                            <Text pt="2" pl="4" w="60px">
+                              ICP
+                            </Text>
+                          </Stack>
 
-                              <Select
-                                {...field}
-                                placeholder="None"
-                                variant="filled"
-                              >
-                                {itemUse.map((x) => (
-                                  <option key={x.val} value={x.val}>
-                                    {x.label}
-                                  </option>
-                                ))}
-                              </Select>
-                              <FormErrorMessage>
-                                {form.errors.use}
-                              </FormErrorMessage>
-                            </FormControl>
-                          )}
-                        </Field>
-                        {props.values.use ? (
-                          <Field name="use_desc" validate={validateDescription}>
-                            {({ field, form }) => (
-                              <FormControl
-                                isInvalid={
-                                  form.errors.use_desc && form.touched.use_desc
-                                }
-                              >
-                                <FormLabel htmlFor="use_desc">
-                                  Effect description
-                                </FormLabel>
-                                <Textarea
-                                  variant="filled"
-                                  {...field}
-                                  resize="none"
-                                  maxLength={256}
-                                  id="use_desc"
-                                  placeholder="Makes you invincible"
-                                />
-                                <FormErrorMessage>
-                                  {form.errors.use_desc}
-                                </FormErrorMessage>
-                              </FormControl>
-                            )}
-                          </Field>
-                        ) : null}
-                        {props.values.use === "cooldown" ? (
-                          <Field
-                            name="use_duration"
-                            validate={validateCooldown}
-                          >
-                            {({ field, form }) => (
-                              <FormControl
-                                isInvalid={
-                                  form.errors.use_duration &&
-                                  form.touched.use_duration
-                                }
-                              >
-                                <FormLabel htmlFor="use_duration">
-                                  Cooldown in minutes
-                                </FormLabel>
-
-                                <NumberInput
-                                  variant="filled"
-                                  {...field}
-                                  onChange={(num) => {
-                                    props.setFieldValue("use_duration", num);
-                                  }}
-                                >
-                                  <NumberInputField />
-                                  <NumberInputStepper>
-                                    <NumberIncrementStepper />
-                                    <NumberDecrementStepper />
-                                  </NumberInputStepper>
-                                </NumberInput>
-                                <FormErrorMessage>
-                                  {form.errors.use_duration}
-                                </FormErrorMessage>
-                              </FormControl>
-                            )}
-                          </Field>
-                        ) : null}
-
-                        {props.values.use ? (
-                          <Field name="use_id" validate={validateUseId}>
-                            {({ field, form }) => (
-                              <FormControl
-                                isInvalid={
-                                  form.errors.use_id && form.touched.use_id
-                                }
-                              >
-                                <FormLabel htmlFor="use_id">Use Id</FormLabel>
-                                <Input
-                                  variant="filled"
-                                  {...field}
-                                  id="use_id"
-                                  placeholder="myeffect"
-                                />
-                                <FormErrorMessage>
-                                  {form.errors.use_id}
-                                </FormErrorMessage>
-                              </FormControl>
-                            )}
-                          </Field>
-                        ) : null}
-                      </Stack>
-                    </Box>
+                          <FormErrorMessage>
+                            {form.errors.price}
+                          </FormErrorMessage>
+                        </FormControl>
+                      )}
+                    </Field>
                   ) : null}
 
                   {pro ? (
@@ -921,7 +704,7 @@ export const MintForm = () => {
                             }
                           >
                             <FormLabel htmlFor="transfer">
-                              <FormTip text="Note - the minter can always transfer their tokens">
+                              <FormTip text="Note - the author can always transfer their tokens">
                                 Transfer
                               </FormTip>
                             </FormLabel>
@@ -1190,56 +973,6 @@ const File = ({
                   }}
                 />
                 <FormErrorMessage>{form.errors[keyIpfs]}</FormErrorMessage>
-              </FormControl>
-            )}
-          </Field>
-        ) : null}
-
-        {form.values[keyStorage] === "external" ? (
-          <Field name={keyExternal + "_idx"} validate={validateExternal}>
-            {({ field, form }) => (
-              <FormControl
-                isInvalid={
-                  form.errors[keyExternal + "_idx"] &&
-                  form.touched[keyExternal + "_idx"]
-                }
-              >
-                <FormLabel htmlFor={keyExternal + "_idx"}>Index</FormLabel>
-                <Input
-                  {...field}
-                  placeholder="5"
-                  id={keyExternal + "_idx"}
-                  variant="filled"
-                />
-                <FormErrorMessage>
-                  {form.errors[keyExternal + "_idx"]}
-                </FormErrorMessage>
-              </FormControl>
-            )}
-          </Field>
-        ) : null}
-
-        {form.values[keyStorage] === "external" ? (
-          <Field name={keyExternal + "_type"} validate={validateExternalType}>
-            {({ field, form }) => (
-              <FormControl
-                isInvalid={
-                  form.errors[keyExternal + "_type"] &&
-                  form.touched[keyExternal + "_type"]
-                }
-              >
-                <FormLabel htmlFor={keyExternal + "_type"}>
-                  Content type
-                </FormLabel>
-                <Input
-                  {...field}
-                  id={keyExternal + "_type"}
-                  placeholder="image/jpeg"
-                  variant="filled"
-                />
-                <FormErrorMessage>
-                  {form.errors[keyExternal + "_type"]}
-                </FormErrorMessage>
               </FormControl>
             )}
           </Field>

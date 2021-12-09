@@ -40,7 +40,7 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
     private stable var _tmpAccount: [(AccountIdentifier, [TokenIndex])] = [];
     private var _account: HashMap.HashMap<AccountIdentifier, TokenStore> =  HashSmash.init<AccountIdentifier,TokenIndex>(_tmpAccount, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Nat32.equal, func(x:Nat32):Nat32 {x} );
   
-    
+
     //Handle canister upgrades
     system func preupgrade() {
         _tmpAccount := HashSmash.pre(_account);

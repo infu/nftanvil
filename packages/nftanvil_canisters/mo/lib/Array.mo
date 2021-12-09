@@ -13,5 +13,12 @@ module {
         Iter.toArray(Iter.map(Iter.range(0, count-1), f));
         };
 
-
+    public func exists<A>(xs:[A], search:A, equal: (A,A) -> Bool) : Bool {
+        switch(Array.find<A>(xs : [A], func(b:A) : Bool {
+            equal(b,search)
+         })) {
+            case (?x) true;
+            case (null) false 
+        }
+    };
  }

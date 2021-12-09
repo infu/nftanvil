@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
-import { login, logout, challenge } from "./reducers/user";
+import { login, logout } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -53,7 +53,7 @@ import Dfinity from "./assets/dfinity.svg";
 import { Switch, Route, Redirect } from "react-router";
 
 import { Link } from "react-router-dom";
-import { Challenge } from "./components/Challenge";
+
 import { Nftstorage } from "./components/Nftstorage";
 
 import { Mint } from "./components/Mint";
@@ -149,7 +149,6 @@ function LoginBox() {
   const pro = useSelector((state) => state.user.pro);
 
   const anonymous = useSelector((state) => state.user.anonymous);
-  const accesstokens = useSelector((state) => state.user.accesstokens);
   const icp = AccountIdentifier.e8sToIcp(
     useSelector((state) => state.user.icp)
   );
@@ -182,24 +181,11 @@ function LoginBox() {
         ) : (
           <>
             <Tooltip hasArrow label="Internet Computer main currency">
-              <Button
-                onClick={() => {
-                  dispatch(challenge());
-                }}
-              >
-                {icp} ICP
-              </Button>
+              <Button>{icp} ICP</Button>
             </Tooltip>
-            <Tooltip
-              hasArrow
-              label="Temporary access tokens. Rewarded for proving personhood"
-            >
-              <Button
-                onClick={() => {
-                  dispatch(challenge());
-                }}
-              >
-                {accesstokens}{" "}
+            <Tooltip hasArrow label="Tokens used for minting">
+              <Button>
+                0{" "}
                 <img
                   src={blueflame}
                   style={{ marginLeft: "4px", width: "13px", height: "13px" }}
@@ -329,7 +315,6 @@ function DesktopMenu() {
 function MobileMenu() {
   const address = useSelector((state) => state.user.address);
   const anonymous = useSelector((state) => state.user.anonymous);
-  const accesstokens = useSelector((state) => state.user.accesstokens);
   const pathname = useSelector((state) => state.router.location.pathname);
   const myroot = "/address/0/" + address;
 
@@ -390,13 +375,7 @@ function MobileMenu() {
               </MenuItem>
             ) : (
               <>
-                <MenuItem
-                  onClick={() => {
-                    dispatch(challenge());
-                  }}
-                >
-                  You have {accesstokens} tokens
-                </MenuItem>
+                <MenuItem>You have 0 tokens</MenuItem>
 
                 <MenuItem
                   onClick={() => {
@@ -482,7 +461,7 @@ function App() {
           </Switch>
         </Center>
       </Box>
-      <Challenge />
+
       <Nftstorage />
       <ToastContainer theme={useColorModeValue("light", "dark")} />
     </>

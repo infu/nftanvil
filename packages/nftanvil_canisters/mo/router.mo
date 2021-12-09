@@ -8,7 +8,6 @@ import HashMap "mo:base/HashMap";
 
 import AAA "./type/aaa_interface";
 import NFT "./nft";
-import AccessControl "./access";
 import Account "./account";
 import Treasury "./treasury";
 import AnvilClass "./anvilclass";
@@ -21,7 +20,6 @@ shared({caller = owner}) actor class Router() = this {
     private stable var _nft_canisters : [NFT.Class] = [];
     private stable var _account_canisters : [Account.Account] = [];
 
-    private stable var _access_canisters : [AccessControl.AccessControl] = [];
 
     private stable var _treasury_canisters : [Treasury.Class] = [];
     private stable var _anvilclass_canisters : [AnvilClass.Class] = [];
@@ -30,7 +28,6 @@ shared({caller = owner}) actor class Router() = this {
 
     private stable var _nft_canisters_next_id:Nat32 = 0;
     private stable var _account_canisters_next_id:Nat32 = 0;
-    private stable var _access_canisters_next_id:Nat32 = 0;
 
     private stable var _tmpNftAvailability : [(Principal, Bool)] = [];
     private var _nft_availability : HashMap.HashMap<Principal, Bool> = HashMap.fromIter(_tmpNftAvailability.vals(), 0, Principal.equal, Principal.hash);
@@ -54,12 +51,9 @@ shared({caller = owner}) actor class Router() = this {
         _account_canisters_next_id := 0;
 
         _nft_availability := HashMap.fromIter(Iter.fromArray([]), 0, Principal.equal, Principal.hash);
-        _access_canisters_next_id := 0;
-        _access_canisters := [];
 
         await addAnvilClassCanister();
         await addTreasuryCanister();
-        await addAccessCanister();
         // await addAccessCanister();
         // await addAccessCanister();
 
@@ -76,6 +70,10 @@ shared({caller = owner}) actor class Router() = this {
             await addNFTCanister();
             nftcan := nftcan + 1;
         };
+
+        let nftCans = Iter.toArray(Iter.map(Iter.fromArray(_nft_canisters), func(x:NFT.Class) : Principal { Principal.fromActor(x); }));
+        _treasury_canisters[0].setNftcans(nftCans);
+
     };
 
     
@@ -125,7 +123,7 @@ shared({caller = owner}) actor class Router() = this {
             let slot = _nft_canisters_next_id;
             _nft_canisters_next_id := _nft_canisters_next_id + 1;
 
-            let new = await NFT.Class({_acclist = getAccountCanisters(); _anvilclass= Principal.fromActor(_anvilclass_canisters[0]); _treasury = Principal.fromActor(_treasury_canisters[0]); _router = Principal.fromActor(this); _accesslist=getAccessCanisters(); _slot= slot; _debug_cannisterId=null});
+            let new = await NFT.Class({_acclist = getAccountCanisters(); _anvilclass= Principal.fromActor(_anvilclass_canisters[0]); _treasury = Principal.fromActor(_treasury_canisters[0]); _router = Principal.fromActor(this); _slot= slot; _debug_cannisterId=null});
             let principal = Principal.fromActor(new);
 
             await IC.update_settings({
@@ -147,11 +145,7 @@ shared({caller = owner}) actor class Router() = this {
                 await x.addAllowed(Principal.fromActor(new), slot);
             };
 
-            // register it inside access canisters
-            let ita = Iter.fromArray(_access_canisters);
-            for (x in ita) {
-                await x.addAllowed(Principal.fromActor(new));
-            };
+        
 
     };
 
@@ -211,26 +205,6 @@ shared({caller = owner}) actor class Router() = this {
             _anvilclass_canisters := [new];
     };
 
-    private func addAccessCanister() : async () {
-            Cycles.add(cyclesForNewCanister);
-            let new = await AccessControl.AccessControl({_admin = owner; _router = Principal.fromActor(this)});
-            let principal = Principal.fromActor(new);
-
-            await IC.update_settings({
-            canister_id = principal; 
-            settings = {
-                controllers = ?[owner, Principal.fromActor(this)];
-                compute_allocation = null;
-                memory_allocation = null; 
-                freezing_threshold = ?31_540_000
-                }
-            });
-
-            _access_canisters := Array.append<AccessControl.AccessControl>(_access_canisters, [new]);
-            _access_canisters_next_id := _access_canisters_next_id + 1;
-        
-    };
-
     public query func fetchNFTCanisters() : async [Text] {
           Iter.toArray(Iter.map(Iter.fromArray(_nft_canisters), func(x:NFT.Class) : Text { Principal.toText(Principal.fromActor(x)); }));
     };
@@ -239,9 +213,7 @@ shared({caller = owner}) actor class Router() = this {
         Iter.toArray(Iter.map(Iter.fromArray(_account_canisters), func(x:Account.Account) : Text { Principal.toText(Principal.fromActor(x)); }));
     };
 
-    private func getAccessCanisters() : [Text] {
-        Iter.toArray(Iter.map(Iter.fromArray(_access_canisters), func(x:AccessControl.AccessControl) : Text { Principal.toText(Principal.fromActor(x)); }));
-    };
+  
 
     public query func fetchNFTCan(slot: Nat) : async Text {
         Principal.toText(Principal.fromActor(_nft_canisters[slot]));
@@ -257,13 +229,11 @@ shared({caller = owner}) actor class Router() = this {
         };
     };
 
-    public query func fetchSetup() : async {accesslist:[Text]; acclist: [Text]} {
+    public query func fetchSetup() : async {acclist: [Text]} {
          {
-         accesslist = getAccessCanisters();
          acclist = getAccountCanisters();
          }
     };
-
 
 
     public type StatsResponse = {

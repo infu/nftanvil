@@ -13,10 +13,12 @@ import Nat32 "mo:base/Nat32";
 import Time "mo:base/Time";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
+import Array_ "./lib/Array";
+
 import Blob "mo:base/Blob";
 
 
-shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal}) = this {
+shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal;}) = this {
 
   public type Balance = Nft.Balance;
   public type AccountIdentifier = Nft.AccountIdentifier;
@@ -27,6 +29,7 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
   private stable var _fee:Nat64 = 10000;
 
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
+  private var _nftcans:[Principal] = [];
 
   system func preupgrade() {
     _tmpBalance := Iter.toArray(_balance.entries());
@@ -50,34 +53,71 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
      };
   };
 
+  public shared({caller}) func setNftcans(cans:[Principal]) : () {
+      assert(caller == _router or caller == _admin);
+      _nftcans := cans;
+  };
+
   public shared({caller}) func notifyTransfer(request: Treasury.NotifyTransferRequest): async Treasury.NotifyTransferResponse {
-      //TODO: make sure caller is nft canister
+      //make sure caller is nft canister
+      if (Array_.exists(_nftcans, caller, Principal.equal) == false) return #err("Unauthorized");
 
       let total:Nat64 = request.amount.e8s;
       let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
-      let minter_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(request.minter.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
-      let marketplace_cut:Nat64 = total * Nat64.fromNat(Nft.Share.limit(request.marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
-      let seller_cut:Nat64 = total - anvil_cut - minter_cut - marketplace_cut;
+      let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(request.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
+      let marketplace_cut:Nat64 = switch(request.marketplace) {
+        case (?marketplace) {
+          total * Nat64.fromNat(Nft.Share.limit(marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
+        };
+        case (null) {
+          0;
+        }
+      };
 
-      assert(total > 0);
-      assert((seller_cut + marketplace_cut + minter_cut + anvil_cut) == total);
+      let affiliate_cut:Nat64 = switch(request.affiliate) {
+        case (?affiliate) {
+          total * Nat64.fromNat(Nft.Share.limit(affiliate.share, Nft.Share.LimitAffiliate)) / Nat64.fromNat(Nft.Share.Max);
+        };
+        case (null) {
+          0;
+        }
+      };
+
+      let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut;
+
+      if (total <= 0) return #err("Can't be 0");
+      if ((seller_cut + marketplace_cut + affiliate_cut + author_cut + anvil_cut) != total) return #err("It's a zero sum game");
 
       let NFTAnvil_treasury_address = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(1) );
       // give to NFTAnvil
       balanceAdd(NFTAnvil_treasury_address, anvil_cut);
 
       // give to Minter
-      balanceAdd(request.minter.address, minter_cut);
+      balanceAdd(request.author.address, author_cut);
 
       // give to Marketplace
-      balanceAdd(request.marketplace.address, marketplace_cut);
+      switch(request.marketplace) {
+        case (?marketplace) {
+          balanceAdd(marketplace.address, marketplace_cut);
+        };
+        case (null) ();
+      };
+
+      // give to Affiliate
+      switch(request.affiliate) {
+        case (?affiliate) {
+          balanceAdd(affiliate.address, affiliate_cut);
+        };
+        case (null) ();
+      };
 
       // give to Seller
       balanceAdd(request.seller, seller_cut);
-
+      #ok();
   };
 
   private func balanceAdd(aid:AccountIdentifier, bal: Balance) : () {
+      if (bal == 0) return ();
       let current:Balance = switch(_balance.get(aid)) {
         case (?a) a;
         case (_) 0;

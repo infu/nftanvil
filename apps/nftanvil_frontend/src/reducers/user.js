@@ -1,7 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { AuthClient } from "@dfinity/auth-client";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
-import { accessCanister } from "@vvv-interactive/nftanvil-canisters/cjs/accesscontrol.js";
 import { ledger } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 import Cookies from "js-cookie";
 
@@ -21,26 +20,16 @@ export const userSlice = createSlice({
     subaccount: null,
     principal: null,
     anonymous: true,
-    challenge: null,
-    accesstokens: 0,
+
     icp: "0",
     acclist: [],
     acccan: "",
-    accesslist: [],
+
     pro: false,
     modal_nftstorage: false,
     key_nftstorage: null,
   },
   reducers: {
-    challengeSet: (state, action) => {
-      return { ...state, challenge: action.payload };
-    },
-    accessTokensAdd: (state, action) => {
-      return { ...state, accesstokens: state.accesstokens + action.payload };
-    },
-    accessTokensSet: (state, action) => {
-      return { ...state, accesstokens: action.payload };
-    },
     icpSet: (state, action) => {
       return { ...state, icp: action.payload };
     },
@@ -54,14 +43,13 @@ export const userSlice = createSlice({
       };
     },
     authSet: (state, action) => {
-      const { address, principal, anonymous, acclist, acccan, accesslist } =
-        action.payload;
+      const { address, principal, anonymous, acclist, acccan } = action.payload;
       return {
         ...state,
         address,
         principal,
         anonymous,
-        ...(acclist ? { acclist, acccan, accesslist } : {}),
+        ...(acclist ? { acclist, acccan } : {}),
       };
     },
     setNftSotrageModal: (state, action) => {
@@ -83,10 +71,8 @@ export const userSlice = createSlice({
 export const {
   proSet,
   authSet,
-  challengeSet,
-  accessTokensSet,
+
   icpSet,
-  accessTokensAdd,
   acclistSet,
   setNftSotrageModal,
   setNftSotrageKey,
@@ -131,16 +117,12 @@ export const auth =
       agentOptions: { identity },
     });
 
-    let { accesslist, acclist } = await router.fetchSetup();
+    let { acclist } = await router.fetchSetup();
     let acccan = address
       ? AccountIdentifier.TextToSlot(address, acclist)
       : null;
 
-    dispatch(
-      authSet({ address, principal, anonymous, acclist, acccan, accesslist })
-    );
-
-    dispatch(getAccessTokenBalance());
+    dispatch(authSet({ address, principal, anonymous, acclist, acccan }));
   };
 
 export const loadNftStorageKey = () => async (dispatch, getState) => {
@@ -166,111 +148,6 @@ export const logout = () => async (dispatch, getState) => {
   let principal = identity.getPrincipal().toString();
   let anonymous = !(await authClient.isAuthenticated());
   dispatch(authSet({ address: null, principal, anonymous }));
-};
-
-export const challenge = () => async (dispatch, getState) => {
-  let s = getState();
-  if (s.user.anonymous) return;
-
-  let identity = authentication.client.getIdentity();
-
-  let accesscan = AccountIdentifier.TextToSlot(
-    s.user.address,
-    s.user.accesslist
-  );
-
-  let access = accessCanister(accesscan, { agentOptions: { identity } });
-
-  let challenge = await access.getChallenge();
-  dispatch(challengeSet(challenge));
-};
-
-export const getAccessTokenBalance = () => async (dispatch, getState) => {
-  let s = getState();
-  if (s.user.anonymous) return;
-
-  let identity = authentication.client.getIdentity();
-
-  let accesscan = AccountIdentifier.TextToSlot(
-    s.user.address,
-    s.user.accesslist
-  );
-
-  let access = accessCanister(accesscan, { agentOptions: { identity } });
-
-  let balance = await access.getBalance(
-    AccountIdentifier.TextToArray(s.user.address)
-  );
-
-  try {
-    let { e8s } = await ledger.account_balance({
-      account: AccountIdentifier.TextToArray(s.user.address),
-    });
-
-    dispatch(icpSet(e8s.toString()));
-  } catch (e) {
-    console.log(e);
-  }
-  // console.log(
-  //   "AT",
-  //   await accessCanister(s.user.accesslist[0], {
-  //     agentOptions: { identity },
-  //   }).getBalance(AccountIdentifier.TextToArray(s.user.address))
-  // );
-  // console.log(
-  //   "AT",
-  //   await accessCanister(s.user.accesslist[1], {
-  //     agentOptions: { identity },
-  //   }).getBalance(AccountIdentifier.TextToArray(s.user.address))
-  // );
-  // console.log(
-  //   "AT",
-  //   await accessCanister(s.user.accesslist[2], {
-  //     agentOptions: { identity },
-  //   }).getBalance(AccountIdentifier.TextToArray(s.user.address))
-  // );
-
-  dispatch(accessTokensSet(parseInt(balance, 10)));
-};
-
-export const sendSolution = (code) => async (dispatch, getState) => {
-  dispatch(challengeSet(null));
-  let s = getState();
-
-  if (s.user.anonymous) return;
-
-  let identity = authentication.client.getIdentity();
-
-  let accesscan = AccountIdentifier.TextToSlot(
-    s.user.address,
-    s.user.accesslist
-  );
-
-  let access = accessCanister(accesscan, { agentOptions: { identity } });
-
-  let result = await access.sendSolution(code);
-  if (result.ok) {
-    dispatch(accessTokensSet(parseInt(result.ok, 10)));
-    toast.success(
-      <div>
-        <div>Captcha success</div>
-        <div>You have earned 10 temporary access tokens</div>
-      </div>,
-      {
-        position: "bottom-right",
-      }
-    );
-  } else {
-    dispatch(challenge());
-    toast.error(
-      <div>
-        <div>Captcha failed</div>
-      </div>,
-      {
-        position: "bottom-right",
-      }
-    );
-  }
 };
 
 export default userSlice.reducer;

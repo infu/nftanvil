@@ -10,7 +10,6 @@ import Iter "mo:base/Iter";
 import Ext "../mo/type/nft_interface";
 import Array_ "../mo/lib/Array";
 
-import AccessControl "../mo/access";
 import PseudoRandom "../mo/lib/PseudoRandom";
 
 

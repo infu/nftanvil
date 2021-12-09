@@ -54,12 +54,17 @@ module {
 
             seller : AccountIdentifier;
 
-            minter : {
+            author : {
                 address : AccountIdentifier;
                 share : Share
                 };
 
-            marketplace : {
+            marketplace : ?{
+                address : AccountIdentifier;
+                share : Share
+                };
+
+            affiliate : ?{
                 address : AccountIdentifier;
                 share : Share
                 };
@@ -67,5 +72,5 @@ module {
             purchaseAccount : AccountIdentifier; 
     };
 
-    public type NotifyTransferResponse = ();
+    public type NotifyTransferResponse = Result.Result<(), Text>;
 }   
