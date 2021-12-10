@@ -18,7 +18,7 @@ import Array_ "./lib/Array";
 import Blob "mo:base/Blob";
 
 
-shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal;}) = this {
+shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal; _nft_canisters:[Principal]}) = this {
 
   public type Balance = Nft.Balance;
   public type AccountIdentifier = Nft.AccountIdentifier;
@@ -29,7 +29,6 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
   private stable var _fee:Nat64 = 10000;
 
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
-  private var _nftcans:[Principal] = [];
 
   system func preupgrade() {
     _tmpBalance := Iter.toArray(_balance.entries());
@@ -53,14 +52,11 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
      };
   };
 
-  public shared({caller}) func setNftcans(cans:[Principal]) : () {
-      assert(caller == _router or caller == _admin);
-      _nftcans := cans;
-  };
+
 
   public shared({caller}) func notifyTransfer(request: Treasury.NotifyTransferRequest): async Treasury.NotifyTransferResponse {
       //make sure caller is nft canister
-      if (Array_.exists(_nftcans, caller, Principal.equal) == false) return #err("Unauthorized");
+      if (Array_.exists(_nft_canisters, caller, Principal.equal) == false) return #err("Unauthorized");
 
       let total:Nat64 = request.amount.e8s;
       let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%

@@ -17,8 +17,7 @@ var NFTcanisterId = "sbzkb-zqaaa-aaaaa-aaaiq-cai";
 var someMeta = Blob.fromArray([116, 116, 105, 100]);
 var someMemo:Nat64 = 0;
 
-let nft = await Dropship.Class({_acclist = []; _slot = 3; _anvilclass = Principal.fromText("aaaaa-aa"); _treasury = Principal.fromText("aaaaa-aa"); _router = Principal.fromText("aaaaa-aa"); _accesslist = []; _debug_cannisterId = ?Principal.fromText(NFTcanisterId)});
-
+let nft = await Dropship.Class({_account_canisters = []; _slot = 3; _collection = Principal.fromText("aaaaa-aa"); _treasury = Principal.fromText("aaaaa-aa"); _router = Principal.fromText("aaaaa-aa");  });
 
 actor class WHOWHO() {
     public shared({caller}) func whoAmI() : async Principal {
@@ -34,8 +33,6 @@ let user_john_principal:Principal = await whoiswho.whoAmI();
 let user_john : Nft.User = #principal(user_john_principal);
 let user_peter_principal = Principal.fromText("ks5fw-csuji-57tsx-mqld6-bjip7-anp4q-pecol-5k6vo-vzcmw-3wuo2-qqe");
 let user_peter : Nft.User = #principal(user_peter_principal);
-
-
 
 let user_john_sub1 : Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?Blob.fromArray([1])));
 let user_john_sub2 : Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(user_john_principal, ?Blob.fromArray([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,210])));

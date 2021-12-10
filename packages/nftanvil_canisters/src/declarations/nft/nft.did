@@ -76,7 +76,6 @@ type TransferResponse =
  variant {
    err:
     variant {
-      CannotNotify: AccountIdentifier;
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
       NotTransferable;
@@ -181,7 +180,6 @@ type SetPriceResponse =
  variant {
    err:
     variant {
-      CannotNotify: AccountIdentifier;
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
       NotTransferable;
@@ -463,7 +461,6 @@ type BurnResponse =
  variant {
    err:
     variant {
-      CannotNotify: AccountIdentifier;
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
       NotTransferable;

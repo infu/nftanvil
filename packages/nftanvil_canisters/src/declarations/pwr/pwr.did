@@ -1,0 +1,88 @@
+type User__1 = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
+type User = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
+type TransferResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier__1;
+    };
+   ok: Balance;
+ };
+type TransferRequest = 
+ record {
+   amount: Balance;
+   from: User;
+   memo: Memo;
+   subaccount: opt SubAccount;
+   to: User;
+ };
+type TransferError = 
+ variant {
+   BadFee: record {expected_fee: ICP;};
+   InsufficientFunds: record {balance: ICP;};
+   TxCreatedInFuture;
+   TxDuplicate: record {duplicate_of: BlockIndex;};
+   TxTooOld: record {allowed_window_nanos: nat64;};
+ };
+type TokenIdentifier = text;
+type SubAccount = blob;
+type PurchaseIntentResponse = 
+ variant {
+   err: text;
+   ok: AccountIdentifier__1;
+ };
+type PurchaseIntentRequest = 
+ record {
+   subaccount: opt SubAccount;
+   user: User;
+ };
+type PurchaseClaimResponse = 
+ variant {
+   err: variant {
+          Ledger: TransferError;
+          PaymentTooSmall;
+        };
+   ok;
+ };
+type PurchaseClaimRequest = 
+ record {
+   subaccount: opt SubAccount;
+   user: User;
+ };
+type Memo = nat64;
+type ICP = record {e8s: nat64;};
+type Class = 
+ service {
+   balance: (BalanceRequest) -> (BalanceResponse) query;
+   dumpBalances: () -> (vec record {
+                              AccountIdentifier__2;
+                              Balance__1;
+                            }) query;
+   purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
+   purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
+   tokenId: () -> (TokenIdentifier) query;
+   transfer: (TransferRequest) -> (TransferResponse);
+ };
+type BlockIndex = nat64;
+type Balance__1 = nat64;
+type BalanceResponse = nat64;
+type BalanceRequest = record {user: User__1;};
+type Balance = nat64;
+type AccountIdentifier__2 = blob;
+type AccountIdentifier__1 = blob;
+type AccountIdentifier = blob;
+service : (record {
+             _admin: principal;
+             _router: principal;
+           }) -> Class

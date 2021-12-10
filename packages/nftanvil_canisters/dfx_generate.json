@@ -12,8 +12,12 @@
       "main": "mo/account.mo",
       "type": "motoko"
     },
-    "accesscontrol": {
-      "main": "mo/access.mo",
+    "anv": {
+      "main": "mo/anv.mo",
+      "type": "motoko"
+    },
+    "pwr": {
+      "main": "mo/pwr.mo",
       "type": "motoko"
     }
   },

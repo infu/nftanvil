@@ -137,10 +137,10 @@ module {
             ));
         };
 
-        public func purchaseAccountId(can:Principal, tokenIndex:Nat32, accountId: AccountIdentifier) : (AccountIdentifier, SubAccount) {
+        public func purchaseAccountId(can:Principal, productId:Nat32, accountId: AccountIdentifier) : (AccountIdentifier, SubAccount) {
         
             let subaccount = Blob.fromArray(Array.append<Nat8>(
-                Blob_.nat32ToBytes(tokenIndex),
+                Blob_.nat32ToBytes(productId),
                 Blob.toArray(toShort(accountId))
             )); 
 
@@ -309,7 +309,6 @@ module {
         #Rejected;
         #NotTransferable;
         #InvalidToken : TokenIdentifier;
-        #CannotNotify : AccountIdentifier;
         #Other        : Text;
     }>;
 
@@ -545,25 +544,25 @@ module {
         };
     };
     
-    public type AnvilClassId = Nat32;
+    public type CollectionId = Nat32;
 
-    public type AnvilClassStored = {
+    public type CollectionStored = {
         domain: ?DomainName;
         authors: [AccountIdentifier];
-        socketable:[AnvilClassId];
+        socketable:[CollectionId];
         max: Nat32;
         var lastIdx: Nat32;
         renderer: ?Renderer;
     };
 
-    public type AnvilClassIndex = Nat32;
+    public type CollectionIndex = Nat32;
 
-    public type AnvilClass = {
+    public type Collection = {
         domain: ?DomainName;
         authors: [AccountIdentifier];
-        socketable:[AnvilClassId];
-        max: AnvilClassIndex;
-        lastIdx: AnvilClassIndex;
+        socketable:[CollectionId];
+        max: CollectionIndex;
+        lastIdx: CollectionIndex;
         renderer: ?Renderer;
         contentType: ContentType;
 
@@ -589,8 +588,8 @@ module {
     };
 
     public type Metadata = {
-        classId: ?AnvilClassId;
-        classIndex: ?AnvilClassIndex;
+        classId: ?CollectionId;
+        classIndex: ?CollectionIndex;
         name: ?ItemName;
         lore: ?ItemLore;
         quality: Nat8;
@@ -617,7 +616,7 @@ module {
     };
 
     public type MetadataInput = {
-        classId: ?AnvilClassId;
+        classId: ?CollectionId;
         name: ?Text;
         lore: ?Text;
         quality: Nat8;
@@ -786,7 +785,7 @@ module {
             #NotTransferable;
             #InsufficientBalance;
             #Unauthorized : AccountIdentifier;
-            #CannotNotify : AccountIdentifier;
+
             #Other        : Text;
         }
     >;

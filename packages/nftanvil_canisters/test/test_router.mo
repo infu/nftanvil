@@ -5,6 +5,7 @@ import Text "mo:base/Text";
 import Ext "../mo/type/nft_interface";
 
 import Treasury "../mo/treasury";
+import Pwr "../mo/pwr";
 
 
 //let router = await Router.Router();

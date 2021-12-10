@@ -11,8 +11,9 @@ import Time "mo:base/Time";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
+import Anv "./type/anv_interface";
 
-shared({caller = _installer}) actor class ANV() = this {
+shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
 
     public type Balance = Nft.Balance;
     public type AccountIdentifier = Nft.AccountIdentifier;
@@ -34,6 +35,10 @@ shared({caller = _installer}) actor class ANV() = this {
     
     private stable var _blockIndex:Nat32 = 0;
 
+    private stable var _feeAnv:Nat64 = 10000;
+
+
+
     system func preupgrade() {
       _tmpBalance := Iter.toArray(_balance.entries());
       _tmpBlockchain := Iter.toArray(_blockchain.entries());
@@ -52,15 +57,44 @@ shared({caller = _installer}) actor class ANV() = this {
       myTokenId();
     };
 
-    public query func balance(request: Nft.BalanceRequest) : async Nft.BalanceResponse {
-      if (request.token != myTokenId()) return #err(#InvalidToken(request.token));
+    public query func balance(request: Anv.BalanceRequest) : async Anv.BalanceResponse {
       
       let aid = Nft.User.toAccountIdentifier(request.user);
       switch(_balance.get(aid)) {
-          case (?a) #ok(a);
-          case (_) #ok(0);
+          case (?a) a;
+          case (_) 0;
       };
     };
+
+
+    public shared({caller}) func transfer(request: Anv.TransferRequest) : async Anv.TransferResponse {
+      let aid = Nft.User.toAccountIdentifier(request.from);
+      let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+
+      if (caller_user != request.from) return #err(#Unauthorized(aid));
+
+      switch(_balance.get(aid)) {
+            case (?bal) {
+
+              if (bal < (request.amount + _feeAnv)) return #err(#InsufficientBalance);
+
+              let to_aid = Nft.User.toAccountIdentifier(request.to);
+
+              let new_balance = bal - request.amount - _feeAnv;
+              if (new_balance > _feeAnv) {
+                _balance.put(aid, new_balance);
+              } else {
+                _balance.delete(aid);
+              };
+
+              balanceAdd(to_aid, request.amount);
+              #ok(new_balance);
+
+            };
+            case (_) return #err(#InsufficientBalance);
+        };
+    };
+
 
     public query func dumpBalances() : async [(AccountIdentifier, Balance)] {
         Iter.toArray(_balance.entries());
@@ -107,5 +141,15 @@ shared({caller = _installer}) actor class ANV() = this {
 
         return (newBlockIndex, newBlock)
     };
+
+     private func balanceAdd(aid:AccountIdentifier, bal: Balance) : () {
+      if (bal == 0) return ();
+      let current:Balance = switch(_balance.get(aid)) {
+        case (?a) a;
+        case (_) 0;
+      };
+
+      _balance.put(aid, current + bal);
+  };
   
 }

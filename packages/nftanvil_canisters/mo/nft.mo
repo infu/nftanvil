@@ -31,12 +31,12 @@ import Painless "./lib/Painless";
 import SHA256 "mo:sha/SHA256";
 import Ledger  "./type/ledger_interface";
 import Treasury  "./type/treasury_interface";
-import AnvilClass  "./type/class_interface";
+import Collection  "./type/collection_interface";
 
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
 
 
-shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principal; _anvilclass:Principal; _treasury:Principal; _slot:Nat32; _debug_cannisterId:?Principal}) : async Nft.Interface = this {
+shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _router:Principal; _collection:Principal; _treasury:Principal; _slot:Nat32;}) : async Nft.Interface = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -63,7 +63,6 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;
-        #CannotNotify : AccountIdentifier;
         #Other        : Text;
     };
 
@@ -72,7 +71,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
         isLegitimate : query (p:Principal) -> async Bool;
     };
 
-    let ANVILCLASS = actor(Principal.toText(_anvilclass)) : AnvilClass.Interface;
+    let COLLECTION = actor(Principal.toText(_collection)) : Collection.Interface;
 
     let TREASURY = actor(Principal.toText(_treasury)) : Treasury.Interface;
 
@@ -81,7 +80,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
     
     private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
-    private let _acclist_size = Iter.size(Iter.fromArray(_acclist));
+    private let _acclist_size = Iter.size(Iter.fromArray(_account_canisters));
 
     type accountInterface = actor {
         add : shared (aid: AccountIdentifier, idx:TokenIndex) -> async ();
@@ -89,8 +88,8 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
     };
 
     private func accountActor(aid: AccountIdentifier) : accountInterface {
-        let selected = _acclist[ Nft.AccountIdentifier.slot(aid, _acclist_size) ];
-        actor(selected): accountInterface;
+        let selected = _account_canisters[ Nft.AccountIdentifier.slot(aid, _acclist_size) ];
+        actor(Principal.toText(selected)): accountInterface;
     };
 
  
@@ -812,10 +811,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
     };
     
     //Explained here: https://forum.dfinity.org/t/cryptic-error-from-icx-proxy/6944/15
-    let _workaround = actor(Principal.toText(switch(_debug_cannisterId) {
-            case(null) Principal.fromActor(this);
-            case(?a) a
-        })) : actor { http_request_streaming_callback : shared () -> async () };
+    let _workaround = actor(Principal.toText(Principal.fromActor(this))): actor { http_request_streaming_callback : shared () -> async () };
 
 
     private func httpKeyDecode(key: Text) : Result.Result<(tokenIndex:TokenIndex, chunkIndex:Nat32, ctype:Nat32), Text> {
@@ -921,9 +917,9 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
         
         if (Nft.Share.validate(m.authorShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
-        let classIndex: ?Nft.AnvilClassIndex = switch(m.classId) {
+        let classIndex: ?Nft.CollectionIndex = switch(m.classId) {
            case (?classId) {
-                switch(await ANVILCLASS.mint_nextId(author, classId)) {
+                switch(await COLLECTION.mint_nextId(author, classId)) {
                     case (#ok(index)) ?index;
                     case (#err(e)) return #err(#ClassError(e)) 
                 };
@@ -1000,7 +996,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
         switch(request.metadata.classId) {
                 case (?classId) {
 
-                    switch (await ANVILCLASS.author_allow(author, classId)) {
+                    switch (await COLLECTION.author_allow(author, classId)) {
                         case (#ok()) {                                        
                             ()
                         };
@@ -1109,7 +1105,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
                             case (?classId) {
 
                                 // get permission from class canister
-                                switch (await ANVILCLASS.socket_allow(request, classId)) {
+                                switch (await COLLECTION.socket_allow(request, classId)) {
                                     case (#ok()) {                                        
                                         #ok()
                                     };
@@ -1378,10 +1374,7 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
     };
 
     private func checkCorrectCannister(cannisterId:Principal) : Bool {
-        Principal.equal(cannisterId,  switch(_debug_cannisterId) {
-            case(null) Principal.fromActor(this);
-            case(?a) a
-        })
+        Principal.equal(cannisterId, Principal.fromActor(this));
     };
 
     // ***** Balance 
@@ -1445,10 +1438,10 @@ shared({caller = _owner}) actor class Class({_acclist: [Text];  _router:Principa
                                 #ok(holder, tokenIndex, bal, 1);
                             };
                             case false #ok(holder, tokenIndex, bal, 0);   
-                        }
+                        };
                     };
-                    case (_) #ok(holder, tokenIndex, bal, 0)
-                }
+                    case (_) #ok(holder, tokenIndex, bal, 0);
+                };
              };
            case (#err(e)) #err(e);
         };

@@ -32,8 +32,7 @@ export interface BurnRequest {
 }
 export type BurnResponse = { 'ok' : Balance } |
   {
-    'err' : { 'CannotNotify' : AccountIdentifier } |
-      { 'InsufficientBalance' : null } |
+    'err' : { 'InsufficientBalance' : null } |
       { 'NotTransferable' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |
@@ -243,7 +242,6 @@ export interface SetPriceRequest {
 export type SetPriceResponse = { 'ok' : null } |
   {
     'err' : { 'TooHigh' : null } |
-      { 'CannotNotify' : AccountIdentifier } |
       { 'InsufficientBalance' : null } |
       { 'NotTransferable' : null } |
       { 'InvalidToken' : TokenIdentifier } |
@@ -323,8 +321,7 @@ export interface TransferRequest {
 }
 export type TransferResponse = { 'ok' : Balance } |
   {
-    'err' : { 'CannotNotify' : AccountIdentifier } |
-      { 'InsufficientBalance' : null } |
+    'err' : { 'InsufficientBalance' : null } |
       { 'NotTransferable' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |

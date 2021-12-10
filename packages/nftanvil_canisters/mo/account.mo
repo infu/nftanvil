@@ -22,7 +22,7 @@ import HashSmash "./lib/HashSmash";
 
 import Prim "mo:prim"; 
 
-shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
+shared({ caller = _owner }) actor class Account({_router: Principal; _nft_canisters:[Principal]}) = this {
 
      // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -31,42 +31,31 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
     type TokenStore = HashMap.HashMap<TokenIndex, Bool>;
     type Slot = Nat32;
 
-    private stable var _tmpCan2idx : [(Principal, Slot)] = [];
-    private var _can2idx : HashMap.HashMap<Principal, Slot> = HashMap.fromIter(_tmpCan2idx.vals(), 0, Principal.equal, Principal.hash );
-   
-    private stable var _tmpIdx2can: [(Slot, Principal)] = [];
-    private var _idx2can : HashMap.HashMap<Slot, Principal> = HashMap.fromIter(_tmpIdx2can.vals(), 0, Nat32.equal, func (x:Nat32):Nat32 {x} );
-
     private stable var _tmpAccount: [(AccountIdentifier, [TokenIndex])] = [];
     private var _account: HashMap.HashMap<AccountIdentifier, TokenStore> =  HashSmash.init<AccountIdentifier,TokenIndex>(_tmpAccount, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Nat32.equal, func(x:Nat32):Nat32 {x} );
   
-
     //Handle canister upgrades
     system func preupgrade() {
         _tmpAccount := HashSmash.pre(_account);
-        _tmpCan2idx := Iter.toArray(_can2idx.entries());
-        _tmpIdx2can := Iter.toArray(_idx2can.entries());
     };
 
     system func postupgrade() {
         _tmpAccount := [];
-        _tmpCan2idx := [];
-        _tmpIdx2can := [];
     };
 
-    // list of allowed nft canisters which can add/rem to account                                     
-    public shared ({caller}) func addAllowed(p: Principal, slot:Nat32) : async () {
-        assert(caller == _router);
-
-        _can2idx.put(p, slot);
-        _idx2can.put(slot, p);
+    private func can2idx(can:Principal) : ?Slot {
+        var found:?Slot = null;
+        Iter.iterate<Principal>(Iter.fromArray(_nft_canisters), func (x, index) {
+            if (can == x) found := ?Nat32.fromNat(index);
+        });
+        return found;
     };
 
     public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
 
-        switch(_can2idx.get(caller)) {
-            case (?a) { 
+        switch(can2idx(caller)) {
+            case (?a) {
                HashSmash.add<AccountIdentifier>(_account, aid, idx);
             };
             case (_) { () }
@@ -76,7 +65,7 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
     public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
 
-        switch(_can2idx.get(caller)) {
+        switch(can2idx(caller)) {
             case (?a) { 
                HashSmash.rem<AccountIdentifier>(_account, aid, idx);
             };
@@ -108,14 +97,9 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
     private func gid2tid(gid:Nat32) : TokenIdentifier {
             let slot:Nat32 = gid >> 13;
             let idx:Nat32 = gid; 
-            switch(_idx2can.get(slot)) {
-                case (?nftcan) {
-                    Nft.TokenIdentifier.encode(nftcan, idx);
-                };
-                case (_) "NoK"
-            }
+            let nftcan = _nft_canisters[Nat32.toNat(slot)];
+            Nft.TokenIdentifier.encode(nftcan, idx);
     };
-
 
     public type StatsResponse = {
         cycles: Nat;
@@ -126,7 +110,6 @@ shared({ caller = _owner }) actor class Account({_router: Principal}) = this {
         rts_reclaimed:Nat;
         rts_max_live_size:Nat;
     };
-
 
     public query func stats() : async StatsResponse {
         {

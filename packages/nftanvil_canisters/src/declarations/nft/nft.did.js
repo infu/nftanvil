@@ -52,7 +52,6 @@ export const idlFactory = ({ IDL }) => {
   const BurnResponse = IDL.Variant({
     'ok' : Balance,
     'err' : IDL.Variant({
-      'CannotNotify' : AccountIdentifier,
       'InsufficientBalance' : IDL.Null,
       'NotTransferable' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
@@ -277,7 +276,6 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Null,
     'err' : IDL.Variant({
       'TooHigh' : IDL.Null,
-      'CannotNotify' : AccountIdentifier,
       'InsufficientBalance' : IDL.Null,
       'NotTransferable' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
@@ -317,7 +315,6 @@ export const idlFactory = ({ IDL }) => {
   const TransferResponse = IDL.Variant({
     'ok' : Balance,
     'err' : IDL.Variant({
-      'CannotNotify' : AccountIdentifier,
       'InsufficientBalance' : IDL.Null,
       'NotTransferable' : IDL.Null,
       'InvalidToken' : TokenIdentifier,

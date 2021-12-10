@@ -55,9 +55,7 @@ cluster.nft.forEach((x, idx) => {
   ci["nft_" + idx] = { [dev ? "local" : "ic"]: x };
   dfxd += `dfx deploy ${network_target} nft_${idx} --argument 'record {_acclist= vec {"${cluster.account.join(
     '";"'
-  )}"}; _accesslist= vec {"${cluster.access.join(
-    '";"'
-  )}"}; _slot=${idx}; _router= principal "${
+  )}"};  _slot=${idx}; _router= principal "${
     cluster.router[0]
   }"; _debug_cannisterId=null}'\n`;
 });
@@ -69,15 +67,6 @@ cluster.account.forEach((x, idx) => {
   };
   ci["account_" + idx] = { [dev ? "local" : "ic"]: x };
   dfxd += `dfx deploy ${network_target} account_${idx} --argument 'record {_router= principal "${cluster.router[0]}"}'\n`;
-});
-
-cluster.access.forEach((x, idx) => {
-  r.canisters["access_" + idx] = {
-    main: "mo/access.mo",
-    type: "motoko",
-  };
-  ci["access_" + idx] = { [dev ? "local" : "ic"]: x };
-  dfxd += `dfx deploy ${network_target} access_${idx} --argument 'record{_admin = principal "vlgg5-pyaaa-aaaai-qaqba-cai"; _router = principal "${cluster.router[0]}"}' \n`;
 });
 
 fs.writeFileSync("./dfx_deploy.json", JSON.stringify(r));
