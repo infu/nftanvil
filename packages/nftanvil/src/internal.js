@@ -4,7 +4,6 @@ import { Principal } from "@dfinity/principal";
 import * as cRouter from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import * as cFrontend from "@vvv-interactive/nftanvil-canisters/cjs/frontend.js";
 import * as cNft from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
-import * as cAccess from "@vvv-interactive/nftanvil-canisters/cjs/accesscontrol.js";
 import * as cAccount from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
 
 import { encodeTokenId } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
@@ -41,12 +40,6 @@ export const routerCanister = async () => {
 
 export const nftCanister = (id) => {
   return cNft.nftCanister(id, { agentOptions: { fetch, identity, host } });
-};
-
-export const accessCanister = (id) => {
-  return cAccess.accessCanister(id, {
-    agentOptions: { fetch, identity, host },
-  });
 };
 
 export const accountCanister = (id) => {

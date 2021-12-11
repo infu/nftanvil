@@ -21,30 +21,75 @@ import Text "mo:base/Text";
 import Blob_ "../lib/Blob";
 
 
+
 module {
     public type Interface = actor {
 
-        // Returns the balance of a requested User.
+        // Returns the balance of account.
         balance    : query (request : BalanceRequest) -> async BalanceResponse;
-        // Returns an array of extensions that the canister supports.
 
-        // Transfers an given amount of tokens between two users, from and to, with an optional memo.
+        // (iPWR) Transfers between two accounts
         transfer   : shared (request : TransferRequest) -> async TransferResponse;
 
         // Returns the metadata of the given token.
         metadata : query (token :  TokenIdentifier) -> async  MetadataResponse;
+
         // Returns the total supply of the token.
         supply   : query (token :  TokenIdentifier) -> async  SupplyResponse;
 
         // Returns the account that is linked to the given token.
         bearer  : query (token :  TokenIdentifier) -> async BearerResponse;
-        // Mints a new NFT and assignes its owner to the given User.
+
+        // (PWR) Mints a new NFT and assignes its owner to the given User.
         mintNFT : shared (request :  MintRequest) -> async  MintResponse;
 
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
         allowance : query (request : Allowance.Request) -> async Allowance.Response;
-        // Allows the given spender to withdraw from your account multiple times, up to the given allowance.
+
+        // (iPWR) Allows the given spender to withdraw from your account multiple times, up to the given allowance.
         approve   : shared (request : Allowance.ApproveRequest) -> async Allowance.ApproveResponse;
+
+        // (returns stored PWR) NFT is removed from memory completely. Burn reciept is added to history
+        burn      : shared (request : BurnRequest) -> async BurnResponse;
+
+        // (iPWR) Saves a hash inside which can be used for claiming
+        transfer_link : shared (request: TransferLinkRequest) -> async TransferLinkResponse;
+
+        // (iPWR) The hash of two inputs must match the hash stored, then claiming is legitimate
+        claim_link  : shared (request: ClaimLinkRequest) -> async ClaimLinkResponse;
+
+        // (no updates) Returns the AccountIdentifier we have to pay ICP to. 
+        purchase_intent : shared (request:  PurchaseIntentRequest) -> async PurchaseIntentResponse;
+
+        // (iPWR) When you buy NFT part of the deal is to refill its PWR to max. Checks if the payment is done
+        purchase_claim : shared (request: PurchaseClaimRequest) -> async PurchaseClaimResponse;
+
+        // (iPWR) Changes "Buynow" price of the NFT
+        set_price : shared (request: SetPriceRequest) -> async SetPriceResponse;
+
+        // (iPWR or returned iPWR) Usage reciept added to history. If use type is 'consumable', then NFT is destroyed
+        use       : shared (request: UseRequest) -> async UseResponse;
+
+        // (iPWR) Used to store files
+        uploadChunk : shared (request: UploadChunkRequest) -> async ();
+
+        // (no updates) This function is only way to fetch NFTs with secret storage. The rest will use http, because it can be cached.
+        fetchChunk : shared (request: FetchChunkRequest) -> async ?Blob;
+
+        // (iPWR) Plugs NFT into socket. Socket func of the recipient NFT is called
+        plug       : shared (request: PlugRequest) -> async PlugResponse;
+
+        // (iPWR, internal) Can be called only by another NFT canister trying to plug NFT
+        socket      : shared (request: SocketRequest ) -> async SocketResponse;
+
+        // (iPWR) Remove nft from socket
+        unsocket    : shared (request: UnsocketRequest) -> async UnsocketResponse;
+
+        // (iPWR, internal) Can be called only by another NFT canister trying to unplug NFT
+        unplug      : shared (request: UnsocketRequest) -> async UnplugResponse;
+
+        // Returns canister stats
+        stats   : query () -> async StatsResponse;
     };
 
     public type AccountIdentifier = Blob; //32 bytes
@@ -54,7 +99,7 @@ module {
         switch(v) { case (?z) f(z); case(null) true }
     };
 
-    public module AccountIdentifier = { // Most AccountIdentifier code is collected from aviate-labs libraries
+    public module AccountIdentifier = { 
         private let prefix : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
 
         public func validate(a: AccountIdentifier) : Bool {
@@ -890,4 +935,18 @@ module {
         >;
 
     };
+
+    public type StatsResponse = {
+        minted: Nat32;
+        transfers: Nat32;
+        burned: Nat32;
+        cycles: Nat;
+        rts_version:Text;
+        rts_memory_size:Nat;
+        rts_heap_size:Nat;
+        rts_total_allocation:Nat;
+        rts_reclaimed:Nat;
+        rts_max_live_size:Nat;
+    };
+
 };

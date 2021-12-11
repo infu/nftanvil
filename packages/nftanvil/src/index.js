@@ -3,7 +3,6 @@ import { easyMint } from "./mint.js";
 import {
   routerCanister,
   nftCanister,
-  accessCanister,
   accountCanister,
   fileIdentity,
   encodeTokenId,
@@ -13,7 +12,6 @@ import {
 export {
   routerCanister,
   nftCanister,
-  accessCanister,
   accountCanister,
   fileIdentity,
   encodeTokenId,

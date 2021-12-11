@@ -21,8 +21,13 @@ import Ledger "./ledger_interface"
 
 module {
     public type Interface = actor {
-        withdraw        : WithdrawRequest       -> async WithdrawResponse;
-        notifyTransfer  : NotifyTransferRequest -> async NotifyTransferResponse;
+        // Take all ICP you are owed
+        withdraw        : shared WithdrawRequest       -> async WithdrawResponse;
+        
+        // (internal) On sale, notify treasury so it can split incoming amount
+        notifySell  : shared NotifySellRequest -> async NotifySellResponse;
+
+        // Check your balance
         balance         : BalanceRequest        -> async BalanceResponse;
     };
 
@@ -47,7 +52,7 @@ module {
         #NotEnoughForTransfer;
     }>;
 
-    public type NotifyTransferRequest = {
+    public type NotifySellRequest = {
             buyerAccount : AccountIdentifier;
             blockIndex : Ledger.BlockIndex;
             amount : Ledger.ICP;
@@ -72,5 +77,5 @@ module {
             purchaseAccount : AccountIdentifier; 
     };
 
-    public type NotifyTransferResponse = Result.Result<(), Text>;
+    public type NotifySellResponse = Result.Result<(), Text>;
 }   

@@ -53,7 +53,6 @@ const main = async () => {
 
   let setup = await router.fetchSetup();
   rez.account = setup.acclist;
-  rez.access = setup.accesslist;
   let accStats = await Promise.all(
     setup.acclist.map(async (can) => {
       let acc = accountCanister(can);
@@ -64,15 +63,6 @@ const main = async () => {
     })
   );
 
-  let accessStats = await Promise.all(
-    setup.accesslist.map(async (can) => {
-      let acc = accessCanister(can);
-      let s = await acc.stats();
-      s = { ...s, ...queryNetworkInfo(can, prod) };
-      s.id = can;
-      return s;
-    })
-  );
   // instantiate
   var table = new Table({
     head: [
@@ -117,17 +107,6 @@ const main = async () => {
     ...accStats.map((s, idx) => {
       return [
         "account",
-        s.id,
-        formatN((100n * s.cycles) / T) + " T",
-        formatN((100n * s.rts_total_allocation) / GB) + " GB",
-        "",
-        s.hash,
-        s.controller,
-      ];
-    }),
-    ...accessStats.map((s, idx) => {
-      return [
-        "access",
         s.id,
         formatN((100n * s.cycles) / T) + " T",
         formatN((100n * s.rts_total_allocation) / GB) + " GB",

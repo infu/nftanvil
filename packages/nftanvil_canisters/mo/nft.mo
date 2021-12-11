@@ -417,7 +417,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
                                                     purchaseAccount = purchaseAccountId; 
                                                 };
 
-                                                switch(await TREASURY.notifyTransfer(notifyRequest)) {
+                                                switch(await TREASURY.notifySell(notifyRequest)) {
                                                     case (#ok()) {
                                                         #ok();
                                                     };
@@ -1290,21 +1290,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
     };
     
 
-    public type StatsResponse = {
-        minted: Nat32;
-        transfers: Nat32;
-        burned: Nat32;
-        cycles: Nat;
-        rts_version:Text;
-        rts_memory_size:Nat;
-        rts_heap_size:Nat;
-        rts_total_allocation:Nat;
-        rts_reclaimed:Nat;
-        rts_max_live_size:Nat;
-    };
-
-
-    public query func stats () : async StatsResponse {
+    public query func stats () : async Nft.StatsResponse {
         {
             minted =  _nextTokenId;
             burned = _statsBurned;

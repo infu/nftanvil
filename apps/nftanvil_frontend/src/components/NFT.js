@@ -190,9 +190,10 @@ function SetPriceButton({ id }) {
       });
     }
   };
+
   return (
     <>
-      <Button onClick={onOpen}>Set Sell Price</Button>
+      <Button onClick={onOpen}>Set Price</Button>
 
       <Modal
         initialFocusRef={initialRef}
@@ -203,7 +204,7 @@ function SetPriceButton({ id }) {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Set Sell Price</ModalHeader>
+          <ModalHeader>Set Price</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>

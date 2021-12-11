@@ -23,6 +23,8 @@ module {
 
     public type Interface = actor {
         balance          : query BalanceRequest        -> async BalanceResponse;
+
+        // (ANV)
         transfer         : shared TransferRequest       -> async TransferResponse;
     };
 
