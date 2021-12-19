@@ -4,6 +4,8 @@ import Result "mo:base/Result";
 module {
         public type Interface = actor {
 
+                create : shared (collection: Nft.Collection) -> async CreateResponse;
+
                 // NFTAnvil asks if a principal is allowed to mint and 
                 author_allow : query (author: Nft.AccountIdentifier, collectionId: Nft.CollectionId) -> async AllowResponse;
 
@@ -14,6 +16,11 @@ module {
 
                 info : query (collectionId: Nft.CollectionId) -> async InfoResponse;
         };
+
+        public type CreateResponse = Result.Result<
+                Nft.CollectionId,
+                Text
+        >;
 
         public type InfoResponse = Result.Result<
                 Nft.Collection,

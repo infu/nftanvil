@@ -34,7 +34,21 @@ module {
     public type ItemUse = Nft.ItemUse;
     public type TokenIdentifier = Nft.TokenIdentifier;
 
+    public type RecordId = Blob; // consist of type, slot, idx
+    // record id is created inside each canister and then sent to history
+    // and returned in response.
+    // Anyone can use the recordId to query history and see whats there
+
+    // func for adding record to local block
+    // func for notifying block
+
     public type Record = {
+        id: RecordId;
+        created: Time.Time;
+        info: RecordInfo;
+    };
+
+    public type RecordInfo = {
         #nft : NftRecord;
         #pwr : PwrRecord;
         #anv : AnvRecord;
@@ -43,6 +57,7 @@ module {
 
     public type AnvRecord = {
         #transaction : RecordFungibleTransaction;
+        // vote
     };
 
     public type PwrRecord = {

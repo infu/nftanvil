@@ -19,6 +19,9 @@ import Collection "./type/collection_interface"
 
 shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal}) : async Collection.Interface = this {
 
+    public shared({caller}) func create(collection: Nft.Collection) : async Collection.CreateResponse {
+        #err("Not implemented");
+    };
 
     public query func author_allow(author: Nft.AccountIdentifier, collectionId: Nft.CollectionId) : async Collection.AllowResponse {
         #err("Not implemented");
