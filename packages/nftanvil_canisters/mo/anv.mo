@@ -38,7 +38,6 @@ shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
     private stable var _feeAnv:Nat64 = 10000;
 
 
-
     system func preupgrade() {
       _tmpBalance := Iter.toArray(_balance.entries());
       _tmpBlockchain := Iter.toArray(_blockchain.entries());
@@ -150,6 +149,6 @@ shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
       };
 
       _balance.put(aid, current + bal);
-  };
+    };
   
 }

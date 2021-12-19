@@ -460,13 +460,13 @@ module {
 
     public type ItemUse = {
         #cooldown: {
-            desc: EffectDesc;
+            //desc: EffectDesc;
             duration: Cooldown;
             useId: CustomId;
         };
 
         #consumable : {
-            desc: EffectDesc;
+           // desc: EffectDesc;
             useId: CustomId;
         };
     };
@@ -474,32 +474,17 @@ module {
     public module ItemUse = {
         public func validate(t : ItemUse) : Bool {
             switch(t) {
-                case (#cooldown({desc; duration; useId})) {
-                    CustomId.validate(useId) and EffectDesc.validate(desc) and Cooldown.validate( duration )
+                case (#cooldown({duration; useId})) {
+                    CustomId.validate(useId)  and Cooldown.validate( duration )
                 };
-                case (#consumable({desc; useId})) {
-                    CustomId.validate(useId) and EffectDesc.validate(desc)
+                case (#consumable({useId})) {
+                    CustomId.validate(useId)
                 }
             }
         }
     };
 
-    public type ItemHold = {
-        #external: {
-        desc: EffectDesc;
-        holdId: CustomId;
-        }
-    };
 
-    public module ItemHold = {
-        public func validate(t : ItemHold) : Bool {
-            switch(t) {
-                case (#external({desc; holdId})) {
-                    CustomId.validate(holdId) and EffectDesc.validate(desc)
-                };
-            }
-        }
-    };
 
     public type ItemTransfer = {
         #unrestricted;

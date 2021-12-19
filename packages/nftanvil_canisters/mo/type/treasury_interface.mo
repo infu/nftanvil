@@ -25,7 +25,7 @@ module {
         withdraw        : shared WithdrawRequest       -> async WithdrawResponse;
         
         // (internal) On sale, notify treasury so it can split incoming amount
-        notifySell  : shared NotifySellRequest -> async NotifySellResponse;
+        notify_NFTPurchase  : shared NFTPurchase -> async NFTPurchaseResponse;
 
         // Check your balance
         balance         : BalanceRequest        -> async BalanceResponse;
@@ -34,6 +34,7 @@ module {
     public type AccountIdentifier = Nft.AccountIdentifier;
     public type Share = Nft.Share;
     public type Balance = Nft.Balance;
+    public type TokenIdentifier = Nft.TokenIdentifier;
 
     public type BalanceRequest = {
         user: Nft.User;
@@ -52,11 +53,13 @@ module {
         #NotEnoughForTransfer;
     }>;
 
-    public type NotifySellRequest = {
-            buyerAccount : AccountIdentifier;
-            blockIndex : Ledger.BlockIndex;
+    public type NFTPurchase = {
+            ledgerBlock : Ledger.BlockIndex;
             amount : Ledger.ICP;
 
+            token: TokenIdentifier;
+            
+            buyer : AccountIdentifier;
             seller : AccountIdentifier;
 
             author : {
@@ -77,5 +80,5 @@ module {
             purchaseAccount : AccountIdentifier; 
     };
 
-    public type NotifySellResponse = Result.Result<(), Text>;
+    public type NFTPurchaseResponse = Result.Result<(), Text>;
 }   

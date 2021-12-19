@@ -404,20 +404,21 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
                                             };
 
                                         switch(await ledger.transfer(transfer)) {
-                                            case (#Ok(blockIndex)) {
+                                            case (#Ok(ledgerBlock)) {
                                                 
                                                 let notifyRequest = {
-                                                    buyerAccount = toUserAID;
-                                                    blockIndex;
-                                                    amount;
+                                                    buyer = toUserAID;
+                                                    ledgerBlock;
+                                                    amount; 
                                                     seller;
+                                                    token = request.token;
                                                     author = {address=meta.author; share=meta.authorShare};
                                                     marketplace = vars.price.marketplace;
                                                     affiliate = vars.price.affiliate;
                                                     purchaseAccount = purchaseAccountId; 
                                                 };
 
-                                                switch(await TREASURY.notifySell(notifyRequest)) {
+                                                switch(await TREASURY.notify_NFTPurchase(notifyRequest)) {
                                                     case (#ok()) {
                                                         #ok();
                                                     };

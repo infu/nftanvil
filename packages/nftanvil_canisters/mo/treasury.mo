@@ -54,7 +54,7 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
 
 
 
-  public shared({caller}) func notifySell(request: Treasury.NotifySellRequest): async Treasury.NotifySellResponse {
+  public shared({caller}) func notify_NFTPurchase(request: Treasury.NFTPurchase): async Treasury.NFTPurchaseResponse {
       //make sure caller is nft canister
       if (Array_.exists(_nft_canisters, caller, Principal.equal) == false) return #err("Unauthorized");
 
