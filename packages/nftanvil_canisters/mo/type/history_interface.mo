@@ -35,12 +35,30 @@ module {
     public type TokenIdentifier = Nft.TokenIdentifier;
 
     public type Record = {
+        #nft : NftRecord;
+        #pwr : PwrRecord;
+        #anv : AnvRecord;
+        #treasury : TreasuryRecord;
+    };
+
+    public type AnvRecord = {
+        #transaction : RecordFungibleTransaction;
+    };
+
+    public type PwrRecord = {
+        #transaction : RecordFungibleTransaction;
+    };
+
+    public type TreasuryRecord = {
+        //treasury withdraw
+    };
+
+    public type NftRecord = {
   
         #transaction : {
             from: AccountIdentifier;
             to: AccountIdentifier;
             token: TokenIdentifier;
-            amount: Balance;
             memo: Memo;
             time: Time.Time;
         };
@@ -60,7 +78,32 @@ module {
         };
 
         #purchase : Treasury.NFTPurchase;
+
+        #mint : {
+            collectionId: Nft.CollectionId;
+            token: TokenIdentifier;
+        };
+
+        #socket : {
+            socket : TokenIdentifier;
+            plug   : TokenIdentifier;
+        };
+
+        #unsocket : {
+            socket : TokenIdentifier;
+            plug   : TokenIdentifier;
+        };
+
     };
+
+    public type RecordFungibleTransaction =  {
+                    from: AccountIdentifier;
+                    to: AccountIdentifier;
+                    token: TokenIdentifier;
+                    amount: Balance;
+                    memo: Memo;
+                    time: Time.Time;
+                };
 
     public type Block = {
         records: [Record]

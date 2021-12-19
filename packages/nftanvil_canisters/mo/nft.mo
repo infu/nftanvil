@@ -918,9 +918,9 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
         
         if (Nft.Share.validate(m.authorShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
-        let classIndex: ?Nft.CollectionIndex = switch(m.classId) {
-           case (?classId) {
-                switch(await COLLECTION.mint_nextId(author, classId)) {
+        let classIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
+           case (?collectionId) {
+                switch(await COLLECTION.mint_nextId(author, collectionId)) {
                     case (#ok(index)) ?index;
                     case (#err(e)) return #err(#ClassError(e)) 
                 };
@@ -929,7 +929,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
         };
         
         let md : Metadata = {
-            classId = m.classId;
+            collectionId = m.collectionId;
             classIndex;
             name = m.name;
             lore = m.lore;
@@ -994,10 +994,10 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
             return #err(#OutOfMemory);
             };
 
-        switch(request.metadata.classId) {
-                case (?classId) {
+        switch(request.metadata.collectionId) {
+                case (?collectionId) {
 
-                    switch (await COLLECTION.author_allow(author, classId)) {
+                    switch (await COLLECTION.author_allow(author, collectionId)) {
                         case (#ok()) {                                        
                             ()
                         };
@@ -1018,17 +1018,17 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
             case (_) ();
         };
 
-        switch(request.metadata.classId) {
+        switch(request.metadata.collectionId) {
             case (?can) {
                 ()
             };
             case (null) {
                  switch(request.metadata.content) {
-                    case(?#external(_)) return #err(#Invalid("classId required if external content is specified"));
+                    case(?#external(_)) return #err(#Invalid("collectionId required if external content is specified"));
                     case (_) ()
                  };
                  switch(request.metadata.thumb) {
-                    case(#external(_)) return #err(#Invalid("classId required if external thumb is specified"));
+                    case(#external(_)) return #err(#Invalid("collectionId required if external thumb is specified"));
                     case (_) ()
                  };
             };
@@ -1102,11 +1102,11 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                        switch(switch(meta.classId) {
-                            case (?classId) {
+                        switch(switch(meta.collectionId) {
+                            case (?collectionId) {
 
                                 // get permission from class canister
-                                switch (await COLLECTION.socket_allow(request, classId)) {
+                                switch (await COLLECTION.socket_allow(request, collectionId)) {
                                     case (#ok()) {                                        
                                         #ok()
                                     };

@@ -5,14 +5,14 @@ module {
         public type Interface = actor {
 
                 // NFTAnvil asks if a principal is allowed to mint and 
-                author_allow : query (author: Nft.AccountIdentifier, classId: Nft.CollectionId) -> async AllowResponse;
+                author_allow : query (author: Nft.AccountIdentifier, collectionId: Nft.CollectionId) -> async AllowResponse;
 
-                mint_nextId : shared (author: Nft.AccountIdentifier, classId: Nft.CollectionId) -> async MintNextIdResponse;
+                mint_nextId : shared (author: Nft.AccountIdentifier, collectionId: Nft.CollectionId) -> async MintNextIdResponse;
 
                 // NFTAnvil asks if an nft can be socketed
-                socket_allow : query (request: Nft.SocketRequest, classId:Nft.CollectionId) -> async AllowResponse;
+                socket_allow : query (request: Nft.SocketRequest, collectionId:Nft.CollectionId) -> async AllowResponse;
 
-                info : query (classId: Nft.CollectionId) -> async InfoResponse;
+                info : query (collectionId: Nft.CollectionId) -> async InfoResponse;
         };
 
         public type InfoResponse = Result.Result<

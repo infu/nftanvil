@@ -61,6 +61,7 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
       let total:Nat64 = request.amount.e8s;
       let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
       let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(request.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
+     
       let marketplace_cut:Nat64 = switch(request.marketplace) {
         case (?marketplace) {
           total * Nat64.fromNat(Nft.Share.limit(marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);

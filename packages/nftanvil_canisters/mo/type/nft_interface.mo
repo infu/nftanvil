@@ -618,7 +618,7 @@ module {
     };
 
     public type Metadata = {
-        classId: ?CollectionId;
+        collectionId: ?CollectionId;
         classIndex: ?CollectionIndex;
         name: ?ItemName;
         lore: ?ItemLore;
@@ -646,7 +646,7 @@ module {
     };
 
     public type MetadataInput = {
-        classId: ?CollectionId;
+        collectionId: ?CollectionId;
         name: ?Text;
         lore: ?Text;
         quality: Nat8;
