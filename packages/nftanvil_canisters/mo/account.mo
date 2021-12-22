@@ -21,8 +21,10 @@ import Array_ "./lib/Array";
 import HashSmash "./lib/HashSmash";
 
 import Prim "mo:prim"; 
+import Cluster  "./type/Cluster";
 
-shared({ caller = _owner }) actor class Account({_router: Principal; _nft_canisters:[Principal]}) = this {
+shared({ caller = _owner }) actor class Account() = this {
+    private stable var _conf : Cluster.Config = Cluster.default();
 
      // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -45,7 +47,7 @@ shared({ caller = _owner }) actor class Account({_router: Principal; _nft_canist
 
     private func can2idx(can:Principal) : ?Slot {
         var found:?Slot = null;
-        Iter.iterate<Principal>(Iter.fromArray(_nft_canisters), func (x, index) {
+        Iter.iterate<Principal>(Iter.fromArray(_conf.nft), func (x, index) {
             if (can == x) found := ?Nat32.fromNat(index);
         });
         return found;
@@ -97,7 +99,7 @@ shared({ caller = _owner }) actor class Account({_router: Principal; _nft_canist
     private func gid2tid(gid:Nat32) : TokenIdentifier {
             let slot:Nat32 = gid >> 13;
             let idx:Nat32 = gid; 
-            let nftcan = _nft_canisters[Nat32.toNat(slot)];
+            let nftcan = _conf.nft[Nat32.toNat(slot)];
             Nft.TokenIdentifier.encode(nftcan, idx);
     };
 

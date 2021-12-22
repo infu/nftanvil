@@ -14,10 +14,12 @@ import Time "mo:base/Time";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
+import Cluster  "./type/Cluster";
 
 import Collection "./type/collection_interface"
 
-shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal}) : async Collection.Interface = this {
+shared({caller = _installer}) actor class Class() : async Collection.Interface = this {
+    private stable var _conf : Cluster.Config = Cluster.default();
 
     public shared({caller}) func create(collection: Nft.Collection) : async Collection.CreateResponse {
         #err("Not implemented");

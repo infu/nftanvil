@@ -32,11 +32,12 @@ import SHA256 "mo:sha/SHA256";
 import Ledger  "./type/ledger_interface";
 import Treasury  "./type/treasury_interface";
 import Collection  "./type/collection_interface";
+import Cluster  "./type/Cluster";
 
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
 
 
-shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _router:Principal; _collection:Principal; _treasury:Principal; _slot:Nat32;}) : async Nft.Interface = this {
+shared({caller = _owner}) actor class Class() : async Nft.Interface = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -66,33 +67,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
         #Other        : Text;
     };
 
-    let ROUTER = actor(Principal.toText(_router)) : actor {
-        reportOutOfMemory : shared () -> async ();
-        isLegitimate : query (p:Principal) -> async Bool;
-    };
-
-    let COLLECTION = actor(Principal.toText(_collection)) : Collection.Interface;
-
-    let TREASURY = actor(Principal.toText(_treasury)) : Treasury.Interface;
-
-    let TREASURYAddress : AccountIdentifier = Nft.AccountIdentifier.fromPrincipal(_treasury, null);
     
-    
-    private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
-
-    private let _acclist_size = Iter.size(Iter.fromArray(_account_canisters));
-
-    type accountInterface = actor {
-        add : shared (aid: AccountIdentifier, idx:TokenIndex) -> async ();
-        rem : shared (aid: AccountIdentifier, idx:TokenIndex) -> async ();
-    };
-
-    private func accountActor(aid: AccountIdentifier) : accountInterface {
-        let selected = _account_canisters[ Nft.AccountIdentifier.slot(aid, _acclist_size) ];
-        actor(Principal.toText(selected)): accountInterface;
-    };
-
- 
 
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
 
@@ -115,6 +90,8 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
     private stable var _tmpChunk : [(Nat32, Blob)] = [];
     private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
 
+
+    private stable var _conf : Cluster.Config = Cluster.default();
 
     private stable var _statsCollections : Nat32  = 0;
     private stable var _statsTransfers : Nat32  = 0;
@@ -237,7 +214,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
                             
                             _token2link.put(tokenIndex, request.hash);
 
-                            #ok(_slot);
+                            #ok(Nat32.fromNat(_conf.slot));
                     };
                     case (#err()) {
                          #err(#InvalidToken(request.token));
@@ -340,7 +317,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
 
                 let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
                 
-                let {e8s = payment} = await ledger.account_balance({
+                let {e8s = payment} = await Cluster.ledger(_conf).account_balance({
                     account = purchaseAccountId
                 });
 
@@ -399,11 +376,11 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
                                             amount;
                                             fee = {e8s = _fee};
                                             from_subaccount = ?purchaseSubAccount;
-                                            to = TREASURYAddress;
+                                            to = Cluster.treasury_address(_conf);
                                             created_at_time = null;
                                             };
 
-                                        switch(await ledger.transfer(transfer)) {
+                                        switch(await Cluster.ledger(_conf).transfer(transfer)) {
                                             case (#Ok(ledgerBlock)) {
                                                 
                                                 let notifyRequest = {
@@ -418,7 +395,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
                                                     purchaseAccount = purchaseAccountId; 
                                                 };
 
-                                                switch(await TREASURY.notify_NFTPurchase(notifyRequest)) {
+                                                switch(await Cluster.treasury(_conf).notify_NFTPurchase(notifyRequest)) {
                                                     case (#ok()) {
                                                         #ok();
                                                     };
@@ -450,7 +427,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
                                             created_at_time = null;
                                             };
 
-                                        switch(await ledger.transfer(transfer)) {
+                                        switch(await Cluster.ledger(_conf).transfer(transfer)) {
                                                 case (#Ok(blockIndex)) {
                                                     #err(#Refunded)
                                                 };
@@ -731,7 +708,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
 
     private func chunkIdDecode(x:Nat32) : (tokenIndex:Nat32, chunkIndex:Nat32, ctype:Nat32) {
         (
-            ((x >> 19 ) & thresholdNFTMask) | (_slot<<13) ,
+            ((x >> 19 ) & thresholdNFTMask) | (Nat32.fromNat(_conf.slot)<<13) ,
             (x >> 2) & 255,
             (x & 3)
         )
@@ -905,7 +882,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
         // Some tokens will be less space, others more, max is ~ 5.4mb
         // Max tokens if canisters have only 1000tokens each = 524287 * 1000 = 524 mil
 
-        let tokenIndex:TokenIndex = (_slot<<13) | _nextTokenId;
+        let tokenIndex:TokenIndex = (Nat32.fromNat(_conf.slot)<<13) | _nextTokenId;
         _nextTokenId := _nextTokenId + 1;
 
         let timestamp:Nat32 = timeInMinutes();
@@ -920,7 +897,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
 
         let classIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
            case (?collectionId) {
-                switch(await COLLECTION.mint_nextId(author, collectionId)) {
+                switch(await Cluster.collection(_conf).mint_nextId(author, collectionId)) {
                     case (#ok(index)) ?index;
                     case (#err(e)) return #err(#ClassError(e)) 
                 };
@@ -990,14 +967,14 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
 
         if ((thresholdNFTCount  <= _nextTokenId) or (thresholdMemory <= Prim.rts_memory_size() )) {
             _available := false;
-            await ROUTER.reportOutOfMemory();
+            await Cluster.router(_conf).reportOutOfMemory();
             return #err(#OutOfMemory);
             };
 
         switch(request.metadata.collectionId) {
                 case (?collectionId) {
 
-                    switch (await COLLECTION.author_allow(author, collectionId)) {
+                    switch (await Cluster.collection(_conf).author_allow(author, collectionId)) {
                         case (#ok()) {                                        
                             ()
                         };
@@ -1092,7 +1069,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
         let plugBlob = Nft.TokenIdentifier.toBlob(request.plug);
 
 
-        if ((await ROUTER.isLegitimate(caller)) == false) return #err(#NotLegitimateCaller);
+         if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
         
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
@@ -1106,7 +1083,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
                             case (?collectionId) {
 
                                 // get permission from class canister
-                                switch (await COLLECTION.socket_allow(request, collectionId)) {
+                                switch (await Cluster.collection(_conf).socket_allow(request, collectionId)) {
                                     case (#ok()) {                                        
                                         #ok()
                                     };
@@ -1193,7 +1170,7 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
 
 // Unsockets and returns it to owner
     public shared({caller}) func unplug(request: Nft.UnsocketRequest) : async Nft.UnplugResponse {
-        if ((await ROUTER.isLegitimate(caller)) == false) return #err(#NotLegitimateCaller);
+        if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     
@@ -1341,12 +1318,13 @@ shared({caller = _owner}) actor class Class({_account_canisters: [Principal]; _r
         await ACC_del(aid, tidx);
     };
 
-    private func ACC_put(aid: AccountIdentifier, tidx: TokenIndex) : async () { 
-        await accountActor(aid).add(aid, tidx);
+    private func ACC_put(aid: AccountIdentifier, tidx: TokenIndex) : async () {
+        await Cluster.accountFromAid(_conf, aid).add(aid, tidx);
+        
     };
 
     private func ACC_del(aid: AccountIdentifier, tidx: TokenIndex) : async () {
-        await accountActor(aid).rem(aid, tidx);   
+        await Cluster.accountFromAid(_conf, aid).rem(aid, tidx);   
     };
 
     private func ACC_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : async () {

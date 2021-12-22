@@ -21,4 +21,13 @@ module {
             case (null) false 
         }
     };
+
+    private func index<A>(list:[A], search:A, equal: (A,A) -> Bool) : ?Nat {
+        var found:?Nat = null;
+        Iter.iterate<A>(Iter.fromArray(list), func (x, index) {
+            if (equal(search, x)) found := ?index;
+        });
+        return found;
+    };
+
  }

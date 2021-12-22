@@ -11,10 +11,12 @@ import Time "mo:base/Time";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
+import Cluster  "./type/Cluster";
 
 import History "./type/history_interface";
 
 shared({caller = _installer}) actor class Class() : async History.Interface = this {
+    private stable var _conf : Cluster.Config = Cluster.default();
 
     public shared({caller}) func add(request: History.AddRequest) : async History.AddResponse {
         #ok();

@@ -2,76 +2,90 @@ const fs = require("fs");
 const path = require("path");
 const dev = process.env.NODE_ENV !== "production";
 
-let clusterFile = path.resolve(
-  "..",
-  "..",
-  dev ? "cluster.local.json" : "cluster.json"
+let canistersFile = path.resolve(
+  dev ? "./.dfx/local/canister_ids.json" : "./canister_ids.json"
 );
-let cluster = JSON.parse(fs.readFileSync(clusterFile));
-let dfxd = "cp dfx_deploy.json dfx.json\n";
+
+let dfxFile = path.resolve("./dfx.json");
+
+let canisters;
+try {
+  canisters = JSON.parse(fs.readFileSync(canistersFile));
+} catch (e) {
+  canisters = {};
+}
+let dfx = JSON.parse(fs.readFileSync(dfxFile));
+
+let cans = { nft: [], account: [] };
+
+for (let name in dfx.canisters) {
+  let id;
+  try {
+    id = canisters[name][dev ? "local" : "ic"];
+  } catch (e) {
+    console.log("Canister " + name + " not found in " + canistersFile);
+  }
+  let m = /(\w*)\_\d/gm.exec(name);
+  if (m) {
+    let prefix = m[1];
+    if (!cans[prefix]) cans[prefix] = [];
+    if (id) cans[prefix].push(id);
+  } else {
+    cans[name] = id ? id : "aaaaa-aa";
+  }
+}
+
 const network_target = dev ? "" : "--network ic";
+console.log(cans);
+let dfxd = "";
+//dfxd += `dfx deploy ${network_target} anv\n`;
 
-let r = {
-  canisters: {},
-  defaults: {
-    build: {
-      args: "",
-      packtool: "vessel sources",
-    },
-  },
-  dfx: "0.8.4",
-  networks: {
-    local: {
-      bind: "127.0.0.1:8000",
-      type: "ephemeral",
-    },
-  },
-  version: 1,
-};
-let ci = {
-  anv: { ic: "4kn7r-oiaaa-aaaai-qa55a-cai" },
-};
+dfxd += `dfx deploy ${network_target} router --argument '
+record {
+  _nft_canisters= vec { ${cans["nft"]
+    .map((x) => `record {principal "${x}"; false}`)
+    .join("; ")} };
+  _account_canisters= vec { ${cans["account"]
+    .map((x) => `principal "${x}"`)
+    .join("; ")} };
+  _pwr= principal "${cans["pwr"]}";
+  _anv= principal "${cans["anv"]}";
+  _collection= principal "${cans["collection"]}";
+  _treasury= principal "${cans["treasury"]}";
+}
+'\n`;
 
-r.canisters["anv"] = {
-  main: "mo/anv.mo",
-  type: "motoko",
-};
-dfxd += `dfx deploy ${network_target} anv\n`;
+for (let slot = 0; slot < cans["nft"].length; slot++) {
+  dfxd += `dfx deploy ${network_target} nft_${slot} --argument '
+record {
+  _nft_canisters= vec { ${cans["nft"]
+    .map((x) => `principal "${x}"`)
+    .join("; ")} };
+  _account_canisters= vec { ${cans["account"]
+    .map((x) => `principal "${x}"`)
+    .join("; ")} };
+  _router= principal "${cans["router"]}";
+  _pwr= principal "${cans["pwr"]}";
+  _anv= principal "${cans["anv"]}";
+  _collection= principal "${cans["collection"]}";
+  _treasury= principal "${cans["treasury"]}";
+  _slot=${slot}
+}
+'\n`;
+}
 
-cluster.router.forEach((x, idx) => {
-  r.canisters["router" + (idx ? "_" + idx : "")] = {
-    main: "mo/router.mo",
-    type: "motoko",
-  };
-  ci["router" + (idx ? "_" + idx : "")] = { [dev ? "local" : "ic"]: x };
-  dfxd += `dfx deploy ${network_target} router${idx ? "_" + idx : ""}\n`;
-});
+//${idx ? "_" + idx : ""}
+console.log("\n\n>>>", dfxd);
+// cluster.nft.forEach((x, idx) => {
+//   dfxd += `dfx deploy ${network_target} nft_${idx} --argument 'record {_acclist= vec {"${cluster.account.join(
+//     '";"'
+//   )}"};  _slot=${idx}; _router= principal "${
+//     cluster.router[0]
+//   }"; _debug_cannisterId=null}'\n`;
+// });
 
-cluster.nft.forEach((x, idx) => {
-  r.canisters["nft_" + idx] = {
-    main: "mo/nft.mo",
-    type: "motoko",
-  };
-  ci["nft_" + idx] = { [dev ? "local" : "ic"]: x };
-  dfxd += `dfx deploy ${network_target} nft_${idx} --argument 'record {_acclist= vec {"${cluster.account.join(
-    '";"'
-  )}"};  _slot=${idx}; _router= principal "${
-    cluster.router[0]
-  }"; _debug_cannisterId=null}'\n`;
-});
-
-cluster.account.forEach((x, idx) => {
-  r.canisters["account_" + idx] = {
-    main: "mo/account.mo",
-    type: "motoko",
-  };
-  ci["account_" + idx] = { [dev ? "local" : "ic"]: x };
-  dfxd += `dfx deploy ${network_target} account_${idx} --argument 'record {_router= principal "${cluster.router[0]}"}'\n`;
-});
-
-fs.writeFileSync("./dfx_deploy.json", JSON.stringify(r));
-
-// if (dev) fs.writeFileSync(".dfx/local/canister_ids.json", JSON.stringify(ci));
-fs.writeFileSync("./canister_ids.json", JSON.stringify(ci));
+// cluster.account.forEach((x, idx) => {
+//   dfxd += `dfx deploy ${network_target} account_${idx} --argument 'record {_router= principal "${cluster.router[0]}"}'\n`;
+// });
 
 fs.writeFileSync("./dfx_deploy.sh", dfxd);

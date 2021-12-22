@@ -12,8 +12,10 @@ import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Blob "mo:base/Blob";
 import Anv "./type/anv_interface";
+import Cluster  "./type/Cluster";
 
 shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
+    private stable var _conf : Cluster.Config = Cluster.default();
 
     public type Balance = Nft.Balance;
     public type AccountIdentifier = Nft.AccountIdentifier;

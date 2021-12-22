@@ -16,9 +16,12 @@ import Array "mo:base/Array";
 import Array_ "./lib/Array";
 
 import Blob "mo:base/Blob";
+import Cluster  "./type/Cluster";
 
 
-shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal;}) : async Pwr.Interface = this {
+shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
+
+  private stable var _conf : Cluster.Config = Cluster.default();
 
   public type Balance = Nft.Balance;
   public type AccountIdentifier = Nft.AccountIdentifier;

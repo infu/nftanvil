@@ -21,7 +21,6 @@ import Text "mo:base/Text";
 import Blob_ "../lib/Blob";
 
 
-
 module {
     public type Interface = actor {
 
@@ -920,6 +919,8 @@ module {
         >;
 
     };
+
+
 
     public type StatsResponse = {
         minted: Nat32;

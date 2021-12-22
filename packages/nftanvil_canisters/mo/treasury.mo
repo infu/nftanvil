@@ -16,9 +16,12 @@ import Array "mo:base/Array";
 import Array_ "./lib/Array";
 
 import Blob "mo:base/Blob";
+import Cluster  "./type/Cluster";
 
 
-shared({caller = _installer}) actor class Class({_admin: Principal; _router: Principal; _nft_canisters:[Principal]}) = this {
+shared({caller = _installer}) actor class Class() = this {
+
+  private stable var _conf : Cluster.Config = Cluster.default();
 
   public type Balance = Nft.Balance;
   public type AccountIdentifier = Nft.AccountIdentifier;
@@ -53,10 +56,10 @@ shared({caller = _installer}) actor class Class({_admin: Principal; _router: Pri
   };
 
 
-
+ 
   public shared({caller}) func notify_NFTPurchase(request: Treasury.NFTPurchase): async Treasury.NFTPurchaseResponse {
       //make sure caller is nft canister
-      if (Array_.exists(_nft_canisters, caller, Principal.equal) == false) return #err("Unauthorized");
+      if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err("Unauthorized");
 
       let total:Nat64 = request.amount.e8s;
       let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
