@@ -10,13 +10,18 @@ import Cluster  "./type/Cluster";
 
 //import AAA "./type/aaa_interface";
 
-shared({caller = owner}) actor class Router() = this {
+shared({caller = _installer}) actor class Router() = this {
 
 //    let IC = actor "aaaaa-aa" : AAA.Interface;
     private stable var _conf : Cluster.Config = Cluster.default();
 
     public shared({caller}) func reportOutOfMemory() : async () {
         //TODO
+    };
+
+    public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+        assert(caller == _installer);
+        _conf := conf
     };
 
     public query func getAvailable() : async [Text] {

@@ -3,10 +3,12 @@
   "version": "0.0.15",
   "scripts": {
     "watch": "babel -d cjs src --copy-files --watch",
-    "build": "node generate_deploy.js && ./dfx_generate.sh && babel -d cjs src --copy-files",
-    "deploy": "NODE_ENV=production node generate_deploy.js && ./dfx_deploy.sh",
-    "deploy:dev": "NODE_ENV=development node generate_deploy.js && ./dfx_deploy.sh",
-    "generate": "./dfx_generate.sh"
+    "build": "yarn generate && babel -d cjs src --copy-files",
+    "deploy:prod": "dfx deploy --network ic",
+    "config:set": "NODE_ENV=development node generate_config_set.js && ./dfx_config_set.sh",
+    "deploy": "dfx deploy",
+    "config:set:prod": "NODE_ENV=production node generate_config_set.js && ./dfx_config_set.sh",
+    "generate": "node generate_idl.js && ./dfx_generate_idl.sh"
   },
   "browserslist": {
     "production": [

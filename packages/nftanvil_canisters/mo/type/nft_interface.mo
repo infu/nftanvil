@@ -20,8 +20,10 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Blob_ "../lib/Blob";
 
+//Notice: In the beginning this spec started from Aviate-labs https://github.com/aviate-labs/ext.std
+//A lot of AccountIdentifier code is from there too
 
-module {
+module {    
     public type Interface = actor {
 
         // Returns the balance of account.

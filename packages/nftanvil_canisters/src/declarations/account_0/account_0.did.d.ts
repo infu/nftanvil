@@ -1,7 +1,7 @@
 import type { Principal } from '@dfinity/principal';
 export interface Account {
   'add' : (arg_0: AccountIdentifier, arg_1: TokenIndex) => Promise<undefined>,
-  'addAllowed' : (arg_0: Principal, arg_1: number) => Promise<undefined>,
+  'config_set' : (arg_0: Config) => Promise<undefined>,
   'list' : (arg_0: AccountIdentifier, arg_1: bigint) => Promise<
       Array<TokenIdentifier>
     >,
@@ -9,6 +9,18 @@ export interface Account {
   'stats' : () => Promise<StatsResponse>,
 }
 export type AccountIdentifier = Array<number>;
+export interface Config {
+  'anv' : Principal,
+  'nft' : Array<Principal>,
+  'pwr' : Principal,
+  'collection' : Principal,
+  'slot' : bigint,
+  'history' : Principal,
+  'nft_avail' : Array<Principal>,
+  'account' : Array<Principal>,
+  'router' : Principal,
+  'treasury' : Principal,
+}
 export interface StatsResponse {
   'rts_max_live_size' : bigint,
   'cycles' : bigint,

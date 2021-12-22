@@ -20,5 +20,11 @@ shared({caller = _installer}) actor class Class() : async History.Interface = th
 
     public shared({caller}) func add(request: History.AddRequest) : async History.AddResponse {
         #ok();
-    }
+    };
+
+    public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+        assert(caller == _installer);
+        _conf := conf
+    };
+
 }

@@ -62,9 +62,23 @@ type PurchaseClaimRequest =
  };
 type Memo = nat64;
 type ICP = record {e8s: nat64;};
+type Config = 
+ record {
+   account: vec principal;
+   anv: principal;
+   collection: principal;
+   history: principal;
+   nft: vec principal;
+   nft_avail: vec principal;
+   pwr: principal;
+   router: principal;
+   slot: nat;
+   treasury: principal;
+ };
 type Class = 
  service {
    balance: (BalanceRequest) -> (BalanceResponse) query;
+   config_set: (Config) -> ();
    dumpBalances: () -> (vec record {
                               AccountIdentifier__2;
                               Balance__1;
@@ -82,7 +96,4 @@ type Balance = nat64;
 type AccountIdentifier__2 = blob;
 type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;
-service : (record {
-             _admin: principal;
-             _router: principal;
-           }) -> Class
+service : () -> Class

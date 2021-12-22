@@ -23,7 +23,7 @@ import HashSmash "./lib/HashSmash";
 import Prim "mo:prim"; 
 import Cluster  "./type/Cluster";
 
-shared({ caller = _owner }) actor class Account() = this {
+shared({ caller = _installer }) actor class Account() = this {
     private stable var _conf : Cluster.Config = Cluster.default();
 
      // TYPE ALIASES
@@ -51,6 +51,11 @@ shared({ caller = _owner }) actor class Account() = this {
             if (can == x) found := ?Nat32.fromNat(index);
         });
         return found;
+    };
+
+    public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+        assert(caller == _installer);
+        _conf := conf
     };
 
     public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex) : async () {

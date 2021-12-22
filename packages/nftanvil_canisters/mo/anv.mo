@@ -54,6 +54,12 @@ shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
       Nft.TokenIdentifier.encode( Principal.fromActor(this), 0);
     };
 
+   
+    public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+        assert(caller == _installer);
+        _conf := conf
+    };
+
     public query func tokenId() : async TokenIdentifier {
       myTokenId();
     };

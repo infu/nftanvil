@@ -1,7 +1,5 @@
 import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
-export type AnvilClassId = number;
-export type AnvilClassIndex = number;
 export interface ApproveRequest {
   'token' : TokenIdentifier,
   'subaccount' : [] | [SubAccount],
@@ -55,6 +53,7 @@ export interface Class {
   'bearer' : (arg_0: TokenIdentifier) => Promise<BearerResponse>,
   'burn' : (arg_0: BurnRequest) => Promise<BurnResponse>,
   'claim_link' : (arg_0: ClaimLinkRequest) => Promise<ClaimLinkResponse>,
+  'config_set' : (arg_0: Config) => Promise<undefined>,
   'cyclesAccept' : () => Promise<undefined>,
   'cyclesBalance' : () => Promise<bigint>,
   'fetchChunk' : (arg_0: FetchChunkRequest) => Promise<[] | [Array<number>]>,
@@ -82,8 +81,22 @@ export interface Class {
   'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
   'use' : (arg_0: UseRequest) => Promise<UseResponse>,
 }
+export type CollectionId = number;
+export type CollectionIndex = number;
 export type CommonError = { 'InvalidToken' : TokenIdentifier } |
   { 'Other' : string };
+export interface Config {
+  'anv' : Principal,
+  'nft' : Array<Principal>,
+  'pwr' : Principal,
+  'collection' : Principal,
+  'slot' : bigint,
+  'history' : Principal,
+  'nft_avail' : Array<Principal>,
+  'account' : Array<Principal>,
+  'router' : Principal,
+  'treasury' : Principal,
+}
 export type Content = {
     'internal' : { 'contentType' : ContentType, 'size' : number }
   } |
@@ -110,10 +123,11 @@ export type ItemTransfer = { 'unrestricted' : null } |
 export type Memo = bigint;
 export interface Metadata {
   'ttl' : [] | [number],
-  'classIndex' : [] | [AnvilClassIndex],
+  'classIndex' : [] | [CollectionIndex],
   'thumb' : Content,
   'created' : number,
   'content' : [] | [Content],
+  'collectionId' : [] | [CollectionId],
   'authorShare' : Share,
   'custom' : [] | [CustomData],
   'quality' : number,
@@ -121,7 +135,6 @@ export interface Metadata {
   'name' : [] | [ItemName],
   'tags' : Tags,
   'secret' : boolean,
-  'classId' : [] | [AnvilClassId],
   'author' : AccountIdentifier,
   'entropy' : Array<number>,
   'attributes' : Attributes,
@@ -131,6 +144,7 @@ export interface MetadataInput {
   'ttl' : [] | [number],
   'thumb' : Content,
   'content' : [] | [Content],
+  'collectionId' : [] | [CollectionId],
   'authorShare' : Share,
   'custom' : [] | [CustomData],
   'quality' : number,
@@ -138,7 +152,6 @@ export interface MetadataInput {
   'name' : [] | [string],
   'tags' : Tags,
   'secret' : boolean,
-  'classId' : [] | [AnvilClassId],
   'attributes' : Attributes,
   'price' : Price,
   'transfer' : ItemTransfer,

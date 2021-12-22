@@ -37,7 +37,7 @@ import Cluster  "./type/Cluster";
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
 
 
-shared({caller = _owner}) actor class Class() : async Nft.Interface = this {
+shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -157,6 +157,7 @@ shared({caller = _owner}) actor class Class() : async Nft.Interface = this {
         
     };
 
+    
     private func isTransferBound(caller: AccountIdentifier, meta :Metadata, vars: Metavars) : Bool {
             switch( caller == meta.author ) { 
                 case (false) {
@@ -275,7 +276,12 @@ shared({caller = _owner}) actor class Class() : async Nft.Interface = this {
                 }
             }
     };
-    
+
+    public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+        assert(caller == _installer);
+        _conf := conf
+    };
+
     // Get accountid and exact ICP amount
     public shared({caller}) func purchase_intent( request: Nft.PurchaseIntentRequest) : async Nft.PurchaseIntentResponse {
         let toUserAID = Nft.User.toAccountIdentifier(request.user);

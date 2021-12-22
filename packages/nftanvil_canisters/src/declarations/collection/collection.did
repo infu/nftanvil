@@ -1,0 +1,82 @@
+type User = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
+type TokenIdentifier = text;
+type SubAccount = blob;
+type SocketRequest = 
+ record {
+   plug: TokenIdentifier;
+   socket: TokenIdentifier;
+   subaccount: opt SubAccount;
+   user: User;
+ };
+type Renderer = 
+ variant {
+   canister: record {contentType: ContentType;};
+   wasm: variant {
+           ic: ICPath;
+           ipfs: IPFS_CID;
+         };
+ };
+type MintNextIdResponse = 
+ variant {
+   err: text;
+   ok: CollectionIndex;
+ };
+type InfoResponse = 
+ variant {
+   err: variant {NotFound;};
+   ok: Collection;
+ };
+type IPFS_CID = text;
+type ICPath = text;
+type DomainName = text;
+type CreateResponse = 
+ variant {
+   err: text;
+   ok: CollectionId;
+ };
+type ContentType = text;
+type Config = 
+ record {
+   account: vec principal;
+   anv: principal;
+   collection: principal;
+   history: principal;
+   nft: vec principal;
+   nft_avail: vec principal;
+   pwr: principal;
+   router: principal;
+   slot: nat;
+   treasury: principal;
+ };
+type CollectionIndex = nat32;
+type CollectionId = nat32;
+type Collection = 
+ record {
+   authors: vec AccountIdentifier;
+   contentType: ContentType;
+   domain: opt DomainName;
+   lastIdx: CollectionIndex;
+   max: CollectionIndex;
+   renderer: opt Renderer;
+   socketable: vec CollectionId;
+ };
+type Class = 
+ service {
+   author_allow: (AccountIdentifier, CollectionId) -> (AllowResponse) query;
+   config_set: (Config) -> ();
+   create: (Collection) -> (CreateResponse);
+   info: (CollectionId) -> (InfoResponse) query;
+   mint_nextId: (AccountIdentifier, CollectionId) -> (MintNextIdResponse);
+   socket_allow: (SocketRequest, CollectionId) -> (AllowResponse) query;
+ };
+type AllowResponse = 
+ variant {
+   err: text;
+   ok;
+ };
+type AccountIdentifier = blob;
+service : () -> Class

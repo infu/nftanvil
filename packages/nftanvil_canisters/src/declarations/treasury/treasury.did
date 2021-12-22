@@ -1,0 +1,85 @@
+type WithdrawResponse = 
+ variant {
+   err: variant {
+          NotEnoughForTransfer;
+          TransferFailed;
+        };
+   ok: Balance;
+ };
+type WithdrawRequest = 
+ record {
+   subaccount: opt SubAccount;
+   user: User;
+ };
+type User = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
+type TokenIdentifier = text;
+type SubAccount = blob;
+type Share = nat16;
+type NFTPurchaseResponse = 
+ variant {
+   err: text;
+   ok;
+ };
+type NFTPurchase = 
+ record {
+   affiliate: opt record {
+                    address: AccountIdentifier__1;
+                    share: Share;
+                  };
+   amount: ICP;
+   author: record {
+             address: AccountIdentifier__1;
+             share: Share;
+           };
+   buyer: AccountIdentifier__1;
+   ledgerBlock: BlockIndex;
+   marketplace: opt record {
+                      address: AccountIdentifier__1;
+                      share: Share;
+                    };
+   purchaseAccount: AccountIdentifier__1;
+   seller: AccountIdentifier__1;
+   token: TokenIdentifier;
+ };
+type ICP = record {e8s: nat64;};
+type Config = 
+ record {
+   account: vec principal;
+   anv: principal;
+   collection: principal;
+   history: principal;
+   nft: vec principal;
+   nft_avail: vec principal;
+   pwr: principal;
+   router: principal;
+   slot: nat;
+   treasury: principal;
+ };
+type Class = 
+ service {
+   balance: (BalanceRequest) -> (BalanceResponse) query;
+   config_set: (Config) -> ();
+   dumpBalances: () -> (vec record {
+                              AccountIdentifier__2;
+                              Balance__1;
+                            }) query;
+   notify_NFTPurchase: (NFTPurchase) -> (NFTPurchaseResponse);
+   withdraw: (WithdrawRequest) -> (WithdrawResponse);
+ };
+type BlockIndex = nat64;
+type Balance__1 = nat64;
+type BalanceResponse = nat64;
+type BalanceRequest = 
+ record {
+   subaccount: opt SubAccount;
+   user: User;
+ };
+type Balance = nat64;
+type AccountIdentifier__2 = blob;
+type AccountIdentifier__1 = blob;
+type AccountIdentifier = blob;
+service : () -> Class

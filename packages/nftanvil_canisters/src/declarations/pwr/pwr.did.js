@@ -6,6 +6,18 @@ export const idlFactory = ({ IDL }) => {
   });
   const BalanceRequest = IDL.Record({ 'user' : User__1 });
   const BalanceResponse = IDL.Nat64;
+  const Config = IDL.Record({
+    'anv' : IDL.Principal,
+    'nft' : IDL.Vec(IDL.Principal),
+    'pwr' : IDL.Principal,
+    'collection' : IDL.Principal,
+    'slot' : IDL.Nat,
+    'history' : IDL.Principal,
+    'nft_avail' : IDL.Vec(IDL.Principal),
+    'account' : IDL.Vec(IDL.Principal),
+    'router' : IDL.Principal,
+    'treasury' : IDL.Principal,
+  });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__1 = IDL.Nat64;
   const User = IDL.Variant({
@@ -63,6 +75,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
+    'config_set' : IDL.Func([Config], [], []),
     'dumpBalances' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance__1))],
@@ -83,6 +96,4 @@ export const idlFactory = ({ IDL }) => {
   });
   return Class;
 };
-export const init = ({ IDL }) => {
-  return [IDL.Record({ '_admin' : IDL.Principal, '_router' : IDL.Principal })];
-};
+export const init = ({ IDL }) => { return []; };

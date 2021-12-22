@@ -330,7 +330,7 @@ type MetadataInput =
  record {
    attributes: Attributes;
    authorShare: Share;
-   classId: opt AnvilClassId;
+   collectionId: opt CollectionId;
    content: opt Content;
    custom: opt CustomData;
    lore: opt text;
@@ -348,8 +348,8 @@ type Metadata =
    attributes: Attributes;
    author: AccountIdentifier;
    authorShare: Share;
-   classId: opt AnvilClassId;
-   classIndex: opt AnvilClassIndex;
+   classIndex: opt CollectionIndex;
+   collectionId: opt CollectionId;
    content: opt Content;
    created: nat32;
    custom: opt CustomData;
@@ -403,11 +403,26 @@ type Content =
            size: nat32;
          };
  };
+type Config = 
+ record {
+   account: vec principal;
+   anv: principal;
+   collection: principal;
+   history: principal;
+   nft: vec principal;
+   nft_avail: vec principal;
+   pwr: principal;
+   router: principal;
+   slot: nat;
+   treasury: principal;
+ };
 type CommonError = 
  variant {
    InvalidToken: TokenIdentifier;
    Other: text;
  };
+type CollectionIndex = nat32;
+type CollectionId = nat32;
 type Class = 
  service {
    allowance: (Request__1) -> (Response__1) query;
@@ -416,6 +431,7 @@ type Class =
    bearer: (TokenIdentifier) -> (BearerResponse) query;
    burn: (BurnRequest) -> (BurnResponse);
    claim_link: (ClaimLinkRequest) -> (ClaimLinkResponse);
+   config_set: (Config) -> ();
    cyclesAccept: () -> ();
    cyclesBalance: () -> (nat) query;
    fetchChunk: (FetchChunkRequest) -> (opt blob);
@@ -518,14 +534,5 @@ type ApproveRequest =
    subaccount: opt SubAccount;
    token: TokenIdentifier;
  };
-type AnvilClassIndex = nat32;
-type AnvilClassId = nat32;
 type AccountIdentifier = blob;
-service : (record {
-             _acclist: vec text;
-             _anvilclass: principal;
-             _debug_cannisterId: opt principal;
-             _router: principal;
-             _slot: nat32;
-             _treasury: principal;
-           }) -> Class
+service : () -> Class

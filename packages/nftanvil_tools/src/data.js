@@ -91,10 +91,17 @@ export const djb2xor = (str) => {
   return h >>> 0;
 };
 
-export const uploadFile = async (nft, tokenIndex, position, chunks) => {
+export const uploadFile = async (
+  nft,
+  tokenIndex,
+  position,
+  chunks,
+  subaccount
+) => {
   await Promise.all(
     chunks.map(async (chunk, idx) => {
       return nft.uploadChunk({
+        subaccount,
         position: { [position]: null },
         chunkIdx: idx,
         tokenIndex,

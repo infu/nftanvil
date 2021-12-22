@@ -568,7 +568,8 @@ export const mint = (vals) => async (dispatch, getState) => {
         nft,
         tokenIndex,
         "content",
-        await chunkBlob(vals.content[0].internal.url)
+        await chunkBlob(vals.content[0].internal.url),
+        subaccount
       );
     }
 
@@ -580,7 +581,8 @@ export const mint = (vals) => async (dispatch, getState) => {
         nft,
         tokenIndex,
         "thumb",
-        await chunkBlob(vals.thumb.internal.url)
+        await chunkBlob(vals.thumb.internal.url),
+        subaccount
       );
     }
 

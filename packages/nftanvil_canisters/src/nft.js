@@ -1,8 +1,8 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 
 // Imports and re-exports candid interface
-import { idlFactory } from "./declarations/nft/nft.did.js";
-export { idlFactory } from "./declarations/nft/nft.did.js";
+import { idlFactory } from "./declarations/nft_0/nft_0.did.js";
+export { idlFactory } from "./declarations/nft_0/nft_0.did.js";
 
 export const nftCanister = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });

@@ -1,8 +1,8 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 
 // Imports and re-exports candid interface
-import { idlFactory } from "./declarations/account/account.did.js";
-export { idlFactory } from "./declarations/account/account.did.js";
+import { idlFactory } from "./declarations/account_0/account_0.did.js";
+export { idlFactory } from "./declarations/account_0/account_0.did.js";
 
 export const accountCanister = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });

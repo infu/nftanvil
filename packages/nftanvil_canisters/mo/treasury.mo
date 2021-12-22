@@ -55,6 +55,10 @@ shared({caller = _installer}) actor class Class() = this {
      };
   };
 
+   public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+        assert(caller == _installer);
+        _conf := conf
+    };
 
  
   public shared({caller}) func notify_NFTPurchase(request: Treasury.NFTPurchase): async Treasury.NFTPurchaseResponse {

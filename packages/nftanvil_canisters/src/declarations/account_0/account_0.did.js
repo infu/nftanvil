@@ -1,6 +1,18 @@
 export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const TokenIndex = IDL.Nat32;
+  const Config = IDL.Record({
+    'anv' : IDL.Principal,
+    'nft' : IDL.Vec(IDL.Principal),
+    'pwr' : IDL.Principal,
+    'collection' : IDL.Principal,
+    'slot' : IDL.Nat,
+    'history' : IDL.Principal,
+    'nft_avail' : IDL.Vec(IDL.Principal),
+    'account' : IDL.Vec(IDL.Principal),
+    'router' : IDL.Principal,
+    'treasury' : IDL.Principal,
+  });
   const TokenIdentifier = IDL.Text;
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
@@ -13,7 +25,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const Account = IDL.Service({
     'add' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
-    'addAllowed' : IDL.Func([IDL.Principal, IDL.Nat32], [], []),
+    'config_set' : IDL.Func([Config], [], []),
     'list' : IDL.Func(
         [AccountIdentifier, IDL.Nat],
         [IDL.Vec(TokenIdentifier)],
@@ -24,6 +36,4 @@ export const idlFactory = ({ IDL }) => {
   });
   return Account;
 };
-export const init = ({ IDL }) => {
-  return [IDL.Record({ '_router' : IDL.Principal })];
-};
+export const init = ({ IDL }) => { return []; };

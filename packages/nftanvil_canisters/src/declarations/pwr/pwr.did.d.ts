@@ -9,6 +9,7 @@ export type Balance__1 = bigint;
 export type BlockIndex = bigint;
 export interface Class {
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
+  'config_set' : (arg_0: Config) => Promise<undefined>,
   'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__1]>>,
   'purchase_claim' : (arg_0: PurchaseClaimRequest) => Promise<
       PurchaseClaimResponse
@@ -18,6 +19,18 @@ export interface Class {
     >,
   'tokenId' : () => Promise<TokenIdentifier>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
+}
+export interface Config {
+  'anv' : Principal,
+  'nft' : Array<Principal>,
+  'pwr' : Principal,
+  'collection' : Principal,
+  'slot' : bigint,
+  'history' : Principal,
+  'nft_avail' : Array<Principal>,
+  'account' : Array<Principal>,
+  'router' : Principal,
+  'treasury' : Principal,
 }
 export interface ICP { 'e8s' : bigint }
 export type Memo = bigint;

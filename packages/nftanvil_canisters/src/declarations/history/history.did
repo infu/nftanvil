@@ -1,0 +1,131 @@
+type TreasuryRecord = record {};
+type TokenIdentifier__1 = text;
+type TokenIdentifier = text;
+type Time = int;
+type Share = nat16;
+type RecordInfo = 
+ variant {
+   anv: AnvRecord;
+   nft: NftRecord;
+   pwr: PwrRecord;
+   treasury: TreasuryRecord;
+ };
+type RecordId = blob;
+type RecordFungibleTransaction = 
+ record {
+   amount: Balance;
+   from: AccountIdentifier;
+   memo: Memo;
+   time: Time;
+   to: AccountIdentifier;
+   token: TokenIdentifier;
+ };
+type Record = 
+ record {
+   created: Time;
+   id: RecordId;
+   info: RecordInfo;
+ };
+type PwrRecord = variant {transaction: RecordFungibleTransaction;};
+type NftRecord = 
+ variant {
+   burn:
+    record {
+      amount: Balance;
+      memo: Memo;
+      token: TokenIdentifier;
+      user: AccountIdentifier;
+    };
+   mint: record {
+           collectionId: CollectionId;
+           token: TokenIdentifier;
+         };
+   purchase: NFTPurchase;
+   socket: record {
+             plug: TokenIdentifier;
+             socket: TokenIdentifier;
+           };
+   transaction:
+    record {
+      from: AccountIdentifier;
+      memo: Memo;
+      time: Time;
+      to: AccountIdentifier;
+      token: TokenIdentifier;
+    };
+   unsocket: record {
+               plug: TokenIdentifier;
+               socket: TokenIdentifier;
+             };
+   use:
+    record {
+      memo: Memo;
+      token: TokenIdentifier;
+      use: ItemUse;
+      user: AccountIdentifier;
+    };
+ };
+type NFTPurchase = 
+ record {
+   affiliate: opt record {
+                    address: AccountIdentifier__1;
+                    share: Share;
+                  };
+   amount: ICP;
+   author: record {
+             address: AccountIdentifier__1;
+             share: Share;
+           };
+   buyer: AccountIdentifier__1;
+   ledgerBlock: BlockIndex;
+   marketplace: opt record {
+                      address: AccountIdentifier__1;
+                      share: Share;
+                    };
+   purchaseAccount: AccountIdentifier__1;
+   seller: AccountIdentifier__1;
+   token: TokenIdentifier__1;
+ };
+type Memo = nat64;
+type ItemUse = 
+ variant {
+   consumable: record {useId: CustomId;};
+   cooldown: record {
+               duration: Cooldown;
+               useId: CustomId;
+             };
+ };
+type ICP = record {e8s: nat64;};
+type CustomId = text;
+type Cooldown = nat32;
+type Config = 
+ record {
+   account: vec principal;
+   anv: principal;
+   collection: principal;
+   history: principal;
+   nft: vec principal;
+   nft_avail: vec principal;
+   pwr: principal;
+   router: principal;
+   slot: nat;
+   treasury: principal;
+ };
+type CollectionId = nat32;
+type Class = 
+ service {
+   add: (AddRequest) -> (AddResponse);
+   config_set: (Config) -> ();
+ };
+type BlockIndex = nat64;
+type Balance = nat64;
+type AnvRecord = variant {transaction: RecordFungibleTransaction;};
+type AddResponse = 
+ variant {
+   err: record {};
+   ok;
+ };
+type AddRequest = record {"record": Record;};
+type AccountIdentifier__1 = blob;
+type AccountIdentifier = blob;
+service : () -> Class

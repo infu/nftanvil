@@ -69,6 +69,18 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Null,
     'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'Other' : IDL.Text }),
   });
+  const Config = IDL.Record({
+    'anv' : IDL.Principal,
+    'nft' : IDL.Vec(IDL.Principal),
+    'pwr' : IDL.Principal,
+    'collection' : IDL.Principal,
+    'slot' : IDL.Nat,
+    'history' : IDL.Principal,
+    'nft_avail' : IDL.Vec(IDL.Principal),
+    'account' : IDL.Vec(IDL.Principal),
+    'router' : IDL.Principal,
+    'treasury' : IDL.Principal,
+  });
   const TokenIndex = IDL.Nat32;
   const FetchChunkRequest = IDL.Record({
     'tokenIndex' : TokenIndex,
@@ -103,7 +115,7 @@ export const idlFactory = ({ IDL }) => {
     'token' : IDL.Opt(Token),
     'body' : IDL.Vec(IDL.Nat8),
   });
-  const AnvilClassIndex = IDL.Nat32;
+  const CollectionIndex = IDL.Nat32;
   const ContentType = IDL.Text;
   const IPFS_CID = IDL.Text;
   const Content = IDL.Variant({
@@ -118,13 +130,13 @@ export const idlFactory = ({ IDL }) => {
     }),
     'external' : IDL.Null,
   });
+  const CollectionId = IDL.Nat32;
   const Share = IDL.Nat16;
   const CustomData = IDL.Vec(IDL.Nat8);
   const ItemLore = IDL.Text;
   const ItemName = IDL.Text;
   const Tag = IDL.Text;
   const Tags = IDL.Vec(Tag);
-  const AnvilClassId = IDL.Nat32;
   const Attribute = IDL.Tuple(IDL.Text, IDL.Nat16);
   const Attributes = IDL.Vec(Attribute);
   const ItemTransfer = IDL.Variant({
@@ -134,10 +146,11 @@ export const idlFactory = ({ IDL }) => {
   });
   const Metadata = IDL.Record({
     'ttl' : IDL.Opt(IDL.Nat32),
-    'classIndex' : IDL.Opt(AnvilClassIndex),
+    'classIndex' : IDL.Opt(CollectionIndex),
     'thumb' : Content,
     'created' : IDL.Nat32,
     'content' : IDL.Opt(Content),
+    'collectionId' : IDL.Opt(CollectionId),
     'authorShare' : Share,
     'custom' : IDL.Opt(CustomData),
     'quality' : IDL.Nat8,
@@ -145,7 +158,6 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Opt(ItemName),
     'tags' : Tags,
     'secret' : IDL.Bool,
-    'classId' : IDL.Opt(AnvilClassId),
     'author' : AccountIdentifier,
     'entropy' : IDL.Vec(IDL.Nat8),
     'attributes' : Attributes,
@@ -180,6 +192,7 @@ export const idlFactory = ({ IDL }) => {
     'ttl' : IDL.Opt(IDL.Nat32),
     'thumb' : Content,
     'content' : IDL.Opt(Content),
+    'collectionId' : IDL.Opt(CollectionId),
     'authorShare' : Share,
     'custom' : IDL.Opt(CustomData),
     'quality' : IDL.Nat8,
@@ -187,7 +200,6 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Opt(IDL.Text),
     'tags' : Tags,
     'secret' : IDL.Bool,
-    'classId' : IDL.Opt(AnvilClassId),
     'attributes' : Attributes,
     'price' : Price,
     'transfer' : ItemTransfer,
@@ -398,6 +410,7 @@ export const idlFactory = ({ IDL }) => {
     'bearer' : IDL.Func([TokenIdentifier], [BearerResponse], ['query']),
     'burn' : IDL.Func([BurnRequest], [BurnResponse], []),
     'claim_link' : IDL.Func([ClaimLinkRequest], [ClaimLinkResponse], []),
+    'config_set' : IDL.Func([Config], [], []),
     'cyclesAccept' : IDL.Func([], [], []),
     'cyclesBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'fetchChunk' : IDL.Func(
@@ -441,15 +454,4 @@ export const idlFactory = ({ IDL }) => {
   });
   return Class;
 };
-export const init = ({ IDL }) => {
-  return [
-    IDL.Record({
-      '_debug_cannisterId' : IDL.Opt(IDL.Principal),
-      '_anvilclass' : IDL.Principal,
-      '_router' : IDL.Principal,
-      '_treasury' : IDL.Principal,
-      '_acclist' : IDL.Vec(IDL.Text),
-      '_slot' : IDL.Nat32,
-    }),
-  ];
-};
+export const init = ({ IDL }) => { return []; };

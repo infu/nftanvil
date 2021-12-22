@@ -81,6 +81,7 @@ import {
 } from "@vvv-interactive/nftanvil-tools/cjs/validate.js";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import { values } from "lodash";
 
 export const Mint = () => {
   return <MintForm />;
@@ -192,7 +193,7 @@ export const MintForm = () => {
     let a = {
       price: v.price,
       authorShare: Math.round(v.authorShare * 100),
-      classId: v.classId ? v.classId : [],
+      collectionId: v.collectionId ? v.collectionId : [],
       name: [v.name].filter(Boolean),
       lore: [v.lore].filter(Boolean),
       transfer: v.transfer,
@@ -220,7 +221,8 @@ export const MintForm = () => {
     <Formik
       validate={mintFormValidate}
       initialValues={{
-        classId: null,
+        collectionId: null,
+
         authorShare: 0.5,
         price: 0.0,
         name: "",
@@ -234,8 +236,8 @@ export const MintForm = () => {
         ttl: 0,
         maxChildren: 0,
         attributes: [],
-        content_storage: "ipfs",
-        thumb_storage: "ipfs",
+        content_storage: "internal",
+        thumb_storage: "internal",
         secret: false,
         tags: [],
       }}
@@ -322,7 +324,10 @@ export const MintForm = () => {
                           );
                         }
                         let f = await resizeImage(info.url, 124, 124, true);
-                        props.setFieldValue("thumb_ipfs", f);
+                        props.setFieldValue(
+                          "thumb_" + props.values.thumb_storage,
+                          f
+                        );
                       }
                     }}
                     accept="image/*,video/*"
@@ -365,7 +370,10 @@ export const MintForm = () => {
                       if (info.type.indexOf("image/") !== -1) {
                         if (info.size > 1024 * 128) {
                           let x = await resizeImage(info.url, 124, 124);
-                          props.setFieldValue("thumb_ipfs", x);
+                          props.setFieldValue(
+                            "thumb_" + props.values.thumb_storage,
+                            x
+                          );
                           toast.info(
                             "Image was too big. Resizing automatically",
                             { position: "bottom-center" }

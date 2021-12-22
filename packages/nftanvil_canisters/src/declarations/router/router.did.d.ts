@@ -1,14 +1,24 @@
 import type { Principal } from '@dfinity/principal';
+export interface Config {
+  'anv' : Principal,
+  'nft' : Array<Principal>,
+  'pwr' : Principal,
+  'collection' : Principal,
+  'slot' : bigint,
+  'history' : Principal,
+  'nft_avail' : Array<Principal>,
+  'account' : Array<Principal>,
+  'router' : Principal,
+  'treasury' : Principal,
+}
 export interface Router {
-  'addNFT' : () => Promise<undefined>,
-  'debug_reset' : () => Promise<undefined>,
+  'config_set' : (arg_0: Config) => Promise<undefined>,
   'fetchNFTCan' : (arg_0: bigint) => Promise<string>,
   'fetchNFTCanisters' : () => Promise<Array<string>>,
   'fetchSetup' : () => Promise<{ 'acclist' : Array<string> }>,
   'getAvailable' : () => Promise<Array<string>>,
   'isLegitimate' : (arg_0: Principal) => Promise<boolean>,
   'reportOutOfMemory' : () => Promise<undefined>,
-  'setNFTOut' : (arg_0: Principal) => Promise<undefined>,
   'stats' : () => Promise<StatsResponse>,
 }
 export interface StatsResponse {

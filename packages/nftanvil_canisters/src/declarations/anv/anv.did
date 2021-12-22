@@ -1,17 +1,69 @@
+type User__1 = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
 type User = 
  variant {
-   address: AccountIdentifier__1;
+   address: AccountIdentifier;
    "principal": principal;
+ };
+type TransferResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier__1;
+    };
+   ok: Balance;
+ };
+type TransferRequest = 
+ record {
+   amount: Balance;
+   from: User;
+   memo: Memo;
+   subaccount: opt SubAccount;
+   to: User;
  };
 type TransactionTo = blob;
 type TransactionFrom = blob;
 type TransactionAmount = nat64;
-type TokenIdentifier__1 = text;
 type TokenIdentifier = text;
-type CommonError = 
- variant {
-   InvalidToken: TokenIdentifier__1;
-   Other: text;
+type SubAccount = blob;
+type Memo = nat64;
+type Config = 
+ record {
+   account: vec principal;
+   anv: principal;
+   collection: principal;
+   history: principal;
+   nft: vec principal;
+   nft_avail: vec principal;
+   pwr: principal;
+   router: principal;
+   slot: nat;
+   treasury: principal;
+ };
+type Class = 
+ service {
+   adminAllocate: (record {
+                     amount: TransactionAmount;
+                     user: User__1;
+                   }) -> (BlockIndex, Block);
+   balance: (BalanceRequest) -> (BalanceResponse) query;
+   config_set: (Config) -> ();
+   dumpBalances: () -> (vec record {
+                              AccountIdentifier__2;
+                              Balance__1;
+                            }) query;
+   dumpBlockchain: () -> (vec record {
+                                BlockIndex;
+                                Block;
+                              }) query;
+   tokenId: () -> (TokenIdentifier) query;
+   transfer: (TransferRequest) -> (TransferResponse);
  };
 type BlockTimestamp = int;
 type BlockIndex = nat32;
@@ -25,34 +77,10 @@ type Block =
    BlockHash;
  };
 type Balance__1 = nat64;
-type BalanceResponse = 
- variant {
-   err: CommonError;
-   ok: Balance__1;
- };
-type BalanceRequest = 
- record {
-   token: TokenIdentifier__1;
-   user: User;
- };
+type BalanceResponse = nat64;
+type BalanceRequest = record {user: User__1;};
 type Balance = nat64;
+type AccountIdentifier__2 = blob;
 type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;
-type ANV = 
- service {
-   adminAllocate: (record {
-                     amount: TransactionAmount;
-                     user: User;
-                   }) -> (BlockIndex, Block);
-   balance: (BalanceRequest) -> (BalanceResponse) query;
-   dumpBalances: () -> (vec record {
-                              AccountIdentifier;
-                              Balance;
-                            }) query;
-   dumpBlockchain: () -> (vec record {
-                                BlockIndex;
-                                Block;
-                              }) query;
-   tokenId: () -> (TokenIdentifier) query;
- };
-service : () -> ANV
+service : () -> Class
