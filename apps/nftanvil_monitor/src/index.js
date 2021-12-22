@@ -3,7 +3,6 @@ import {
   routerCanister,
   nftCanister,
   accountCanister,
-  accessCanister,
   encodeTokenId,
 } from "@vvv-interactive/nftanvil";
 import Table from "cli-table";
@@ -118,13 +117,14 @@ const main = async () => {
   );
 
   console.log(table.toString());
-  let savePath = path.resolve(
-    "..",
-    "..",
-    prod ? "cluster.json" : "cluster.local.json"
-  );
 
-  fs.writeFileSync(savePath, JSON.stringify(rez));
+  // let savePath = path.resolve(
+  //   "..",
+  //   "..",
+  //   prod ? "cluster.json" : "cluster.local.json"
+  // );
+
+  // fs.writeFileSync(savePath, JSON.stringify(rez));
 };
 
 main();
