@@ -18,6 +18,7 @@ const limit = pLimit(
   process.env.MINT_CONCURRENCY ? parseInt(process.env.MINT_CONCURRENCY, 10) : 20
 ); // Number of concurrent async requests. Don't get it too high or network may block you
 import { blobFrom } from "fetch-blob/from.js";
+import { NFTStorage } from "nft.storage";
 
 export const easyMint = async (arr) => {
   await Promise.all(
@@ -27,46 +28,56 @@ export const easyMint = async (arr) => {
   );
 };
 
-export const uploadIPFS = async (up) => {
-  if (typeof up === "string" && up.indexOf("blob:") === 0)
-    up = await fetch(up).then((r) => r.blob());
-
-  return fetch("https://nftpkg.com/nft/upload", {
-    method: "POST",
-    mode: "cors",
-    body: up,
-  })
-    .then((d) => {
-      return d.json();
-    })
-    .then((x) => {
-      console.log(x);
-      return x;
-    });
+export const uploadIPFS = async (token, up) => {
+  let blob = await fetch(up).then((r) => r.blob());
+  const client = new NFTStorage({ token });
+  const cid = await client.storeBlob(blob);
+  return cid;
 };
 
-export const pinIPFS = async (tokenid, cid, secret) => {
-  return fetch(
-    "https://nftpkg.com/nft/pin/" + tokenid + "/" + cid + "/" + secret,
-    {
-      method: "POST",
-      mode: "cors",
-    }
-  )
-    .then((d) => {
-      return d.json();
-    })
-    .then((x) => {
-      return x;
-    });
-};
+// export const uploadIPFS = async (up) => {
+//   if (typeof up === "string" && up.indexOf("blob:") === 0)
+//     up = await fetch(up).then((r) => r.blob());
+
+//   return fetch("https://nftpkg.com/nft/upload", {
+//     method: "POST",
+//     mode: "cors",
+//     body: up,
+//   })
+//     .then((d) => {
+//       return d.json();
+//     })
+//     .then((x) => {
+//       console.log(x);
+//       return x;
+//     });
+// };
+
+// export const pinIPFS = async (tokenid, cid, secret) => {
+//   return fetch(
+//     "https://nftpkg.com/nft/pin/" + tokenid + "/" + cid + "/" + secret,
+//     {
+//       method: "POST",
+//       mode: "cors",
+//     }
+//   )
+//     .then((d) => {
+//       return d.json();
+//     })
+//     .then((x) => {
+//       return x;
+//     });
+// };
 
 export const easyMintOne = async ({ to, metadata }) => {
   let ipfs_pins = [];
   if (metadata?.content[0]?.ipfs?.path) {
     let blob = await blobFrom(metadata.content[0].ipfs.path);
     let size = getFilesizeInBytes(metadata.content[0].ipfs.path);
-    let { ok, cid, secret } = await uploadIPFS(blob);
+    let { ok, cid, secret } = await uploadIPFS(
+      process.env.NFT_STORAGE_IPFS_API_KEY,
+      blob
+    );
     ipfs_pins.push({ cid, secret, size });
     metadata.content[0].ipfs.cid = cid;
     metadata.content[0].ipfs.size = size;
@@ -75,7 +86,10 @@ export const easyMintOne = async ({ to, metadata }) => {
   if (metadata?.thumb?.ipfs?.path) {
     let blob = await blobFrom(metadata.thumb.ipfs.path);
     let size = getFilesizeInBytes(metadata.thumb.ipfs.path);
-    let { ok, cid, secret } = await uploadIPFS(blob);
+    let { ok, cid, secret } = await uploadIPFS(
+      process.env.NFT_STORAGE_IPFS_API_KEY,
+      blob
+    );
     ipfs_pins.push({ cid, secret, size });
     metadata.thumb.ipfs.cid = cid;
     metadata.thumb.ipfs.size = size;
@@ -89,14 +103,6 @@ export const easyMintOne = async ({ to, metadata }) => {
   );
 
   let nft = nftCanister(nftcan);
-
-  if (
-    metadata.extensionCanister[0] &&
-    typeof metadata.extensionCanister[0] === "string"
-  )
-    metadata.extensionCanister[0] = Principal.fromText(
-      metadata.extensionCanister[0]
-    );
 
   if (metadata?.content[0]?.internal?.path)
     metadata.content[0].internal.size = getFilesizeInBytes(

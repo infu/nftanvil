@@ -793,7 +793,7 @@ module {
         (), UnplugError
     >;
 
-  public type PurchaseIntentRequest = {
+    public type PurchaseIntentRequest = {
         token : TokenIdentifier;
         user : User;
         subaccount: ?SubAccount;
@@ -849,47 +849,47 @@ module {
         }
     >;
 
-        public type BearerResponse = Result.Result<
-            AccountIdentifier, 
-            CommonError
-        >;
+    public type BearerResponse = Result.Result<
+        AccountIdentifier, 
+        CommonError
+    >;
 
-        public type UploadChunkRequest =  {
-           subaccount : ?SubAccount;
-           tokenIndex: TokenIndex;
-           position : {#content; #thumb};
-           chunkIdx : Nat32;
-           data : Blob;
-        };
+    public type UploadChunkRequest =  {
+        subaccount : ?SubAccount;
+        tokenIndex: TokenIndex;
+        position : {#content; #thumb};
+        chunkIdx : Nat32;
+        data : Blob;
+    };
 
-        public type FetchChunkRequest =  {
-           tokenIndex: TokenIndex;
-           position : {#content; #thumb};
-           chunkIdx : Nat32;
-           subaccount : ?SubAccount;
-        };
+    public type FetchChunkRequest =  {
+        tokenIndex: TokenIndex;
+        position : {#content; #thumb};
+        chunkIdx : Nat32;
+        subaccount : ?SubAccount;
+    };
 
-        public type MintRequest = {
-            to         : User;
-            subaccount : ?SubAccount;
-            metadata : MetadataInput;
-        };
+    public type MintRequest = {
+        to         : User;
+        subaccount : ?SubAccount;
+        metadata : MetadataInput;
+    };
 
-        public type MintResponse = Result.Result<
-           TokenIndex, {
-            #Rejected;
-            #InsufficientBalance;
-            #ClassError: Text;
-            #Invalid: Text;
-            #OutOfMemory;
-            #Unauthorized;
-          }
-        >;
+    public type MintResponse = Result.Result<
+        TokenIndex, {
+        #Rejected;
+        #InsufficientBalance;
+        #ClassError: Text;
+        #Invalid: Text;
+        #OutOfMemory;
+        #Unauthorized;
+        }
+    >;
 
-        public type MintBatchResponse = Result.Result<
-           [TokenIndex],
-           CommonError
-        >;
+    public type MintBatchResponse = Result.Result<
+        [TokenIndex],
+        CommonError
+    >;
 
     public module Allowance = {
         public type Request = {

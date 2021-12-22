@@ -211,7 +211,7 @@ export const MintForm = () => {
 
   const devGetRecord = (values) => {
     let s = record2request(form2record(values));
-    console.log(JSON.stringify(s));
+    console.log(s);
   };
 
   const boxColor = useColorModeValue("white", "gray.600");

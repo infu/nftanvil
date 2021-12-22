@@ -10,12 +10,10 @@ const main = async () => {
   // Currently agent-js candid implementation doesn't supply the user with very informative errors,
   // so a creating correct metadata record will be hard. Add one change at a time and test.
   let metadata = {
+    collectionId: [],
     name: ["A cat"],
-    domain: [],
     lore: ["Born in Mount Doom"],
-    use: [],
     transfer: { unrestricted: null },
-    hold: [],
     quality: 1,
     ttl: [],
     attributes: [
@@ -24,14 +22,15 @@ const main = async () => {
     ],
     content: [],
     thumb: {
-      ipfs: { contentType: "image/jpeg", path: "./some.jpg" },
+      internal: { contentType: "image/jpeg", path: "./some.jpg" },
     },
     secret: false,
-    extensionCanister: [],
     custom: [],
     tags: ["cat", "animal"],
+    authorShare: 50,
+    price: { amount: 100000, marketplace: [], affiliate: [] },
   };
-
+  console.dir(metadata);
   try {
     let resp = await easyMint([
       {
