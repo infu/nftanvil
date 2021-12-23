@@ -49,16 +49,17 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount),
     'amount' : Balance,
   });
+  const TransferResponseError = IDL.Variant({
+    'InsufficientBalance' : IDL.Null,
+    'NotTransferable' : IDL.Null,
+    'InvalidToken' : TokenIdentifier,
+    'Rejected' : IDL.Null,
+    'Unauthorized' : AccountIdentifier,
+    'Other' : IDL.Text,
+  });
   const BurnResponse = IDL.Variant({
     'ok' : Balance,
-    'err' : IDL.Variant({
-      'InsufficientBalance' : IDL.Null,
-      'NotTransferable' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
-      'Rejected' : IDL.Null,
-      'Unauthorized' : AccountIdentifier,
-      'Other' : IDL.Text,
-    }),
+    'err' : TransferResponseError,
   });
   const ClaimLinkRequest = IDL.Record({
     'to' : User,
@@ -133,6 +134,7 @@ export const idlFactory = ({ IDL }) => {
   const CollectionId = IDL.Nat32;
   const Share = IDL.Nat16;
   const CustomData = IDL.Vec(IDL.Nat8);
+  const Quality = IDL.Nat8;
   const ItemLore = IDL.Text;
   const ItemName = IDL.Text;
   const Tag = IDL.Text;
@@ -145,7 +147,6 @@ export const idlFactory = ({ IDL }) => {
     'bindsDuration' : IDL.Nat32,
   });
   const Metadata = IDL.Record({
-    'ttl' : IDL.Opt(IDL.Nat32),
     'classIndex' : IDL.Opt(CollectionIndex),
     'thumb' : Content,
     'created' : IDL.Nat32,
@@ -153,7 +154,7 @@ export const idlFactory = ({ IDL }) => {
     'collectionId' : IDL.Opt(CollectionId),
     'authorShare' : Share,
     'custom' : IDL.Opt(CustomData),
-    'quality' : IDL.Nat8,
+    'quality' : Quality,
     'lore' : IDL.Opt(ItemLore),
     'name' : IDL.Opt(ItemName),
     'tags' : Tags,
@@ -175,6 +176,8 @@ export const idlFactory = ({ IDL }) => {
     'amount' : IDL.Nat64,
   });
   const MetavarsFrozen = IDL.Record({
+    'pwr' : IDL.Nat64,
+    'ttl' : IDL.Opt(IDL.Nat32),
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
     'sockets' : Sockets,
@@ -195,7 +198,7 @@ export const idlFactory = ({ IDL }) => {
     'collectionId' : IDL.Opt(CollectionId),
     'authorShare' : Share,
     'custom' : IDL.Opt(CustomData),
-    'quality' : IDL.Nat8,
+    'quality' : Quality,
     'lore' : IDL.Opt(IDL.Text),
     'name' : IDL.Opt(IDL.Text),
     'tags' : Tags,
@@ -212,6 +215,7 @@ export const idlFactory = ({ IDL }) => {
   const MintResponse = IDL.Variant({
     'ok' : TokenIndex,
     'err' : IDL.Variant({
+      'Pwr' : TransferResponseError,
       'Invalid' : IDL.Text,
       'InsufficientBalance' : IDL.Null,
       'Rejected' : IDL.Null,
@@ -326,14 +330,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const TransferResponse = IDL.Variant({
     'ok' : Balance,
-    'err' : IDL.Variant({
-      'InsufficientBalance' : IDL.Null,
-      'NotTransferable' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
-      'Rejected' : IDL.Null,
-      'Unauthorized' : AccountIdentifier,
-      'Other' : IDL.Text,
-    }),
+    'err' : TransferResponseError,
   });
   const TransferLinkRequest = IDL.Record({
     'token' : TokenIdentifier,

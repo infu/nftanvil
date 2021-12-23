@@ -29,14 +29,7 @@ export interface BurnRequest {
   'amount' : Balance,
 }
 export type BurnResponse = { 'ok' : Balance } |
-  {
-    'err' : { 'InsufficientBalance' : null } |
-      { 'NotTransferable' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
-      { 'Rejected' : null } |
-      { 'Unauthorized' : AccountIdentifier } |
-      { 'Other' : string }
-  };
+  { 'err' : TransferResponseError };
 export interface Callback { 'token' : [] | [Token], 'body' : Array<number> }
 export type CallbackFunc = () => Promise<undefined>;
 export interface ClaimLinkRequest {
@@ -122,7 +115,6 @@ export type ItemTransfer = { 'unrestricted' : null } |
   { 'bindsDuration' : number };
 export type Memo = bigint;
 export interface Metadata {
-  'ttl' : [] | [number],
   'classIndex' : [] | [CollectionIndex],
   'thumb' : Content,
   'created' : number,
@@ -130,7 +122,7 @@ export interface Metadata {
   'collectionId' : [] | [CollectionId],
   'authorShare' : Share,
   'custom' : [] | [CustomData],
-  'quality' : number,
+  'quality' : Quality,
   'lore' : [] | [ItemLore],
   'name' : [] | [ItemName],
   'tags' : Tags,
@@ -147,7 +139,7 @@ export interface MetadataInput {
   'collectionId' : [] | [CollectionId],
   'authorShare' : Share,
   'custom' : [] | [CustomData],
-  'quality' : number,
+  'quality' : Quality,
   'lore' : [] | [string],
   'name' : [] | [string],
   'tags' : Tags,
@@ -165,6 +157,8 @@ export type MetadataResponse = {
   } |
   { 'err' : CommonError };
 export interface MetavarsFrozen {
+  'pwr' : bigint,
+  'ttl' : [] | [number],
   'cooldownUntil' : [] | [number],
   'boundUntil' : [] | [number],
   'sockets' : Sockets,
@@ -177,7 +171,8 @@ export interface MintRequest {
 }
 export type MintResponse = { 'ok' : TokenIndex } |
   {
-    'err' : { 'Invalid' : string } |
+    'err' : { 'Pwr' : TransferResponseError } |
+      { 'Invalid' : string } |
       { 'InsufficientBalance' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : null } |
@@ -227,6 +222,7 @@ export type PurchaseIntentResponse = {
     'ok' : { 'paymentAddress' : AccountIdentifier, 'price' : Price }
   } |
   { 'err' : { 'InvalidToken' : TokenIdentifier } | { 'NotForSale' : null } };
+export type Quality = number;
 export interface Request {
   'url' : string,
   'method' : string,
@@ -333,14 +329,13 @@ export interface TransferRequest {
   'amount' : Balance,
 }
 export type TransferResponse = { 'ok' : Balance } |
-  {
-    'err' : { 'InsufficientBalance' : null } |
-      { 'NotTransferable' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
-      { 'Rejected' : null } |
-      { 'Unauthorized' : AccountIdentifier } |
-      { 'Other' : string }
-  };
+  { 'err' : TransferResponseError };
+export type TransferResponseError = { 'InsufficientBalance' : null } |
+  { 'NotTransferable' : null } |
+  { 'InvalidToken' : TokenIdentifier } |
+  { 'Rejected' : null } |
+  { 'Unauthorized' : AccountIdentifier } |
+  { 'Other' : string };
 export type UnplugError = { 'InsufficientBalance' : null } |
   { 'NotLegitimateCaller' : null } |
   { 'InvalidToken' : TokenIdentifier } |

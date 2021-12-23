@@ -70,11 +70,7 @@ module {
         subaccount : ?SubAccount;
     };
 
-    public type TransferResponse = Result.Result<Balance, {
-        #Unauthorized : AccountIdentifier;
-        #InsufficientBalance;
-        #Rejected;
-        #Other        : Text;
-    }>;
+
+    public type TransferResponse = Result.Result<Balance, Nft.TransferResponseError>;
 
 }   

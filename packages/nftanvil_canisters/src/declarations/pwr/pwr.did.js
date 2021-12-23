@@ -54,7 +54,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : AccountIdentifier__1,
     'err' : IDL.Text,
   });
-  const TokenIdentifier = IDL.Text;
+  const TokenIdentifier__1 = IDL.Text;
   const Memo = IDL.Nat64;
   const Balance = IDL.Nat64;
   const TransferRequest = IDL.Record({
@@ -64,14 +64,18 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount),
     'amount' : Balance,
   });
+  const TokenIdentifier = IDL.Text;
+  const TransferResponseError = IDL.Variant({
+    'InsufficientBalance' : IDL.Null,
+    'NotTransferable' : IDL.Null,
+    'InvalidToken' : TokenIdentifier,
+    'Rejected' : IDL.Null,
+    'Unauthorized' : AccountIdentifier,
+    'Other' : IDL.Text,
+  });
   const TransferResponse = IDL.Variant({
     'ok' : Balance,
-    'err' : IDL.Variant({
-      'InsufficientBalance' : IDL.Null,
-      'Rejected' : IDL.Null,
-      'Unauthorized' : AccountIdentifier__1,
-      'Other' : IDL.Text,
-    }),
+    'err' : TransferResponseError,
   });
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
@@ -91,7 +95,7 @@ export const idlFactory = ({ IDL }) => {
         [PurchaseIntentResponse],
         [],
       ),
-    'tokenId' : IDL.Func([], [TokenIdentifier], ['query']),
+    'tokenId' : IDL.Func([], [TokenIdentifier__1], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
   });
   return Class;

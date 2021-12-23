@@ -72,17 +72,18 @@ type UnplugError =
    Rejected;
    Unauthorized: AccountIdentifier;
  };
+type TransferResponseError = 
+ variant {
+   InsufficientBalance;
+   InvalidToken: TokenIdentifier;
+   NotTransferable;
+   Other: text;
+   Rejected;
+   Unauthorized: AccountIdentifier;
+ };
 type TransferResponse = 
  variant {
-   err:
-    variant {
-      InsufficientBalance;
-      InvalidToken: TokenIdentifier;
-      NotTransferable;
-      Other: text;
-      Rejected;
-      Unauthorized: AccountIdentifier;
-    };
+   err: TransferResponseError;
    ok: Balance;
  };
 type TransferRequest = 
@@ -222,6 +223,7 @@ type Request =
    method: text;
    url: text;
  };
+type Quality = nat8;
 type PurchaseIntentResponse = 
  variant {
    err: variant {
@@ -298,6 +300,7 @@ type MintResponse =
       InsufficientBalance;
       Invalid: text;
       OutOfMemory;
+      Pwr: TransferResponseError;
       Rejected;
       Unauthorized;
     };
@@ -314,7 +317,9 @@ type MetavarsFrozen =
    boundUntil: opt nat32;
    cooldownUntil: opt nat32;
    price: Price;
+   pwr: nat64;
    sockets: Sockets;
+   ttl: opt nat32;
  };
 type MetadataResponse = 
  variant {
@@ -336,7 +341,7 @@ type MetadataInput =
    lore: opt text;
    name: opt text;
    price: Price;
-   quality: nat8;
+   quality: Quality;
    secret: bool;
    tags: Tags;
    thumb: Content;
@@ -356,12 +361,11 @@ type Metadata =
    entropy: blob;
    lore: opt ItemLore;
    name: opt ItemName;
-   quality: nat8;
+   quality: Quality;
    secret: bool;
    tags: Tags;
    thumb: Content;
    transfer: ItemTransfer;
-   ttl: opt nat32;
  };
 type Memo = nat64;
 type ItemTransfer = 
@@ -475,15 +479,7 @@ type Callback =
  };
 type BurnResponse = 
  variant {
-   err:
-    variant {
-      InsufficientBalance;
-      InvalidToken: TokenIdentifier;
-      NotTransferable;
-      Other: text;
-      Rejected;
-      Unauthorized: AccountIdentifier;
-    };
+   err: TransferResponseError;
    ok: Balance;
  };
 type BurnRequest = 

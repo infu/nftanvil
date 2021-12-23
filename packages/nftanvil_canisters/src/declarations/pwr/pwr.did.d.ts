@@ -17,7 +17,7 @@ export interface Class {
   'purchase_intent' : (arg_0: PurchaseIntentRequest) => Promise<
       PurchaseIntentResponse
     >,
-  'tokenId' : () => Promise<TokenIdentifier>,
+  'tokenId' : () => Promise<TokenIdentifier__1>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
 }
 export interface Config {
@@ -48,6 +48,7 @@ export type PurchaseIntentResponse = { 'ok' : AccountIdentifier__1 } |
   { 'err' : string };
 export type SubAccount = Array<number>;
 export type TokenIdentifier = string;
+export type TokenIdentifier__1 = string;
 export type TransferError = {
     'TxTooOld' : { 'allowed_window_nanos' : bigint }
   } |
@@ -63,12 +64,13 @@ export interface TransferRequest {
   'amount' : Balance,
 }
 export type TransferResponse = { 'ok' : Balance } |
-  {
-    'err' : { 'InsufficientBalance' : null } |
-      { 'Rejected' : null } |
-      { 'Unauthorized' : AccountIdentifier__1 } |
-      { 'Other' : string }
-  };
+  { 'err' : TransferResponseError };
+export type TransferResponseError = { 'InsufficientBalance' : null } |
+  { 'NotTransferable' : null } |
+  { 'InvalidToken' : TokenIdentifier } |
+  { 'Rejected' : null } |
+  { 'Unauthorized' : AccountIdentifier } |
+  { 'Other' : string };
 export type User = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
 export type User__1 = { 'principal' : Principal } |

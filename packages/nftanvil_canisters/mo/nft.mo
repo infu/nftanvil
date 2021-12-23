@@ -33,7 +33,7 @@ import Ledger  "./type/ledger_interface";
 import Treasury  "./type/treasury_interface";
 import Collection  "./type/collection_interface";
 import Cluster  "./type/Cluster";
-
+import PWR "./type/pwr_interface";
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
 
 
@@ -880,21 +880,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)/60);
     };
 
-    private func PWR_add(tokenIndex: TokenIndex, amount:Nat64) :  () {
-        let current = PWR_get(aid);
-        _pwr.put(aid, current + amount);
-    };
-    private func PWR_rem(tokenIndex: TokenIndex, amount:Nat64) :  () {
-        let current = PWR_get(aid);
-        _pwr.put(aid, current - amount);
-    };
-    private func PWR_get(tokenIndex: TokenIndex) : Nat64 {
-        let current = PWR_get(aid);
-        switch(_pwr.get(aid)) {
-            case (?bal) bal;
-            case (_) 0;
-        }
-    };
 
     private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
@@ -906,7 +891,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
            case (?collectionId) {
                 switch(await Cluster.collection(_conf).mint_nextId(author, collectionId)) {
                     case (#ok(index)) ?index;
-                    case (#err(e)) return #err(#ClassError(e)) 
+                    case (#err(e)) return #err(#ClassError(e))
                 };
             };
            case (_) null
@@ -923,26 +908,23 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         _nextTokenId := _nextTokenId + 1;
 
         // Charge minting price
-        let mintPriceCycles = Nft.MetadataInput.price(request.metadata);
-        let mintPricePwr:Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, mintPriceCycles);
 
+        let mintPricePwr:Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.price(request.metadata));
 
-        switch(await Cluster.pwr(_conf).transfer({
-            from = #address(author);
-            to = #address(Cluster.nft_address(_conf, _conf.slot));
-            amount = mintPricePwr;
-            memo = 0;
-            subaccount = null;
-            })) {
-                case (#ok(bal)) {
-                    // store pwr in nft memory
-                     PWR_add(tokenIndex, mintPricePwr);
-                    
-                };
-                case (#err(e)) {
-                    return #err(#Rejected)
-                }
-            };
+        // switch(await Cluster.pwr(_conf).transfer({
+        //     from = #address(author);
+        //     to = #address(Cluster.nft_address(_conf, _conf.slot));
+        //     amount = mintPricePwr;
+        //     memo = 0;
+        //     subaccount = null;
+        //     })) {
+        //         case (#ok(bal)) {
+ 
+        //         };
+        //         case (#err(e)) {
+        //             return #err(#Pwr(e))
+        //         }
+        //     };
 
 
         let timestamp:Nat32 = timeInMinutes();
@@ -957,7 +939,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             lore = m.lore;
             quality = m.quality;
             transfer = m.transfer;
-            ttl = m.ttl; // time to live
             secret = m.secret;
             attributes = m.attributes;
             tags = m.tags;
@@ -971,7 +952,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
         };
 
-        
         let mvar : Metavars = {
              var boundUntil = switch (md.transfer) {
                     case (#unrestricted) { null };
@@ -983,6 +963,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
              var cooldownUntil = null; // in minutes
              var sockets = [];
              var price = m.price;
+             var pwr = mintPricePwr;
+             var ttl = m.ttl;
         };
 
         assert(switch(_meta.get(tokenIndex)) { // make some memory integrity checks

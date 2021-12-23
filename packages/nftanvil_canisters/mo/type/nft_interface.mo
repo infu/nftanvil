@@ -23,7 +23,203 @@ import Blob_ "../lib/Blob";
 //Notice: In the beginning this spec started from Aviate-labs https://github.com/aviate-labs/ext.std
 //A lot of AccountIdentifier code is from there too
 
-module {    
+module {
+
+        public type AccountIdentifier = Blob; //32 bytes
+        public type AccountIdentifierShort = Blob; //28bytes
+
+
+        public module AccountIdentifier = { 
+            private let prefix : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
+
+            public func validate(a: AccountIdentifier) : Bool {
+                a.size() == 32;
+            };
+
+            public func fromText(accountId : Text) : AccountIdentifier {
+                switch (Hex.decode(accountId)) {
+                    case (#err(e)) { assert(false); Blob.fromArray([]); };
+                    case (#ok(bs)) {
+                        Blob.fromArray(bs);
+                    };
+                };
+            };
+
+            public func toShort(accountId : AccountIdentifier) : AccountIdentifierShort {
+                Blob.fromArray(Array_.drop<Nat8>(Blob.toArray(accountId), 4));
+            };
+
+            public func fromShort(accountId: AccountIdentifierShort) : AccountIdentifier {
+                Blob.fromArray(Array.append<Nat8>(
+                    Binary.BigEndian.fromNat32(CRC32.checksum(Blob.toArray(accountId))),
+                    Blob.toArray(accountId),
+                ))
+            };
+
+            public func toText(accountId : AccountIdentifier) : Text {
+                let t = Hex.encode(Blob.toArray(accountId));
+                Text.translate(t, func (c:Char) : Text {
+                        Text.fromChar(switch (c) {
+                            case ('A') 'a';
+                            case ('B') 'b';
+                            case ('C') 'c';
+                            case ('D') 'd';
+                            case ('E') 'e';
+                            case ('F') 'f';
+                            case (_) c; 
+                        });
+                });
+            };
+
+            public func slot(accountId : AccountIdentifier, max:Nat) : Nat {
+                let bl = Blob.toArray(accountId);
+                let (rawPrefix, rawToken) = Array_.split(bl, 4);
+
+                let crc = Blob_.bytesToNat32(rawPrefix);
+
+                Nat32.toNat( crc  % Nat32.fromNat(max) );
+            };
+
+            public func equal(a : AccountIdentifier, b : AccountIdentifier) : Bool {
+                a == b
+            };
+
+            public func hash(accountId : AccountIdentifier) : Hash.Hash {
+                CRC32.checksum(Blob.toArray(accountId));
+            };
+
+            public func fromPrincipal(p : Principal, subAccount : ?SubAccount) : AccountIdentifier {
+                fromBlob(Principal.toBlob(p), subAccount);
+            };
+
+            public func fromBlob(data : Blob, subAccount : ?SubAccount) : AccountIdentifier {
+                fromArray(Blob.toArray(data), subAccount);
+            };
+
+        
+
+            public func fromArray(data : [Nat8], subAccount : ?SubAccount) : AccountIdentifier {
+                let account : [Nat8] = switch (subAccount) {
+                    case (null) { Array.freeze(Array.init<Nat8>(32, 0)); };
+                    case (?sa)  { Blob.toArray(sa); };
+                };
+                
+                let inner = SHA256.sum224(Array.flatten<Nat8>([prefix, data, account]));
+
+                Blob.fromArray(Array.append<Nat8>(
+                    Binary.BigEndian.fromNat32(CRC32.checksum(inner)),
+                    inner,
+                ));
+            };
+
+            public func purchaseAccountId(can:Principal, productId:Nat32, accountId: AccountIdentifier) : (AccountIdentifier, SubAccount) {
+            
+                let subaccount = Blob.fromArray(Array.append<Nat8>(
+                    Blob_.nat32ToBytes(productId),
+                    Blob.toArray(toShort(accountId))
+                )); 
+
+                (fromPrincipal(can, ?subaccount), subaccount);
+            };
+        };
+        public type SubAccount = Blob; //32 bytes
+
+        public module SubAccount = {
+            public func fromNat(idx: Nat) : SubAccount {
+                Blob.fromArray(Array.append<Nat8>(
+                    Array.freeze(Array.init<Nat8>(24, 0)),
+                    Blob_.nat64ToBytes(Nat64.fromNat(idx))
+                    ));
+                };
+        };
+
+        // Balance refers to an amount of a particular token.
+        public type Balance = Nat64;
+
+        public type Memo = Nat64;
+
+        public type TokenIdentifier = Text;
+        public type TokenIdentifierBlob = Blob;
+
+        public module TokenIdentifier = {
+            private let prefix : [Nat8] = [10, 116, 105, 100]; // \x0A "tid"
+        
+            public func encode(canisterId : Principal, tokenIndex : TokenIndex) : Text {
+                let rawTokenId = Array.flatten<Nat8>([
+                    prefix,
+                    Blob.toArray(Principal.toBlob(canisterId)),
+                    Binary.BigEndian.fromNat32(tokenIndex),
+                ]);
+                
+                Principal.toText(Principal.fromBlob(Blob.fromArray(rawTokenId)));
+            };
+
+            public func decode(tokenId : TokenIdentifier) : Result.Result<(Principal, TokenIndex), Text> {
+                let bs = Blob.toArray(Principal.toBlob(Principal.fromText(tokenId)));
+                let (rawPrefix, rawToken) = Array_.split(bs, 4);
+                if (rawPrefix != prefix) return #err("invalid prefix");
+                let (rawCanister, rawIndex) = Array_.split(rawToken, rawToken.size() - 4 : Nat);
+                #ok(
+                    Principal.fromBlob(Blob.fromArray(rawCanister)),
+                    Binary.BigEndian.toNat32(rawIndex),
+                );
+            };
+
+            public func toBlob(tokenId : TokenIdentifier) : TokenIdentifierBlob {
+                let bl = Principal.toBlob(Principal.fromText(tokenId));
+            };
+
+            public func validate(tokenId : TokenIdentifier) : Bool {
+                let bl = toBlob(tokenId);
+                if (bl.size() > 100) return false;
+                let bs = Blob.toArray(bl);
+                let (rawPrefix, rawToken) = Array_.split(bs, 4);
+                if (rawPrefix != prefix) return false;
+                return true;
+                
+            };
+
+            public func fromBlob(b:TokenIdentifierBlob) : Text {
+                Principal.toText(Principal.fromBlob(b));
+            };
+        };
+
+        public type User = {
+            #address   : AccountIdentifier;
+            #principal : Principal;
+        };
+
+        public module User = {
+            public func validate(u:User) : Bool {
+                switch (u) {
+                    case (#address(address)) { AccountIdentifier.validate(address); };
+                    case (#principal(principal)) {
+                        true
+                    };
+                };
+            };
+
+            public func equal(a : User, b : User) : Bool {
+                let aAddress = toAccountIdentifier(a);
+                let bAddress = toAccountIdentifier(b);
+                AccountIdentifier.equal(aAddress, bAddress);
+            };
+
+            public func hash(u : User) : Hash.Hash {
+                AccountIdentifier.hash(toAccountIdentifier(u));
+            };
+
+            public func toAccountIdentifier(u : User) : AccountIdentifier {
+                switch (u) {
+                    case (#address(address)) { address; };
+                    case (#principal(principal)) {
+                        AccountIdentifier.fromPrincipal(principal, null);
+                    };
+                };
+            };
+        };
+    
+
     public type Interface = actor {
 
         // Returns the balance of account.
@@ -93,9 +289,6 @@ module {
         stats   : query () -> async StatsResponse;
     };
 
-    public type AccountIdentifier = Blob; //32 bytes
-    public type AccountIdentifierShort = Blob; //28bytes
-
     public func OptValid<A>(v:?A, f: (A) -> Bool) : Bool {
         switch(v) { case (?z) f(z); case(null) true }
     };
@@ -104,167 +297,15 @@ module {
         switch(v) { case (?z) f(z); case(null) 0 }
     };
 
-    public module AccountIdentifier = { 
-        private let prefix : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
-
-        public func validate(a: AccountIdentifier) : Bool {
-            a.size() == 32;
-        };
-
-        public func fromText(accountId : Text) : AccountIdentifier {
-            switch (Hex.decode(accountId)) {
-                case (#err(e)) { assert(false); Blob.fromArray([]); };
-                case (#ok(bs)) {
-                    Blob.fromArray(bs);
-                };
-            };
-        };
-
-        public func toShort(accountId : AccountIdentifier) : AccountIdentifierShort {
-            Blob.fromArray(Array_.drop<Nat8>(Blob.toArray(accountId), 4));
-        };
-
-        public func fromShort(accountId: AccountIdentifierShort) : AccountIdentifier {
-            Blob.fromArray(Array.append<Nat8>(
-                Binary.BigEndian.fromNat32(CRC32.checksum(Blob.toArray(accountId))),
-                Blob.toArray(accountId),
-            ))
-        };
-
-        public func toText(accountId : AccountIdentifier) : Text {
-            let t = Hex.encode(Blob.toArray(accountId));
-            Text.translate(t, func (c:Char) : Text {
-                    Text.fromChar(switch (c) {
-                        case ('A') 'a';
-                        case ('B') 'b';
-                        case ('C') 'c';
-                        case ('D') 'd';
-                        case ('E') 'e';
-                        case ('F') 'f';
-                        case (_) c; 
-                    });
-             });
-        };
-
-        public func slot(accountId : AccountIdentifier, max:Nat) : Nat {
-            let bl = Blob.toArray(accountId);
-            let (rawPrefix, rawToken) = Array_.split(bl, 4);
-
-            let crc = Blob_.bytesToNat32(rawPrefix);
-
-            Nat32.toNat( crc  % Nat32.fromNat(max) );
-        };
-
-        public func equal(a : AccountIdentifier, b : AccountIdentifier) : Bool {
-            a == b
-        };
-
-        public func hash(accountId : AccountIdentifier) : Hash.Hash {
-            CRC32.checksum(Blob.toArray(accountId));
-        };
-
-        public func fromPrincipal(p : Principal, subAccount : ?SubAccount) : AccountIdentifier {
-            fromBlob(Principal.toBlob(p), subAccount);
-        };
-
-        public func fromBlob(data : Blob, subAccount : ?SubAccount) : AccountIdentifier {
-            fromArray(Blob.toArray(data), subAccount);
-        };
-
-    
-
-        public func fromArray(data : [Nat8], subAccount : ?SubAccount) : AccountIdentifier {
-            let account : [Nat8] = switch (subAccount) {
-                case (null) { Array.freeze(Array.init<Nat8>(32, 0)); };
-                case (?sa)  { Blob.toArray(sa); };
-            };
-            
-            let inner = SHA256.sum224(Array.flatten<Nat8>([prefix, data, account]));
-
-            Blob.fromArray(Array.append<Nat8>(
-                Binary.BigEndian.fromNat32(CRC32.checksum(inner)),
-                inner,
-            ));
-        };
-
-        public func purchaseAccountId(can:Principal, productId:Nat32, accountId: AccountIdentifier) : (AccountIdentifier, SubAccount) {
-        
-            let subaccount = Blob.fromArray(Array.append<Nat8>(
-                Blob_.nat32ToBytes(productId),
-                Blob.toArray(toShort(accountId))
-            )); 
-
-            (fromPrincipal(can, ?subaccount), subaccount);
-        };
-    };
-    public type SubAccount = Blob; //32 bytes
-
-    public module SubAccount = {
-        public func fromNat(idx: Nat) : SubAccount {
-            Blob.fromArray(Array.append<Nat8>(
-                Array.freeze(Array.init<Nat8>(24, 0)),
-                Blob_.nat64ToBytes(Nat64.fromNat(idx))
-                ));
-            };
-    };
-
-    // Balance refers to an amount of a particular token.
-    public type Balance = Nat64;
-
     public type CommonError = {
         #InvalidToken : TokenIdentifier;
         #Other        : Text;
     };
 
-    public type Memo = Nat64;
 
     // A unique id for a particular token and reflects the canister where the 
     // token resides as well as the index within the tokens container.
-    public type TokenIdentifier = Text;
-    public type TokenIdentifierBlob = Blob;
-
-    public module TokenIdentifier = {
-        private let prefix : [Nat8] = [10, 116, 105, 100]; // \x0A "tid"
-     
-        public func encode(canisterId : Principal, tokenIndex : TokenIndex) : Text {
-            let rawTokenId = Array.flatten<Nat8>([
-                prefix,
-                Blob.toArray(Principal.toBlob(canisterId)),
-                Binary.BigEndian.fromNat32(tokenIndex),
-            ]);
-            
-            Principal.toText(Principal.fromBlob(Blob.fromArray(rawTokenId)));
-        };
-
-        public func decode(tokenId : TokenIdentifier) : Result.Result<(Principal, TokenIndex), Text> {
-            let bs = Blob.toArray(Principal.toBlob(Principal.fromText(tokenId)));
-            let (rawPrefix, rawToken) = Array_.split(bs, 4);
-            if (rawPrefix != prefix) return #err("invalid prefix");
-            let (rawCanister, rawIndex) = Array_.split(rawToken, rawToken.size() - 4 : Nat);
-            #ok(
-                Principal.fromBlob(Blob.fromArray(rawCanister)),
-                Binary.BigEndian.toNat32(rawIndex),
-            );
-        };
-
-        public func toBlob(tokenId : TokenIdentifier) : TokenIdentifierBlob {
-            let bl = Principal.toBlob(Principal.fromText(tokenId));
-        };
-
-        public func validate(tokenId : TokenIdentifier) : Bool {
-            let bl = toBlob(tokenId);
-            if (bl.size() > 100) return false;
-            let bs = Blob.toArray(bl);
-            let (rawPrefix, rawToken) = Array_.split(bs, 4);
-            if (rawPrefix != prefix) return false;
-            return true;
-            
-        };
-
-        public func fromBlob(b:TokenIdentifierBlob) : Text {
-            Principal.toText(Principal.fromBlob(b));
-        };
-    };
+   
 
     // Represents an individual token's index within a given canister.
     public type TokenIndex = Nat32;
@@ -273,41 +314,6 @@ module {
         public func equal(a : TokenIndex, b : TokenIndex) : Bool { a == b; };
 
         public func hash(a : TokenIndex) : Hash.Hash { a; };
-    };
-
-    public type User = {
-        #address   : AccountIdentifier;
-        #principal : Principal;
-    };
-
-    public module User = {
-        public func validate(u:User) : Bool {
-            switch (u) {
-                case (#address(address)) { AccountIdentifier.validate(address); };
-                case (#principal(principal)) {
-                    true
-                };
-            };
-        };
-
-        public func equal(a : User, b : User) : Bool {
-            let aAddress = toAccountIdentifier(a);
-            let bAddress = toAccountIdentifier(b);
-            AccountIdentifier.equal(aAddress, bAddress);
-        };
-
-        public func hash(u : User) : Hash.Hash {
-            AccountIdentifier.hash(toAccountIdentifier(u));
-        };
-
-        public func toAccountIdentifier(u : User) : AccountIdentifier {
-            switch (u) {
-                case (#address(address)) { address; };
-                case (#principal(principal)) {
-                    AccountIdentifier.fromPrincipal(principal, null);
-                };
-            };
-        };
     };
 
 
@@ -353,14 +359,16 @@ module {
         subaccount : ?SubAccount;
     };
 
-    public type TransferResponse = Result.Result<Balance, {
+    public type TransferResponseError = {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;
         #NotTransferable;
         #InvalidToken : TokenIdentifier;
         #Other        : Text;
-    }>;
+    };
+
+    public type TransferResponse = Result.Result<Balance, TransferResponseError>;
 
     public type BurnResponse = TransferResponse;
 
@@ -643,7 +651,6 @@ module {
         lore: ?ItemLore;
         quality: Quality;
         transfer: ItemTransfer;
-        ttl: ?Nat32; // time to live
         author: AccountIdentifier;
         authorShare: Share; // min 0 ; max 10000 - which is 100%
         secret: Bool;
@@ -755,6 +762,8 @@ module {
         var cooldownUntil: ?Nat32; // in minutes
         var sockets: Sockets;
         var price: Price;
+        var pwr : Nat64;
+        var ttl : ?Nat32; // time to live
     };
 
     public type MetavarsFrozen = {
@@ -762,6 +771,8 @@ module {
             cooldownUntil: ?Nat32; 
             sockets: Sockets;
             price: Price;
+            pwr: Nat64;
+            ttl: ?Nat32;
     };
 
     public func MetavarsFreeze(a:Metavars) : MetavarsFrozen {
@@ -770,6 +781,8 @@ module {
             cooldownUntil= a.cooldownUntil; 
             sockets= a.sockets; 
             price = a.price;
+            pwr = a.pwr;
+            ttl = a.ttl;
         }
     };
 
@@ -945,6 +958,7 @@ module {
         #Invalid: Text;
         #OutOfMemory;
         #Unauthorized;
+        #Pwr: TransferResponseError
         }
     >;
 

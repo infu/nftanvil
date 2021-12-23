@@ -8,15 +8,18 @@ type User =
    address: AccountIdentifier;
    "principal": principal;
  };
+type TransferResponseError = 
+ variant {
+   InsufficientBalance;
+   InvalidToken: TokenIdentifier;
+   NotTransferable;
+   Other: text;
+   Rejected;
+   Unauthorized: AccountIdentifier;
+ };
 type TransferResponse = 
  variant {
-   err:
-    variant {
-      InsufficientBalance;
-      Other: text;
-      Rejected;
-      Unauthorized: AccountIdentifier__1;
-    };
+   err: TransferResponseError;
    ok: Balance;
  };
 type TransferRequest = 
@@ -35,6 +38,7 @@ type TransferError =
    TxDuplicate: record {duplicate_of: BlockIndex;};
    TxTooOld: record {allowed_window_nanos: nat64;};
  };
+type TokenIdentifier__1 = text;
 type TokenIdentifier = text;
 type SubAccount = blob;
 type PurchaseIntentResponse = 
@@ -85,7 +89,7 @@ type Class =
                             }) query;
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
-   tokenId: () -> (TokenIdentifier) query;
+   tokenId: () -> (TokenIdentifier__1) query;
    transfer: (TransferRequest) -> (TransferResponse);
  };
 type BlockIndex = nat64;
