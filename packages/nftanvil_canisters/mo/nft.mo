@@ -91,7 +91,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
 
 
-    private stable var _conf : Cluster.Config = Cluster.default();
+    private stable var _conf : Cluster.Config = Cluster.Config.default();
+    private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
 
     private stable var _statsCollections : Nat32  = 0;
     private stable var _statsTransfers : Nat32  = 0;
@@ -107,6 +108,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private let thresholdMemory = 1147483648; //  ~1GB
     private let thresholdNFTMask:Nat32 = 8191; // Dont touch. 13 bit Nat
     private let thresholdNFTCount:Nat32 = 4001; // can go up to 8191
+
+
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -877,9 +880,37 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)/60);
     };
 
+    private func PWR_add(tokenIndex: TokenIndex, amount:Nat64) :  () {
+        let current = PWR_get(aid);
+        _pwr.put(aid, current + amount);
+    };
+    private func PWR_rem(tokenIndex: TokenIndex, amount:Nat64) :  () {
+        let current = PWR_get(aid);
+        _pwr.put(aid, current - amount);
+    };
+    private func PWR_get(tokenIndex: TokenIndex) : Nat64 {
+        let current = PWR_get(aid);
+        switch(_pwr.get(aid)) {
+            case (?bal) bal;
+            case (_) 0;
+        }
+    };
+
     private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
         let receiver = Nft.User.toAccountIdentifier(request.to);
+
+        let m = request.metadata;
+
+        let classIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
+           case (?collectionId) {
+                switch(await Cluster.collection(_conf).mint_nextId(author, collectionId)) {
+                    case (#ok(index)) ?index;
+                    case (#err(e)) return #err(#ClassError(e)) 
+                };
+            };
+           case (_) null
+        };
 
         // INFO:
         // 13 bits used for local token index (max 8191)
@@ -891,25 +922,33 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let tokenIndex:TokenIndex = (Nat32.fromNat(_conf.slot)<<13) | _nextTokenId;
         _nextTokenId := _nextTokenId + 1;
 
+        // Charge minting price
+        let mintPriceCycles = Nft.MetadataInput.price(request.metadata);
+        let mintPricePwr:Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, mintPriceCycles);
+
+
+        switch(await Cluster.pwr(_conf).transfer({
+            from = #address(author);
+            to = #address(Cluster.nft_address(_conf, _conf.slot));
+            amount = mintPricePwr;
+            memo = 0;
+            subaccount = null;
+            })) {
+                case (#ok(bal)) {
+                    // store pwr in nft memory
+                     PWR_add(tokenIndex, mintPricePwr);
+                    
+                };
+                case (#err(e)) {
+                    return #err(#Rejected)
+                }
+            };
+
+
         let timestamp:Nat32 = timeInMinutes();
 
         // Get class info, check if principal is allowed to mint
-        let m = request.metadata;
-
-        if (Nft.MetadataInput.validate(m) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
-
-        
-        if (Nft.Share.validate(m.authorShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
-
-        let classIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
-           case (?collectionId) {
-                switch(await Cluster.collection(_conf).mint_nextId(author, collectionId)) {
-                    case (#ok(index)) ?index;
-                    case (#err(e)) return #err(#ClassError(e)) 
-                };
-            };
-           case (_) null
-        };
+       
         
         let md : Metadata = {
             collectionId = m.collectionId;
@@ -1016,6 +1055,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                  };
             };
         };
+
+        if (Nft.MetadataInput.validate(request.metadata) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
+
+        if (Nft.Share.validate(request.metadata.authorShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
 
         await SNFT_mint(author, request);

@@ -100,6 +100,10 @@ module {
         switch(v) { case (?z) f(z); case(null) true }
     };
 
+    public func OptPrice<A>(v:?A, f: (A) -> Nat64) : Nat64 {
+        switch(v) { case (?z) f(z); case(null) 0 }
+    };
+
     public module AccountIdentifier = { 
         private let prefix : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
 
@@ -388,7 +392,7 @@ module {
     };
 
     public type ClaimLinkResponse = Result.Result<(), {
-        #Rejected; // We wont supply a possible attacker with various errors
+        #Rejected; // We wont supply possible attacker with verbose errors
         #Other: Text
         }>;
 
@@ -442,7 +446,21 @@ module {
                         and IPFS_CID.validate(cid)
                 }
             }
-        }
+        };
+
+        public func price(x : Content) : Nat64 {
+            switch(x) {
+                case (#internal({contentType; size})) {
+                    (Nat64.fromNat(Nat32.toNat(size)) / 1024) * Pricing.STORAGE_KB_PER_MIN 
+                };
+                case (#external) {
+                       0
+                };
+                case (#ipfs({contentType; cid})) {
+                       0
+                };
+            }
+        };
     };
 
     public type EffectDesc = Text;
@@ -584,6 +602,7 @@ module {
         max: Nat32;
         var lastIdx: Nat32;
         renderer: ?Renderer;
+        IPFSGateway: ?Text;
     };
 
     public type CollectionIndex = Nat32;
@@ -596,7 +615,6 @@ module {
         lastIdx: CollectionIndex;
         renderer: ?Renderer;
         contentType: ContentType;
-
     };
 
     public type ICPath = Text;
@@ -623,7 +641,7 @@ module {
         classIndex: ?CollectionIndex;
         name: ?ItemName;
         lore: ?ItemLore;
-        quality: Nat8;
+        quality: Quality;
         transfer: ItemTransfer;
         ttl: ?Nat32; // time to live
         author: AccountIdentifier;
@@ -643,14 +661,17 @@ module {
     public module CustomData = {
         public func validate(t : CustomData) : Bool {
             t.size() <= 1024 * 50 // 50 kb 
-        }
+        };
+        public func price (t: CustomData) : Nat64 {
+            (Nat64.fromNat(t.size()) / 1024) * Pricing.STORAGE_KB_PER_MIN 
+        };
     };
 
     public type MetadataInput = {
         collectionId: ?CollectionId;
         name: ?Text;
         lore: ?Text;
-        quality: Nat8;
+        quality: Quality;
         secret: Bool;
         transfer: ItemTransfer;
         ttl: ?Nat32;
@@ -663,6 +684,27 @@ module {
         price: Price;
     };
 
+    public module Pricing = {
+        public let MAX_QUALITY_PRICE : Nat64 = 2000000; // max quality price per min
+        public let STORAGE_KB_PER_MIN : Nat64 = 8; // prices are in cycles
+        public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
+        public let FULLY_CHARGED_MINUTES : Nat64 = 8409600; //(16 * 365 * 24 * 60) 16 years
+        public let FULLY_CHARGED_MESSAGES : Nat64 = 5840; // 1 message per day
+
+    };
+
+    public type Quality = Nat8;
+    public module Quality = {
+
+        public func validate(t : Quality) : Bool {
+            t <= 6; // Poor, Common, Uncommon, Rare, Epic, Legendary, Artifact
+        };
+        public func price(t: Quality) : Nat64 {
+            Nat64.fromNat(Nat8.toNat(t)) * Pricing.MAX_QUALITY_PRICE
+        }
+    };
+
+ 
     public type Price = {
         amount : Nat64;
         marketplace : ?{
@@ -678,14 +720,34 @@ module {
 
     public module MetadataInput = {
         public func validate(m : MetadataInput) : Bool {
-             OptValid(m.name, ItemName.validate)
+            OptValid(m.name, ItemName.validate)
             and OptValid(m.lore, ItemLore.validate)
             and OptValid(m.content, Content.validate)
             and Content.validate(m.thumb)
             and Attributes.validate(m.attributes)
+            and Quality.validate(m.quality)
             and Tags.validate(m.tags)
             and OptValid(m.custom, CustomData.validate)
-        }
+        };
+        
+        public func price(m: MetadataInput) : Nat64 {
+            let cost_per_min = Pricing.STORAGE_KB_PER_MIN * 50 // cost for nft metadata stored in the cluster
+            + OptPrice(m.custom, CustomData.price)
+            + OptPrice(m.content, Content.price)
+            + Content.price(m.thumb)
+            + Quality.price(m.quality);
+
+            switch(m.ttl) {
+                case (null) {
+                    cost_per_min * Pricing.FULLY_CHARGED_MINUTES
+                    + Pricing.FULLY_CHARGED_MESSAGES * Pricing.AVG_MESSAGE_COST
+                };
+                case (?t) {
+                    Nat64.fromNat(Nat32.toNat(t)) * Pricing.AVG_MESSAGE_COST / 60 / 24 
+                    + Pricing.AVG_MESSAGE_COST * 50 // minimum 50 messages
+                }
+            }
+        };
     };
 
     public type Metavars = {
@@ -739,7 +801,7 @@ module {
         }
     >;
 
-    public type SocketRequest = { 
+    public type SocketRequest = {
         user       : User;
         subaccount : ?SubAccount;
         socket : TokenIdentifier;

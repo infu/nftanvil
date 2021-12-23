@@ -13,7 +13,7 @@ import Cluster  "./type/Cluster";
 shared({caller = _installer}) actor class Router() = this {
 
 //    let IC = actor "aaaaa-aa" : AAA.Interface;
-    private stable var _conf : Cluster.Config = Cluster.default();
+    private stable var _conf : Cluster.Config = Cluster.Config.default();
 
     public shared({caller}) func reportOutOfMemory() : async () {
         //TODO

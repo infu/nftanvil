@@ -10,6 +10,8 @@ import History "./history_interface";
 import Anv "./anv_interface";
 import Account "./account_interface";
 import Ledger "./ledger_interface";
+import Float "mo:base/Float";
+import Int64 "mo:base/Int64";
 
 module {
     public type Config = {
@@ -25,19 +27,37 @@ module {
         slot:Nat;
     };
 
-    public func default() : Config {
-         {
-            router= Principal.fromText("aaaaa-aa");
-            nft= [];
-            nft_avail= [];
-            account= [];
-            pwr= Principal.fromText("aaaaa-aa");
-            anv= Principal.fromText("aaaaa-aa");
-            collection= Principal.fromText("aaaaa-aa");
-            treasury= Principal.fromText("aaaaa-aa");
-            history= Principal.fromText("aaaaa-aa");
-            slot=0;
+    public module Config = {
+        public func default() : Config {
+            {
+                router= Principal.fromText("aaaaa-aa");
+                nft= [];
+                nft_avail= [];
+                account= [];
+                pwr= Principal.fromText("aaaaa-aa");
+                anv= Principal.fromText("aaaaa-aa");
+                collection= Principal.fromText("aaaaa-aa");
+                treasury= Principal.fromText("aaaaa-aa");
+                history= Principal.fromText("aaaaa-aa");
+                slot=0;
+            };
         };
+    };
+    
+    public type Oracle = {
+        cycle_to_pwr : Float
+    };
+
+    public module Oracle = {
+        public func default() : Oracle {
+            { 
+                cycle_to_pwr = 0.123
+            }
+        };
+        public func cycle_to_pwr(oracle:Oracle, cycles:Nat64) : Nat64 {
+            Int64.toNat64(Float.toInt64(Float.fromInt64(Int64.fromNat64(cycles)) * oracle.cycle_to_pwr))
+        };
+        
     };
 
     public func router(conf : Config) : Router.Interface {
@@ -54,6 +74,10 @@ module {
 
     public func treasury_address(conf : Config) : Nft.AccountIdentifier {
         Nft.AccountIdentifier.fromPrincipal(conf.treasury, null);
+    };
+
+    public func nft_address(conf : Config, slot:Nat) : Nft.AccountIdentifier {
+        Nft.AccountIdentifier.fromPrincipal(conf.nft[slot], null);
     };
 
     public func anv(conf : Config) : Anv.Interface {

@@ -24,7 +24,7 @@ import Prim "mo:prim";
 import Cluster  "./type/Cluster";
 
 shared({ caller = _installer }) actor class Account() = this {
-    private stable var _conf : Cluster.Config = Cluster.default();
+    private stable var _conf : Cluster.Config = Cluster.Config.default();
 
      // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;

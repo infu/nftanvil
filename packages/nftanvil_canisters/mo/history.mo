@@ -16,7 +16,7 @@ import Cluster  "./type/Cluster";
 import History "./type/history_interface";
 
 shared({caller = _installer}) actor class Class() : async History.Interface = this {
-    private stable var _conf : Cluster.Config = Cluster.default();
+    private stable var _conf : Cluster.Config = Cluster.Config.default();
 
     public shared({caller}) func add(request: History.AddRequest) : async History.AddResponse {
         #ok();
