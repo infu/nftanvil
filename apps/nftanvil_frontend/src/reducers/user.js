@@ -3,6 +3,7 @@ import { AuthClient } from "@dfinity/auth-client";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { ledger } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 import Cookies from "js-cookie";
+import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 
 import authentication from "../auth";
 
@@ -149,5 +150,29 @@ export const logout = () => async (dispatch, getState) => {
   let anonymous = !(await authClient.isAuthenticated());
   dispatch(authSet({ address: null, principal, anonymous }));
 };
+
+export const transfer_icp =
+  ({ to, amount }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let s = getState();
+
+    let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+
+    let ledger = ledgerCanister({ agentOptions: { identity } });
+
+    let trez = await ledger.transfer({
+      memo: 0,
+      amount: { e8s: amount },
+      fee: { e8s: 10000n },
+      from_subaccount: subaccount,
+      to: to,
+      created_at_time: [],
+    });
+
+    console.log("TREZ", trez);
+  };
 
 export default userSlice.reducer;

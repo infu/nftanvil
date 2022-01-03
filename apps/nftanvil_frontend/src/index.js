@@ -11,7 +11,7 @@ import { theme } from "./theme.js";
 import { ColorModeScript } from "@chakra-ui/react";
 
 import { ConnectedRouter } from "connected-react-router";
-import "./decorations/Christmass";
+//import "./decorations/Christmass";
 
 setTimeout(() => {
   store.dispatch(auth());

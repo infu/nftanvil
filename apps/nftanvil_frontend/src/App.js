@@ -2,13 +2,13 @@ import anvillogo from "./assets/anvillogo.svg";
 import anvillogowhite from "./assets/anvillogowhite.svg";
 import blueflame from "./assets/blueflame.svg";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
-import { login, logout } from "./reducers/user";
+import { login, logout, transfer_icp } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -63,6 +63,17 @@ import { useWindowSize } from "react-use";
 import { Menu, MenuButton, MenuList, MenuItem } from "@chakra-ui/react";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+
+import { useDisclosure, FormLabel, FormControl, Input } from "@chakra-ui/react";
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+} from "@chakra-ui/react";
 
 function PageTabs() {
   const address = useSelector((state) => state.user.address);
@@ -143,15 +154,111 @@ function AlertTestNet() {
   );
 }
 
+function ICP({ mobile }) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const dispatch = useDispatch();
+  const initialRef = React.useRef();
+  const amountRef = React.useRef();
+
+  const icp = AccountIdentifier.e8sToIcp(
+    useSelector((state) => state.user.icp)
+  );
+
+  const transferOk = async () => {
+    let to = AccountIdentifier.TextToArray(initialRef.current.value);
+    let amount = AccountIdentifier.icpToE8s(amountRef.current.value);
+
+    onClose();
+    let toastId = toast("Sending...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+    try {
+      await dispatch(transfer_icp({ to, amount }));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div>
+            <div>Transfer successfull.</div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      console.error("Transfer error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <div>
+            <div>Transfer failed.</div>
+            <div style={{ fontSize: "10px" }}>{e.message}</div>
+          </div>
+        ),
+      });
+    }
+  };
+  return (
+    <>
+      {mobile ? (
+        <MenuItem onClick={onOpen}>{icp} ICP</MenuItem>
+      ) : (
+        <Tooltip hasArrow label="Internet Computer main currency">
+          <Button onClick={onOpen}>{icp} ICP</Button>
+        </Tooltip>
+      )}
+
+      <Modal
+        initialFocusRef={initialRef}
+        onClose={onClose}
+        isOpen={isOpen}
+        isCentered
+        size={"xl"}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Send ICP</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>To Address</FormLabel>
+              <Input ref={initialRef} placeholder="50e3df3..." />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Amount</FormLabel>
+              <Input ref={amountRef} placeholder="" type="number" />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button ml={3} onClick={transferOk}>
+              Send
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+
 function LoginBox() {
-  const address = useSelector((state) => state.user.address);
+  const address = useSelector((state) =>
+    state.user.address ? state.user.address.toLowerCase() : null
+  );
   const principal = useSelector((state) => state.user.principal);
   const pro = useSelector((state) => state.user.pro);
 
   const anonymous = useSelector((state) => state.user.anonymous);
-  const icp = AccountIdentifier.e8sToIcp(
-    useSelector((state) => state.user.icp)
-  );
 
   const { onCopy } = useClipboard(address);
 
@@ -180,12 +287,10 @@ function LoginBox() {
           </>
         ) : (
           <>
-            <Tooltip hasArrow label="Internet Computer main currency">
-              <Button>{icp} ICP</Button>
-            </Tooltip>
-            <Tooltip hasArrow label="Tokens used for minting">
+            <ICP mobile={false} />
+            <Tooltip hasArrow label="PWR tokens used for minting">
               <Button>
-                0{" "}
+                0
                 <img
                   src={blueflame}
                   style={{ marginLeft: "4px", width: "13px", height: "13px" }}
@@ -313,7 +418,9 @@ function DesktopMenu() {
 }
 
 function MobileMenu() {
-  const address = useSelector((state) => state.user.address);
+  const address = useSelector((state) =>
+    state.user.address ? state.user.address.toLowerCase() : null
+  );
   const anonymous = useSelector((state) => state.user.anonymous);
   const pathname = useSelector((state) => state.router.location.pathname);
   const myroot = "/address/0/" + address;
@@ -375,7 +482,9 @@ function MobileMenu() {
               </MenuItem>
             ) : (
               <>
-                <MenuItem>You have 0 tokens</MenuItem>
+                <ICP mobile={true} />
+
+                <MenuItem>0 PWR</MenuItem>
 
                 <MenuItem
                   onClick={() => {

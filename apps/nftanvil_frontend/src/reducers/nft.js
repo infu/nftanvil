@@ -67,7 +67,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     canister,
 
     // data
-    ttl: data.ttl[0],
+
     // domain: data.domain[0],
     // use: data.use[0],
     // hold: data.hold[0],
@@ -85,6 +85,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     authorShare: data.authorShare,
     tags: data.tags,
     //vars
+    ttl: vars.ttl[0],
     cooldownUntil: vars.cooldownUntil[0],
     boundUntil: vars.boundUntil[0],
     sockets: vars.sockets.map((x) => TokenIdentifier.ArrayToText(x)),

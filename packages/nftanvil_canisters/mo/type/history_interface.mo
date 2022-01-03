@@ -75,7 +75,6 @@ module {
             to: AccountIdentifier;
             token: TokenIdentifier;
             memo: Memo;
-            time: Time.Time;
         };
 
         #burn : {
@@ -117,7 +116,6 @@ module {
                     token: TokenIdentifier;
                     amount: Balance;
                     memo: Memo;
-                    time: Time.Time;
                 };
 
     public type Block = {

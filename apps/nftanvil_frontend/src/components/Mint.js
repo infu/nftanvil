@@ -316,7 +316,10 @@ export const MintForm = () => {
                       if (info.type.indexOf("image/") !== -1) {
                         if (info.size > 1024 * 1024) {
                           let x = await resizeImage(info.url, 1280, 1280);
-                          props.setFieldValue("content_ipfs", x);
+                          props.setFieldValue(
+                            "content_" + props.values.content_storage,
+                            x
+                          );
 
                           toast.info(
                             "Image was too big. Resizing automatically",
@@ -650,7 +653,7 @@ export const MintForm = () => {
                         <FormControl
                           isInvalid={form.errors.price && form.touched.price}
                         >
-                          <FormLabel htmlFor="price">Price</FormLabel>
+                          <FormLabel htmlFor="price">Initial price</FormLabel>
                           <Stack direction="horizontal">
                             <NumberInput
                               {...field}
@@ -936,7 +939,7 @@ const File = ({
                     </FormTip>
                   </Radio>
                   <Radio size="sm" value={"external"}>
-                    <FormTip text="Extension canister is responsible for providing data">
+                    <FormTip text="Collection settings point to a renderer">
                       External
                     </FormTip>
                   </Radio>

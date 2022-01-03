@@ -39,6 +39,7 @@ shared({ caller = _installer }) actor class Account() = this {
     //Handle canister upgrades
     system func preupgrade() {
         _tmpAccount := HashSmash.pre(_account);
+
     };
 
     system func postupgrade() {

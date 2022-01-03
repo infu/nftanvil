@@ -21,7 +21,6 @@ import Collection "./type/collection_interface"
 shared({caller = _installer}) actor class Class() : async Collection.Interface = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
 
-   
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);
         _conf := conf

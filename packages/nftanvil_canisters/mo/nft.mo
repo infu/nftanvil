@@ -83,7 +83,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     
     private stable var _tmpAllowance : [(TokenIndex, Principal)] = [];
     private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
-    
+ 
     private stable var _tmpToken2Link: [(TokenIndex, Blob)] = [];
     private var _token2link : HashMap.HashMap<TokenIndex, Blob> = HashMap.fromIter(_tmpToken2Link.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
 
@@ -120,6 +120,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         _tmpToken2Link := Iter.toArray(_token2link.entries());
         _tmpChunk := Iter.toArray(_chunk.entries());
+
+      
     };
 
     system func postupgrade() {
