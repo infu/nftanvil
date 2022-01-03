@@ -719,7 +719,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     private func chunkIdDecode(x:Nat32) : (tokenIndex:Nat32, chunkIndex:Nat32, ctype:Nat32) {
         (
-            ((x >> 19 ) & thresholdNFTMask) | (Nat32.fromNat(_conf.slot)<<13) ,
+            ((x >> 19 ) & thresholdNFTMask), //| (Nat32.fromNat(_conf.slot)<<13) ,
             (x >> 2) & 255,
             (x & 3)
         )
@@ -906,7 +906,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         // Some tokens will be less space, others more, max is ~ 5.4mb
         // Max tokens if canisters have only 1000tokens each = 524287 * 1000 = 524 mil
 
-        let tokenIndex:TokenIndex = (Nat32.fromNat(_conf.slot)<<13) | _nextTokenId;
+        let tokenIndex:TokenIndex =  _nextTokenId; //(Nat32.fromNat(_conf.slot)<<13) |
         _nextTokenId := _nextTokenId + 1;
 
         // Charge minting price
@@ -1352,12 +1352,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     private func ACC_put(aid: AccountIdentifier, tidx: TokenIndex) : async () {
-        await Cluster.accountFromAid(_conf, aid).add(aid, tidx);
+        await Cluster.accountFromAid(_conf, aid).add(aid, tidx, _conf.slot);
         
     };
 
     private func ACC_del(aid: AccountIdentifier, tidx: TokenIndex) : async () {
-        await Cluster.accountFromAid(_conf, aid).rem(aid, tidx);   
+        await Cluster.accountFromAid(_conf, aid).rem(aid, tidx, _conf.slot);   
     };
 
     private func ACC_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : async () {

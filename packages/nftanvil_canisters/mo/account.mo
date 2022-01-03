@@ -59,23 +59,24 @@ shared({ caller = _installer }) actor class Account() = this {
         _conf := conf
     };
 
-    public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex) : async () {
+    public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex, slot: Nat) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
-
+        let gid = tidx2gid(idx, slot);
         switch(can2idx(caller)) {
             case (?a) {
-               HashSmash.add<AccountIdentifier>(_account, aid, idx);
+               HashSmash.add<AccountIdentifier>(_account, aid, gid);
             };
             case (_) { () }
         }
     };
 
-    public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex) : async () {
+    public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex, slot: Nat) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
+        let gid = tidx2gid(idx, slot);
 
         switch(can2idx(caller)) {
             case (?a) { 
-               HashSmash.rem<AccountIdentifier>(_account, aid, idx);
+               HashSmash.rem<AccountIdentifier>(_account, aid, gid);
             };
             case (_) { () }
         }
@@ -107,6 +108,10 @@ shared({ caller = _installer }) actor class Account() = this {
             let idx:Nat32 = gid; 
             let nftcan = _conf.nft[Nat32.toNat(slot)];
             Nft.TokenIdentifier.encode(nftcan, idx);
+    };
+
+    private func tidx2gid(tidx:Nat32, slot:Nat) : TokenIndex {
+            Nat32.fromNat(slot)<<13 | tidx
     };
 
     public type StatsResponse = {
