@@ -889,7 +889,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let m = request.metadata;
 
-        let classIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
+        let collectionIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
            case (?collectionId) {
                 switch(await Cluster.collection(_conf).mint_nextId(author, collectionId)) {
                     case (#ok(index)) ?index;
@@ -901,12 +901,19 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         // INFO:
         // 13 bits used for local token index (max 8191)
-        // 19 bits used for slot number (max 524287)
+        // 19 bits used for collectionId number (max 524287)
         // 1000 tokens * 4mb each = 4gb (the canister limit); 
         // Some tokens will be less space, others more, max is ~ 5.4mb
         // Max tokens if canisters have only 1000tokens each = 524287 * 1000 = 524 mil
 
-        let tokenIndex:TokenIndex =  _nextTokenId; //(Nat32.fromNat(_conf.slot)<<13) |
+        let tokenIndex:TokenIndex = switch(m.collectionId) {
+            case (?collectionId) {
+                _nextTokenId | (collectionId<<13); 
+            };
+            case (_) {
+                _nextTokenId
+            }
+        };
         _nextTokenId := _nextTokenId + 1;
 
         // Charge minting price
@@ -936,7 +943,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         
         let md : Metadata = {
             collectionId = m.collectionId;
-            classIndex;
+            collectionIndex;
             name = m.name;
             lore = m.lore;
             quality = m.quality;

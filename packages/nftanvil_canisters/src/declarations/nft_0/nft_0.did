@@ -353,7 +353,7 @@ type Metadata =
    attributes: Attributes;
    author: AccountIdentifier;
    authorShare: Share;
-   classIndex: opt CollectionIndex;
+   collectionIndex: opt CollectionIndex;
    collectionId: opt CollectionId;
    content: opt Content;
    created: nat32;

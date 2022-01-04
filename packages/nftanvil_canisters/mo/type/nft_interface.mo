@@ -646,7 +646,7 @@ module {
 
     public type Metadata = {
         collectionId: ?CollectionId;
-        classIndex: ?CollectionIndex;
+        collectionIndex: ?CollectionIndex;
         name: ?ItemName;
         lore: ?ItemLore;
         quality: Quality;

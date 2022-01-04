@@ -1,11 +1,13 @@
 import Iter "mo:base/Iter";
 import HashMap "mo:base/HashMap";
 import Nat32 "mo:base/Nat32";
+import Hash_ "mo:base/Hash";
 
 module {
 
+    public type Hash = Hash_.Hash;
 
-    public func init<A,B>( tmp:[(A,[B])], equal: (A,A) -> Bool, hash: (A) -> Nat32, equalB: (B,B) -> Bool, hashB: (B) -> Nat32  ) : HashMap.HashMap<A, HashMap.HashMap<B, Bool>> {
+    public func init<A,B>( tmp:[(A,[B])], equal: (A,A) -> Bool, hash: (A) -> Hash, equalB: (B,B) -> Bool, hashB: (B) -> Hash  ) : HashMap.HashMap<A, HashMap.HashMap<B, Bool>> {
         HashMap.fromIter(Iter.map<(A, [B]),(A, HashMap.HashMap<B, Bool>)>( tmp.vals(),   
             func ((ai:A, x:[B])): ((A,HashMap.HashMap<B, Bool>)) { 
             let it = Iter.map<B,(B, Bool)>(x.vals(), func(c:B): (B,Bool) { (c, true) });
@@ -23,19 +25,19 @@ module {
          }));
     };
 
-    public func add<A>(vvv: HashMap.HashMap<A, HashMap.HashMap<Nat32, Bool>>, key:A, val:Nat32) : () {
+    public func add<A,B>(vvv: HashMap.HashMap<A, HashMap.HashMap<B, Bool>>, key:A, val:B, equalB: (B,B) -> Bool, hashB: (B) -> Hash) : () {
          switch(vvv.get(key)) {
             case (?buf) {
                buf.put(val, true);
             };
             case (_) {
-                let buf:HashMap.HashMap<Nat32, Bool> = HashMap.fromIter<Nat32,Bool>(Iter.fromArray([(val, true)]),0, Nat32.equal, func(x) {x});
+                let buf:HashMap.HashMap<B, Bool> = HashMap.fromIter<B,Bool>(Iter.fromArray([(val, true)]),0, equalB, hashB);
                 vvv.put(key, buf);
             }
         }
     };
     
-    public func rem<A>(vvv: HashMap.HashMap<A, HashMap.HashMap<Nat32, Bool>>, key:A, val:Nat32) : () {
+    public func rem<A,B>(vvv: HashMap.HashMap<A, HashMap.HashMap<B, Bool>>, key:A, val:B) : () {
          switch(vvv.get(key)) {
             case (?buf) {
                buf.delete(val);
@@ -46,10 +48,10 @@ module {
         }
     };
 
-    public func list<A>(vvv: HashMap.HashMap<A, HashMap.HashMap<Nat32, Bool>>, key:A) : Iter.Iter<(Nat32)> {
+    public func list<A,B>(vvv: HashMap.HashMap<A, HashMap.HashMap<B, Bool>>, key:A) : Iter.Iter<(B)> {
         switch(vvv.get(key)) {
             case (?buf) {
-               Iter.map<(Nat32,Bool),Nat32>(buf.entries(), func((x:Nat32,b:Bool)): Nat32 { x } );
+               Iter.map<(B,Bool),B>(buf.entries(), func((x:B,b:Bool)): B { x } );
             };
             case (_) {
                 Iter.fromArray([]);
