@@ -16,7 +16,6 @@ type RecordFungibleTransaction =
    amount: Balance;
    from: AccountIdentifier;
    memo: Memo;
-   time: Time;
    to: AccountIdentifier;
    token: TokenIdentifier;
  };
@@ -49,7 +48,6 @@ type NftRecord =
     record {
       from: AccountIdentifier;
       memo: Memo;
-      time: Time;
       to: AccountIdentifier;
       token: TokenIdentifier;
     };

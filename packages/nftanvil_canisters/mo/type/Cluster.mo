@@ -21,7 +21,7 @@ module {
         account:[Principal];
         pwr: Principal;
         anv: Principal;
-        collection: Principal;
+        // collection: Principal;
         treasury:Principal;
         history:Principal;
         slot:Nat;
@@ -64,9 +64,9 @@ module {
         actor(Principal.toText(conf.router)) : Router.Interface;
     };
    
-    public func collection(conf : Config) : Collection.Interface {
-        actor(Principal.toText(conf.collection)) : Collection.Interface;
-    };
+    // public func collection(conf : Config) : Collection.Interface {
+    //     actor(Principal.toText(conf.collection)) : Collection.Interface;
+    // };
    
     public func treasury(conf : Config) : Treasury.Interface {
         actor(Principal.toText(conf.treasury)) : Treasury.Interface;

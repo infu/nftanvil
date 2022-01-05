@@ -23,13 +23,13 @@ type Config =
    slot: nat;
    treasury: principal;
  };
-type AccountIdentifier = blob;
-type Account = 
+type Class = 
  service {
-   add: (AccountIdentifier, TokenIndex) -> ();
+   add: (AccountIdentifier, TokenIndex, nat) -> ();
    config_set: (Config) -> ();
    list: (AccountIdentifier, nat) -> (vec TokenIdentifier) query;
-   rem: (AccountIdentifier, TokenIndex) -> ();
+   rem: (AccountIdentifier, TokenIndex, nat) -> ();
    stats: () -> (StatsResponse) query;
  };
-service : () -> Account
+type AccountIdentifier = blob;
+service : () -> Class

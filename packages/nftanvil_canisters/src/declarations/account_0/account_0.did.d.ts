@@ -1,14 +1,22 @@
 import type { Principal } from '@dfinity/principal';
-export interface Account {
-  'add' : (arg_0: AccountIdentifier, arg_1: TokenIndex) => Promise<undefined>,
+export type AccountIdentifier = Array<number>;
+export interface Class {
+  'add' : (
+      arg_0: AccountIdentifier,
+      arg_1: TokenIndex,
+      arg_2: bigint,
+    ) => Promise<undefined>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
   'list' : (arg_0: AccountIdentifier, arg_1: bigint) => Promise<
       Array<TokenIdentifier>
     >,
-  'rem' : (arg_0: AccountIdentifier, arg_1: TokenIndex) => Promise<undefined>,
+  'rem' : (
+      arg_0: AccountIdentifier,
+      arg_1: TokenIndex,
+      arg_2: bigint,
+    ) => Promise<undefined>,
   'stats' : () => Promise<StatsResponse>,
 }
-export type AccountIdentifier = Array<number>;
 export interface Config {
   'anv' : Principal,
   'nft' : Array<Principal>,
@@ -32,4 +40,4 @@ export interface StatsResponse {
 }
 export type TokenIdentifier = string;
 export type TokenIndex = number;
-export interface _SERVICE extends Account {}
+export interface _SERVICE extends Class {}

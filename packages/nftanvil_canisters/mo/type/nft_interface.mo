@@ -28,7 +28,6 @@ module {
         public type AccountIdentifier = Blob; //32 bytes
         public type AccountIdentifierShort = Blob; //28bytes
 
-
         public module AccountIdentifier = { 
             private let prefix : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
 
@@ -95,8 +94,6 @@ module {
             public func fromBlob(data : Blob, subAccount : ?SubAccount) : AccountIdentifier {
                 fromArray(Blob.toArray(data), subAccount);
             };
-
-        
 
             public func fromArray(data : [Nat8], subAccount : ?SubAccount) : AccountIdentifier {
                 let account : [Nat8] = switch (subAccount) {
@@ -237,7 +234,7 @@ module {
         // Returns the account that is linked to the given token.
         bearer  : query (token :  TokenIdentifier) -> async BearerResponse;
 
-        // (PWR) Mints a new NFT and assignes its owner to the given User.
+        // (PWR) Mints a new NFT
         mintNFT : shared (request :  MintRequest) -> async  MintResponse;
 
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
@@ -426,7 +423,6 @@ module {
             t.size() <= 64
         } 
     };
-    public type ExternalRenderer = Principal;
     public type Content = {
         #ipfs: {
             contentType: ContentType;
@@ -601,29 +597,30 @@ module {
         };
     };
     
-    public type CollectionId = Nat32;
+    // public type CollectionId = Nat32;
+    // public type CollectionIndex = Nat32;
 
-    public type CollectionStored = {
-        domain: ?DomainName;
-        authors: [AccountIdentifier];
-        socketable:[CollectionId];
-        max: Nat32;
-        var lastIdx: Nat32;
-        renderer: ?Renderer;
-        IPFSGateway: ?Text;
-    };
+    // public type CollectionStored = {
+    //     name: Text;
+    //     domain: ?DomainName;
+    //     authors: [AccountIdentifier];
+    //     socketable:[CollectionId];
+    //     max: CollectionIndex;
+    //     var lastIdx: CollectionIndex;
+    //     renderer: ?ICPath;
+    //     IPFSGateway: ?Text;
+    // };
 
-    public type CollectionIndex = Nat32;
-
-    public type Collection = {
-        domain: ?DomainName;
-        authors: [AccountIdentifier];
-        socketable:[CollectionId];
-        max: CollectionIndex;
-        lastIdx: CollectionIndex;
-        renderer: ?Renderer;
-        contentType: ContentType;
-    };
+    // public type Collection = {
+    //     name: Text;
+    //     domain: ?DomainName;
+    //     authors: [AccountIdentifier];
+    //     socketable:[CollectionId];
+    //     max: CollectionIndex;
+    //     lastIdx: CollectionIndex;
+    //     renderer: ?ICPath;
+    //     IPFSGateway: ?Text;
+    // };
 
     public type ICPath = Text;
     public module ICPath = {
@@ -634,19 +631,9 @@ module {
         };
     };
 
-    public type Renderer = {
-        #canister : {
-           contentType: ContentType;
-        };
-        #wasm : {
-            #ipfs: IPFS_CID;
-            #ic: ICPath; // ic://principal/path
-        };
-    };
-
     public type Metadata = {
-        collectionId: ?CollectionId;
-        collectionIndex: ?CollectionIndex;
+        // collectionId: ?CollectionId;
+        // collectionIndex: ?CollectionIndex;
         name: ?ItemName;
         lore: ?ItemLore;
         quality: Quality;
@@ -675,7 +662,7 @@ module {
     };
 
     public type MetadataInput = {
-        collectionId: ?CollectionId;
+        // collectionId: ?CollectionId;
         name: ?Text;
         lore: ?Text;
         quality: Quality;

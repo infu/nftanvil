@@ -66,7 +66,6 @@ export type NftRecord = {
       'token' : TokenIdentifier,
       'from' : AccountIdentifier,
       'memo' : Memo,
-      'time' : Time,
     }
   } |
   { 'purchase' : NFTPurchase };
@@ -81,7 +80,6 @@ export interface RecordFungibleTransaction {
   'token' : TokenIdentifier,
   'from' : AccountIdentifier,
   'memo' : Memo,
-  'time' : Time,
   'amount' : Balance,
 }
 export type RecordId = Array<number>;

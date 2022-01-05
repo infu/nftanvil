@@ -10,7 +10,6 @@ export const idlFactory = ({ IDL }) => {
     'token' : TokenIdentifier,
     'from' : AccountIdentifier,
     'memo' : Memo,
-    'time' : Time,
     'amount' : Balance,
   });
   const AnvRecord = IDL.Variant({ 'transaction' : RecordFungibleTransaction });
@@ -74,7 +73,6 @@ export const idlFactory = ({ IDL }) => {
       'token' : TokenIdentifier,
       'from' : AccountIdentifier,
       'memo' : Memo,
-      'time' : Time,
     }),
     'purchase' : NFTPurchase,
   });

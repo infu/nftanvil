@@ -49,7 +49,7 @@ shared({caller = _installer}) actor class Router() = this {
          acclist = getAccountCanisters();
          anv = _conf.anv;
          pwr = _conf.pwr;
-         collection = _conf.collection;
+        //  collection = _conf.collection;
          treasury = _conf.treasury;
          }
     };

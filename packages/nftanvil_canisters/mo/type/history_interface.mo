@@ -94,7 +94,7 @@ module {
         #purchase : Treasury.NFTPurchase;
 
         #mint : {
-            collectionId: Nft.CollectionId;
+            // collectionId: Nft.CollectionId;
             token: TokenIdentifier;
         };
 

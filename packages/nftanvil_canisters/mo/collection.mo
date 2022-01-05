@@ -19,31 +19,31 @@ import Cluster  "./type/Cluster";
 import Collection "./type/collection_interface"
 
 shared({caller = _installer}) actor class Class() : async Collection.Interface = this {
-    private stable var _conf : Cluster.Config = Cluster.Config.default();
+    // private stable var _conf : Cluster.Config = Cluster.Config.default();
 
-    public shared({caller}) func config_set(conf : Cluster.Config) : async () {
-        assert(caller == _installer);
-        _conf := conf
-    };
+    // public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+    //     assert(caller == _installer);
+    //     _conf := conf
+    // };
 
-    public shared({caller}) func create(collection: Nft.Collection) : async Collection.CreateResponse {
-        #err("Not implemented");
-    };
+    // public shared({caller}) func create(collection: Nft.Collection) : async Collection.CreateResponse {
+    //     #err("Not implemented");
+    // };
 
-    public query func author_allow(author: Nft.AccountIdentifier, collectionId: Nft.CollectionId) : async Collection.AllowResponse {
-        #err("Not implemented");
-    };
+    // public query func author_allow(author: Nft.AccountIdentifier, collectionId: Nft.CollectionId) : async Collection.AllowResponse {
+    //     #err("Not implemented");
+    // };
 
-    public shared({caller}) func mint_nextId(author: Nft.AccountIdentifier, collectionId: Nft.CollectionId) : async Collection.MintNextIdResponse {
-        #err("Not implemented");
-    };
+    // public shared({caller}) func mint_nextId(author: Nft.AccountIdentifier, collectionId: Nft.CollectionId) : async Collection.MintNextIdResponse {
+    //     #err("Not implemented");
+    // };
 
-    public query func socket_allow(request: Nft.SocketRequest, collectionId:Nft.CollectionId) : async Collection.AllowResponse {
-        #err("Not implemented");
-    };
+    // public query func socket_allow(request: Nft.SocketRequest, collectionId:Nft.CollectionId) : async Collection.AllowResponse {
+    //     #err("Not implemented");
+    // };
 
-    public query func info(collectionId: Nft.CollectionId) : async Collection.InfoResponse {
-        #err(#NotFound);
-    };
+    // public query func info(collectionId: Nft.CollectionId) : async Collection.InfoResponse {
+    //     #err(#NotFound);
+    // };
 
 }

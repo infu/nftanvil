@@ -115,7 +115,6 @@ export type ItemTransfer = { 'unrestricted' : null } |
   { 'bindsDuration' : number };
 export type Memo = bigint;
 export interface Metadata {
-  'collectionIndex' : [] | [CollectionIndex],
   'thumb' : Content,
   'created' : number,
   'content' : [] | [Content],
@@ -130,6 +129,7 @@ export interface Metadata {
   'author' : AccountIdentifier,
   'entropy' : Array<number>,
   'attributes' : Attributes,
+  'collectionIndex' : [] | [CollectionIndex],
   'transfer' : ItemTransfer,
 }
 export interface MetadataInput {

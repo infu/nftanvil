@@ -889,15 +889,15 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let m = request.metadata;
 
-        let collectionIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
-           case (?collectionId) {
-                switch(await Cluster.collection(_conf).mint_nextId(author, collectionId)) {
-                    case (#ok(index)) ?index;
-                    case (#err(e)) return #err(#ClassError(e))
-                };
-            };
-           case (_) null
-        };
+        // let collectionIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
+        //    case (?collectionId) {
+        //         switch(await Cluster.collection(_conf).mint_nextId(author, collectionId)) {
+        //             case (#ok(index)) ?index;
+        //             case (#err(e)) return #err(#ClassError(e))
+        //         };
+        //     };
+        //    case (_) null
+        // };
 
         // INFO:
         // 13 bits used for local token index (max 8191)
@@ -906,14 +906,15 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         // Some tokens will be less space, others more, max is ~ 5.4mb
         // Max tokens if canisters have only 1000tokens each = 524287 * 1000 = 524 mil
 
-        let tokenIndex:TokenIndex = switch(m.collectionId) {
-            case (?collectionId) {
-                _nextTokenId | (collectionId<<13); 
-            };
-            case (_) {
-                _nextTokenId
-            }
-        };
+        // let tokenIndex:TokenIndex = switch(m.collectionId) {
+        //     case (?collectionId) {
+        //         _nextTokenId | (collectionId<<13); 
+        //     };
+        //     case (_) {
+        //         _nextTokenId
+        //     }
+        // };
+        let tokenIndex = _nextTokenId;
         _nextTokenId := _nextTokenId + 1;
 
         // Charge minting price
@@ -942,8 +943,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
        
         
         let md : Metadata = {
-            collectionId = m.collectionId;
-            collectionIndex;
+            // collectionId = m.collectionId;
+            // collectionIndex;
             name = m.name;
             lore = m.lore;
             quality = m.quality;
@@ -1007,18 +1008,18 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             return #err(#OutOfMemory);
             };
 
-        switch(request.metadata.collectionId) {
-                case (?collectionId) {
+        // switch(request.metadata.collectionId) {
+        //         case (?collectionId) {
 
-                    switch (await Cluster.collection(_conf).author_allow(author, collectionId)) {
-                        case (#ok()) {                                        
-                            ()
-                        };
-                        case (#err(e)) return #err(#ClassError("Unauthorized author"));
-                    };
-                };
-                case (null) ();
-            };
+        //             switch (await Cluster.collection(_conf).author_allow(author, collectionId)) {
+        //                 case (#ok()) {                                        
+        //                     ()
+        //                 };
+        //                 case (#err(e)) return #err(#ClassError("Unauthorized author"));
+        //             };
+        //         };
+        //         case (null) ();
+        //     };
 
         // validity checks
         if (request.metadata.secret == true) switch (request.metadata.content) {
@@ -1031,21 +1032,21 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (_) ();
         };
 
-        switch(request.metadata.collectionId) {
-            case (?can) {
-                ()
-            };
-            case (null) {
-                 switch(request.metadata.content) {
-                    case(?#external(_)) return #err(#Invalid("collectionId required if external content is specified"));
-                    case (_) ()
-                 };
-                 switch(request.metadata.thumb) {
-                    case(#external(_)) return #err(#Invalid("collectionId required if external thumb is specified"));
-                    case (_) ()
-                 };
-            };
-        };
+        // switch(request.metadata.collectionId) {
+        //     case (?can) {
+        //         ()
+        //     };
+        //     case (null) {
+        //          switch(request.metadata.content) {
+        //             case(?#external(_)) return #err(#Invalid("collectionId required if external content is specified"));
+        //             case (_) ()
+        //          };
+        //          switch(request.metadata.thumb) {
+        //             case(#external(_)) return #err(#Invalid("collectionId required if external thumb is specified"));
+        //             case (_) ()
+        //          };
+        //     };
+        // };
 
         if (Nft.MetadataInput.validate(request.metadata) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
 
@@ -1119,29 +1120,29 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                        switch(switch(meta.collectionId) {
-                            case (?collectionId) {
+                        // switch(switch(meta.collectionId) {
+                        //     case (?collectionId) {
 
-                                // get permission from class canister
-                                switch (await Cluster.collection(_conf).socket_allow(request, collectionId)) {
-                                    case (#ok()) {                                        
-                                        #ok()
-                                    };
-                                    case (#err(e)) #err(#ClassError(e));
-                                };
-                            };
-                            case (null) {
-                                // canisters without class don't need permission
-                                #ok()
-                            }
-                        }) {
-                            case (#ok()) {
+                        //         // get permission from class canister
+                        //         switch (await Cluster.collection(_conf).socket_allow(request, collectionId)) {
+                        //             case (#ok()) {                                        
+                        //                 #ok()
+                        //             };
+                        //             case (#err(e)) #err(#ClassError(e));
+                        //         };
+                        //     };
+                        //     case (null) {
+                        //         // canisters without class don't need permission
+                        //         #ok()
+                        //     }
+                        // }) {
+                        //     case (#ok()) {
                                 if (Iter.size(Iter.fromArray(vars.sockets)) >= 10) return #err(#SocketsFull);
                                 vars.sockets := Array.append(vars.sockets, [plugBlob]);
                                 #ok();
-                            };
-                            case (#err(e)) #err(e);
-                        }
+                        //     };
+                        //     case (#err(e)) #err(e);
+                        // }
                         
                     };
                     case (#err()) {

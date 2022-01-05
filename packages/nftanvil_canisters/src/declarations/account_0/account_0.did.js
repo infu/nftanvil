@@ -23,17 +23,17 @@ export const idlFactory = ({ IDL }) => {
     'rts_reclaimed' : IDL.Nat,
     'rts_version' : IDL.Text,
   });
-  const Account = IDL.Service({
-    'add' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
+  const Class = IDL.Service({
+    'add' : IDL.Func([AccountIdentifier, TokenIndex, IDL.Nat], [], []),
     'config_set' : IDL.Func([Config], [], []),
     'list' : IDL.Func(
         [AccountIdentifier, IDL.Nat],
         [IDL.Vec(TokenIdentifier)],
         ['query'],
       ),
-    'rem' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
+    'rem' : IDL.Func([AccountIdentifier, TokenIndex, IDL.Nat], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
   });
-  return Account;
+  return Class;
 };
 export const init = ({ IDL }) => { return []; };

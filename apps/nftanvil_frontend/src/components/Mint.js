@@ -930,19 +930,18 @@ const File = ({
                 }}
               >
                 <Stack spacing={6} direction="row">
+                  <Radio size="sm" value={"internal"}>
+                    <FormTip text="Stored on Internet Computer">IC</FormTip>
+                  </Radio>
                   <Radio size="sm" value={"ipfs"}>
                     <FormTip text="Stored on IPFS">IPFS</FormTip>
                   </Radio>
-                  <Radio size="sm" value={"internal"}>
-                    <FormTip text="Stored on Internet Computer">
-                      Internal
-                    </FormTip>
-                  </Radio>
-                  <Radio size="sm" value={"external"}>
+
+                  {/* <Radio size="sm" value={"external"}>
                     <FormTip text="Collection settings point to a renderer">
                       External
                     </FormTip>
-                  </Radio>
+                  </Radio> */}
                 </Stack>
               </RadioGroup>
             )}
