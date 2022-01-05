@@ -57,7 +57,7 @@ import { Link } from "react-router-dom";
 import { Nftstorage } from "./components/Nftstorage";
 
 import { Mint } from "./components/Mint";
-import { Collection } from "./components/Collection";
+
 import { Inventory } from "./components/Inventory";
 import { NFTPage, NFTClaim } from "./components/NFT";
 import { useWindowSize } from "react-use";
@@ -91,12 +91,6 @@ function PageTabs() {
         <Link to="/mint">
           <Button variant="solid" colorScheme="gray">
             Mint
-          </Button>
-        </Link>
-
-        <Link to="/collection">
-          <Button variant="solid" colorScheme="gray">
-            Collection
           </Button>
         </Link>
       </ButtonGroup>
@@ -478,10 +472,6 @@ function MobileMenu() {
               <MenuItem>Mint</MenuItem>
             </Link>
 
-            <Link to="/collection">
-              <MenuItem>Collection</MenuItem>
-            </Link>
-
             {anonymous ? (
               <MenuItem onClick={() => dispatch(login())}>
                 Authenticate
@@ -570,7 +560,7 @@ function App() {
         <Center>
           <Switch>
             <Route path="/mint" component={Mint} />
-            <Route path="/collection" component={Collection} />
+
             <Route path="/nft/:id/:code" component={NFTPage} />
             <Route path="/nft/:id" component={NFTPage} />
             <Route path="/address/:pageIdx/:address" component={Inventory} />
