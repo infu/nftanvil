@@ -945,6 +945,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let md : Metadata = {
             // collectionId = m.collectionId;
             // collectionIndex;
+            domain = m.domain;
             name = m.name;
             lore = m.lore;
             quality = m.quality;

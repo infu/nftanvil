@@ -442,7 +442,7 @@ module {
                 case (#internal({contentType; size})) {
                     ContentType.validate(contentType)
                 };
-                case (#external) {
+                case (#external(p)) {
                         true
                 };
                 case (#ipfs({contentType; cid})) {
@@ -457,7 +457,7 @@ module {
                 case (#internal({contentType; size})) {
                     (Nat64.fromNat(Nat32.toNat(size)) / 1024) * Pricing.STORAGE_KB_PER_MIN 
                 };
-                case (#external) {
+                case (#external(p)) {
                        0
                 };
                 case (#ipfs({contentType; cid})) {
@@ -634,6 +634,7 @@ module {
     public type Metadata = {
         // collectionId: ?CollectionId;
         // collectionIndex: ?CollectionIndex;
+        domain: ?DomainName;
         name: ?ItemName;
         lore: ?ItemLore;
         quality: Quality;
@@ -663,6 +664,7 @@ module {
 
     public type MetadataInput = {
         // collectionId: ?CollectionId;
+        domain: ?DomainName;
         name: ?Text;
         lore: ?Text;
         quality: Quality;

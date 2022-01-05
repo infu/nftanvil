@@ -386,6 +386,31 @@ export const MintForm = () => {
                     }}
                   />
 
+                  {pro ? (
+                    <Field name="domain" validate={validateDomain}>
+                      {({ field, form }) => (
+                        <FormControl
+                          isInvalid={form.errors.domain && form.touched.domain}
+                        >
+                          <FormLabel htmlFor="domain">
+                            <FormTip text="Verify domain by placing /.well-known/nftanvil.json with {allowed:[allowed author principal ids]}">
+                              Verified domain
+                            </FormTip>
+                          </FormLabel>
+                          <Input
+                            {...field}
+                            id="domain"
+                            placeholder="yourdomain.com"
+                            variant="filled"
+                          />
+                          <FormErrorMessage>
+                            {form.errors.domain}
+                          </FormErrorMessage>
+                        </FormControl>
+                      )}
+                    </Field>
+                  ) : null}
+
                   <Field name="name" validate={validateName}>
                     {({ field, form }) => (
                       <FormControl
