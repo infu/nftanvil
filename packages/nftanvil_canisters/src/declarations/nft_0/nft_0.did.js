@@ -74,7 +74,6 @@ export const idlFactory = ({ IDL }) => {
     'anv' : IDL.Principal,
     'nft' : IDL.Vec(IDL.Principal),
     'pwr' : IDL.Principal,
-    'collection' : IDL.Principal,
     'slot' : IDL.Nat,
     'history' : IDL.Principal,
     'nft_avail' : IDL.Vec(IDL.Principal),
@@ -118,6 +117,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const ContentType = IDL.Text;
   const IPFS_CID = IDL.Text;
+  const ICPath = IDL.Text;
   const Content = IDL.Variant({
     'internal' : IDL.Record({
       'contentType' : ContentType,
@@ -128,9 +128,9 @@ export const idlFactory = ({ IDL }) => {
       'contentType' : ContentType,
       'size' : IDL.Nat32,
     }),
-    'external' : IDL.Null,
+    'external' : ICPath,
   });
-  const CollectionId = IDL.Nat32;
+  const DomainName = IDL.Text;
   const Share = IDL.Nat16;
   const CustomData = IDL.Vec(IDL.Nat8);
   const Quality = IDL.Nat8;
@@ -140,7 +140,6 @@ export const idlFactory = ({ IDL }) => {
   const Tags = IDL.Vec(Tag);
   const Attribute = IDL.Tuple(IDL.Text, IDL.Nat16);
   const Attributes = IDL.Vec(Attribute);
-  const CollectionIndex = IDL.Nat32;
   const ItemTransfer = IDL.Variant({
     'unrestricted' : IDL.Null,
     'bindsForever' : IDL.Null,
@@ -150,7 +149,7 @@ export const idlFactory = ({ IDL }) => {
     'thumb' : Content,
     'created' : IDL.Nat32,
     'content' : IDL.Opt(Content),
-    'collectionId' : IDL.Opt(CollectionId),
+    'domain' : IDL.Opt(DomainName),
     'authorShare' : Share,
     'custom' : IDL.Opt(CustomData),
     'quality' : Quality,
@@ -161,7 +160,6 @@ export const idlFactory = ({ IDL }) => {
     'author' : AccountIdentifier,
     'entropy' : IDL.Vec(IDL.Nat8),
     'attributes' : Attributes,
-    'collectionIndex' : IDL.Opt(CollectionIndex),
     'transfer' : ItemTransfer,
   });
   const TokenIdentifierBlob = IDL.Vec(IDL.Nat8);
@@ -195,7 +193,7 @@ export const idlFactory = ({ IDL }) => {
     'ttl' : IDL.Opt(IDL.Nat32),
     'thumb' : Content,
     'content' : IDL.Opt(Content),
-    'collectionId' : IDL.Opt(CollectionId),
+    'domain' : IDL.Opt(DomainName),
     'authorShare' : Share,
     'custom' : IDL.Opt(CustomData),
     'quality' : Quality,
@@ -382,7 +380,14 @@ export const idlFactory = ({ IDL }) => {
     'chunkIdx' : IDL.Nat32,
     'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
   });
+  const CustomId = IDL.Text;
+  const Cooldown = IDL.Nat32;
+  const ItemUse = IDL.Variant({
+    'consumable' : IDL.Record({ 'useId' : CustomId }),
+    'cooldown' : IDL.Record({ 'duration' : Cooldown, 'useId' : CustomId }),
+  });
   const UseRequest = IDL.Record({
+    'use' : ItemUse,
     'token' : TokenIdentifier,
     'memo' : Memo,
     'user' : User,

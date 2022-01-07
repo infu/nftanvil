@@ -10,7 +10,6 @@ export const idlFactory = ({ IDL }) => {
     'anv' : IDL.Principal,
     'nft' : IDL.Vec(IDL.Principal),
     'pwr' : IDL.Principal,
-    'collection' : IDL.Principal,
     'slot' : IDL.Nat,
     'history' : IDL.Principal,
     'nft_avail' : IDL.Vec(IDL.Principal),

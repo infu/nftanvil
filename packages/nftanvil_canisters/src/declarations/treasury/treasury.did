@@ -50,7 +50,6 @@ type Config =
  record {
    account: vec principal;
    anv: principal;
-   collection: principal;
    history: principal;
    nft: vec principal;
    nft_avail: vec principal;

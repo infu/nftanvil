@@ -66,7 +66,6 @@ function config({ slot }) {
       .join("; ")} };
     pwr= principal "${cans["pwr"]}";
     anv= principal "${cans["anv"]}";
-    collection= principal "${cans["collection"]}";
     history= principal "${cans["history"]}";
     treasury= principal "${cans["treasury"]}";
     router= principal "${cans["router"]}";

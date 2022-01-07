@@ -44,13 +44,13 @@ shared({caller = _installer}) actor class Router() = this {
        Array_.exists(_conf.nft, can, Principal.equal)
     };
 
-    public query func fetchSetup() : async {acclist: [Text]} {
+    public query func fetchSetup() : async {acclist: [Text];anv:Text;pwr:Text;history:Text;treasury:Text} {
          {
          acclist = getAccountCanisters();
-         anv = _conf.anv;
-         pwr = _conf.pwr;
-        //  collection = _conf.collection;
-         treasury = _conf.treasury;
+         anv = Principal.toText(_conf.anv);
+         pwr = Principal.toText(_conf.pwr);
+         history = Principal.toText(_conf.history);
+         treasury = Principal.toText(_conf.treasury);
          }
     };
 

@@ -7,4 +7,3 @@ dfx generate anv
 dfx generate pwr
 dfx generate treasury
 dfx generate history
-dfx generate collection

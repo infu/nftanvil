@@ -46,10 +46,6 @@
     "history": {
       "main": "mo/history.mo",
       "type": "motoko"
-    },
-    "collection": {
-      "main": "mo/collection.mo",
-      "type": "motoko"
     }
   },
   "defaults": {

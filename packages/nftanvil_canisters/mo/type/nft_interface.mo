@@ -314,7 +314,7 @@ module {
     };
 
 
-    public type BalanceRequest = { 
+    public type BalanceRequest = {
         user  : User; 
         token : TokenIdentifier;
     };
@@ -345,6 +345,7 @@ module {
         user       : User;
         subaccount : ?SubAccount;
         token      : TokenIdentifier;
+        use        : ItemUse;
         memo       : Memo;
     };
     

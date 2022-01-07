@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./reducers/user";
 import nftReducer from "./reducers/nft";
 import inventoryReducer from "./reducers/inventory";
+import historyReducer from "./reducers/history";
 
 import { connectRouter, routerMiddleware } from "connected-react-router";
 import { createBrowserHistory } from "history";
@@ -13,6 +14,7 @@ export default configureStore({
     router: connectRouter(history),
     user: userReducer,
     nft: nftReducer,
+    history: historyReducer,
     inventory: inventoryReducer,
   },
   middleware: (getDefaultMiddleware) =>

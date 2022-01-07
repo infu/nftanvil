@@ -21,7 +21,6 @@ export interface Config {
   'anv' : Principal,
   'nft' : Array<Principal>,
   'pwr' : Principal,
-  'collection' : Principal,
   'slot' : bigint,
   'history' : Principal,
   'nft_avail' : Array<Principal>,

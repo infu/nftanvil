@@ -1,25 +1,23 @@
 export const idlFactory = ({ IDL }) => {
-  const RecordId = IDL.Vec(IDL.Nat8);
   const Time = IDL.Int;
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const TokenIdentifier = IDL.Text;
   const Memo = IDL.Nat64;
   const Balance = IDL.Nat64;
-  const RecordFungibleTransaction = IDL.Record({
+  const EventFungibleTransaction = IDL.Record({
     'to' : AccountIdentifier,
     'token' : TokenIdentifier,
     'from' : AccountIdentifier,
     'memo' : Memo,
     'amount' : Balance,
   });
-  const AnvRecord = IDL.Variant({ 'transaction' : RecordFungibleTransaction });
+  const AnvEvent = IDL.Variant({ 'transaction' : EventFungibleTransaction });
   const CustomId = IDL.Text;
   const Cooldown = IDL.Nat32;
   const ItemUse = IDL.Variant({
     'consumable' : IDL.Record({ 'useId' : CustomId }),
     'cooldown' : IDL.Record({ 'duration' : Cooldown, 'useId' : CustomId }),
   });
-  const CollectionId = IDL.Nat32;
   const TokenIdentifier__1 = IDL.Text;
   const Share = IDL.Nat16;
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
@@ -43,7 +41,7 @@ export const idlFactory = ({ IDL }) => {
     'amount' : ICP,
     'ledgerBlock' : BlockIndex,
   });
-  const NftRecord = IDL.Variant({
+  const NftEvent = IDL.Variant({
     'use' : IDL.Record({
       'use' : ItemUse,
       'token' : TokenIdentifier,
@@ -62,12 +60,8 @@ export const idlFactory = ({ IDL }) => {
       'token' : TokenIdentifier,
       'memo' : Memo,
       'user' : AccountIdentifier,
-      'amount' : Balance,
     }),
-    'mint' : IDL.Record({
-      'token' : TokenIdentifier,
-      'collectionId' : CollectionId,
-    }),
+    'mint' : IDL.Record({ 'token' : TokenIdentifier }),
     'transaction' : IDL.Record({
       'to' : AccountIdentifier,
       'token' : TokenIdentifier,
@@ -76,26 +70,23 @@ export const idlFactory = ({ IDL }) => {
     }),
     'purchase' : NFTPurchase,
   });
-  const PwrRecord = IDL.Variant({ 'transaction' : RecordFungibleTransaction });
-  const TreasuryRecord = IDL.Record({});
-  const RecordInfo = IDL.Variant({
-    'anv' : AnvRecord,
-    'nft' : NftRecord,
-    'pwr' : PwrRecord,
-    'treasury' : TreasuryRecord,
+  const PwrEvent = IDL.Variant({ 'transaction' : EventFungibleTransaction });
+  const TreasuryEvent = IDL.Record({});
+  const EventInfo = IDL.Variant({
+    'anv' : AnvEvent,
+    'nft' : NftEvent,
+    'pwr' : PwrEvent,
+    'treasury' : TreasuryEvent,
   });
-  const Record = IDL.Record({
-    'id' : RecordId,
-    'created' : Time,
-    'info' : RecordInfo,
+  const Event = IDL.Record({ 'created' : Time, 'info' : EventInfo });
+  const AddResponse = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Variant({ 'NotLegitimateCaller' : IDL.Null }),
   });
-  const AddRequest = IDL.Record({ 'record' : Record });
-  const AddResponse = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Record({}) });
   const Config = IDL.Record({
     'anv' : IDL.Principal,
     'nft' : IDL.Vec(IDL.Principal),
     'pwr' : IDL.Principal,
-    'collection' : IDL.Principal,
     'slot' : IDL.Nat,
     'history' : IDL.Principal,
     'nft_avail' : IDL.Vec(IDL.Principal),
@@ -103,9 +94,18 @@ export const idlFactory = ({ IDL }) => {
     'router' : IDL.Principal,
     'treasury' : IDL.Principal,
   });
+  const EventIndex = IDL.Nat32;
+  const InfoResponse = IDL.Record({
+    'total' : EventIndex,
+    'previous' : IDL.Opt(IDL.Principal),
+  });
+  const ListRequest = IDL.Record({ 'to' : EventIndex, 'from' : EventIndex });
+  const ListResponse = IDL.Vec(IDL.Opt(Event));
   const Class = IDL.Service({
-    'add' : IDL.Func([AddRequest], [AddResponse], []),
+    'add' : IDL.Func([Event], [AddResponse], []),
     'config_set' : IDL.Func([Config], [], []),
+    'info' : IDL.Func([], [InfoResponse], ['query']),
+    'list' : IDL.Func([ListRequest], [ListResponse], ['query']),
   });
   return Class;
 };

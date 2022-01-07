@@ -1,22 +1,21 @@
 import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
 export type AccountIdentifier__1 = Array<number>;
-export interface AddRequest { 'record' : Record }
 export type AddResponse = { 'ok' : null } |
-  { 'err' : {} };
-export type AnvRecord = { 'transaction' : RecordFungibleTransaction };
+  { 'err' : { 'NotLegitimateCaller' : null } };
+export type AnvEvent = { 'transaction' : EventFungibleTransaction };
 export type Balance = bigint;
 export type BlockIndex = bigint;
 export interface Class {
-  'add' : (arg_0: AddRequest) => Promise<AddResponse>,
+  'add' : (arg_0: Event) => Promise<AddResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
+  'info' : () => Promise<InfoResponse>,
+  'list' : (arg_0: ListRequest) => Promise<ListResponse>,
 }
-export type CollectionId = number;
 export interface Config {
   'anv' : Principal,
   'nft' : Array<Principal>,
   'pwr' : Principal,
-  'collection' : Principal,
   'slot' : bigint,
   'history' : Principal,
   'nft_avail' : Array<Principal>,
@@ -26,9 +25,28 @@ export interface Config {
 }
 export type Cooldown = number;
 export type CustomId = string;
+export interface Event { 'created' : Time, 'info' : EventInfo }
+export interface EventFungibleTransaction {
+  'to' : AccountIdentifier,
+  'token' : TokenIdentifier,
+  'from' : AccountIdentifier,
+  'memo' : Memo,
+  'amount' : Balance,
+}
+export type EventIndex = number;
+export type EventInfo = { 'anv' : AnvEvent } |
+  { 'nft' : NftEvent } |
+  { 'pwr' : PwrEvent } |
+  { 'treasury' : TreasuryEvent };
 export interface ICP { 'e8s' : bigint }
+export interface InfoResponse {
+  'total' : EventIndex,
+  'previous' : [] | [Principal],
+}
 export type ItemUse = { 'consumable' : { 'useId' : CustomId } } |
   { 'cooldown' : { 'duration' : Cooldown, 'useId' : CustomId } };
+export interface ListRequest { 'to' : EventIndex, 'from' : EventIndex }
+export type ListResponse = Array<[] | [Event]>;
 export type Memo = bigint;
 export interface NFTPurchase {
   'token' : TokenIdentifier__1,
@@ -41,7 +59,7 @@ export interface NFTPurchase {
   'amount' : ICP,
   'ledgerBlock' : BlockIndex,
 }
-export type NftRecord = {
+export type NftEvent = {
     'use' : {
       'use' : ItemUse,
       'token' : TokenIdentifier,
@@ -56,10 +74,9 @@ export type NftRecord = {
       'token' : TokenIdentifier,
       'memo' : Memo,
       'user' : AccountIdentifier,
-      'amount' : Balance,
     }
   } |
-  { 'mint' : { 'token' : TokenIdentifier, 'collectionId' : CollectionId } } |
+  { 'mint' : { 'token' : TokenIdentifier } } |
   {
     'transaction' : {
       'to' : AccountIdentifier,
@@ -69,27 +86,10 @@ export type NftRecord = {
     }
   } |
   { 'purchase' : NFTPurchase };
-export type PwrRecord = { 'transaction' : RecordFungibleTransaction };
-export interface Record {
-  'id' : RecordId,
-  'created' : Time,
-  'info' : RecordInfo,
-}
-export interface RecordFungibleTransaction {
-  'to' : AccountIdentifier,
-  'token' : TokenIdentifier,
-  'from' : AccountIdentifier,
-  'memo' : Memo,
-  'amount' : Balance,
-}
-export type RecordId = Array<number>;
-export type RecordInfo = { 'anv' : AnvRecord } |
-  { 'nft' : NftRecord } |
-  { 'pwr' : PwrRecord } |
-  { 'treasury' : TreasuryRecord };
+export type PwrEvent = { 'transaction' : EventFungibleTransaction };
 export type Share = number;
 export type Time = bigint;
 export type TokenIdentifier = string;
 export type TokenIdentifier__1 = string;
-export type TreasuryRecord = {};
+export type TreasuryEvent = {};
 export interface _SERVICE extends Class {}

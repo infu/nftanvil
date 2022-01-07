@@ -44,11 +44,9 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     _tmpBalance := [];
   };
 
-
-
   public shared({caller}) func config_set(conf : Cluster.Config) : async () {
-        assert(caller == _installer);
-        _conf := conf
+      assert(caller == _installer);
+      _conf := conf
   };
 
   public query func dumpBalances() : async [(AccountIdentifier, Balance)] {

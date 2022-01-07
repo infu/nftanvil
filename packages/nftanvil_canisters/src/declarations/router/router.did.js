@@ -3,7 +3,6 @@ export const idlFactory = ({ IDL }) => {
     'anv' : IDL.Principal,
     'nft' : IDL.Vec(IDL.Principal),
     'pwr' : IDL.Principal,
-    'collection' : IDL.Principal,
     'slot' : IDL.Nat,
     'history' : IDL.Principal,
     'nft_avail' : IDL.Vec(IDL.Principal),
@@ -26,7 +25,15 @@ export const idlFactory = ({ IDL }) => {
     'fetchNFTCanisters' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'fetchSetup' : IDL.Func(
         [],
-        [IDL.Record({ 'acclist' : IDL.Vec(IDL.Text) })],
+        [
+          IDL.Record({
+            'anv' : IDL.Text,
+            'pwr' : IDL.Text,
+            'history' : IDL.Text,
+            'acclist' : IDL.Vec(IDL.Text),
+            'treasury' : IDL.Text,
+          }),
+        ],
         ['query'],
       ),
     'getAvailable' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),

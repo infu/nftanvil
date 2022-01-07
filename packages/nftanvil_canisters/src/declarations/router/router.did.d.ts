@@ -3,7 +3,6 @@ export interface Config {
   'anv' : Principal,
   'nft' : Array<Principal>,
   'pwr' : Principal,
-  'collection' : Principal,
   'slot' : bigint,
   'history' : Principal,
   'nft_avail' : Array<Principal>,
@@ -15,7 +14,15 @@ export interface Router {
   'config_set' : (arg_0: Config) => Promise<undefined>,
   'fetchNFTCan' : (arg_0: bigint) => Promise<string>,
   'fetchNFTCanisters' : () => Promise<Array<string>>,
-  'fetchSetup' : () => Promise<{ 'acclist' : Array<string> }>,
+  'fetchSetup' : () => Promise<
+      {
+        'anv' : string,
+        'pwr' : string,
+        'history' : string,
+        'acclist' : Array<string>,
+        'treasury' : string,
+      }
+    >,
   'getAvailable' : () => Promise<Array<string>>,
   'isLegitimate' : (arg_0: Principal) => Promise<boolean>,
   'reportOutOfMemory' : () => Promise<undefined>,

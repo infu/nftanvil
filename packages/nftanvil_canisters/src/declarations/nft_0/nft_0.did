@@ -25,6 +25,7 @@ type UseRequest =
    memo: Memo;
    subaccount: opt SubAccount;
    token: TokenIdentifier;
+   use: ItemUse;
    user: User;
  };
 type UploadChunkRequest = 
@@ -335,9 +336,9 @@ type MetadataInput =
  record {
    attributes: Attributes;
    authorShare: Share;
-   collectionId: opt CollectionId;
    content: opt Content;
    custom: opt CustomData;
+   domain: opt DomainName;
    lore: opt text;
    name: opt text;
    price: Price;
@@ -353,11 +354,10 @@ type Metadata =
    attributes: Attributes;
    author: AccountIdentifier;
    authorShare: Share;
-   collectionId: opt CollectionId;
-   collectionIndex: opt CollectionIndex;
    content: opt Content;
    created: nat32;
    custom: opt CustomData;
+   domain: opt DomainName;
    entropy: blob;
    lore: opt ItemLore;
    name: opt ItemName;
@@ -368,6 +368,14 @@ type Metadata =
    transfer: ItemTransfer;
  };
 type Memo = nat64;
+type ItemUse = 
+ variant {
+   consumable: record {useId: CustomId;};
+   cooldown: record {
+               duration: Cooldown;
+               useId: CustomId;
+             };
+ };
 type ItemTransfer = 
  variant {
    bindsDuration: nat32;
@@ -377,6 +385,7 @@ type ItemTransfer =
 type ItemName = text;
 type ItemLore = text;
 type IPFS_CID = text;
+type ICPath = text;
 type HeaderField = 
  record {
    text;
@@ -392,11 +401,14 @@ type FetchChunkRequest =
    subaccount: opt SubAccount;
    tokenIndex: TokenIndex;
  };
+type DomainName = text;
+type CustomId = text;
 type CustomData = blob;
+type Cooldown = nat32;
 type ContentType = text;
 type Content = 
  variant {
-   external;
+   external: ICPath;
    internal: record {
                contentType: ContentType;
                size: nat32;
@@ -411,7 +423,6 @@ type Config =
  record {
    account: vec principal;
    anv: principal;
-   collection: principal;
    history: principal;
    nft: vec principal;
    nft_avail: vec principal;
@@ -425,8 +436,6 @@ type CommonError =
    InvalidToken: TokenIdentifier;
    Other: text;
  };
-type CollectionIndex = nat32;
-type CollectionId = nat32;
 type Class = 
  service {
    allowance: (Request__1) -> (Response__1) query;

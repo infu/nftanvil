@@ -25,8 +25,8 @@ export const loadInventory = (aid, pageIdx) => async (dispatch, getState) => {
     ? authentication.client.getIdentity()
     : null;
   let s = getState();
-  if (!s.user.acclist?.length) return null;
-  let can = AccountIdentifier.TextToSlot(aid, s.user.acclist);
+  if (!s.user.map.acclist?.length) return null;
+  let can = AccountIdentifier.TextToSlot(aid, s.user.map.acclist);
   let acc = accountCanister(can, { agentOptions: { identity } });
   pageIdx = parseInt(pageIdx, 10);
   let list = await acc.list(AccountIdentifier.TextToArray(aid), pageIdx);

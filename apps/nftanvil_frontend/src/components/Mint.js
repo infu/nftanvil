@@ -116,6 +116,7 @@ export const MintForm = () => {
 
   const form2record = (v) => {
     let a = {
+      domain: v.domain,
       author: AccountIdentifier.TextToArray(address), // not sent to minting, temporary here for the preview
       price: {
         amount: AccountIdentifier.icpToE8s(v.price),
@@ -192,6 +193,7 @@ export const MintForm = () => {
   const record2request = (v) => {
     let a = {
       price: v.price,
+      domain: v.domain,
       authorShare: Math.round(v.authorShare * 100),
       collectionId: v.collectionId ? v.collectionId : [],
       name: [v.name].filter(Boolean),
@@ -222,7 +224,7 @@ export const MintForm = () => {
       validate={mintFormValidate}
       initialValues={{
         collectionId: null,
-
+        domain: "",
         authorShare: 0.5,
         price: 0.0,
         name: "",

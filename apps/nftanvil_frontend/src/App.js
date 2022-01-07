@@ -57,6 +57,7 @@ import { Link } from "react-router-dom";
 import { Nftstorage } from "./components/Nftstorage";
 
 import { Mint } from "./components/Mint";
+import { HistoryRedirect, History } from "./components/History";
 
 import { Inventory } from "./components/Inventory";
 import { NFTPage, NFTClaim } from "./components/NFT";
@@ -91,6 +92,12 @@ function PageTabs() {
         <Link to="/mint">
           <Button variant="solid" colorScheme="gray">
             Mint
+          </Button>
+        </Link>
+
+        <Link to="/history">
+          <Button variant="solid" colorScheme="gray">
+            History
           </Button>
         </Link>
       </ButtonGroup>
@@ -472,6 +479,10 @@ function MobileMenu() {
               <MenuItem>Mint</MenuItem>
             </Link>
 
+            <Link to="/history">
+              <MenuItem>History</MenuItem>
+            </Link>
+
             {anonymous ? (
               <MenuItem onClick={() => dispatch(login())}>
                 Authenticate
@@ -560,7 +571,8 @@ function App() {
         <Center>
           <Switch>
             <Route path="/mint" component={Mint} />
-
+            <Route path="/history" exact component={HistoryRedirect} />
+            <Route path="/history/:canister/:from/:to" component={History} />
             <Route path="/nft/:id/:code" component={NFTPage} />
             <Route path="/nft/:id" component={NFTPage} />
             <Route path="/address/:pageIdx/:address" component={Inventory} />

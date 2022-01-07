@@ -74,15 +74,12 @@ export interface Class {
   'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
   'use' : (arg_0: UseRequest) => Promise<UseResponse>,
 }
-export type CollectionId = number;
-export type CollectionIndex = number;
 export type CommonError = { 'InvalidToken' : TokenIdentifier } |
   { 'Other' : string };
 export interface Config {
   'anv' : Principal,
   'nft' : Array<Principal>,
   'pwr' : Principal,
-  'collection' : Principal,
   'slot' : bigint,
   'history' : Principal,
   'nft_avail' : Array<Principal>,
@@ -96,9 +93,12 @@ export type Content = {
   {
     'ipfs' : { 'cid' : IPFS_CID, 'contentType' : ContentType, 'size' : number }
   } |
-  { 'external' : null };
+  { 'external' : ICPath };
 export type ContentType = string;
+export type Cooldown = number;
 export type CustomData = Array<number>;
+export type CustomId = string;
+export type DomainName = string;
 export interface FetchChunkRequest {
   'tokenIndex' : TokenIndex,
   'subaccount' : [] | [SubAccount],
@@ -107,18 +107,21 @@ export interface FetchChunkRequest {
     { 'content' : null },
 }
 export type HeaderField = [string, string];
+export type ICPath = string;
 export type IPFS_CID = string;
 export type ItemLore = string;
 export type ItemName = string;
 export type ItemTransfer = { 'unrestricted' : null } |
   { 'bindsForever' : null } |
   { 'bindsDuration' : number };
+export type ItemUse = { 'consumable' : { 'useId' : CustomId } } |
+  { 'cooldown' : { 'duration' : Cooldown, 'useId' : CustomId } };
 export type Memo = bigint;
 export interface Metadata {
   'thumb' : Content,
   'created' : number,
   'content' : [] | [Content],
-  'collectionId' : [] | [CollectionId],
+  'domain' : [] | [DomainName],
   'authorShare' : Share,
   'custom' : [] | [CustomData],
   'quality' : Quality,
@@ -129,14 +132,13 @@ export interface Metadata {
   'author' : AccountIdentifier,
   'entropy' : Array<number>,
   'attributes' : Attributes,
-  'collectionIndex' : [] | [CollectionIndex],
   'transfer' : ItemTransfer,
 }
 export interface MetadataInput {
   'ttl' : [] | [number],
   'thumb' : Content,
   'content' : [] | [Content],
-  'collectionId' : [] | [CollectionId],
+  'domain' : [] | [DomainName],
   'authorShare' : Share,
   'custom' : [] | [CustomData],
   'quality' : Quality,
@@ -368,6 +370,7 @@ export interface UploadChunkRequest {
     { 'content' : null },
 }
 export interface UseRequest {
+  'use' : ItemUse,
   'token' : TokenIdentifier,
   'memo' : Memo,
   'user' : User,

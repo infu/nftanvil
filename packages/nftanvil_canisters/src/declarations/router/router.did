@@ -13,7 +13,14 @@ type Router =
    config_set: (Config) -> ();
    fetchNFTCan: (nat) -> (text) query;
    fetchNFTCanisters: () -> (vec text) query;
-   fetchSetup: () -> (record {acclist: vec text;}) query;
+   fetchSetup: () ->
+    (record {
+       acclist: vec text;
+       anv: text;
+       history: text;
+       pwr: text;
+       treasury: text;
+     }) query;
    getAvailable: () -> (vec text) query;
    isLegitimate: (principal) -> (bool) query;
    reportOutOfMemory: () -> ();
@@ -23,7 +30,6 @@ type Config =
  record {
    account: vec principal;
    anv: principal;
-   collection: principal;
    history: principal;
    nft: vec principal;
    nft_avail: vec principal;

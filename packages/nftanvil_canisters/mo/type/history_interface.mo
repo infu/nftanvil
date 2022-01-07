@@ -1,5 +1,4 @@
 import Array "mo:base/Array";
-import Array_ "mo:array/Array";
 import Base32 "mo:encoding/Base32";
 import Binary "mo:encoding/Binary";
 import Blob "mo:base/Blob";
@@ -34,41 +33,43 @@ module {
     public type ItemUse = Nft.ItemUse;
     public type TokenIdentifier = Nft.TokenIdentifier;
 
-    public type RecordId = Blob; // consist of type, slot, idx
-    // record id is created inside each canister and then sent to history
-    // and returned in response.
-    // Anyone can use the recordId to query history and see whats there
 
-    // func for adding record to local block
-    // func for notifying block
+    public type EventIndex = Nat32;
+    public module EventIndex = {
+        public func equal (a:EventIndex, b:EventIndex): Bool {
+            a == b
+        };
+        public func hash (a:EventIndex) : Hash.Hash {
+            return a;
+        };
+    };
 
-    public type Record = {
-        id: RecordId;
+    public type Event = {
         created: Time.Time;
-        info: RecordInfo;
+        info: EventInfo;
     };
 
-    public type RecordInfo = {
-        #nft : NftRecord;
-        #pwr : PwrRecord;
-        #anv : AnvRecord;
-        #treasury : TreasuryRecord;
+    public type EventInfo = {
+        #nft : NftEvent;
+        #pwr : PwrEvent;
+        #anv : AnvEvent;
+        #treasury : TreasuryEvent;
     };
 
-    public type AnvRecord = {
-        #transaction : RecordFungibleTransaction;
+    public type AnvEvent = {
+        #transaction : EventFungibleTransaction;
         // vote
     };
 
-    public type PwrRecord = {
-        #transaction : RecordFungibleTransaction;
+    public type PwrEvent = {
+        #transaction : EventFungibleTransaction;
     };
 
-    public type TreasuryRecord = {
+    public type TreasuryEvent = {
         //treasury withdraw
     };
 
-    public type NftRecord = {
+    public type NftEvent = {
   
         #transaction : {
             from: AccountIdentifier;
@@ -79,7 +80,6 @@ module {
 
         #burn : {
             user: AccountIdentifier;
-            amount: Balance;
             token: TokenIdentifier;
             memo: Memo;
         };
@@ -110,7 +110,7 @@ module {
 
     };
 
-    public type RecordFungibleTransaction =  {
+    public type EventFungibleTransaction =  {
                     from: AccountIdentifier;
                     to: AccountIdentifier;
                     token: TokenIdentifier;
@@ -119,14 +119,25 @@ module {
                 };
 
     public type Block = {
-        records: [Record]
+        events: [Event]
     };
 
-    public type AddRequest = {
-        record: Record;
+    public type ListRequest = {
+        from: EventIndex;
+        to: EventIndex;
     };
+
+    public type ListResponse = [?Event];
+
+    public type AddRequest = Event;
+    
 
     public type AddResponse = Result.Result<(),{
-
+        #NotLegitimateCaller
     }>;
+
+    public type InfoResponse = {
+        total: EventIndex;
+        previous: ?Principal       
+    }
 }

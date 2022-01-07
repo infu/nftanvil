@@ -30,7 +30,7 @@ export const Inventory = (p) => {
   const address = p.match.params.address;
   const pageIdx = p.match.params.pageIdx;
 
-  const acclist = useSelector((state) => state.user.acclist);
+  const acclist = useSelector((state) => state.user.map.acclist);
   const { width, height } = useWindowSize();
 
   const [isLoading, setLoading] = useState(true);

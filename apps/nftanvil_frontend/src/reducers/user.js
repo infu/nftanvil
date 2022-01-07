@@ -23,7 +23,7 @@ export const userSlice = createSlice({
     anonymous: true,
 
     icp: "0",
-    acclist: [],
+    map: { acclist: [] },
     acccan: "",
 
     pro: false,
@@ -34,9 +34,6 @@ export const userSlice = createSlice({
     icpSet: (state, action) => {
       return { ...state, icp: action.payload };
     },
-    acclistSet: (state, action) => {
-      return { ...state, acclist: action.payload };
-    },
     proSet: (state, action) => {
       return {
         ...state,
@@ -44,13 +41,13 @@ export const userSlice = createSlice({
       };
     },
     authSet: (state, action) => {
-      const { address, principal, anonymous, acclist, acccan } = action.payload;
+      const { address, principal, anonymous, map, acccan } = action.payload;
       return {
         ...state,
         address,
         principal,
         anonymous,
-        ...(acclist ? { acclist, acccan } : {}),
+        ...(map ? { map, acccan } : {}),
       };
     },
     setNftSotrageModal: (state, action) => {
@@ -74,7 +71,6 @@ export const {
   authSet,
 
   icpSet,
-  acclistSet,
   setNftSotrageModal,
   setNftSotrageKey,
 } = userSlice.actions;
@@ -118,12 +114,13 @@ export const auth =
       agentOptions: { identity },
     });
 
-    let { acclist } = await router.fetchSetup();
+    let map = await router.fetchSetup();
+
     let acccan = address
-      ? AccountIdentifier.TextToSlot(address, acclist)
+      ? AccountIdentifier.TextToSlot(address, map.acclist)
       : null;
 
-    dispatch(authSet({ address, principal, anonymous, acclist, acccan }));
+    dispatch(authSet({ address, principal, anonymous, map, acccan }));
   };
 
 export const loadNftStorageKey = () => async (dispatch, getState) => {
