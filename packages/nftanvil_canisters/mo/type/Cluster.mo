@@ -2,7 +2,6 @@ import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 
 import Router "./router_interface";
-import Collection "./collection_interface";
 import Nft "./nft_interface";
 import Pwr "./pwr_interface";
 import Treasury "./treasury_interface";

@@ -508,7 +508,6 @@ module {
     };
 
 
-
     public type ItemTransfer = {
         #unrestricted;
         #bindsForever;

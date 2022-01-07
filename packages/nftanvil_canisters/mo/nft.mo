@@ -31,7 +31,6 @@ import Painless "./lib/Painless";
 import SHA256 "mo:sha/SHA256";
 import Ledger  "./type/ledger_interface";
 import Treasury  "./type/treasury_interface";
-import Collection  "./type/collection_interface";
 import Cluster  "./type/Cluster";
 import PWR "./type/pwr_interface";
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
