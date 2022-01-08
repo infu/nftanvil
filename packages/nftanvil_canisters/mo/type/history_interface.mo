@@ -24,6 +24,8 @@ module {
     public type Interface = actor {
         // each canister gathers info in a buffer and then sends it to the history canister
         add          : shared AddRequest        -> async AddResponse;
+        list         : query ListRequest        -> async ListResponse;
+        info         : query ()                 -> async InfoResponse;
         // when history canister is full, another one is created
     }; 
 

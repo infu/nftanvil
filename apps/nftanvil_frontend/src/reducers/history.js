@@ -14,6 +14,7 @@ import { Principal } from "@dfinity/principal";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 import { toast } from "react-toastify";
+import _ from "lodash";
 
 export const userSlice = createSlice({
   name: "history",
@@ -71,8 +72,24 @@ export const loadHistory =
       from,
       to,
     });
-    dispatch(setEvents(events));
+
     console.log("Events result", events);
+
+    events = mapValuesDeep(events, (v) => {
+      return typeof v === "bigint" ? v.toString() : v;
+    });
+
+    dispatch(setEvents(events));
   };
+
+const mapValuesDeep = (obj, cb) => {
+  if (_.isArray(obj)) {
+    return obj.map((innerObj) => mapValuesDeep(innerObj, cb));
+  } else if (_.isObject(obj)) {
+    return _.mapValues(obj, (val) => mapValuesDeep(val, cb));
+  } else {
+    return cb(obj);
+  }
+};
 
 export default userSlice.reducer;

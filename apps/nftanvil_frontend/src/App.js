@@ -57,7 +57,7 @@ import { Link } from "react-router-dom";
 import { Nftstorage } from "./components/Nftstorage";
 
 import { Mint } from "./components/Mint";
-import { HistoryRedirect, History } from "./components/History";
+import { HistoryRedirect, History, HistoryTx } from "./components/History";
 
 import { Inventory } from "./components/Inventory";
 import { NFTPage, NFTClaim } from "./components/NFT";
@@ -572,6 +572,7 @@ function App() {
           <Switch>
             <Route path="/mint" component={Mint} />
             <Route path="/history" exact component={HistoryRedirect} />
+            <Route path="/tx/:tx" component={HistoryTx} />
             <Route path="/history/:canister/:from/:to" component={History} />
             <Route path="/nft/:id/:code" component={NFTPage} />
             <Route path="/nft/:id" component={NFTPage} />
