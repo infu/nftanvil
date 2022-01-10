@@ -4,6 +4,7 @@ import Text "mo:base/Text";
 import Blob "mo:base/Blob";
 import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat64";
+import Nat16 "mo:base/Nat16";
 import Nat8 "mo:base/Nat8";
 import Nat "mo:base/Nat";
 import Char "mo:base/Char";
@@ -42,6 +43,10 @@ import Char "mo:base/Char";
         Nat8.fromNat( Nat32.toNat(n & 255))]
     };
 
+    public func nat16ToBytes (n : Nat16) : [Nat8] {
+        [Nat8.fromNat( Nat16.toNat((n >> 8) & 255)),
+        Nat8.fromNat( Nat16.toNat(n & 255))]
+    };
 
     public func textToBlob (txt:Text) : Blob {
         Blob.fromArray(Array.flatten(Array.map(Iter.toArray(Text.toIter(txt)), func(x : Char) : [Nat8] { nat32ToBytes(Char.toNat32(x)) })))

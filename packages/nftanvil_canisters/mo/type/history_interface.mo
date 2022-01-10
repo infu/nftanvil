@@ -6,6 +6,7 @@ import Char "mo:base/Char";
 import CRC32 "mo:hash/CRC32";
 import SHA256 "mo:sha/SHA256";
 import Hash "mo:base/Hash";
+import Nat64 "mo:base/Nat64";
 import Hex "mo:encoding/Hex";
 import Iter "mo:base/Iter";
 import Result "mo:base/Result";
@@ -15,7 +16,7 @@ import Nat32 "mo:base/Nat32";
 import Principal "mo:principal/Principal";
 import RawAccountId "mo:principal/AccountIdentifier";
 import Text "mo:base/Text";
-
+import Blob_ "../lib/Blob";
 import Nft "./nft_interface";
 import Treasury "./treasury_interface";
 
@@ -30,11 +31,13 @@ module {
     }; 
 
     public type AccountIdentifier = Nft.AccountIdentifier;
+    public type TokenIdentifierBlob = Nft.TokenIdentifierBlob;
+
     public type Balance = Nft.Balance;
     public type Memo = Nft.Memo;
     public type ItemUse = Nft.ItemUse;
     public type TokenIdentifier = Nft.TokenIdentifier;
-
+    public type Timestamp = Time.Time;
 
     public type EventIndex = Nat32;
     public module EventIndex = {
@@ -46,9 +49,22 @@ module {
         };
     };
 
+
     public type Event = {
-        created: Time.Time;
-        info: EventInfo;
+        info : EventInfo;
+        hash : Blob; // accumulated by hash previous hash and current event hash
+    };
+
+    public module EventInfo = {
+        public func hash( e: EventInfo) : [Nat8] {
+            SHA256.sum224(
+                switch(e) {
+                case (#nft(x)) NftEvent.hash(x);
+                case (#pwr(x)) PwrEvent.hash(x);
+                case (#anv(x)) AnvEvent.hash(x);
+                case (#treasury(x)) [];
+            });
+        }
     };
 
     public type EventInfo = {
@@ -74,21 +90,24 @@ module {
     public type NftEvent = {
   
         #transaction : {
+            created: Timestamp;
             from: AccountIdentifier;
             to: AccountIdentifier;
-            token: TokenIdentifier;
+            token: TokenIdentifierBlob;
             memo: Memo;
         };
 
         #burn : {
+            created: Timestamp;
             user: AccountIdentifier;
-            token: TokenIdentifier;
+            token: TokenIdentifierBlob;
             memo: Memo;
         };
 
         #use : {
+            created: Timestamp;
             user: AccountIdentifier;
-            token: TokenIdentifier;
+            token: TokenIdentifierBlob;
             use: ItemUse;
             memo: Memo;
         };
@@ -96,26 +115,124 @@ module {
         #purchase : Treasury.NFTPurchase;
 
         #mint : {
-            // collectionId: Nft.CollectionId;
-            token: TokenIdentifier;
+            created: Timestamp;
+            token: TokenIdentifierBlob;
         };
 
         #socket : {
-            socket : TokenIdentifier;
-            plug   : TokenIdentifier;
+            created: Timestamp;
+            socket : TokenIdentifierBlob;
+            plug   : TokenIdentifierBlob;
         };
 
         #unsocket : {
-            socket : TokenIdentifier;
-            plug   : TokenIdentifier;
+            created: Timestamp;
+            socket : TokenIdentifierBlob;
+            plug   : TokenIdentifierBlob;
+        };
+
+    };
+
+    public module AnvEvent = {
+        public func hash(e : AnvEvent) : [Nat8] {
+             switch (e) {
+                case (#transaction({from;to;token;amount;memo})) {
+                    Array.flatten<Nat8>([
+                        [1:Nat8],
+                        Blob.toArray(from),
+                        Blob.toArray(to),
+                        Blob.toArray(token),
+                        Blob_.nat64ToBytes(amount),
+                        Blob_.nat64ToBytes(memo)
+                    ])
+                };
+             }
+        }
+    };
+
+    public module PwrEvent = {
+        public func hash(e : PwrEvent) : [Nat8] {
+             switch (e) {
+                case (#transaction({from;to;token;amount;memo})) {
+                    Array.flatten<Nat8>([
+                        [2:Nat8],
+                        Blob.toArray(from),
+                        Blob.toArray(to),
+                        Blob.toArray(token),
+                        Blob_.nat64ToBytes(amount),
+                        Blob_.nat64ToBytes(memo)
+                    ])
+                };
+             }
+        }
+    };
+
+    public module NftEvent = {
+        public func hash(e : NftEvent) : [Nat8] {
+            switch (e) {
+                case (#transaction({from;to;token;memo})) {
+                    Array.flatten<Nat8>([
+                        [3:Nat8],
+                        Blob.toArray(from),
+                        Blob.toArray(to),
+                        Blob.toArray(token),
+                        Blob_.nat64ToBytes(memo)
+                    ])
+                };
+                case (#burn({user;token;memo})) {
+                    Array.flatten<Nat8>([
+                        [4:Nat8],
+                        Blob.toArray(user),
+                        Blob.toArray(token),
+                        Blob_.nat64ToBytes(memo)
+                    ])
+                };
+                case (#use({user;token;use;memo})) { 
+                    Array.flatten<Nat8>([
+                        [5:Nat8],
+                        Blob.toArray(user),
+                        Blob.toArray(token),
+                        Nft.ItemUse.hash(use),
+                        Blob_.nat64ToBytes(memo)
+                    ])
+                };
+                case (#mint({token;})) { // todo add use
+                    Array.flatten<Nat8>([
+                        [6:Nat8],
+                        Blob.toArray(token),
+                    ])
+                };
+                case (#socket({socket; plug})) {
+                    Array.flatten<Nat8>([
+                        [7:Nat8],
+                        Blob.toArray(socket),
+                        Blob.toArray(plug)
+                    ])
+                };
+                case (#unsocket({socket; plug})) {
+                    Array.flatten<Nat8>([
+                        [8:Nat8],
+                        Blob.toArray(socket),
+                        Blob.toArray(plug)
+                    ])
+                };
+                case (#purchase(a)) {
+                    // 9
+                    Treasury.NFTPurchase.hash(a)
+                };
+            
+            }
+               
+
         };
 
     };
 
     public type EventFungibleTransaction =  {
+                    created: Timestamp;
                     from: AccountIdentifier;
                     to: AccountIdentifier;
-                    token: TokenIdentifier;
+                    token: TokenIdentifierBlob;
                     amount: Balance;
                     memo: Memo;
                 };
@@ -131,7 +248,7 @@ module {
 
     public type ListResponse = [?Event];
 
-    public type AddRequest = Event;
+    public type AddRequest = EventInfo;
     
 
     public type AddResponse = Result.Result<(),{

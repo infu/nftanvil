@@ -34,7 +34,7 @@ export const userSlice = createSlice({
       };
     },
     setInfo: (state, action) => {
-      return { ...state, events: action.payload };
+      return { ...state, ...action.payload };
     },
   },
 });
@@ -44,7 +44,6 @@ export const { setEvents, setInfo } = userSlice.actions;
 
 export const loadInfo = () => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
-  console.log("LOADING INFO");
   let s = getState();
 
   let history = historyCanister(Principal.fromText(s.user.map.history), {
@@ -52,10 +51,14 @@ export const loadInfo = () => async (dispatch, getState) => {
   });
 
   let { total, previous } = await history.info();
-  dispatch(setInfo({ total, previous }));
-  console.log("Info result", { total, previous });
-  return { total, canister: s.user.map.history };
+  let p = { total, canister: s.user.map.history };
+  dispatch(setInfo({ total }));
+  return p;
 };
+
+export const tailHistory =
+  ({ canister }) =>
+  async (dispatch, getState) => {};
 
 export const loadHistory =
   ({ canister, from, to }) =>
@@ -63,6 +66,7 @@ export const loadHistory =
     let identity = authentication.client.getIdentity();
 
     let s = getState();
+    dispatch(loadInfo());
 
     let history = historyCanister(Principal.fromText(canister), {
       agentOptions: { identity },
@@ -72,8 +76,6 @@ export const loadHistory =
       from,
       to,
     });
-
-    console.log("Events result", events);
 
     events = mapValuesDeep(events, (v) => {
       return typeof v === "bigint" ? v.toString() : v;

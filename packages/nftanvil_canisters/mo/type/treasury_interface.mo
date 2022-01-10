@@ -4,6 +4,7 @@ import Base32 "mo:encoding/Base32";
 import Binary "mo:encoding/Binary";
 import Blob "mo:base/Blob";
 import Char "mo:base/Char";
+import Blob_ "../lib/Blob";
 import CRC32 "mo:hash/CRC32";
 import SHA256 "mo:sha/SHA256";
 import Hash "mo:base/Hash";
@@ -32,6 +33,8 @@ module {
     };
 
     public type AccountIdentifier = Nft.AccountIdentifier;
+    public type TokenIdentifierBlob = Nft.TokenIdentifierBlob;
+
     public type Share = Nft.Share;
     public type Balance = Nft.Balance;
     public type TokenIdentifier = Nft.TokenIdentifier;
@@ -54,10 +57,11 @@ module {
     }>;
 
     public type NFTPurchase = {
+            created : Time.Time;
             ledgerBlock : Ledger.BlockIndex;
             amount : Ledger.ICP;
 
-            token: TokenIdentifier;
+            token: TokenIdentifierBlob;
             
             buyer : AccountIdentifier;
             seller : AccountIdentifier;
@@ -78,6 +82,37 @@ module {
                 };
 
             purchaseAccount : AccountIdentifier; 
+    };
+
+    public module NFTPurchase {
+        public func hash (e : NFTPurchase) : [Nat8] {
+            Array.flatten<Nat8>([
+                        [9:Nat8],
+                        Blob_.nat64ToBytes(e.ledgerBlock),
+                        Blob_.nat64ToBytes(e.amount.e8s),
+                        Blob.toArray(e.token),
+                        Blob.toArray(e.buyer),
+                        Blob.toArray(e.seller),
+                        Blob.toArray(e.author.address),
+                        Blob_.nat16ToBytes(e.author.share),
+                        switch(e.marketplace) { 
+                            case (?a) Array.flatten<Nat8>([ 
+                                  Blob.toArray(a.address),
+                                  Blob_.nat16ToBytes(a.share)
+                            ]);
+                            case (null) []
+                        },
+                        switch(e.affiliate) { 
+                            case (?a) Array.flatten<Nat8>([ 
+                                  Blob.toArray(a.address),
+                                  Blob_.nat16ToBytes(a.share)
+                            ]);
+                            case (null) []
+                        },
+                        Blob.toArray(e.purchaseAccount)
+
+                    ])
+        };
     };
 
     public type NFTPurchaseResponse = Result.Result<(), Text>;

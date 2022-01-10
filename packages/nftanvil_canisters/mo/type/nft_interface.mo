@@ -403,12 +403,8 @@ module {
         }>;
 
 
-    public type CustomId = Text;
-    public module CustomId = {
-        public func validate(t : CustomId) : Bool {
-            t.size() <= 32 //TODO: Make real domain name verification.
-        } 
-    };
+    public type CustomId = Nat64;
+
 
     public type Chunks = [Nat32];
 
@@ -494,18 +490,36 @@ module {
             useId: CustomId;
         };
     };
-    
+
+
     public module ItemUse = {
         public func validate(t : ItemUse) : Bool {
             switch(t) {
                 case (#cooldown({duration; useId})) {
-                    CustomId.validate(useId)  and Cooldown.validate( duration )
+                    Cooldown.validate( duration )
                 };
                 case (#consumable({useId})) {
-                    CustomId.validate(useId)
+                    true
                 }
             }
-        }
+        };
+
+        public func hash (e: ItemUse) : [Nat8] {
+            Array.flatten<Nat8>(
+                switch(e) {
+                    case (#cooldown({duration; useId})) {
+                        [
+                        Blob_.nat32ToBytes(duration),
+                        Blob_.nat64ToBytes(useId)
+                        ]
+                    };
+                    case (#consumable({useId})) {
+                        [
+                        Blob_.nat64ToBytes(useId)
+                        ]
+                    }
+                })
+        };
     };
 
 

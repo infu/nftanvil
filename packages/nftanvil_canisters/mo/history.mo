@@ -36,9 +36,9 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         _tmpEvents := [];
     };
 
-    public shared({caller}) func add(event: H.Event) : async H.AddResponse {
+    public shared({caller}) func add(eventinfo: H.EventInfo) : async H.AddResponse {
 
-        switch (event.info) {
+        switch (eventinfo) {
             case (#nft(e)) {
                 if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
             };
@@ -54,7 +54,21 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         };
         
         let index = _nextEvent;
-  
+        
+        let previousTransactionHash: [Nat8] = switch(_events.get(index - 1)) {
+            case (?x) Blob.toArray(x.hash);
+            case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
+        };
+
+        let event = {
+            info = eventinfo;
+            hash = Blob.fromArray(SHA256.sum224(
+                Array.flatten<Nat8>([
+                    previousTransactionHash,
+                    H.EventInfo.hash(eventinfo)
+                    ])));
+        };
+
         _events.put(index, event);
         _nextEvent := _nextEvent + 1;
         
