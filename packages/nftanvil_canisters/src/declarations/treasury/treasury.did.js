@@ -23,13 +23,15 @@ export const idlFactory = ({ IDL }) => {
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__1 = IDL.Nat64;
-  const TokenIdentifier = IDL.Text;
+  const Time = IDL.Int;
+  const TokenIdentifierBlob = IDL.Vec(IDL.Nat8);
   const Share = IDL.Nat16;
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
   const ICP = IDL.Record({ 'e8s' : IDL.Nat64 });
   const BlockIndex = IDL.Nat64;
   const NFTPurchase = IDL.Record({
-    'token' : TokenIdentifier,
+    'created' : Time,
+    'token' : TokenIdentifierBlob,
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier__1 })
     ),

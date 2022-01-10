@@ -30,7 +30,8 @@ export interface Config {
 }
 export interface ICP { 'e8s' : bigint }
 export interface NFTPurchase {
-  'token' : TokenIdentifier,
+  'created' : Time,
+  'token' : TokenIdentifierBlob,
   'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
   'seller' : AccountIdentifier__1,
   'author' : { 'share' : Share, 'address' : AccountIdentifier__1 },
@@ -44,7 +45,8 @@ export type NFTPurchaseResponse = { 'ok' : null } |
   { 'err' : string };
 export type Share = number;
 export type SubAccount = Array<number>;
-export type TokenIdentifier = string;
+export type Time = bigint;
+export type TokenIdentifierBlob = Array<number>;
 export type User = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
 export interface WithdrawRequest {

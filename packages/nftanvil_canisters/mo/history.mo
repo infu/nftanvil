@@ -14,6 +14,7 @@ import Array_ "./lib/Array";
 
 import Blob "mo:base/Blob";
 import Cluster  "./type/Cluster";
+import Debug "mo:base/Debug";
 
 import H "./type/history_interface";
 
@@ -55,10 +56,14 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         
         let index = _nextEvent;
         
-        let previousTransactionHash: [Nat8] = switch(_events.get(index - 1)) {
+        let previousTransactionHash : [Nat8] = switch(_events.get(index - 1)) {
             case (?x) Blob.toArray(x.hash);
             case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
         };
+
+        // Debug.print("HERE");
+
+        // Debug.print(debug_show(previousTransactionHash));
 
         let event = {
             info = eventinfo;
@@ -67,6 +72,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
                     previousTransactionHash,
                     H.EventInfo.hash(eventinfo)
                     ])));
+            //  hash = Blob.fromArray(H.EventInfo.hash(eventinfo));
         };
 
         _events.put(index, event);

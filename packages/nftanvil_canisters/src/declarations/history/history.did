@@ -1,37 +1,49 @@
 type TreasuryEvent = record {};
-type TokenIdentifier__1 = text;
-type TokenIdentifier = text;
+type TokenIdentifierBlob__1 = blob;
+type TokenIdentifierBlob = blob;
+type Timestamp = int;
 type Time = int;
 type Share = nat16;
 type PwrEvent = variant {transaction: EventFungibleTransaction;};
 type NftEvent = 
  variant {
-   burn: record {
-           memo: Memo;
-           token: TokenIdentifier;
-           user: AccountIdentifier;
+   burn:
+    record {
+      created: Timestamp;
+      memo: Memo;
+      token: TokenIdentifierBlob;
+      user: AccountIdentifier;
+    };
+   mint: record {
+           created: Timestamp;
+           token: TokenIdentifierBlob;
          };
-   mint: record {token: TokenIdentifier;};
    purchase: NFTPurchase;
-   socket: record {
-             plug: TokenIdentifier;
-             socket: TokenIdentifier;
-           };
+   socket:
+    record {
+      created: Timestamp;
+      plug: TokenIdentifierBlob;
+      socket: TokenIdentifierBlob;
+    };
    transaction:
     record {
+      created: Timestamp;
       from: AccountIdentifier;
       memo: Memo;
       to: AccountIdentifier;
-      token: TokenIdentifier;
+      token: TokenIdentifierBlob;
     };
-   unsocket: record {
-               plug: TokenIdentifier;
-               socket: TokenIdentifier;
-             };
+   unsocket:
+    record {
+      created: Timestamp;
+      plug: TokenIdentifierBlob;
+      socket: TokenIdentifierBlob;
+    };
    use:
     record {
+      created: Timestamp;
       memo: Memo;
-      token: TokenIdentifier;
+      token: TokenIdentifierBlob;
       use: ItemUse;
       user: AccountIdentifier;
     };
@@ -48,6 +60,7 @@ type NFTPurchase =
              share: Share;
            };
    buyer: AccountIdentifier__1;
+   created: Time;
    ledgerBlock: BlockIndex;
    marketplace: opt record {
                       address: AccountIdentifier__1;
@@ -55,7 +68,7 @@ type NFTPurchase =
                     };
    purchaseAccount: AccountIdentifier__1;
    seller: AccountIdentifier__1;
-   token: TokenIdentifier__1;
+   token: TokenIdentifierBlob__1;
  };
 type Memo = nat64;
 type ListResponse = vec opt Event;
@@ -89,17 +102,18 @@ type EventIndex = nat32;
 type EventFungibleTransaction = 
  record {
    amount: Balance;
+   created: Timestamp;
    from: AccountIdentifier;
    memo: Memo;
    to: AccountIdentifier;
-   token: TokenIdentifier;
+   token: TokenIdentifierBlob;
  };
 type Event = 
  record {
-   created: Time;
+   hash: blob;
    info: EventInfo;
  };
-type CustomId = text;
+type CustomId = nat64;
 type Cooldown = nat32;
 type Config = 
  record {
@@ -115,7 +129,7 @@ type Config =
  };
 type Class = 
  service {
-   add: (Event) -> (AddResponse);
+   add: (EventInfo) -> (AddResponse);
    config_set: (Config) -> ();
    info: () -> (InfoResponse) query;
    list: (ListRequest) -> (ListResponse) query;

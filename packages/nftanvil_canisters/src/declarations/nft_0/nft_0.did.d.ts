@@ -97,7 +97,7 @@ export type Content = {
 export type ContentType = string;
 export type Cooldown = number;
 export type CustomData = Array<number>;
-export type CustomId = string;
+export type CustomId = bigint;
 export type DomainName = string;
 export interface FetchChunkRequest {
   'tokenIndex' : TokenIndex,

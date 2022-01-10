@@ -402,7 +402,7 @@ type FetchChunkRequest =
    tokenIndex: TokenIndex;
  };
 type DomainName = text;
-type CustomId = text;
+type CustomId = nat64;
 type CustomData = blob;
 type Cooldown = nat32;
 type ContentType = text;

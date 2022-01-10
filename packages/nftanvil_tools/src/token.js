@@ -48,6 +48,10 @@ export const encodeTokenId = (principal, index) => {
   return Principal.fromUint8Array(array).toText();
 };
 
+export const tokenFromBlob = (b) => {
+  return Principal.fromUint8Array(b).toText();
+};
+
 export const decodeTokenId = (tid) => {
   var p = [...Principal.fromText(tid).toUint8Array()];
   var padding = p.splice(0, 4);

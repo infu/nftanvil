@@ -380,7 +380,7 @@ export const idlFactory = ({ IDL }) => {
     'chunkIdx' : IDL.Nat32,
     'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
   });
-  const CustomId = IDL.Text;
+  const CustomId = IDL.Nat64;
   const Cooldown = IDL.Nat32;
   const ItemUse = IDL.Variant({
     'consumable' : IDL.Record({ 'useId' : CustomId }),

@@ -16,7 +16,8 @@ type User =
    address: AccountIdentifier;
    "principal": principal;
  };
-type TokenIdentifier = text;
+type TokenIdentifierBlob = blob;
+type Time = int;
 type SubAccount = blob;
 type Share = nat16;
 type NFTPurchaseResponse = 
@@ -36,6 +37,7 @@ type NFTPurchase =
              share: Share;
            };
    buyer: AccountIdentifier__1;
+   created: Time;
    ledgerBlock: BlockIndex;
    marketplace: opt record {
                       address: AccountIdentifier__1;
@@ -43,7 +45,7 @@ type NFTPurchase =
                     };
    purchaseAccount: AccountIdentifier__1;
    seller: AccountIdentifier__1;
-   token: TokenIdentifier;
+   token: TokenIdentifierBlob;
  };
 type ICP = record {e8s: nat64;};
 type Config = 

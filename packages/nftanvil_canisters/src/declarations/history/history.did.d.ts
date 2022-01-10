@@ -7,7 +7,7 @@ export type AnvEvent = { 'transaction' : EventFungibleTransaction };
 export type Balance = bigint;
 export type BlockIndex = bigint;
 export interface Class {
-  'add' : (arg_0: Event) => Promise<AddResponse>,
+  'add' : (arg_0: EventInfo) => Promise<AddResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
   'info' : () => Promise<InfoResponse>,
   'list' : (arg_0: ListRequest) => Promise<ListResponse>,
@@ -24,11 +24,12 @@ export interface Config {
   'treasury' : Principal,
 }
 export type Cooldown = number;
-export type CustomId = string;
-export interface Event { 'created' : Time, 'info' : EventInfo }
+export type CustomId = bigint;
+export interface Event { 'hash' : Array<number>, 'info' : EventInfo }
 export interface EventFungibleTransaction {
   'to' : AccountIdentifier,
-  'token' : TokenIdentifier,
+  'created' : Timestamp,
+  'token' : TokenIdentifierBlob,
   'from' : AccountIdentifier,
   'memo' : Memo,
   'amount' : Balance,
@@ -49,7 +50,8 @@ export interface ListRequest { 'to' : EventIndex, 'from' : EventIndex }
 export type ListResponse = Array<[] | [Event]>;
 export type Memo = bigint;
 export interface NFTPurchase {
-  'token' : TokenIdentifier__1,
+  'created' : Time,
+  'token' : TokenIdentifierBlob__1,
   'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
   'seller' : AccountIdentifier__1,
   'author' : { 'share' : Share, 'address' : AccountIdentifier__1 },
@@ -62,25 +64,40 @@ export interface NFTPurchase {
 export type NftEvent = {
     'use' : {
       'use' : ItemUse,
-      'token' : TokenIdentifier,
+      'created' : Timestamp,
+      'token' : TokenIdentifierBlob,
       'memo' : Memo,
       'user' : AccountIdentifier,
     }
   } |
-  { 'socket' : { 'socket' : TokenIdentifier, 'plug' : TokenIdentifier } } |
-  { 'unsocket' : { 'socket' : TokenIdentifier, 'plug' : TokenIdentifier } } |
+  {
+    'socket' : {
+      'created' : Timestamp,
+      'socket' : TokenIdentifierBlob,
+      'plug' : TokenIdentifierBlob,
+    }
+  } |
+  {
+    'unsocket' : {
+      'created' : Timestamp,
+      'socket' : TokenIdentifierBlob,
+      'plug' : TokenIdentifierBlob,
+    }
+  } |
   {
     'burn' : {
-      'token' : TokenIdentifier,
+      'created' : Timestamp,
+      'token' : TokenIdentifierBlob,
       'memo' : Memo,
       'user' : AccountIdentifier,
     }
   } |
-  { 'mint' : { 'token' : TokenIdentifier } } |
+  { 'mint' : { 'created' : Timestamp, 'token' : TokenIdentifierBlob } } |
   {
     'transaction' : {
       'to' : AccountIdentifier,
-      'token' : TokenIdentifier,
+      'created' : Timestamp,
+      'token' : TokenIdentifierBlob,
       'from' : AccountIdentifier,
       'memo' : Memo,
     }
@@ -89,7 +106,8 @@ export type NftEvent = {
 export type PwrEvent = { 'transaction' : EventFungibleTransaction };
 export type Share = number;
 export type Time = bigint;
-export type TokenIdentifier = string;
-export type TokenIdentifier__1 = string;
+export type Timestamp = bigint;
+export type TokenIdentifierBlob = Array<number>;
+export type TokenIdentifierBlob__1 = Array<number>;
 export type TreasuryEvent = {};
 export interface _SERVICE extends Class {}

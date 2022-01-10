@@ -57,13 +57,12 @@ module {
 
     public module EventInfo = {
         public func hash( e: EventInfo) : [Nat8] {
-            SHA256.sum224(
-                switch(e) {
+             switch(e) {
                 case (#nft(x)) NftEvent.hash(x);
                 case (#pwr(x)) PwrEvent.hash(x);
                 case (#anv(x)) AnvEvent.hash(x);
                 case (#treasury(x)) [];
-            });
+            };
         }
     };
 

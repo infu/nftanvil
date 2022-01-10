@@ -24,6 +24,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { loadInfo, loadHistory, tailHistory } from "../reducers/history";
 import styled from "@emotion/styled";
 import { push } from "connected-react-router";
+
+import { toHexString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import { tokenFromBlob } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 const SHOW = 10; // max records shown on screen
@@ -79,7 +83,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
   let action = Object.keys(ev.info[etype])[0];
   let details = ev.info[etype][action];
   let transactionId = canister + "-" + idx;
-  let timestamp = Number(BigInt(ev.created) / 1000000n);
+  let timestamp = Number(BigInt(details.created) / 1000000n);
 
   return (
     <Box bg={boxColor} borderRadius={"4"} border={1} p={3} mb={2}>
@@ -92,17 +96,22 @@ const HistoryEvent = ({ ev, canister, idx }) => {
       <KeyVal k={"Type"} v={<b>{etype + "-" + action}</b>} />
 
       {Object.keys(details).map((key, idx) => {
+        if (key === "created") return null;
+
         let val = details[key];
         if (val.length === 32) {
           val = AccountIdentifier.ArrayToText(val);
           val = <Link to={"/address/0/" + val}>{val}</Link>;
         }
 
-        if (key === "token" || key === "socket" || key === "plug")
+        if (key === "token" || key === "socket" || key === "plug") {
+          val = tokenFromBlob(val);
           val = <Link to={"/nft/" + val}>{val}</Link>;
+        }
 
         return <KeyVal key={idx} k={key} v={val} />;
       })}
+      <KeyVal k={"Hash"} v={toHexString(ev.hash)} />
     </Box>
   );
 };
@@ -157,7 +166,7 @@ export const History = (p) => {
   }
 
   return (
-    <Box mt={8} maxW={"700px"} w="100%">
+    <Box mt={8} maxW={"770px"} w="100%">
       {/* <Box p={3}>
         <div>History canister: {canister} </div>
         <div>From {from} </div>
