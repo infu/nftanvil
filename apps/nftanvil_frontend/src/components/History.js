@@ -55,13 +55,13 @@ const KeyVal = ({ k, v }) => {
 
 const Key = styled.div`
   text-transform: capitalize;
-  color: rgb(170, 174, 179);
+  color: rgb(170, 200, 222);
   width: 130px;
 `;
 
 const Val = styled.div`
   a {
-    color: rgb(133, 133, 255);
+    color: rgb(133, 200, 255);
   }
 `;
 
@@ -170,12 +170,6 @@ export const HistoryTx = (p) => {
 
   return (
     <Box mt={8}>
-      {/* <Box p={3}>
-          <div>History canister: {canister} </div>
-          <div>From {from} </div>
-          <div>To {to} </div>
-          <div>Total {total} </div>
-        </Box> */}
       {events.map((ev, idx) => (
         <HistoryEvent
           key={idx}

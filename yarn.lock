@@ -1844,20 +1844,46 @@
     js-sha256 "0.9.0"
     simple-cbor "^0.4.1"
 
+"@dfinity/agent@^0.10.2":
+  version "0.10.2"
+  resolved "https://registry.yarnpkg.com/@dfinity/agent/-/agent-0.10.2.tgz#1c591e9f5d0b3acaeea767d402f53c8732f754ac"
+  integrity sha512-ipzw+UYSUJWgwq5IM8PwHLXlfViFJWX+ZPvMD4vclDjwxiLf/nDZNk2sgLfYAi/2o2MpG6wUTUYriX/gmYrbkg==
+  dependencies:
+    base64-arraybuffer "^0.2.0"
+    bignumber.js "^9.0.0"
+    borc "^2.1.1"
+    js-sha256 "0.9.0"
+    simple-cbor "^0.4.1"
+
 "@dfinity/auth-client@^0.10.1":
   version "0.10.1"
   resolved "https://registry.yarnpkg.com/@dfinity/auth-client/-/auth-client-0.10.1.tgz"
   integrity sha512-nKEUOyislqX4IklLh1kPGZyh5NHKusJCA6W+ySgh5VmGvE1qXHajRof0SY6z/i/lncjg7vi4fxtod/4knWtp/A==
+
+"@dfinity/auth-client@^0.10.2":
+  version "0.10.2"
+  resolved "https://registry.yarnpkg.com/@dfinity/auth-client/-/auth-client-0.10.2.tgz#36079df982ffc73ba99fa18ebc4800953616d704"
+  integrity sha512-u9RThzTvsrKb85PhnEUXgZ3KwdSJCeNwHBZ3zVCZ7XQEkDhwNZK87JD00Mh2Z5kCbN3+A+OdGZtYXloFlgENew==
 
 "@dfinity/authentication@^0.10.1":
   version "0.10.1"
   resolved "https://registry.yarnpkg.com/@dfinity/authentication/-/authentication-0.10.1.tgz"
   integrity sha512-k8D80Ba27Kw3sgVtnz9j3jZ/7rpg5r8n1/NWdmy8aHMJnVhTXghIskptM0YRpA7bS9cJW5tSFLnvalKNGWcnuA==
 
+"@dfinity/authentication@^0.10.2":
+  version "0.10.2"
+  resolved "https://registry.yarnpkg.com/@dfinity/authentication/-/authentication-0.10.2.tgz#fcc4e82e13f18e66556e40807190709dbbde92d7"
+  integrity sha512-+fNuknjSl1SI4f0e+KQdCnJy3vuSTeGFriLXstjYDCO2ez432lMiyqoF9eC4Gvp6AX9RZifRt2BXuWnhzwZwEQ==
+
 "@dfinity/candid@^0.10.1":
   version "0.10.1"
   resolved "https://registry.yarnpkg.com/@dfinity/candid/-/candid-0.10.1.tgz"
   integrity sha512-Z7C125quoAYafj+yK20KQKI/MkXgB9tgPkvtIk1Ec8eGXIU7OXOHSIknvJR6zXdE9eUc/veiD4+VDWK7I82sDw==
+
+"@dfinity/candid@^0.10.2":
+  version "0.10.2"
+  resolved "https://registry.yarnpkg.com/@dfinity/candid/-/candid-0.10.2.tgz#545692c4f9a954b2133436049a707434d5c6c7c9"
+  integrity sha512-vHRw6G5N6Nj8PlGl+Dx8pRGNCA/OQJ5v5ktj+t4ZL/4UIaebDZYzRZyrtBC0Vs1iG9BA5l48b7ByMH26UKLC6w==
 
 "@dfinity/identity@^0.10.1":
   version "0.10.1"
@@ -1869,10 +1895,25 @@
     secp256k1 "^4.0.2"
     tweetnacl "^1.0.1"
 
+"@dfinity/identity@^0.10.2":
+  version "0.10.2"
+  resolved "https://registry.yarnpkg.com/@dfinity/identity/-/identity-0.10.2.tgz#653336e20bbae0d279c0551bdddb198e8dad194e"
+  integrity sha512-ltAqR813Rm8pZjD5qCXAdBa4S/W9Afo7u6ue2m9UDHmOryiq4VR295hl1Mn4Svb2itgOE1omWl0oA3VDoQ1B1A==
+  dependencies:
+    borc "^2.1.1"
+    js-sha256 "^0.9.0"
+    secp256k1 "^4.0.2"
+    tweetnacl "^1.0.1"
+
 "@dfinity/principal@^0.10.1":
   version "0.10.1"
   resolved "https://registry.yarnpkg.com/@dfinity/principal/-/principal-0.10.1.tgz"
   integrity sha512-1/r726xwVlSsCc+Fl2szM+P9xNfsu5TItC56n/KRuhGEE9sN8NLnorxcNvpzoII0f99XBNCNMRJPUkWSZPLpbw==
+
+"@dfinity/principal@^0.10.2":
+  version "0.10.2"
+  resolved "https://registry.yarnpkg.com/@dfinity/principal/-/principal-0.10.2.tgz#26123490bac2de6987d20715eda5efb8812a68d5"
+  integrity sha512-CueU9ByIG2ifGDN8YnTPKbLJ6+ZDkoOLVmelaIcueTwqvHMIIvWNme76GwjbcbZ6/XgFd+I7cIKPMX0qQgbGCw==
 
 "@emotion/babel-plugin@^11.3.0":
   version "11.3.0"

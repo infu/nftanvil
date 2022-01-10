@@ -523,6 +523,8 @@ export const mint = (vals) => async (dispatch, getState) => {
     vals.thumb.ipfs.cid = await uploadIPFS(key_nftstorage, vals.thumb.ipfs.url);
   }
 
+  console.log("VALS", vals);
+
   let available = await router.getAvailable();
   let canisterId = Principal.fromText(
     available[Math.floor(Math.random() * available.length)]

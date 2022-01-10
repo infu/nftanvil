@@ -193,7 +193,7 @@ export const MintForm = () => {
   const record2request = (v) => {
     let a = {
       price: v.price,
-      domain: v.domain,
+      domain: v.domain ? [v.domain] : [],
       authorShare: Math.round(v.authorShare * 100),
       collectionId: v.collectionId ? v.collectionId : [],
       name: [v.name].filter(Boolean),

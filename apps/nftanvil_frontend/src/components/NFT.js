@@ -934,9 +934,7 @@ const verifyDomain = lodash.debounce((meta, cb) => {
     .then((response) => response.json())
     .then((data) => {
       try {
-        if (data.allowed.indexOf(meta.author) !== -1) {
-          cb(true);
-        }
+        cb(data.allowed.indexOf(meta.author) !== -1);
       } catch (e) {
         console.log(e);
         cb(false);
@@ -967,7 +965,7 @@ const MetaDomain = ({ meta }) => {
   }, [meta.domain]);
 
   return (
-    <Text
+    <Box
       color={verified ? "green.300" : isLoading ? null : "red.300"}
       as={verified ? null : isLoading ? null : "s"}
     >
@@ -977,7 +975,7 @@ const MetaDomain = ({ meta }) => {
       ) : verified ? (
         <VerifiedIcon w={"16px"} h={"16px"} />
       ) : null}
-    </Text>
+    </Box>
   );
 };
 
