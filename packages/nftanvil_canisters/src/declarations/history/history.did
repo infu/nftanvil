@@ -137,11 +137,7 @@ type Class =
 type BlockIndex = nat64;
 type Balance = nat64;
 type AnvEvent = variant {transaction: EventFungibleTransaction;};
-type AddResponse = 
- variant {
-   err: variant {NotLegitimateCaller;};
-   ok;
- };
+type AddResponse = blob;
 type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;
 service : () -> Class

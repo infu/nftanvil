@@ -1,8 +1,7 @@
 import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
 export type AccountIdentifier__1 = Array<number>;
-export type AddResponse = { 'ok' : null } |
-  { 'err' : { 'NotLegitimateCaller' : null } };
+export type AddResponse = Array<number>;
 export type AnvEvent = { 'transaction' : EventFungibleTransaction };
 export type Balance = bigint;
 export type BlockIndex = bigint;

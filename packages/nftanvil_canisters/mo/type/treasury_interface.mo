@@ -88,6 +88,7 @@ module {
         public func hash (e : NFTPurchase) : [Nat8] {
             Array.flatten<Nat8>([
                         [9:Nat8],
+                        Blob_.intToBytes(e.created),
                         Blob_.nat64ToBytes(e.ledgerBlock),
                         Blob_.nat64ToBytes(e.amount.e8s),
                         Blob.toArray(e.token),
@@ -110,7 +111,6 @@ module {
                             case (null) []
                         },
                         Blob.toArray(e.purchaseAccount)
-
                     ])
         };
     };

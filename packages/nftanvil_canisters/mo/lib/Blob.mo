@@ -4,12 +4,17 @@ import Text "mo:base/Text";
 import Blob "mo:base/Blob";
 import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat64";
+import Int "mo:base/Int";
 import Nat16 "mo:base/Nat16";
 import Nat8 "mo:base/Nat8";
 import Nat "mo:base/Nat";
 import Char "mo:base/Char";
 
  module {
+
+    public func intToBytes(n: Int) : [Nat8] {
+        nat64ToBytes( Nat64.fromIntWrap(n) )
+    };
 
     public func nat64ToBytes(n:Nat64) : [Nat8] {
         [Nat8.fromNat( Nat64.toNat((n >> 56) & 255)),

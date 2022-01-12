@@ -366,13 +366,12 @@ module {
         #Other        : Text;
     };
 
-    public type TransferResponse = Result.Result<Balance, TransferResponseError>;
+    public type TransferResponse = Result.Result<{transactionId: Blob}, TransferResponseError>;
 
     public type BurnResponse = TransferResponse;
 
     public type UseResponse = Result.Result<{
-        #consumed;
-        #cooldown: Nat32;
+        transactionId: Blob
     }, {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
@@ -397,7 +396,9 @@ module {
         token      : TokenIdentifier;
     };
 
-    public type ClaimLinkResponse = Result.Result<(), {
+    public type ClaimLinkResponse = Result.Result<{
+         transactionId: Blob
+    }, {
         #Rejected; // We wont supply possible attacker with verbose errors
         #Other: Text
         }>;
@@ -700,7 +701,6 @@ module {
         public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
         public let FULLY_CHARGED_MINUTES : Nat64 = 8409600; //(16 * 365 * 24 * 60) 16 years
         public let FULLY_CHARGED_MESSAGES : Nat64 = 5840; // 1 message per day
-
     };
 
     public type Quality = Nat8;
@@ -807,7 +807,7 @@ module {
     };
 
     public type PlugResponse = Result.Result<
-        (), {
+        { transactionId: Blob}, {
         #Rejected;
         #InsufficientBalance;
         #InvalidToken :TokenIdentifier;
@@ -847,7 +847,7 @@ module {
     };
 
     public type UnsocketResponse = Result.Result<
-        (), {
+        { transactionId: Blob }, {
         #Rejected;
         #InsufficientBalance;
         #InvalidToken :TokenIdentifier;
@@ -917,7 +917,7 @@ module {
     };
 
     public type PurchaseClaimResponse = Result.Result<
-        (), {
+        { transactionId: Blob }, {
             #Refunded;
             #ErrorWhileRefunding;
             #NotEnoughToRefund;
@@ -954,7 +954,7 @@ module {
     };
 
     public type MintResponse = Result.Result<
-        TokenIndex, {
+        {tokenIndex: TokenIndex; transactionId: Blob}, {
         #Rejected;
         #InsufficientBalance;
         #ClassError: Text;
@@ -990,7 +990,7 @@ module {
         };
 
         public type ApproveResponse = Result.Result<
-            (),
+            {transactionId: Blob},
             {
             #Other        : Text;
             #InvalidToken : TokenIdentifier;

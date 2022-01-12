@@ -49,6 +49,17 @@ module {
         };
     };
 
+    public type TransactionId = Blob;
+    public module TransactionId = { 
+        public func encode(historyCanisterId: Principal, idx: EventIndex) : TransactionId { 
+                let raw = Array.flatten<Nat8>([
+                    Blob.toArray(Principal.toBlob(historyCanisterId)),
+                    Binary.BigEndian.fromNat32(idx),
+                ]);
+                
+                Blob.fromArray(raw)
+        };
+    };
 
     public type Event = {
         info : EventInfo;
@@ -118,6 +129,13 @@ module {
             token: TokenIdentifierBlob;
         };
 
+        #approve : {
+            created: Timestamp;
+            token: TokenIdentifierBlob;
+            user: AccountIdentifier;
+            spender: Principal;
+        };
+
         #socket : {
             created: Timestamp;
             socket : TokenIdentifierBlob;
@@ -169,48 +187,63 @@ module {
     public module NftEvent = {
         public func hash(e : NftEvent) : [Nat8] {
             switch (e) {
-                case (#transaction({from;to;token;memo})) {
+                case (#transaction({created;from;to;token;memo})) {
                     Array.flatten<Nat8>([
                         [3:Nat8],
+                        Blob_.intToBytes(created),
                         Blob.toArray(from),
                         Blob.toArray(to),
                         Blob.toArray(token),
                         Blob_.nat64ToBytes(memo)
                     ])
                 };
-                case (#burn({user;token;memo})) {
+                case (#burn({created;user;token;memo})) {
                     Array.flatten<Nat8>([
                         [4:Nat8],
+                        Blob_.intToBytes(created),
                         Blob.toArray(user),
                         Blob.toArray(token),
                         Blob_.nat64ToBytes(memo)
                     ])
                 };
-                case (#use({user;token;use;memo})) { 
+                case (#use({created;user;token;use;memo})) { 
                     Array.flatten<Nat8>([
                         [5:Nat8],
+                        Blob_.intToBytes(created),
                         Blob.toArray(user),
                         Blob.toArray(token),
                         Nft.ItemUse.hash(use),
                         Blob_.nat64ToBytes(memo)
                     ])
                 };
-                case (#mint({token;})) { // todo add use
+                case (#mint({created;token;})) { // todo add use
                     Array.flatten<Nat8>([
                         [6:Nat8],
+                        Blob_.intToBytes(created),
                         Blob.toArray(token),
                     ])
                 };
-                case (#socket({socket; plug})) {
+                case (#approve({created;spender;user;token})) {
+                    Array.flatten<Nat8>([
+                        [3:Nat8],
+                        Blob_.intToBytes(created),
+                        Blob.toArray(user),
+                        Blob.toArray(Principal.toBlob(spender)),
+                        Blob.toArray(token)
+                    ])
+                };
+                case (#socket({created;socket; plug})) {
                     Array.flatten<Nat8>([
                         [7:Nat8],
+                        Blob_.intToBytes(created),
                         Blob.toArray(socket),
                         Blob.toArray(plug)
                     ])
                 };
-                case (#unsocket({socket; plug})) {
+                case (#unsocket({created;socket; plug})) {
                     Array.flatten<Nat8>([
                         [8:Nat8],
+                        Blob_.intToBytes(created),
                         Blob.toArray(socket),
                         Blob.toArray(plug)
                     ])
@@ -250,10 +283,8 @@ module {
     public type AddRequest = EventInfo;
     
 
-    public type AddResponse = Result.Result<(),{
-        #NotLegitimateCaller
-    }>;
-
+    public type AddResponse = TransactionId;
+    
     public type InfoResponse = {
         total: EventIndex;
         previous: ?Principal       

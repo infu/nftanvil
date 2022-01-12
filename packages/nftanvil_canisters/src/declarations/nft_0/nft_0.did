@@ -15,10 +15,7 @@ type UseResponse =
       Rejected;
       Unauthorized: AccountIdentifier;
     };
-   ok: variant {
-         consumed;
-         cooldown: nat32;
-       };
+   ok: record {transactionId: blob;};
  };
 type UseRequest = 
  record {
@@ -50,7 +47,7 @@ type UnsocketResponse =
       Unauthorized: AccountIdentifier;
       UnplugError: UnplugError;
     };
-   ok;
+   ok: record {transactionId: blob;};
  };
 type UnsocketRequest = 
  record {
@@ -85,7 +82,7 @@ type TransferResponseError =
 type TransferResponse = 
  variant {
    err: TransferResponseError;
-   ok: Balance;
+   ok: record {transactionId: blob;};
  };
 type TransferRequest = 
  record {
@@ -253,7 +250,7 @@ type PurchaseClaimResponse =
       Refunded;
       TreasuryNotifyFailed;
     };
-   ok;
+   ok: record {transactionId: blob;};
  };
 type PurchaseClaimRequest = 
  record {
@@ -284,7 +281,7 @@ type PlugResponse =
       SocketError: SocketError;
       Unauthorized: AccountIdentifier;
     };
-   ok;
+   ok: record {transactionId: blob;};
  };
 type PlugRequest = 
  record {
@@ -305,7 +302,10 @@ type MintResponse =
       Rejected;
       Unauthorized;
     };
-   ok: TokenIndex;
+   ok: record {
+         tokenIndex: TokenIndex;
+         transactionId: blob;
+       };
  };
 type MintRequest = 
  record {
@@ -472,7 +472,7 @@ type ClaimLinkResponse =
           Other: text;
           Rejected;
         };
-   ok;
+   ok: record {transactionId: blob;};
  };
 type ClaimLinkRequest = 
  record {
@@ -489,7 +489,7 @@ type Callback =
 type BurnResponse = 
  variant {
    err: TransferResponseError;
-   ok: Balance;
+   ok: record {transactionId: blob;};
  };
 type BurnRequest = 
  record {

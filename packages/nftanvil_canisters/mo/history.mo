@@ -39,20 +39,20 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     public shared({caller}) func add(eventinfo: H.EventInfo) : async H.AddResponse {
 
-        switch (eventinfo) {
+        assert(switch (eventinfo) {
             case (#nft(e)) {
-                if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
+                Array_.exists(_conf.nft, caller, Principal.equal) == true
             };
             case (#pwr(e)) {
-                if (Principal.equal(_conf.pwr, caller) == false) return #err(#NotLegitimateCaller);
+                Principal.equal(_conf.pwr, caller) == true
             };
             case (#anv(e)) {
-                if (Principal.equal(_conf.anv, caller) == false) return #err(#NotLegitimateCaller);
+                Principal.equal(_conf.anv, caller) == true
             };
             case (#treasury(e)) {
-                if (Principal.equal(_conf.treasury, caller) == false) return #err(#NotLegitimateCaller);
+                Principal.equal(_conf.treasury, caller) == true
             };
-        };
+        });
         
         let index = _nextEvent;
         
@@ -77,8 +77,10 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
         _events.put(index, event);
         _nextEvent := _nextEvent + 1;
-        
-        #ok();
+
+        let transactionId = H.TransactionId.encode(Principal.fromActor(this), index);
+
+        transactionId;
     };
 
     public query func info() : async H.InfoResponse {

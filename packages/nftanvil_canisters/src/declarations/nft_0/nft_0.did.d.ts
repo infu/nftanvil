@@ -28,7 +28,7 @@ export interface BurnRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type BurnResponse = { 'ok' : Balance } |
+export type BurnResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   { 'err' : TransferResponseError };
 export interface Callback { 'token' : [] | [Token], 'body' : Array<number> }
 export type CallbackFunc = () => Promise<undefined>;
@@ -37,7 +37,7 @@ export interface ClaimLinkRequest {
   'key' : Array<number>,
   'token' : TokenIdentifier,
 }
-export type ClaimLinkResponse = { 'ok' : null } |
+export type ClaimLinkResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   { 'err' : { 'Rejected' : null } | { 'Other' : string } };
 export interface Class {
   'allowance' : (arg_0: Request__1) => Promise<Response__1>,
@@ -171,7 +171,9 @@ export interface MintRequest {
   'metadata' : MetadataInput,
   'subaccount' : [] | [SubAccount],
 }
-export type MintResponse = { 'ok' : TokenIndex } |
+export type MintResponse = {
+    'ok' : { 'tokenIndex' : TokenIndex, 'transactionId' : Array<number> }
+  } |
   {
     'err' : { 'Pwr' : TransferResponseError } |
       { 'Invalid' : string } |
@@ -187,7 +189,7 @@ export interface PlugRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type PlugResponse = { 'ok' : null } |
+export type PlugResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'SocketError' : SocketError } |
@@ -206,7 +208,9 @@ export interface PurchaseClaimRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type PurchaseClaimResponse = { 'ok' : null } |
+export type PurchaseClaimResponse = {
+    'ok' : { 'transactionId' : Array<number> }
+  } |
   {
     'err' : { 'TreasuryNotifyFailed' : null } |
       { 'Refunded' : null } |
@@ -330,7 +334,7 @@ export interface TransferRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type TransferResponse = { 'ok' : Balance } |
+export type TransferResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   { 'err' : TransferResponseError };
 export type TransferResponseError = { 'InsufficientBalance' : null } |
   { 'NotTransferable' : null } |
@@ -352,7 +356,7 @@ export interface UnsocketRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type UnsocketResponse = { 'ok' : null } |
+export type UnsocketResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'UnplugError' : UnplugError } |
       { 'InsufficientBalance' : null } |
@@ -376,10 +380,7 @@ export interface UseRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type UseResponse = {
-    'ok' : { 'consumed' : null } |
-      { 'cooldown' : number }
-  } |
+export type UseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |

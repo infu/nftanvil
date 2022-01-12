@@ -89,10 +89,7 @@ export const idlFactory = ({ IDL }) => {
     'pwr' : PwrEvent,
     'treasury' : TreasuryEvent,
   });
-  const AddResponse = IDL.Variant({
-    'ok' : IDL.Null,
-    'err' : IDL.Variant({ 'NotLegitimateCaller' : IDL.Null }),
-  });
+  const AddResponse = IDL.Vec(IDL.Nat8);
   const Config = IDL.Record({
     'anv' : IDL.Principal,
     'nft' : IDL.Vec(IDL.Principal),
