@@ -3,7 +3,7 @@ import Blob_ "./lib/Blob";
 
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
-import SHA256 "mo:sha/SHA256";
+import SHA224 "./lib/SHA224";
 import Hex "mo:encoding/Hex";
 import Nat64 "mo:base/Nat64";
 import Nat32 "mo:base/Nat32";
@@ -61,22 +61,40 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
             case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
         };
 
-        // Debug.print("HERE");
+        Debug.print("HERE");
 
-        // Debug.print(debug_show(previousTransactionHash));
+        Debug.print(debug_show(previousTransactionHash));
+        Debug.print("HERE2");
+
+        Debug.print(debug_show( H.EventInfo.hash(eventinfo)));
+        Debug.print("HERE3");
+
+        Debug.print(debug_show( SHA224.sha224(
+                Array.flatten<Nat8>([
+                    previousTransactionHash,
+                    H.EventInfo.hash(eventinfo)
+                    ]))));
+
+                 Debug.print("HERE32");
+
+
 
         let event = {
             info = eventinfo;
-            hash = Blob.fromArray(SHA256.sum224(
+            hash = Blob.fromArray(SHA224.sha224(
                 Array.flatten<Nat8>([
                     previousTransactionHash,
                     H.EventInfo.hash(eventinfo)
                     ])));
             //  hash = Blob.fromArray(H.EventInfo.hash(eventinfo));
         };
+        Debug.print("HERE3333");
 
         _events.put(index, event);
         _nextEvent := _nextEvent + 1;
+
+        Debug.print("HERE4");
+
 
         let transactionId = H.TransactionId.encode(Principal.fromActor(this), index);
 

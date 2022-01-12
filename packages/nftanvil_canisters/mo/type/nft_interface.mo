@@ -5,7 +5,7 @@ import Binary "mo:encoding/Binary";
 import Blob "mo:base/Blob";
 import Char "mo:base/Char";
 import CRC32 "mo:hash/CRC32";
-import SHA256 "mo:sha/SHA256";
+import SHA224 "../lib/SHA224";
 import Hash "mo:base/Hash";
 import Hex "mo:encoding/Hex";
 import Iter "mo:base/Iter";
@@ -101,7 +101,7 @@ module {
                     case (?sa)  { Blob.toArray(sa); };
                 };
                 
-                let inner = SHA256.sum224(Array.flatten<Nat8>([prefix, data, account]));
+                let inner = SHA224.sha224(Array.flatten<Nat8>([prefix, data, account]));
 
                 Blob.fromArray(Array.append<Nat8>(
                     Binary.BigEndian.fromNat32(CRC32.checksum(inner)),

@@ -79,6 +79,12 @@ export const idlFactory = ({ IDL }) => {
       'from' : AccountIdentifier,
       'memo' : Memo,
     }),
+    'approve' : IDL.Record({
+      'created' : Timestamp,
+      'token' : TokenIdentifierBlob,
+      'user' : AccountIdentifier,
+      'spender' : IDL.Principal,
+    }),
     'purchase' : NFTPurchase,
   });
   const PwrEvent = IDL.Variant({ 'transaction' : EventFungibleTransaction });

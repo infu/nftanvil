@@ -3,7 +3,7 @@ import Blob_ "./lib/Blob";
 
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
-import SHA256 "mo:sha/SHA256";
+import SHA224 "./lib/SHA224";
 import Hex "mo:encoding/Hex";
 import Nat64 "mo:base/Nat64";
 import Nat32 "mo:base/Nat32";
@@ -141,7 +141,7 @@ shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
         };
         let f:[[Nat8]] = [a,b,c,d,e];
 
-        let hash = Blob.fromArray(SHA256.sum224( Array.flatten(f)));
+        let hash = Blob.fromArray(SHA224.sha224( Array.flatten(f)));
 
         let newBlock = (from, to, amount, time, hash);
         _blockchain.put(newBlockIndex, newBlock);

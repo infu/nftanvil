@@ -7,6 +7,13 @@ type Share = nat16;
 type PwrEvent = variant {transaction: EventFungibleTransaction;};
 type NftEvent = 
  variant {
+   approve:
+    record {
+      created: Timestamp;
+      spender: principal;
+      token: TokenIdentifierBlob;
+      user: AccountIdentifier;
+    };
    burn:
     record {
       created: Timestamp;

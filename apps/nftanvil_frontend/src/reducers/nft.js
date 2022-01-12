@@ -254,7 +254,7 @@ export const set_price =
   ({ id, price }) =>
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
-    console.log("Setting price", price);
+    // console.log("Setting price", price);
     let { canister } = decodeTokenId(id);
 
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
@@ -270,7 +270,7 @@ export const set_price =
       subaccount,
     });
 
-    if (!("ok" in t)) throw t;
+    if (!("ok" in t)) throw t.err;
   };
 
 export const transfer =
@@ -293,7 +293,8 @@ export const transfer =
       memo: 0,
       subaccount: [],
     });
-    if (!t.ok) throw t;
+    if (!t.ok) throw t.err;
+    return t.ok;
   };
 
 export const plug =
@@ -315,7 +316,8 @@ export const plug =
       plug: plug_id,
       socket: socket_id,
     });
-    if (t.ok !== null) throw t.err;
+    if (!t.ok) throw t.err;
+    return t.ok;
   };
 
 export const unsocket =
@@ -337,7 +339,8 @@ export const unsocket =
       plug: plug_id,
       socket: socket_id,
     });
-    if (t.ok !== null) throw t.err;
+    if (!t.ok) throw t.err;
+    return t.ok;
   };
 
 export const burn =
@@ -353,13 +356,38 @@ export const burn =
     let address = s.user.address;
     let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
-    await nftcan.burn({
+    let rez = await nftcan.burn({
       user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
       amount: 1,
       memo: 0,
       subaccount,
     });
+    if (rez.err) throw rez.err;
+    return rez.ok;
+  };
+
+export const approve =
+  ({ id, spender }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let { canister } = decodeTokenId(id);
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let s = getState();
+
+    let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+
+    let rez = await nftcan.approve({
+      token: id,
+      allowance: 1,
+      subaccount,
+      spender,
+    });
+    if (rez.err) throw rez.err;
+    return rez.ok;
   };
 
 export const use =
@@ -375,12 +403,16 @@ export const use =
     let address = s.user.address;
     let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
-    await nftcan.use({
+    let r = await nftcan.use({
       user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
       memo: 0,
+      use: { cooldown: { duration: 2, useId: 15 } },
       subaccount,
     });
+
+    if (!r.ok) throw r.err;
+    return r.ok;
   };
 
 export const transfer_link =

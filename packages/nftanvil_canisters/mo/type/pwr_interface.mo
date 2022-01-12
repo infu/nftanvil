@@ -5,7 +5,6 @@ import Binary "mo:encoding/Binary";
 import Blob "mo:base/Blob";
 import Char "mo:base/Char";
 import CRC32 "mo:hash/CRC32";
-import SHA256 "mo:sha/SHA256";
 import Hash "mo:base/Hash";
 import Hex "mo:encoding/Hex";
 import Iter "mo:base/Iter";

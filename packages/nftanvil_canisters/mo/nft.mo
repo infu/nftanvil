@@ -28,7 +28,7 @@ import Hex "mo:encoding/Hex";
 import Blob_ "./lib/Blob";
 import Hash "./lib/Hash";
 import Painless "./lib/Painless";
-import SHA256 "mo:sha/SHA256";
+import SHA224 "./lib/SHA224";
 import Ledger  "./type/ledger_interface";
 import Treasury  "./type/treasury_interface";
 import Cluster  "./type/Cluster";
@@ -234,7 +234,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     public shared({caller}) func claim_link(request : Nft.ClaimLinkRequest) : async Nft.ClaimLinkResponse {
     
-        let keyHash = Blob.fromArray(SHA256.sum224(Blob.toArray(request.key)));
+        let keyHash = Blob.fromArray(SHA224.sha224(Blob.toArray(request.key)));
         if (Nft.User.validate(request.to) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
         switch (Nft.TokenIdentifier.decode(request.token)) {

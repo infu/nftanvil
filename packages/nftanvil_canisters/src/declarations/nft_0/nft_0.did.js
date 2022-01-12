@@ -24,7 +24,7 @@ export const idlFactory = ({ IDL }) => {
     'spender' : IDL.Principal,
   });
   const ApproveResponse = IDL.Variant({
-    'ok' : IDL.Null,
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,

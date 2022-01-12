@@ -12,6 +12,7 @@ import {
   Spacer,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { Principal } from "@dfinity/principal";
 
 import { NFT } from "./NFT";
 import itemgrid from "../assets/itemgrid.png";
@@ -89,6 +90,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
   let transactionId = TransactionId.toText(TransactionId.encode(canister, idx));
   let timestamp = Number(BigInt(details.created) / 1000000n);
 
+  //TODO: This is will be done in a better way
   return (
     <Box bg={boxColor} borderRadius={"4"} border={1} p={3} mb={2}>
       <KeyVal
@@ -111,6 +113,19 @@ const HistoryEvent = ({ ev, canister, idx }) => {
         if (key === "token" || key === "socket" || key === "plug") {
           val = tokenFromBlob(val);
           val = <Link to={"/nft/" + val}>{val}</Link>;
+        }
+
+        if (key === "use") {
+          val = JSON.stringify(val);
+        }
+
+        if (key === "marketplace" || key === "affiliate" || key === "author") {
+          if (!val || val.length === 0) return null;
+          val = JSON.stringify(val);
+        }
+
+        if (key === "spender") {
+          val = Principal.fromUint8Array(val._arr).toText();
         }
 
         return <KeyVal key={idx} k={key} v={val} />;

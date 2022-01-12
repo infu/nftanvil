@@ -530,7 +530,7 @@ type ApproveResponse =
       Other: text;
       Unauthorized: AccountIdentifier;
     };
-   ok;
+   ok: record {transactionId: blob;};
  };
 type ApproveRequest = 
  record {

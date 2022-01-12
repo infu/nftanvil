@@ -6,7 +6,6 @@ import Blob_ "./lib/Blob";
 
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
-import SHA256 "mo:sha/SHA256";
 import Hex "mo:encoding/Hex";
 import Nat64 "mo:base/Nat64";
 import Nat32 "mo:base/Nat32";

@@ -11,12 +11,13 @@ import {
   claim_link,
   plug,
   unsocket,
+  approve,
   set_price,
   buy,
   purchase_intent,
 } from "../reducers/nft";
 import { Spinner } from "@chakra-ui/react";
-
+import { push } from "connected-react-router";
 import Confetti from "./Confetti";
 import { LoginRequired } from "./LoginRequired";
 import { toast } from "react-toastify";
@@ -63,6 +64,8 @@ import styled from "@emotion/styled";
 import thumb_bg from "../assets/default.png";
 import thumb_over from "../assets/over.png";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
+import { Principal } from "@dfinity/principal";
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -113,8 +116,10 @@ export const NFTMenu = ({ id, meta, owner }) => {
     <Box p={3}>
       {owner ? (
         <Wrap spacing="3">
-          {meta.use ? <UseButton id={id} meta={meta} /> : null}
+          <UseButton id={id} meta={meta} />
           <TransferButton id={id} meta={meta} />
+          <ApproveButton id={id} meta={meta} />
+
           <TransferLinkButton id={id} meta={meta} />
           <SetPriceButton id={id} meta={meta} />
 
@@ -242,7 +247,7 @@ function TransferButton({ id, meta }) {
       draggable: false,
     });
     try {
-      await dispatch(transfer({ id, toAddress }));
+      let { transactionId } = await dispatch(transfer({ id, toAddress }));
 
       toast.update(toastId, {
         type: toast.TYPE.SUCCESS,
@@ -250,6 +255,9 @@ function TransferButton({ id, meta }) {
         render: (
           <div>
             <div>Transfer successfull.</div>
+            <div style={{ fontSize: "10px", color: "green" }}>
+              transactionId: {TransactionId.toText(transactionId)}
+            </div>
           </div>
         ),
         autoClose: 9000,
@@ -271,6 +279,7 @@ function TransferButton({ id, meta }) {
       });
     }
   };
+
   return (
     <>
       <Button onClick={onOpen} isDisabled={!meta.transferable}>
@@ -306,6 +315,95 @@ function TransferButton({ id, meta }) {
   );
 }
 
+function ApproveButton({ id, meta }) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const dispatch = useDispatch();
+  const initialRef = React.useRef();
+
+  const approveOk = async () => {
+    let spender = Principal.fromText(initialRef.current.value);
+
+    onClose();
+    let toastId = toast("Approving...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+    try {
+      let { transactionId } = await dispatch(approve({ id, spender }));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div>
+            <div>Approve successfull.</div>
+            <div style={{ fontSize: "10px", color: "green" }}>
+              transactionId: {TransactionId.toText(transactionId)}
+            </div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      console.error("Transfer error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <div>
+            <div>Approve failed.</div>
+            <div style={{ fontSize: "10px" }}>{e.message}</div>
+          </div>
+        ),
+      });
+    }
+  };
+
+  return (
+    <>
+      <Button onClick={onOpen} isDisabled={!meta.transferable}>
+        Approve
+      </Button>
+
+      <Modal
+        initialFocusRef={initialRef}
+        onClose={onClose}
+        isOpen={isOpen}
+        isCentered
+        size={"xl"}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Approve</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            This will allow a target principal to transfer, socket, unsocket and
+            use this NFT. Setting spender clears previous one.
+            <FormControl>
+              <FormLabel>Spender principal</FormLabel>
+              <Input ref={initialRef} placeholder="aaaaa-aa..." />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button ml={3} onClick={approveOk}>
+              Approve
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+
 function UnsocketButton({ id }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
@@ -324,7 +422,9 @@ function UnsocketButton({ id }) {
       draggable: false,
     });
     try {
-      await dispatch(unsocket({ socket_id: id, plug_id }));
+      let { transactionId } = await dispatch(
+        unsocket({ socket_id: id, plug_id })
+      );
 
       toast.update(toastId, {
         type: toast.TYPE.SUCCESS,
@@ -332,6 +432,9 @@ function UnsocketButton({ id }) {
         render: (
           <div>
             <div>Unplugging successfull.</div>
+            <div style={{ fontSize: "10px", color: "green" }}>
+              transactionId: {TransactionId.toText(transactionId)}
+            </div>
           </div>
         ),
         autoClose: 9000,
@@ -404,7 +507,7 @@ function SocketButton({ id }) {
       draggable: false,
     });
     try {
-      await dispatch(plug({ plug_id: id, socket_id }));
+      let { transactionId } = await dispatch(plug({ plug_id: id, socket_id }));
 
       toast.update(toastId, {
         type: toast.TYPE.SUCCESS,
@@ -412,6 +515,9 @@ function SocketButton({ id }) {
         render: (
           <div>
             <div>Plugging successfull.</div>
+            <div style={{ fontSize: "10px", color: "green" }}>
+              transactionId: {TransactionId.toText(transactionId)}
+            </div>
           </div>
         ),
         autoClose: 9000,
@@ -477,9 +583,51 @@ export const UseButton = ({ id, meta }) => {
 
   const cancelRef = React.useRef();
 
-  const burnOk = () => {
+  const useOk = async () => {
     onClose();
-    dispatch(use({ id }));
+    let toastId = toast("Using...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+
+    try {
+      let { transactionId } = await dispatch(use({ id }));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div>
+            <div>Use successfull.</div>
+            <div style={{ fontSize: "10px", color: "green" }}>
+              transactionId: {TransactionId.toText(transactionId)}
+            </div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      let msg = "OnCooldown" in e ? "On cooldown" : JSON.stringify(e);
+
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <div>
+            <div>Using error.</div>
+            <div style={{ fontSize: "10px" }}>{msg}</div>
+          </div>
+        ),
+      });
+    }
   };
 
   return (
@@ -498,19 +646,15 @@ export const UseButton = ({ id, meta }) => {
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              {meta?.use?.consumable
-                ? "Are you sure? Using will consume the NFT"
-                : null}
-              {meta?.use?.cooldown
-                ? `Are you sure? Using will put ${meta.use.cooldown.duration} cooldown`
-                : null}
+              This use is for demo purposes. Once used, the NFT will have 2 min
+              cooldown.
             </AlertDialogBody>
 
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={burnOk} ml={3}>
+              <Button colorScheme="red" onClick={useOk} ml={3}>
                 Use
               </Button>
             </AlertDialogFooter>
@@ -668,9 +812,55 @@ export const BurnButton = ({ id }) => {
 
   const cancelRef = React.useRef();
 
-  const burnOk = () => {
+  const burnOk = async () => {
     onClose();
-    dispatch(burn({ id }));
+
+    let toastId = toast("Burning...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+
+    try {
+      let { transactionId } = await dispatch(burn({ id }));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div
+            onClick={() => {
+              dispatch(push("/tx/" + TransactionId.toText(transactionId)));
+            }}
+          >
+            <div>Burning successfull.</div>
+            <div style={{ fontSize: "10px", color: "green" }}>
+              transactionId: {TransactionId.toText(transactionId)}
+            </div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      console.error("Plugging error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <div>
+            <div>Socket failed.</div>
+            <div style={{ fontSize: "10px" }}>{e.message}</div>
+          </div>
+        ),
+      });
+    }
   };
   return (
     <>
@@ -983,6 +1173,8 @@ export const NFTInfo = ({ meta }) => {
   const bg = useColorModeValue("gray.500", "gray.700");
   if (!meta || !meta.quality) return null;
   const qcolor = itemQuality[meta.quality].color;
+  let nowMinutes = Math.floor(Date.now() / 1000 / 60);
+
   //if (!meta.name) return null;
   return (
     <Box bg={bg} borderRadius="md" borderWidth={"2px"} w={350} p={2}>
@@ -1013,10 +1205,28 @@ export const NFTInfo = ({ meta }) => {
             {moment.duration(meta.transfer.bindsDuration, "minutes").humanize()}
           </Text>
         ) : null}
+
+        {meta.boundUntil > nowMinutes ? (
+          <Text fontSize="14px" color={"green"} as="i">
+            {"bound for " +
+              moment
+                .duration(meta.boundUntil - nowMinutes, "minutes")
+                .humanize()}
+          </Text>
+        ) : null}
+
         {meta?.use?.consumable?.desc ? (
           <Text fontSize="14px" color={"green"} as="i">
             Use: {meta.use.consumable.desc.capitalize()} (Consumed in the
             process)
+          </Text>
+        ) : null}
+
+        {meta.cooldownUntil > nowMinutes ? (
+          <Text fontSize="14px" color={"green.300"}>
+            {moment
+              .duration(meta.cooldownUntil - nowMinutes, "minutes")
+              .humanize() + " cooldown left"}
           </Text>
         ) : null}
 

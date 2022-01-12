@@ -6,7 +6,7 @@ export interface ApproveRequest {
   'allowance' : Balance,
   'spender' : Principal,
 }
-export type ApproveResponse = { 'ok' : null } |
+export type ApproveResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |

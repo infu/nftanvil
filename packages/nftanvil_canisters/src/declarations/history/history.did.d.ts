@@ -101,6 +101,14 @@ export type NftEvent = {
       'memo' : Memo,
     }
   } |
+  {
+    'approve' : {
+      'created' : Timestamp,
+      'token' : TokenIdentifierBlob,
+      'user' : AccountIdentifier,
+      'spender' : Principal,
+    }
+  } |
   { 'purchase' : NFTPurchase };
 export type PwrEvent = { 'transaction' : EventFungibleTransaction };
 export type Share = number;
