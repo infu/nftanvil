@@ -59,6 +59,7 @@ export const HistoryRedirect = () => {
 
   return <div>Loading...</div>;
 };
+
 const KeyVal = ({ k, v }) => {
   return (
     <Flex>

@@ -56,28 +56,12 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         
         let index = _nextEvent;
         
-        let previousTransactionHash : [Nat8] = switch(_events.get(index - 1)) {
+        let previousTransactionHash : [Nat8] =  switch(_events.get(index - 1)) {
             case (?x) Blob.toArray(x.hash);
             case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
         };
 
-        Debug.print("HERE");
-
-        Debug.print(debug_show(previousTransactionHash));
-        Debug.print("HERE2");
-
-        Debug.print(debug_show( H.EventInfo.hash(eventinfo)));
-        Debug.print("HERE3");
-
-        Debug.print(debug_show( SHA224.sha224(
-                Array.flatten<Nat8>([
-                    previousTransactionHash,
-                    H.EventInfo.hash(eventinfo)
-                    ]))));
-
-                 Debug.print("HERE32");
-
-
+        // Debug.print(debug_show(previousTransactionHash));
 
         let event = {
             info = eventinfo;
@@ -86,18 +70,12 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
                     previousTransactionHash,
                     H.EventInfo.hash(eventinfo)
                     ])));
-            //  hash = Blob.fromArray(H.EventInfo.hash(eventinfo));
         };
-        Debug.print("HERE3333");
 
         _events.put(index, event);
         _nextEvent := _nextEvent + 1;
 
-        Debug.print("HERE4");
-
-
         let transactionId = H.TransactionId.encode(Principal.fromActor(this), index);
-
         transactionId;
     };
 
