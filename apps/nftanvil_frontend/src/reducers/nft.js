@@ -15,6 +15,7 @@ import {
   generateKeyHashPair,
   uploadFile,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { Principal } from "@dfinity/principal";
 
@@ -22,6 +23,8 @@ import { push } from "connected-react-router";
 import { setNftSotrageModal } from "./user";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TokenIdentifier from "@vvv-interactive/nftanvil-tools/cjs/tokenidentifier.js";
+import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
+
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 
 import { NFTStorage } from "nft.storage/dist/bundle.esm.min.js";
@@ -559,9 +562,9 @@ export const mint = (vals) => async (dispatch, getState) => {
     }
     if (!("ok" in mint)) throw Error(JSON.stringify(mint.err));
 
-    let tokenIndex = mint.ok;
+    let { tokenIndex, transactionId } = mint.ok;
     let tid = encodeTokenId(canisterId.toText(), tokenIndex);
-
+    //console.log("Transaction ID", transactionId);
     // Upload Internal
     if (vals?.content[0]?.internal?.url) {
       toast.update(toastId, {
@@ -599,7 +602,10 @@ export const mint = (vals) => async (dispatch, getState) => {
           }}
         >
           <div>Minting successfull.</div>
-          <div style={{ fontSize: "10px" }}>{tid}</div>
+          <div style={{ fontSize: "10px" }}>TokenId: {tid}</div>
+          <div style={{ fontSize: "10px", color: "green" }}>
+            TransactionId: {TransactionId.toText(transactionId)}
+          </div>
         </div>
       ),
       autoClose: 9000,

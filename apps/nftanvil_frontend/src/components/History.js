@@ -25,10 +25,14 @@ import { loadInfo, loadHistory, tailHistory } from "../reducers/history";
 import styled from "@emotion/styled";
 import { push } from "connected-react-router";
 
-import { toHexString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import {
+  toHexString,
+  bytesToBase58,
+} from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { tokenFromBlob } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 
 const SHOW = 10; // max records shown on screen
 const TAIL_INTERVAL = 1000; // every 1 sec
@@ -82,7 +86,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
   let etype = Object.keys(ev.info)[0];
   let action = Object.keys(ev.info[etype])[0];
   let details = ev.info[etype][action];
-  let transactionId = canister + "-" + idx;
+  let transactionId = TransactionId.toText(TransactionId.encode(canister, idx));
   let timestamp = Number(BigInt(details.created) / 1000000n);
 
   return (
@@ -206,11 +210,13 @@ export const History = (p) => {
 export const HistoryTx = (p) => {
   const total = useSelector((state) => state.history.total);
   const events = useSelector((state) => state.history.events);
+  const mapLoaded = useSelector((state) => state.user.map.history);
 
   const tx = p.match.params.tx;
 
-  const canister = tx.substr(0, tx.lastIndexOf("-"));
-  const from = parseInt(tx.substr(tx.lastIndexOf("-") + 1), 10);
+  const { can, idx: from } = TransactionId.decode(tx);
+  let canister = can.toText();
+  // const from = parseInt(tx.substr(tx.lastIndexOf("-") + 1), 10);
 
   const to = from + 1;
 
@@ -224,8 +230,8 @@ export const HistoryTx = (p) => {
   };
 
   useEffect(() => {
-    load();
-  }, [dispatch, from, to, canister]);
+    if (mapLoaded) load();
+  }, [dispatch, from, to, canister, mapLoaded]);
 
   if (!events || !events.length) return null;
 

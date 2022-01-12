@@ -13,6 +13,7 @@ export const bytesArrayToNumber = (a) => {
 };
 
 export const numberToBytesArray = (n, size) => {
+  // size in bytes
   const a = Array(size).fill(0);
 
   for (let i = 0; i < size; i++) {
@@ -44,6 +45,10 @@ export const encodeLink = (slot, tokenIndex, key) => {
   return bs58.encode(x);
 };
 
+export const bytesToBase58 = (bytes) => {
+  return bs58.encode(new Uint8Array([...bytes]));
+};
+
 export const encodeArrayBuffer = (file) => Array.from(new Uint8Array(file));
 
 export const jsonToNat8 = async (json) => {
@@ -60,6 +65,12 @@ export const fromHexString = (hexString) =>
 
 export const toHexString = (bytes) =>
   bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
+
+// export const toHexString = (byteArray) => {
+//   return Array.from(byteArray, function (byte) {
+//     return ("0" + (byte & 0xff).toString(16)).slice(-2);
+//   }).join("");
+// };
 
 export const chunkBlob = async (url_or_blob) => {
   let blob;
