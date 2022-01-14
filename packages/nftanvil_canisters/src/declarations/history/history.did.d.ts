@@ -23,7 +23,6 @@ export interface Config {
   'treasury' : Principal,
 }
 export type Cooldown = number;
-export type CustomId = bigint;
 export interface Event { 'hash' : Array<number>, 'info' : EventInfo }
 export interface EventFungibleTransaction {
   'to' : AccountIdentifier,
@@ -43,11 +42,12 @@ export interface InfoResponse {
   'total' : EventIndex,
   'previous' : [] | [Principal],
 }
-export type ItemUse = { 'consumable' : { 'useId' : CustomId } } |
-  { 'cooldown' : { 'duration' : Cooldown, 'useId' : CustomId } };
+export type ItemUse = { 'consume' : null } |
+  { 'prove' : null } |
+  { 'cooldown' : Cooldown };
 export interface ListRequest { 'to' : EventIndex, 'from' : EventIndex }
 export type ListResponse = Array<[] | [Event]>;
-export type Memo = bigint;
+export type Memo = Array<number>;
 export interface NFTPurchase {
   'created' : Time,
   'token' : TokenIdentifierBlob__1,
@@ -73,6 +73,7 @@ export type NftEvent = {
     'socket' : {
       'created' : Timestamp,
       'socket' : TokenIdentifierBlob,
+      'memo' : Memo,
       'plug' : TokenIdentifierBlob,
     }
   } |
@@ -80,6 +81,7 @@ export type NftEvent = {
     'unsocket' : {
       'created' : Timestamp,
       'socket' : TokenIdentifierBlob,
+      'memo' : Memo,
       'plug' : TokenIdentifierBlob,
     }
   } |

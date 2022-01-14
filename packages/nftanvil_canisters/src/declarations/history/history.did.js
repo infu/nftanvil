@@ -2,7 +2,7 @@ export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const Timestamp = IDL.Int;
   const TokenIdentifierBlob = IDL.Vec(IDL.Nat8);
-  const Memo = IDL.Nat64;
+  const Memo = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
   const EventFungibleTransaction = IDL.Record({
     'to' : AccountIdentifier,
@@ -13,11 +13,11 @@ export const idlFactory = ({ IDL }) => {
     'amount' : Balance,
   });
   const AnvEvent = IDL.Variant({ 'transaction' : EventFungibleTransaction });
-  const CustomId = IDL.Nat64;
   const Cooldown = IDL.Nat32;
   const ItemUse = IDL.Variant({
-    'consumable' : IDL.Record({ 'useId' : CustomId }),
-    'cooldown' : IDL.Record({ 'duration' : Cooldown, 'useId' : CustomId }),
+    'consume' : IDL.Null,
+    'prove' : IDL.Null,
+    'cooldown' : Cooldown,
   });
   const Time = IDL.Int;
   const TokenIdentifierBlob__1 = IDL.Vec(IDL.Nat8);
@@ -55,11 +55,13 @@ export const idlFactory = ({ IDL }) => {
     'socket' : IDL.Record({
       'created' : Timestamp,
       'socket' : TokenIdentifierBlob,
+      'memo' : Memo,
       'plug' : TokenIdentifierBlob,
     }),
     'unsocket' : IDL.Record({
       'created' : Timestamp,
       'socket' : TokenIdentifierBlob,
+      'memo' : Memo,
       'plug' : TokenIdentifierBlob,
     }),
     'burn' : IDL.Record({

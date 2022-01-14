@@ -19,6 +19,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__1 = IDL.Nat64;
+  const Oracle = IDL.Record({ 'cycle_to_pwr' : IDL.Float64 });
   const User = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
@@ -54,7 +55,7 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Text,
   });
   const TokenIdentifier__1 = IDL.Text;
-  const Memo = IDL.Nat64;
+  const Memo = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
   const TransferRequest = IDL.Record({
     'to' : User,
@@ -84,6 +85,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance__1))],
         ['query'],
       ),
+    'oracle_set' : IDL.Func([Oracle], [], []),
     'purchase_claim' : IDL.Func(
         [PurchaseClaimRequest],
         [PurchaseClaimResponse],

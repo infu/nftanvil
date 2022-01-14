@@ -120,14 +120,33 @@ const HistoryEvent = ({ ev, canister, idx }) => {
           val = JSON.stringify(val);
         }
 
+        if (key === "memo") {
+          val = toHexString(val);
+        }
+
         if (key === "marketplace" || key === "affiliate" || key === "author") {
           if (!val || val.length === 0) return null;
-          val = JSON.stringify(val);
+          return (
+            <>
+              <KeyVal
+                key={idx + "share"}
+                k={key + " share"}
+                v={val.share / 100 + "%"}
+              />
+              <KeyVal
+                key={idx + "addr"}
+                k={key + " address"}
+                v={AccountIdentifier.ArrayToText(val.address)}
+              />
+            </>
+          );
         }
 
         if (key === "spender") {
           val = Principal.fromUint8Array(val._arr).toText();
         }
+
+        if (key === "amount") val = val.e8s;
 
         return <KeyVal key={idx} k={key} v={val} />;
       })}

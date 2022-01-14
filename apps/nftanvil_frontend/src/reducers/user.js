@@ -4,6 +4,8 @@ import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { ledger } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 import Cookies from "js-cookie";
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
+import { treasuryCanister } from "@vvv-interactive/nftanvil-canisters/cjs/treasury.js";
+import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
 
 import authentication from "../auth";
 
@@ -23,6 +25,7 @@ export const userSlice = createSlice({
     anonymous: true,
 
     icp: "0",
+    pwr: "0",
     map: { acclist: [] },
     acccan: "",
 
@@ -34,6 +37,10 @@ export const userSlice = createSlice({
     icpSet: (state, action) => {
       return { ...state, icp: action.payload };
     },
+    pwrSet: (state, action) => {
+      return { ...state, pwr: action.payload };
+    },
+
     proSet: (state, action) => {
       return {
         ...state,
@@ -50,7 +57,7 @@ export const userSlice = createSlice({
         ...(map ? { map, acccan } : {}),
       };
     },
-    setNftSotrageModal: (state, action) => {
+    setNftStorageModal: (state, action) => {
       return {
         ...state,
         modal_nftstorage: action.payload,
@@ -69,10 +76,10 @@ export const userSlice = createSlice({
 export const {
   proSet,
   authSet,
-
   icpSet,
-  setNftSotrageModal,
+  setNftStorageModal,
   setNftSotrageKey,
+  pwrSet,
 } = userSlice.actions;
 
 export const login = () => (dispatch) => {
@@ -121,6 +128,11 @@ export const auth =
       : null;
 
     dispatch(authSet({ address, principal, anonymous, map, acccan }));
+    if (!anonymous) {
+      dispatch(refresh_icp_balance());
+      dispatch(refresh_pwr_balance());
+      dispatch(claim_treasury_balance());
+    }
   };
 
 export const loadNftStorageKey = () => async (dispatch, getState) => {
@@ -148,6 +160,95 @@ export const logout = () => async (dispatch, getState) => {
   dispatch(authSet({ address: null, principal, anonymous }));
 };
 
+export const refresh_icp_balance = () => async (dispatch, getState) => {
+  let identity = authentication.client.getIdentity();
+
+  let s = getState();
+
+  let address = s.user.address;
+
+  let ledger = ledgerCanister({
+    agentOptions: { identity },
+  });
+
+  await ledger
+    .account_balance({
+      account: AccountIdentifier.TextToArray(address),
+    })
+    .then((icp) => {
+      let e8s = icp.e8s;
+      dispatch(icpSet(e8s.toString()));
+    })
+    .catch((e) => {
+      if (process.env.NODE_ENV === "production") console.log(e); // Will always show bug in dev mode because there is ledger canister on the local replica
+    });
+};
+
+export const refresh_pwr_balance = () => async (dispatch, getState) => {
+  let identity = authentication.client.getIdentity();
+
+  let s = getState();
+
+  let address = s.user.address;
+
+  let pwr = pwrCanister(s.user.map.pwr, {
+    agentOptions: { identity },
+  });
+
+  await pwr
+    .balance({
+      user: { address: AccountIdentifier.TextToArray(address) },
+    })
+    .then((bal) => {
+      dispatch(pwrSet(bal.toString()));
+    });
+};
+
+export const claim_treasury_balance = () => async (dispatch, getState) => {
+  let identity = authentication.client.getIdentity();
+
+  let s = getState();
+
+  let address = AccountIdentifier.TextToArray(s.user.address);
+  let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+
+  let treasury = treasuryCanister(s.user.map.treasury, {
+    agentOptions: { identity },
+  });
+
+  let icp = await treasury.balance({
+    user: { address },
+    subaccount,
+  });
+
+  console.log("TREASURY balance response", icp);
+
+  if (icp > 10000n) {
+    let bal = await treasury.withdraw({
+      user: { address },
+      subaccount,
+    });
+
+    console.log("TREASURY Withdraw response", bal);
+
+    if (bal.ok) {
+      let msg = `${AccountIdentifier.e8sToIcp(bal.ok)} ICP recieved`;
+      let toastId = toast(msg, {
+        isLoading: false,
+        type: toast.TYPE.SUCCESS,
+        position: "bottom-right",
+        autoClose: true,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+      });
+
+      dispatch(refresh_icp_balance());
+    }
+  }
+};
+
 export const transfer_icp =
   ({ to, amount }) =>
   async (dispatch, getState) => {
@@ -169,7 +270,9 @@ export const transfer_icp =
       created_at_time: [],
     });
 
-    console.log("TREZ", trez);
+    dispatch(refresh_icp_balance());
+
+    return trez;
   };
 
 export default userSlice.reducer;

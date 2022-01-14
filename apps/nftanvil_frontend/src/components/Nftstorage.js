@@ -1,5 +1,5 @@
 import React from "react";
-import { saveNftStorageKey, setNftSotrageModal } from "../reducers/user";
+import { saveNftStorageKey, setNftStorageModal } from "../reducers/user";
 import { useSelector, useDispatch } from "react-redux";
 import logo from "../assets/logo-nft.storage.svg";
 
@@ -32,7 +32,7 @@ export const Nftstorage = () => {
       initialFocusRef={initialRef}
       isOpen={open !== false}
       onClose={() => {
-        dispatch(setNftSotrageModal(false));
+        dispatch(setNftStorageModal(false));
       }}
     >
       <ModalOverlay />
@@ -88,7 +88,7 @@ function NftstorageForm({ currentKey }) {
       initialValues={{ key: currentKey }}
       onSubmit={(values, actions) => {
         dispatch(saveNftStorageKey(values.key));
-        dispatch(setNftSotrageModal(false));
+        dispatch(setNftStorageModal(false));
       }}
     >
       {(props) => (

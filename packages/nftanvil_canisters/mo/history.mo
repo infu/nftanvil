@@ -56,10 +56,13 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         
         let index = _nextEvent;
         
-        let previousTransactionHash : [Nat8] =  switch(_events.get(index - 1)) {
-            case (?x) Blob.toArray(x.hash);
-            case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
-        };
+        let previousTransactionHash : [Nat8] = switch(index > 0) {
+            case (true) switch(_events.get(index - 1)) {
+                case (?x) Blob.toArray(x.hash);
+                case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
+            };
+            case (false) [];
+            };
 
         // Debug.print(debug_show(previousTransactionHash));
 

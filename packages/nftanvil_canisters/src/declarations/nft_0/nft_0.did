@@ -51,6 +51,7 @@ type UnsocketResponse =
  };
 type UnsocketRequest = 
  record {
+   memo: Memo;
    plug: TokenIdentifier;
    socket: TokenIdentifier;
    subaccount: opt SubAccount;
@@ -285,11 +286,13 @@ type PlugResponse =
  };
 type PlugRequest = 
  record {
+   memo: Memo;
    plug: TokenIdentifier;
    socket: TokenIdentifier;
    subaccount: opt SubAccount;
    user: User;
  };
+type Oracle = record {cycle_to_pwr: float64;};
 type MintResponse = 
  variant {
    err:
@@ -367,14 +370,12 @@ type Metadata =
    thumb: Content;
    transfer: ItemTransfer;
  };
-type Memo = nat64;
+type Memo = blob;
 type ItemUse = 
  variant {
-   consumable: record {useId: CustomId;};
-   cooldown: record {
-               duration: Cooldown;
-               useId: CustomId;
-             };
+   consume;
+   cooldown: Cooldown;
+   prove;
  };
 type ItemTransfer = 
  variant {
@@ -402,7 +403,6 @@ type FetchChunkRequest =
    tokenIndex: TokenIndex;
  };
 type DomainName = text;
-type CustomId = nat64;
 type CustomData = blob;
 type Cooldown = nat32;
 type ContentType = text;
@@ -451,7 +451,9 @@ type Class =
    http_request: (Request) -> (Response) query;
    http_request_streaming_callback: (Token) -> (Callback) query;
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
-   mintNFT: (MintRequest) -> (MintResponse);
+   mint: (MintRequest) -> (MintResponse);
+   mint_quote: (MetadataInput) -> (nat64);
+   oracle_set: (Oracle) -> ();
    plug: (PlugRequest) -> (PlugResponse);
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);

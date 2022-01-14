@@ -37,7 +37,7 @@ export const idlFactory = ({ IDL }) => {
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
   });
-  const Memo = IDL.Nat64;
+  const Memo = IDL.Vec(IDL.Nat8);
   const SubAccount = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
   const TransferRequest = IDL.Record({

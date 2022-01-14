@@ -47,12 +47,21 @@ for (let name in dfx.canisters) {
 
 for (let { name, slot } of postproc) {
   dfxd += config_set(name, slot);
+  dfxd += oracle_set(name);
 }
 
 function config_set(name, slot) {
   return `dfx canister --wallet=$(dfx identity ${network_target} get-wallet) ${network_target} call ${name} config_set ${config(
     { slot }
   )} & \n`;
+}
+
+function oracle_set(name) {
+  return `dfx canister --wallet=$(dfx identity ${network_target} get-wallet) ${network_target} call ${name} oracle_set ${oracle()} & \n`;
+}
+
+function oracle() {
+  return `'(record {cycle_to_pwr = 0.000003703703703704})'`;
 }
 
 function config({ slot }) {

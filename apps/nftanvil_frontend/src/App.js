@@ -187,14 +187,18 @@ function ICP({ mobile }) {
       draggable: false,
     });
     try {
-      await dispatch(transfer_icp({ to, amount }));
+      let r = await dispatch(transfer_icp({ to, amount }));
+      if ("Err" in r) throw r["Err"];
 
       toast.update(toastId, {
         type: toast.TYPE.SUCCESS,
         isLoading: false,
         render: (
           <div>
-            <div>Transfer successfull.</div>
+            <div>
+              Transfer of {AccountIdentifier.e8sToIcp(amount)} ICP successfull.
+            </div>
+            <div>Block height: {r["Ok"]}</div>
           </div>
         ),
         autoClose: 9000,
@@ -210,7 +214,7 @@ function ICP({ mobile }) {
         render: (
           <div>
             <div>Transfer failed.</div>
-            <div style={{ fontSize: "10px" }}>{e.message}</div>
+            <div style={{ fontSize: "10px" }}>{e}</div>
           </div>
         ),
       });
@@ -264,6 +268,8 @@ function LoginBox() {
     state.user.address ? state.user.address.toLowerCase() : null
   );
   const principal = useSelector((state) => state.user.principal);
+  const pwr = useSelector((state) => state.user.pwr);
+
   const pro = useSelector((state) => state.user.pro);
 
   const anonymous = useSelector((state) => state.user.anonymous);
@@ -298,7 +304,7 @@ function LoginBox() {
             <ICP mobile={false} />
             <Tooltip hasArrow label="PWR tokens used for minting">
               <Button>
-                0
+                {AccountIdentifier.e8sToIcp(pwr)}
                 <img
                   src={blueflame}
                   style={{ marginLeft: "4px", width: "13px", height: "13px" }}

@@ -20,7 +20,7 @@ import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { Principal } from "@dfinity/principal";
 
 import { push } from "connected-react-router";
-import { setNftSotrageModal } from "./user";
+import { setNftStorageModal } from "./user";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TokenIdentifier from "@vvv-interactive/nftanvil-tools/cjs/tokenidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
@@ -290,7 +290,7 @@ export const transfer =
       to: { address: AccountIdentifier.TextToArray(toAddress) },
       token: id,
       amount: 1,
-      memo: 0,
+      memo: [],
       subaccount: [],
     });
     if (!t.ok) throw t.err;
@@ -315,6 +315,7 @@ export const plug =
       subaccount,
       plug: plug_id,
       socket: socket_id,
+      memo: [],
     });
     if (!t.ok) throw t.err;
     return t.ok;
@@ -338,6 +339,7 @@ export const unsocket =
       subaccount,
       plug: plug_id,
       socket: socket_id,
+      memo: [],
     });
     if (!t.ok) throw t.err;
     return t.ok;
@@ -360,7 +362,7 @@ export const burn =
       user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
       amount: 1,
-      memo: 0,
+      memo: [],
       subaccount,
     });
     if (rez.err) throw rez.err;
@@ -391,7 +393,7 @@ export const approve =
   };
 
 export const use =
-  ({ id }) =>
+  ({ id, use, memo }) =>
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
 
@@ -403,11 +405,12 @@ export const use =
     let address = s.user.address;
     let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
+    console.log("use");
     let r = await nftcan.use({
       user: { address: AccountIdentifier.TextToArray(address) },
       token: id,
-      memo: 0,
-      use: { cooldown: { duration: 2, useId: 15 } },
+      memo,
+      use,
       subaccount,
     });
 
@@ -516,6 +519,23 @@ export const nftEnterCode = (code) => async (dispatch, getState) => {
   dispatch(push("/nft/" + id + "/" + code));
 };
 
+export const mint_quote = (vals) => async (dispatch, getState) => {
+  let s = getState();
+
+  let identity = authentication.client.getIdentity();
+
+  let available = await router.getAvailable();
+  let canisterId = Principal.fromText(
+    available[Math.floor(Math.random() * available.length)]
+  );
+
+  let nft = nftCanister(canisterId, { agentOptions: { identity } });
+
+  let pwr = await nft.mint_quote(vals);
+  console.log("quote", vals, pwr);
+  return pwr;
+};
+
 export const mint = (vals) => async (dispatch, getState) => {
   let s = getState();
   const key_nftstorage = s.user.key_nftstorage;
@@ -535,7 +555,7 @@ export const mint = (vals) => async (dispatch, getState) => {
     (vals?.content[0]?.ipfs?.url || vals?.thumb?.ipfs?.url) &&
     !key_nftstorage?.length
   ) {
-    dispatch(setNftSotrageModal(true));
+    dispatch(setNftStorageModal(true));
     return;
   }
 
@@ -557,8 +577,6 @@ export const mint = (vals) => async (dispatch, getState) => {
 
     vals.thumb.ipfs.cid = await uploadIPFS(key_nftstorage, vals.thumb.ipfs.url);
   }
-
-  //  console.log("VALS", vals);
 
   let available = await router.getAvailable();
   let canisterId = Principal.fromText(
@@ -583,7 +601,8 @@ export const mint = (vals) => async (dispatch, getState) => {
       ),
     });
 
-    let mint = await nft.mintNFT({
+    console.log("mint vals", vals);
+    let mint = await nft.mint({
       to: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
       metadata: vals,
@@ -592,12 +611,15 @@ export const mint = (vals) => async (dispatch, getState) => {
     if (mint?.err?.InsufficientBalance === null) {
       throw Error("Insufficient Balance");
     }
+
     if (!("ok" in mint)) throw Error(JSON.stringify(mint.err));
 
     let { tokenIndex, transactionId } = mint.ok;
     let tid = encodeTokenId(canisterId.toText(), tokenIndex);
+
     //console.log("Transaction ID", transactionId);
     // Upload Internal
+
     if (vals?.content[0]?.internal?.url) {
       toast.update(toastId, {
         render: "Uploading content...",

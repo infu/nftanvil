@@ -133,7 +133,12 @@ module {
         // Balance refers to an amount of a particular token.
         public type Balance = Nat64;
 
-        public type Memo = Nat64;
+        public type Memo = Blob;
+        public module Memo = {
+            public func validate(m : Memo) : Bool {
+                 (m.size() <= 32)
+            };
+        };
 
         public type TokenIdentifier = Text;
         public type TokenIdentifierBlob = Blob;
@@ -235,7 +240,9 @@ module {
         bearer  : query (token :  TokenIdentifier) -> async BearerResponse;
 
         // (PWR) Mints a new NFT
-        mintNFT : shared (request :  MintRequest) -> async  MintResponse;
+        mint : shared (request :  MintRequest) -> async  MintResponse;
+
+        mint_quote : shared (request : MetadataInput) -> async Nat64;
 
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
         allowance : query (request : Allowance.Request) -> async Allowance.Response;
@@ -480,26 +487,22 @@ module {
     };
 
     public type ItemUse = {
-        #cooldown: {
-            //desc: EffectDesc;
-            duration: Cooldown;
-            useId: CustomId;
-        };
-
-        #consumable : {
-           // desc: EffectDesc;
-            useId: CustomId;
-        };
+        #cooldown: Cooldown;
+        #consume;
+        #prove;
     };
 
 
     public module ItemUse = {
         public func validate(t : ItemUse) : Bool {
             switch(t) {
-                case (#cooldown({duration; useId})) {
+                case (#cooldown(duration)) {
                     Cooldown.validate( duration )
                 };
-                case (#consumable({useId})) {
+                case (#consume) {
+                    true
+                };
+                case (#prove) {
                     true
                 }
             }
@@ -508,15 +511,20 @@ module {
         public func hash (e: ItemUse) : [Nat8] {
             Array.flatten<Nat8>(
                 switch(e) {
-                    case (#cooldown({duration; useId})) {
+                    case (#cooldown(duration)) {
                         [
-                        Blob_.nat32ToBytes(duration),
-                        Blob_.nat64ToBytes(useId)
+                        [1:Nat8],
+                        Blob_.nat32ToBytes(duration)
                         ]
                     };
-                    case (#consumable({useId})) {
+                    case (#consume) {
                         [
-                        Blob_.nat64ToBytes(useId)
+                        [2:Nat8]
+                        ]
+                    };
+                    case (#prove) {
+                        [
+                        [3:Nat8]
                         ]
                     }
                 })
@@ -696,7 +704,7 @@ module {
     };
 
     public module Pricing = {
-        public let MAX_QUALITY_PRICE : Nat64 = 2000000; // max quality price per min
+        public let QUALITY_PRICE : Nat64 = 2; // max quality price per min
         public let STORAGE_KB_PER_MIN : Nat64 = 8; // prices are in cycles
         public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
         public let FULLY_CHARGED_MINUTES : Nat64 = 8409600; //(16 * 365 * 24 * 60) 16 years
@@ -710,7 +718,7 @@ module {
             t <= 6; // Poor, Common, Uncommon, Rare, Epic, Legendary, Artifact
         };
         public func price(t: Quality) : Nat64 {
-            Nat64.fromNat(Nat8.toNat(t)) * Pricing.MAX_QUALITY_PRICE
+            Nat64.fromNat(Nat8.toNat(t)) * Pricing.QUALITY_PRICE
         }
     };
 
@@ -804,6 +812,7 @@ module {
         subaccount : ?SubAccount;
         socket : TokenIdentifier;
         plug   : TokenIdentifier;
+        memo   : Memo;
     };
 
     public type PlugResponse = Result.Result<
@@ -844,6 +853,7 @@ module {
         subaccount : ?SubAccount;
         socket : TokenIdentifier;
         plug   : TokenIdentifier;
+        memo   : Memo;
     };
 
     public type UnsocketResponse = Result.Result<

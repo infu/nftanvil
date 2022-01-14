@@ -1,10 +1,10 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 
 // Imports and re-exports candid interface
-import { idlFactory } from "./declarations/pwr/pwr.did.js";
-export { idlFactory } from "./declarations/pwr/pwr.did.js";
+import { idlFactory } from "./declarations/treasury/treasury.did.js";
+export { idlFactory } from "./declarations/treasury/treasury.did.js";
 
-export const pwrCanister = (canisterId, options) => {
+export const treasuryCanister = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
 
   // Fetch root key for certificate validation during development

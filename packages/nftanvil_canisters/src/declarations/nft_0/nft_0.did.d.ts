@@ -53,7 +53,9 @@ export interface Class {
   'http_request' : (arg_0: Request) => Promise<Response>,
   'http_request_streaming_callback' : (arg_0: Token) => Promise<Callback>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
-  'mintNFT' : (arg_0: MintRequest) => Promise<MintResponse>,
+  'mint' : (arg_0: MintRequest) => Promise<MintResponse>,
+  'mint_quote' : (arg_0: MetadataInput) => Promise<bigint>,
+  'oracle_set' : (arg_0: Oracle) => Promise<undefined>,
   'plug' : (arg_0: PlugRequest) => Promise<PlugResponse>,
   'purchase_claim' : (arg_0: PurchaseClaimRequest) => Promise<
       PurchaseClaimResponse
@@ -97,7 +99,6 @@ export type Content = {
 export type ContentType = string;
 export type Cooldown = number;
 export type CustomData = Array<number>;
-export type CustomId = bigint;
 export type DomainName = string;
 export interface FetchChunkRequest {
   'tokenIndex' : TokenIndex,
@@ -114,9 +115,10 @@ export type ItemName = string;
 export type ItemTransfer = { 'unrestricted' : null } |
   { 'bindsForever' : null } |
   { 'bindsDuration' : number };
-export type ItemUse = { 'consumable' : { 'useId' : CustomId } } |
-  { 'cooldown' : { 'duration' : Cooldown, 'useId' : CustomId } };
-export type Memo = bigint;
+export type ItemUse = { 'consume' : null } |
+  { 'prove' : null } |
+  { 'cooldown' : Cooldown };
+export type Memo = Array<number>;
 export interface Metadata {
   'thumb' : Content,
   'created' : number,
@@ -183,8 +185,10 @@ export type MintResponse = {
       { 'ClassError' : string } |
       { 'OutOfMemory' : null }
   };
+export interface Oracle { 'cycle_to_pwr' : number }
 export interface PlugRequest {
   'socket' : TokenIdentifier,
+  'memo' : Memo,
   'plug' : TokenIdentifier,
   'user' : User,
   'subaccount' : [] | [SubAccount],
@@ -352,6 +356,7 @@ export type UnplugResponse = { 'ok' : null } |
   { 'err' : UnplugError };
 export interface UnsocketRequest {
   'socket' : TokenIdentifier,
+  'memo' : Memo,
   'plug' : TokenIdentifier,
   'user' : User,
   'subaccount' : [] | [SubAccount],

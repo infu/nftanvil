@@ -49,8 +49,8 @@ module {
 
     public module Oracle = {
         public func default() : Oracle {
-            { 
-                cycle_to_pwr = 0.123
+            {                  
+                cycle_to_pwr = 0.000000000000037037;
             }
         };
         public func cycle_to_pwr(oracle:Oracle, cycles:Nat64) : Nat64 {

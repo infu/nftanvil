@@ -64,7 +64,7 @@ Result.assertErr(await nft.balance({ user  = user_john; token = token_one;}));
 
 
 // mint token with index 0
-assert((await nft.mintNFT({to = user_john; subaccount=null; metadata = {
+assert((await nft.mint({to = user_john; subaccount=null; metadata = {
             name = ?"Some";
             lore = ?"Other";
             quality= 1;
@@ -83,7 +83,7 @@ assert((await nft.mintNFT({to = user_john; subaccount=null; metadata = {
             ) == #ok(0));
 
 // mint token with index 1
-assert((await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
+assert((await nft.mint({to = user_john; subaccount=null;  metadata = {
             name = ?"Some";
             lore = ?"Other";
             quality= 1;
@@ -103,7 +103,7 @@ assert((await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
 
 
 // mint token with index 2 to peter
-switch(await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
+switch(await nft.mint({to = user_john; subaccount=null;  metadata = {
             name = ?"Some";
             lore = ?"Other";
             quality= 1;
@@ -125,7 +125,7 @@ switch(await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
 };
 
 // mint token for burning later
-assert((await nft.mintNFT({to = user_john; subaccount=null;  metadata = {
+assert((await nft.mint({to = user_john; subaccount=null;  metadata = {
             classId=null;
 
             name = ?"Some";
@@ -322,7 +322,7 @@ assert(stats.burned == 1);
 assert( (await nft.bearer(token_for_burning)) == #err(#InvalidToken(token_for_burning)) );
 
 
-// -- Batch mintNFT 
+// -- Batch mint 
 // func iterate<A>(
 //     xs : Iter.Iter<A>,
 //     f : (A, Nat) -> ()
@@ -357,9 +357,9 @@ assert( (await nft.bearer(token_for_burning)) == #err(#InvalidToken(token_for_bu
 
 // let batch = Array_.amap<Nft.NonFungible.MintRequest>(50, func(x) { {to = user_john; author = author_one; metadata = someMeta; TTL = null}  });
 
-// let minted = await nft.mintNFT_batch(batch);
-// ignore await nft.mintNFT_batch(batch);
-// ignore await nft.mintNFT_batch(batch);
+// let minted = await nft.mint_batch(batch);
+// ignore await nft.mint_batch(batch);
+// ignore await nft.mint_batch(batch);
 
 Debug.print(debug_show( (await nft.stats()) ));
 Debug.print("DONE TOKEN BASICS");

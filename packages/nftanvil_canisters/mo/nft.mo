@@ -136,7 +136,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func burn(request : Nft.BurnRequest) : async Nft.BurnResponse {
 
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
-        
+        if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
+
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
         if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
@@ -255,7 +256,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                                                     resetTransferBindings(meta, vars);
                                                     
-                                                    let transactionId = await Cluster.history(_conf).add(#nft(#transaction({created=Time.now();token = Nft.TokenIdentifier.toBlob(tokenId(tokenIndex)); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=0})));
+                                                    let transactionId = await Cluster.history(_conf).add(#nft(#transaction({created=Time.now();token = Nft.TokenIdentifier.toBlob(tokenId(tokenIndex)); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
 
                                                     return #ok({transactionId});
                                             };
@@ -283,6 +284,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);
         _conf := conf
+    };
+
+    public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {
+        assert(caller == _installer);
+        _oracle := oracle
     };
 
     // Get accountid and exact ICP amount
@@ -506,6 +512,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func transfer(request : TransferRequest) : async TransferResponse {
 
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
+        if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
         if (Nft.User.validate(request.from) == false) return #err(#Other("Invalid from"));
         if (Nft.User.validate(request.to) == false) return #err(#Other("Invalid to"));
@@ -558,10 +565,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func use(request : Nft.UseRequest) : async Nft.UseResponse {
 
         if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
-        switch (balRequireOwner(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user)) {
+        switch (balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
@@ -570,7 +578,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                 let aid = Nft.User.toAccountIdentifier(holder);
 
                                 switch(request.use) {
-                                    case (#cooldown({duration; useId})) {
+                                    case (#cooldown(duration)) {
                                         let isOnCooldown = switch(vars.cooldownUntil) {
                                             case (?a) timeInMinutes() <= a;
                                             case (null) false;
@@ -579,11 +587,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                         
                                         vars.cooldownUntil := ?(timeInMinutes() + duration);
                                     };
-                                    case(#consumable({useId})) {
+                                    case(#consume) {
                                         // Consumable USE save to History
 
                                         SNFT_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
                                         await ACC_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
+                                    };
+                                    case(#prove) {
+                   
                                     };
                                 };
 
@@ -887,6 +898,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
 
+
     private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
         let receiver = Nft.User.toAccountIdentifier(request.to);
@@ -1001,9 +1013,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     };
 
+    public func mint_quote(request: Nft.MetadataInput) : async Nat64 {
+        let mintPricePwr:Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.price(request));
+        return mintPricePwr;
+    };
 
-
-    public shared({caller}) func mintNFT(request: Nft.MintRequest) : async Nft.MintResponse {
+    public shared({caller}) func mint(request: Nft.MintRequest) : async Nft.MintResponse {
 
         let author:AccountIdentifier = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
 
@@ -1071,7 +1086,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     // Calls func socket on the target token
     public shared({caller}) func plug(request: Nft.PlugRequest) : async Nft.PlugResponse {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
- 
+         if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
+
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.plug; user = request.user}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
@@ -1088,7 +1104,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                             SNFT_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
                                             await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
 
-                                            let transactionId = await Cluster.history(_conf).add(#nft(#socket({created=Time.now();plug = Nft.TokenIdentifier.toBlob(request.plug); socket=Nft.TokenIdentifier.toBlob(request.socket)})));
+                                            let transactionId = await Cluster.history(_conf).add(#nft(#socket({created=Time.now();plug = Nft.TokenIdentifier.toBlob(request.plug); socket=Nft.TokenIdentifier.toBlob(request.socket); memo=request.memo})));
 
                                             #ok({transactionId});
                                         };
@@ -1175,6 +1191,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func unsocket(request: Nft.UnsocketRequest) : async Nft.UnsocketResponse {
 
         if (Nft.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
+        if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
+
         let plugBlob = Nft.TokenIdentifier.toBlob(request.plug);
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
@@ -1197,7 +1215,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                                     tid != plugBlob
                                                 });
 
-                                                let transactionId =  await Cluster.history(_conf).add(#nft(#unsocket({created=Time.now();plug = Nft.TokenIdentifier.toBlob(request.plug); socket=Nft.TokenIdentifier.toBlob(request.socket)})));
+                                                let transactionId =  await Cluster.history(_conf).add(#nft(#unsocket({created=Time.now();plug = Nft.TokenIdentifier.toBlob(request.plug); socket=Nft.TokenIdentifier.toBlob(request.socket); memo = request.memo})));
 
                                                 #ok({transactionId});
                                             };

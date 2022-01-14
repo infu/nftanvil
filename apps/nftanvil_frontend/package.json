@@ -47,7 +47,6 @@
   "proxy": "http://localhost:8000",
   "scripts": {
     "start": "node dfx.env.js && react-scripts start",
-    "startx": "react-scripts start --max_old_space_size=4096",
     "build": "node dfx.env.js && react-scripts build",
     "deploy": "dfx deploy --network ic frontend"
   },

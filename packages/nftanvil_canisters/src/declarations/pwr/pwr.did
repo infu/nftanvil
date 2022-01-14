@@ -64,7 +64,8 @@ type PurchaseClaimRequest =
    subaccount: opt SubAccount;
    user: User;
  };
-type Memo = nat64;
+type Oracle = record {cycle_to_pwr: float64;};
+type Memo = blob;
 type ICP = record {e8s: nat64;};
 type Config = 
  record {
@@ -86,6 +87,7 @@ type Class =
                               AccountIdentifier__2;
                               Balance__1;
                             }) query;
+   oracle_set: (Oracle) -> ();
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
    tokenId: () -> (TokenIdentifier__1) query;

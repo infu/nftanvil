@@ -139,12 +139,14 @@ module {
             created: Timestamp;
             socket : TokenIdentifierBlob;
             plug   : TokenIdentifierBlob;
+            memo: Memo;
         };
 
         #unsocket : {
             created: Timestamp;
             socket : TokenIdentifierBlob;
             plug   : TokenIdentifierBlob;
+            memo: Memo;
         };
 
     };
@@ -159,7 +161,7 @@ module {
                         Blob.toArray(to),
                         Blob.toArray(token),
                         Blob_.nat64ToBytes(amount),
-                        Blob_.nat64ToBytes(memo)
+                        Blob.toArray(memo)
                     ])
                 };
              }
@@ -176,7 +178,7 @@ module {
                         Blob.toArray(to),
                         Blob.toArray(token),
                         Blob_.nat64ToBytes(amount),
-                        Blob_.nat64ToBytes(memo)
+                        Blob.toArray(memo)
                     ])
                 };
              }
@@ -193,7 +195,7 @@ module {
                         Blob.toArray(from),
                         Blob.toArray(to),
                         Blob.toArray(token),
-                        Blob_.nat64ToBytes(memo)
+                        Blob.toArray(memo)
                     ])
                 };
                 case (#burn({created;user;token;memo})) {
@@ -202,7 +204,7 @@ module {
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
                         Blob.toArray(token),
-                        Blob_.nat64ToBytes(memo)
+                        Blob.toArray(memo)
                     ])
                 };
                 case (#use({created;user;token;use;memo})) { 
@@ -212,7 +214,7 @@ module {
                         Blob.toArray(user),
                         Blob.toArray(token),
                         Nft.ItemUse.hash(use),
-                        Blob_.nat64ToBytes(memo)
+                        Blob.toArray(memo)
                     ])
                 };
                 case (#mint({created;token;})) { // todo add use
@@ -222,34 +224,36 @@ module {
                         Blob.toArray(token),
                     ])
                 };
-                case (#approve({created;spender;user;token})) {
-                    Array.flatten<Nat8>([
-                        [3:Nat8],
-                        Blob_.intToBytes(created),
-                        Blob.toArray(user),
-                        Blob.toArray(Principal.toBlob(spender)),
-                        Blob.toArray(token)
-                    ])
-                };
-                case (#socket({created;socket; plug})) {
+                case (#socket({created;socket; plug; memo})) {
                     Array.flatten<Nat8>([
                         [7:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(socket),
-                        Blob.toArray(plug)
+                        Blob.toArray(plug),
+                        Blob.toArray(memo)
                     ])
                 };
-                case (#unsocket({created;socket; plug})) {
+                case (#unsocket({created;socket; plug; memo})) {
                     Array.flatten<Nat8>([
                         [8:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(socket),
-                        Blob.toArray(plug)
+                        Blob.toArray(plug),
+                        Blob.toArray(memo)
                     ])
                 };
                 case (#purchase(a)) {
                     // 9
                     Treasury.NFTPurchase.hash(a)
+                };
+                case (#approve({created;spender;user;token})) {
+                    Array.flatten<Nat8>([
+                        [10:Nat8],
+                        Blob_.intToBytes(created),
+                        Blob.toArray(user),
+                        Blob.toArray(Principal.toBlob(spender)),
+                        Blob.toArray(token)
+                    ])
                 };
             
             }

@@ -21,6 +21,7 @@ import Cluster  "./type/Cluster";
 shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   private stable var _conf : Cluster.Config = Cluster.Config.default();
+  private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
 
   public type Balance = Nft.Balance;
   public type AccountIdentifier = Nft.AccountIdentifier;
@@ -47,6 +48,12 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       assert(caller == _installer);
       _conf := conf
   };
+
+  public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {
+        assert(caller == _installer);
+        _oracle := oracle
+  };
+
 
   public query func dumpBalances() : async [(AccountIdentifier, Balance)] {
      Iter.toArray(_balance.entries());

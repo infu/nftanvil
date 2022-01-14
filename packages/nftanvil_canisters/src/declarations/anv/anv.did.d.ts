@@ -38,7 +38,7 @@ export interface Config {
   'router' : Principal,
   'treasury' : Principal,
 }
-export type Memo = bigint;
+export type Memo = Array<number>;
 export type SubAccount = Array<number>;
 export type TokenIdentifier = string;
 export type TransactionAmount = bigint;

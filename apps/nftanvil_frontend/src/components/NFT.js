@@ -385,10 +385,12 @@ function ApproveButton({ id, meta }) {
           <ModalHeader>Approve</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            This will allow a target principal to transfer, socket, unsocket and
-            use this NFT. Setting spender clears previous one.
+            <Text mb={2}>
+              This will allow a principal to transfer, socket, unsocket and use
+              this NFT. Setting one clears the previous.
+            </Text>
             <FormControl>
-              <FormLabel>Spender principal</FormLabel>
+              <FormLabel>Principal</FormLabel>
               <Input ref={initialRef} placeholder="aaaaa-aa..." />
             </FormControl>
           </ModalBody>
@@ -596,7 +598,9 @@ export const UseButton = ({ id, meta }) => {
     });
 
     try {
-      let { transactionId } = await dispatch(use({ id }));
+      let useData = { cooldown: 2 };
+      let memo = [12, 10, 5, 0, 0, 1, 7];
+      let { transactionId } = await dispatch(use({ id, use: useData, memo }));
 
       toast.update(toastId, {
         type: toast.TYPE.SUCCESS,

@@ -41,7 +41,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : AccountIdentifier,
     'err' : CommonError,
   });
-  const Memo = IDL.Nat64;
+  const Memo = IDL.Vec(IDL.Nat8);
   const BurnRequest = IDL.Record({
     'token' : TokenIdentifier,
     'memo' : Memo,
@@ -225,8 +225,10 @@ export const idlFactory = ({ IDL }) => {
       'OutOfMemory' : IDL.Null,
     }),
   });
+  const Oracle = IDL.Record({ 'cycle_to_pwr' : IDL.Float64 });
   const PlugRequest = IDL.Record({
     'socket' : TokenIdentifier,
+    'memo' : Memo,
     'plug' : TokenIdentifier,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
@@ -352,6 +354,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const UnsocketRequest = IDL.Record({
     'socket' : TokenIdentifier,
+    'memo' : Memo,
     'plug' : TokenIdentifier,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
@@ -383,11 +386,11 @@ export const idlFactory = ({ IDL }) => {
     'chunkIdx' : IDL.Nat32,
     'position' : IDL.Variant({ 'thumb' : IDL.Null, 'content' : IDL.Null }),
   });
-  const CustomId = IDL.Nat64;
   const Cooldown = IDL.Nat32;
   const ItemUse = IDL.Variant({
-    'consumable' : IDL.Record({ 'useId' : CustomId }),
-    'cooldown' : IDL.Record({ 'duration' : Cooldown, 'useId' : CustomId }),
+    'consume' : IDL.Null,
+    'prove' : IDL.Null,
+    'cooldown' : Cooldown,
   });
   const UseRequest = IDL.Record({
     'use' : ItemUse,
@@ -430,7 +433,9 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
-    'mintNFT' : IDL.Func([MintRequest], [MintResponse], []),
+    'mint' : IDL.Func([MintRequest], [MintResponse], []),
+    'mint_quote' : IDL.Func([MetadataInput], [IDL.Nat64], []),
+    'oracle_set' : IDL.Func([Oracle], [], []),
     'plug' : IDL.Func([PlugRequest], [PlugResponse], []),
     'purchase_claim' : IDL.Func(
         [PurchaseClaimRequest],

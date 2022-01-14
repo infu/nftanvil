@@ -32,7 +32,7 @@ type TransactionFrom = blob;
 type TransactionAmount = nat64;
 type TokenIdentifier = text;
 type SubAccount = blob;
-type Memo = nat64;
+type Memo = blob;
 type Config = 
  record {
    account: vec principal;

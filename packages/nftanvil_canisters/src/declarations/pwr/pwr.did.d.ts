@@ -11,6 +11,7 @@ export interface Class {
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
   'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__1]>>,
+  'oracle_set' : (arg_0: Oracle) => Promise<undefined>,
   'purchase_claim' : (arg_0: PurchaseClaimRequest) => Promise<
       PurchaseClaimResponse
     >,
@@ -32,7 +33,8 @@ export interface Config {
   'treasury' : Principal,
 }
 export interface ICP { 'e8s' : bigint }
-export type Memo = bigint;
+export type Memo = Array<number>;
+export interface Oracle { 'cycle_to_pwr' : number }
 export interface PurchaseClaimRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],

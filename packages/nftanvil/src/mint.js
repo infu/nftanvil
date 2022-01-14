@@ -114,7 +114,7 @@ export const easyMintOne = async ({ to, metadata }) => {
       metadata.thumb.internal.path
     );
 
-  let s = await nft.mintNFT({ to, metadata });
+  let s = await nft.mint({ to, metadata });
   if (s.ok) {
     let tokenIndex = s.ok;
     let tid = encodeTokenId(nftcan.toText(), tokenIndex);
