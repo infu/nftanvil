@@ -1,5 +1,8 @@
 import { Principal } from "@dfinity/principal";
 import { bytesArrayToNumber, numberToBytesArray } from "./data.js";
+import basex from "base-x";
+
+var bs = basex("0123456789abcdefghijkmnopqrstuvwxyz");
 
 export function encode(can, idx) {
   let p = Principal.fromText(can);
@@ -7,12 +10,16 @@ export function encode(can, idx) {
 }
 
 export function decode(tx) {
-  let p = Principal.fromText(tx).toUint8Array();
+  let p = fromText(tx);
   let idx = bytesArrayToNumber(p.slice(-4));
   let can = Principal.fromUint8Array(p.slice(0, -4));
   return { can, idx };
 }
 
-export function toText(x) {
-  return Principal.fromUint8Array(x).toText();
+export function toText(bytes) {
+  return bs.encode(new Uint8Array([...bytes]));
+}
+
+export function fromText(t) {
+  return bs.decode(t);
 }

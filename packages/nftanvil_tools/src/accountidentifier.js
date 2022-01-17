@@ -22,6 +22,9 @@ export function icpToE8s(x) {
   }
 }
 
-export function TextToSlot(aid, list) {
-  return list[bytesArrayToNumber(fromHexString(aid).slice(0, 4)) % list.length];
+export function TextToSlot(aid, range) {
+  return (
+    range[0] +
+    (bytesArrayToNumber(fromHexString(aid).slice(0, 4)) % (range[1] - range[0]))
+  );
 }

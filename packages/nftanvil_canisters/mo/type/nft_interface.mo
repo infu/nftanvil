@@ -434,7 +434,7 @@ module {
         #Other        : Text;
     }>;
 
-    public type TransferLinkResponse = Result.Result<CanisterSlot, {
+    public type TransferLinkResponse = Result.Result<(), {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;

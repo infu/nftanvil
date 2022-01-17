@@ -22,6 +22,7 @@ import Confetti from "./Confetti";
 import { LoginRequired } from "./LoginRequired";
 import { toast } from "react-toastify";
 import lodash from "lodash";
+import { tokenFromText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Center,
@@ -964,12 +965,13 @@ export const NFT = ({ id }) => {
 
 export const NFTClaim = (p) => {
   const code = p.match.params.code;
+  const mapLoaded = useSelector((state) => state.user.map.account);
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(nftEnterCode(code));
-  }, [code, dispatch]);
+    if (mapLoaded) dispatch(nftEnterCode(code));
+  }, [code, mapLoaded, dispatch]);
 
   return null;
 };
@@ -979,6 +981,8 @@ export const NFTPage = (p) => {
   const code = p.match.params.code;
 
   const address = useSelector((state) => state.user.address);
+  const mapLoaded = useSelector((state) => state.user.map.account);
+
   const meta = useSelector((state) => state.nft[id]);
   const [claimed, setClaimed] = useState(false);
   const [error, setError] = useState(false);
@@ -987,8 +991,9 @@ export const NFTPage = (p) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    if (!mapLoaded) return;
     dispatch(nftFetch(id));
-  }, [id, dispatch]);
+  }, [id, dispatch, mapLoaded]);
 
   const onClaim = async () => {
     setClaiming(true);
@@ -1005,6 +1010,7 @@ export const NFTPage = (p) => {
   };
 
   if (!meta) return null;
+  if (!mapLoaded) return null;
   return (
     <Stack ml={"10px"} mr={"10px"} mt={"80px"}>
       <Center>

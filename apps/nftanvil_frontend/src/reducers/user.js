@@ -27,7 +27,7 @@ export const userSlice = createSlice({
 
     icp: "0",
     pwr: "0",
-    map: { acclist: [] },
+    map: {},
     acccan: "",
 
     pro: false,

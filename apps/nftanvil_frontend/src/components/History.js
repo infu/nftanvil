@@ -30,7 +30,11 @@ import {
   toHexString,
   bytesToBase58,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
-import { tokenFromBlob } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+import {
+  tokenFromBlob,
+  tokenToText,
+  decodeTokenId,
+} from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
@@ -112,7 +116,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
         }
 
         if (key === "token" || key === "socket" || key === "plug") {
-          val = tokenFromBlob(val);
+          val = tokenToText(val); //tokenFromBlob(val);
           val = <Link to={"/nft/" + val}>{val}</Link>;
         }
 

@@ -1,7 +1,8 @@
 import { getCrc32 } from "@dfinity/principal/lib/cjs/utils/getCrc";
 import { sha224 } from "@dfinity/principal/lib/cjs/utils/sha224";
 import { Principal } from "@dfinity/principal";
-import { toHexString } from "./data.js";
+import { toHexString, numberToBytesArray } from "./data.js";
+import { PrincipalFromSlot } from "./principal.js";
 
 export const principalToAccountIdentifier = (p, s) => {
   const padding = Buffer("\x0Aaccount-id");
@@ -32,38 +33,55 @@ const to32bits = (num) => {
   new DataView(b).setUint32(0, num);
   return Array.from(new Uint8Array(b));
 };
-
-export const encodeTokenId = (principal, index) => {
-  const padding = Buffer("\x0Atid");
-  const array = new Uint8Array([
-    ...padding,
-    ...Principal.fromText(principal).toUint8Array(),
-    ...to32bits(index),
-  ]);
-  return Principal.fromUint8Array(array).toText();
+export const encodeTokenId = (slot, index) => {
+  let t = (slot << 16) | index;
+  return t;
 };
+
+export const decodeTokenId = (t) => {
+  let slot = t >> 16;
+  let index = t & 65535; // 16 bits
+  return { slot, index };
+};
+
+export const tokenToText = (tid) => {
+  return tid.toString(32);
+};
+
+export const tokenFromText = (tid) => {
+  return parseInt(tid, 32);
+};
+// export const encodeTokenId = (principal, index) => {
+//   const padding = Buffer("\x0Atid");
+//   const array = new Uint8Array([
+//     ...padding,
+//     ...Principal.fromText(principal).toUint8Array(),
+//     ...to32bits(index),
+//   ]);
+//   return Principal.fromUint8Array(array).toText();
+// };
 
 export const tokenFromBlob = (b) => {
   return Principal.fromUint8Array(b).toText();
 };
 
-export const decodeTokenId = (tid) => {
-  var p = [...Principal.fromText(tid).toUint8Array()];
-  var padding = p.splice(0, 4);
-  if (toHexString(padding) !== toHexString(Buffer("\x0Atid"))) {
-    return {
-      index: 0,
-      canister: tid,
-      token: encodeTokenId(tid, 0),
-    };
-  } else {
-    return {
-      index: from32bits(p.splice(-4)),
-      canister: Principal.fromUint8Array(p).toText(),
-      token: tid,
-    };
-  }
-};
+// export const decodeTokenId = (tid) => {
+//   var p = [...Principal.fromText(tid).toUint8Array()];
+//   var padding = p.splice(0, 4);
+//   if (toHexString(padding) !== toHexString(Buffer("\x0Atid"))) {
+//     return {
+//       index: 0,
+//       canister: tid,
+//       token: encodeTokenId(tid, 0),
+//     };
+//   } else {
+//     return {
+//       index: from32bits(p.splice(-4)),
+//       canister: Principal.fromUint8Array(p).toText(),
+//       token: tid,
+//     };
+//   }
+// };
 
 const from32bits = (ba) => {
   var value;
@@ -83,8 +101,9 @@ export const ipfsTokenUrl = (cid) => {
   return "https://ipfs.io/ipfs/" + cid;
 };
 
-export const tokenUrl = (tid, type) => {
-  let { index, canister } = decodeTokenId(tid);
+export const tokenUrl = (space, tid, type) => {
+  let { index, slot } = decodeTokenId(tid);
+  let canister = PrincipalFromSlot(space, slot).toText();
   if (process.env.NODE_ENV === "production") {
     return (
       "https://" +

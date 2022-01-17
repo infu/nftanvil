@@ -97,8 +97,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private stable var _statsTransfers : Nat32  = 0;
     private stable var _statsBurned : Nat32 = 0;
 
-    private stable var _nextTokenId : Nat32 = 0;
-    private stable var _nextChunkId : Nat32 = 0;
+    private stable var _nextTokenId : Nat32 = 1;
 
     private stable var _available : Bool = true;
 
@@ -219,7 +218,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             
                             _token2link.put(tokenIndex, request.hash);
 
-                            #ok(_slot);
+                            #ok();
                     };
                     case (#err()) {
                          #err(#InvalidToken(request.token));
