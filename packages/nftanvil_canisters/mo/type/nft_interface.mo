@@ -28,7 +28,28 @@ module {
         public type AccountIdentifier = Blob; //32 bytes
         public type AccountIdentifierShort = Blob; //28bytes
 
-        public module AccountIdentifier = { 
+        public module APrincipal = { 
+       
+            public func fromIdx(space:[[Nat64]], idx: Nat64) : Principal {
+                let start = space[0][0];
+                Principal.fromBlob(Blob.fromArray(Array.append<Nat8>(
+                    Blob_.nat64ToBytes(start + idx),
+                    [1,1]
+                )));
+            };
+
+            public func isLegitimate(space:[[Nat64]], p: Principal) : Bool {
+                let start = space[0][0];
+                let end = space[0][1];
+
+                let (idxarr, flags) = Array_.split<Nat8>(Blob.toArray(Principal.toBlob(p)), 8);
+                let idx = Blob_.bytesToNat64(idxarr);
+                
+                idx >= start and idx <= end and flags[0] == 1 and flags[1] == 1
+            };
+        };
+
+        public module AccountIdentifier = {
             private let prefix : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
 
             public func validate(a: AccountIdentifier) : Bool {

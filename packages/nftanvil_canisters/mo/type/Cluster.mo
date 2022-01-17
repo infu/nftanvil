@@ -20,10 +20,10 @@ module {
         account:[Principal];
         pwr: Principal;
         anv: Principal;
-        // collection: Principal;
         treasury:Principal;
         history:Principal;
         slot:Nat;
+        space:[[Nat64]];
     };
 
     public module Config = {
@@ -35,10 +35,10 @@ module {
                 account= [];
                 pwr= Principal.fromText("aaaaa-aa");
                 anv= Principal.fromText("aaaaa-aa");
-                collection= Principal.fromText("aaaaa-aa");
                 treasury= Principal.fromText("aaaaa-aa");
                 history= Principal.fromText("aaaaa-aa");
                 slot=0;
+                space=[[0,1000]]
             };
         };
     };
@@ -56,13 +56,12 @@ module {
         public func cycle_to_pwr(oracle:Oracle, cycles:Nat64) : Nat64 {
             Int64.toNat64(Float.toInt64(Float.fromInt64(Int64.fromNat64(cycles)) * oracle.cycle_to_pwr))
         };
-        
     };
 
     public func router(conf : Config) : Router.Interface {
         actor(Principal.toText(conf.router)) : Router.Interface;
     };
-   
+
     // public func collection(conf : Config) : Collection.Interface {
     //     actor(Principal.toText(conf.collection)) : Collection.Interface;
     // };

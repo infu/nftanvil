@@ -39,20 +39,22 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     public shared({caller}) func add(eventinfo: H.EventInfo) : async H.AddResponse {
 
-        assert(switch (eventinfo) {
-            case (#nft(e)) {
-                Array_.exists(_conf.nft, caller, Principal.equal) == true
-            };
-            case (#pwr(e)) {
-                Principal.equal(_conf.pwr, caller) == true
-            };
-            case (#anv(e)) {
-                Principal.equal(_conf.anv, caller) == true
-            };
-            case (#treasury(e)) {
-                Principal.equal(_conf.treasury, caller) == true
-            };
-        });
+        assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
+
+        // assert(switch (eventinfo) {
+        //     case (#nft(e)) {
+        //         Array_.exists(_conf.nft, caller, Principal.equal) == true
+        //     };
+        //     case (#pwr(e)) {
+        //         Principal.equal(_conf.pwr, caller) == true
+        //     };
+        //     case (#anv(e)) {
+        //         Principal.equal(_conf.anv, caller) == true
+        //     };
+        //     case (#treasury(e)) {
+        //         Principal.equal(_conf.treasury, caller) == true
+        //     };
+        // });
         
         let index = _nextEvent;
         

@@ -1139,7 +1139,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let plugBlob = Nft.TokenIdentifier.toBlob(request.plug);
 
 
-         if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
+        if ( Nft.APrincipal.isLegitimate(_conf.space, caller) == false ) return #err(#NotLegitimateCaller);
+        //if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
         
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
@@ -1244,7 +1245,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
 // Unsockets and returns it to owner
     public shared({caller}) func unplug(request: Nft.UnsocketRequest) : async Nft.UnplugResponse {
-        if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
+
+        if ( Nft.APrincipal.isLegitimate(_conf.space, caller) == false ) return #err(#NotLegitimateCaller);
+
+        // if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     

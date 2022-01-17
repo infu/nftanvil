@@ -40,9 +40,6 @@ shared({caller = _installer}) actor class Router() = this {
         Principal.toText(_conf.nft[slot]);
     };
 
-    public query func isLegitimate(can: Principal) : async Bool {
-       Array_.exists(_conf.nft, can, Principal.equal)
-    };
 
     public query func fetchSetup() : async {acclist: [Text];anv:Text;pwr:Text;history:Text;treasury:Text} {
          {

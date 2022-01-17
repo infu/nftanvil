@@ -62,7 +62,10 @@ shared({caller = _installer}) actor class Class() = this {
  
   public shared({caller}) func notify_NFTPurchase(request: Treasury.NFTPurchase): async Treasury.NFTPurchaseResponse {
       //make sure caller is nft canister
-      if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err("Unauthorized");
+      
+      if ( Nft.APrincipal.isLegitimate(_conf.space, caller) == false ) return #err("Unauthorized");
+
+      // if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err("Unauthorized");
 
       let total:Nat64 = request.amount.e8s;
       let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
