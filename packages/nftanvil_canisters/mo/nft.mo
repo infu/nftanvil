@@ -42,7 +42,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     type AccountIdentifier = Nft.AccountIdentifier;
     type Balance = Nft.Balance;
     type TokenIdentifier = Nft.TokenIdentifier;
-    type TokenIdentifierBlob = Nft.TokenIdentifierBlob;
+    // type TokenIdentifierBlob = Nft.TokenIdentifierBlob;
     type TokenIndex = Nft.TokenIndex;
     type User = Nft.User;
     type CommonError = Nft.CommonError;
@@ -91,6 +91,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
+    private stable var _slot : Nft.CanisterSlot = 0;
 
     private stable var _statsCollections : Nat32  = 0;
     private stable var _statsTransfers : Nat32  = 0;
@@ -147,7 +148,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                  SNFT_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
                  await ACC_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
 
-                let transactionId = await Cluster.history(_conf).add(#nft(#burn({created=Time.now();token = Nft.TokenIdentifier.toBlob(request.token); user=Nft.User.toAccountIdentifier(request.user); memo=request.memo})));
+                let transactionId = await Cluster.history(_conf).add(#nft(#burn({created=Time.now();token = request.token; user=Nft.User.toAccountIdentifier(request.user); memo=request.memo})));
 
                 return #ok({transactionId});
             }; 
@@ -200,6 +201,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     //         Iter.toArray(_meta.entries())
     // };
 
+
     public shared({caller}) func transfer_link(request : Nft.TransferLinkRequest) : async Nft.TransferLinkResponse {
         
         if (request.amount != 1) return #err(#Other("Must use amount of 1"));
@@ -217,7 +219,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             
                             _token2link.put(tokenIndex, request.hash);
 
-                            #ok(Nat32.fromNat(_conf.slot));
+                            #ok(_slot);
                     };
                     case (#err()) {
                          #err(#InvalidToken(request.token));
@@ -238,52 +240,58 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let keyHash = Blob.fromArray(SHA224.sha224(Blob.toArray(request.key)));
         if (Nft.User.validate(request.to) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
-        switch (Nft.TokenIdentifier.decode(request.token)) {
-                case (#ok(cannisterId, tokenIndex)) {
+        let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
-                    if (checkCorrectCannister(cannisterId) == false) return #err(#Rejected);
 
-                    switch(_token2link.get(tokenIndex)) {
-                        case (?hash) {
-                            if (keyHash != hash) return #err(#Rejected);   
+        if (slot != _slot) return #err(#Rejected);
 
-                            switch(_balance.get(tokenIndex)) {
-                                case (?from) {
-                                    switch(getMeta(tokenIndex)) {
-                                            case (#ok((meta,vars))) {
-                                                    SNFT_move(from,Nft.User.toAccountIdentifier(request.to), tokenIndex);
-                                                    await ACC_move(from,Nft.User.toAccountIdentifier(request.to), tokenIndex);
+        switch(_token2link.get(tokenIndex)) {
+            case (?hash) {
+                if (keyHash != hash) return #err(#Rejected);   
 
-                                                    resetTransferBindings(meta, vars);
-                                                    
-                                                    let transactionId = await Cluster.history(_conf).add(#nft(#transaction({created=Time.now();token = Nft.TokenIdentifier.toBlob(tokenId(tokenIndex)); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
+                switch(_balance.get(tokenIndex)) {
+                    case (?from) {
+                        switch(getMeta(tokenIndex)) {
+                                case (#ok((meta,vars))) {
+                                        SNFT_move(from,Nft.User.toAccountIdentifier(request.to), tokenIndex);
+                                        await ACC_move(from,Nft.User.toAccountIdentifier(request.to), tokenIndex);
 
-                                                    return #ok({transactionId});
-                                            };
-                                            case (#err()) {
-                                                #err(#Rejected);
-                                            }
-                                        }
+                                        resetTransferBindings(meta, vars);
+                                        
+                                        let transactionId = await Cluster.history(_conf).add(#nft(#transaction({created=Time.now();token = tokenId(tokenIndex); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
+
+                                        return #ok({transactionId});
                                 };
-                                case (_) {
-                                    #err(#Rejected)
+                                case (#err()) {
+                                    #err(#Rejected);
                                 }
-                            };
-                        };
-                        case (_) {
-                            #err(#Rejected)
-                        };
+                            }
+                    };
+                    case (_) {
+                        #err(#Rejected)
                     }
-                  };
-                case (#err(e)) {
-                    #err(#Rejected)
-                }
-            }
+                };
+            };
+            case (_) {
+                #err(#Rejected)
+            };
+        }
+                  
     };
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);
+        assert(switch(Nft.APrincipal.toSlot(conf.space, Principal.fromActor(this))) {
+            case (?slot) {
+                _slot := slot;
+                true;
+            };
+            case (null) {
+                false; // current principal is not in space, which means configuration is wrong or canister principal is not correct
+            }
+        });
         _conf := conf
+        
     };
 
     public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {
@@ -298,27 +306,25 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
         assert(caller_user == request.user);
 
-        switch (Nft.TokenIdentifier.decode(request.token)) {
-                case (#ok(cannisterId, tokenIndex)) {
+        let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
-                    switch(getMeta(tokenIndex)) {
-                        case (#ok((meta,vars))) {
-                            if (vars.price.amount == 0) return #err(#NotForSale);
+        if (slot != _slot) return #err(#InvalidToken(request.token));
+        
+        switch(getMeta(tokenIndex)) {
+            case (#ok((meta,vars))) {
+                if (vars.price.amount == 0) return #err(#NotForSale);
 
-                            let (purchaseAccountId,_) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
-                            
-                            #ok({
-                                paymentAddress = purchaseAccountId;
-                                price = vars.price;
-                                });
-                        };
-                        case(#err(e)) #err(#InvalidToken(request.token));
-                        
-                    };
-                };
-                case (#err(e)) #err(#InvalidToken(request.token));
-            }
-    };
+                let (purchaseAccountId,_) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
+                
+                #ok({
+                    paymentAddress = purchaseAccountId;
+                    price = vars.price;
+                    });
+            };
+            case(#err(e)) #err(#InvalidToken(request.token));
+            
+        };
+    };   
 
     // Check accountid if its exact or more than asked. If something is wrong, refund. If more is sent, refund extra.
     public shared({caller}) func purchase_claim(request: Nft.PurchaseClaimRequest) : async Nft.PurchaseClaimResponse {
@@ -327,150 +333,147 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let toUserAID = Nft.User.toAccountIdentifier(request.user);
         
-        switch (Nft.TokenIdentifier.decode(request.token)) {
-             case (#ok(cannisterId, tokenIndex)) {
+        let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
+            
+        let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
+        
+        let {e8s = payment} = await Cluster.ledger(_conf).account_balance({
+            account = purchaseAccountId
+        });
 
-                let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
-                
-                let {e8s = payment} = await Cluster.ledger(_conf).account_balance({
-                    account = purchaseAccountId
-                });
+        switch(getMeta(tokenIndex)) {
+            case (#ok((meta,vars))) {
+                switch(SNFT_tidxGet(tokenIndex)) {
+                    case(?seller) {
 
-                switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
-                        switch(SNFT_tidxGet(tokenIndex)) {
-                            case(?seller) {
+                        if (vars.price.amount == 0) return #err(#NotForSale);
 
-                                if (vars.price.amount == 0) return #err(#NotForSale);
+                        let purchaseOk = payment >= vars.price.amount;
 
-                                let purchaseOk = payment >= vars.price.amount;
+                        let fullRefund : Nat64 = payment - _fee;
+                        let noRefund : Nat64 = 0;
 
-                                let fullRefund : Nat64 = payment - _fee;
-                                let noRefund : Nat64 = 0;
+                        let refundAmount:Nat64 = switch(purchaseOk) {
+                            case(true) {
 
-                                let refundAmount:Nat64 = switch(purchaseOk) {
-                                    case(true) {
-
-                                        switch(SNFT_tidxGet(tokenIndex)) {
-                                                case(?fromAccount) {
-                                                    try {
-                                                        SNFT_move(fromAccount, toUserAID, tokenIndex);
-                                                        vars.price := {
-                                                            amount=0;
-                                                            marketplace=null;
-                                                            affiliate=null;
-                                                        };
-                                                        ignore try {
-                                                            await ACC_move(fromAccount, toUserAID, tokenIndex);
-                                                            ()
-                                                        } catch (e) {
-                                                            ()
-                                                        };
-                                                        noRefund;
-                                                    } catch (e) {
-                                                        fullRefund;
-                                                    };
+                                switch(SNFT_tidxGet(tokenIndex)) {
+                                        case(?fromAccount) {
+                                            try {
+                                                SNFT_move(fromAccount, toUserAID, tokenIndex);
+                                                vars.price := {
+                                                    amount=0;
+                                                    marketplace=null;
+                                                    affiliate=null;
                                                 };
-                                                case(_) {
-                                                    fullRefund;
-                                                }
+                                                ignore try {
+                                                    await ACC_move(fromAccount, toUserAID, tokenIndex);
+                                                    ()
+                                                } catch (e) {
+                                                    ()
+                                                };
+                                                noRefund;
+                                            } catch (e) {
+                                                fullRefund;
+                                            };
+                                        };
+                                        case(_) {
+                                            fullRefund;
+                                        }
+                                    }
+                                };
+
+                            case(false) {
+                                fullRefund;
+                                }
+                        };
+                                            
+
+                        switch (purchaseOk) {
+                            case (true) {
+                                let amount = {e8s = payment - _fee};
+                                // move
+                                let transfer : Ledger.TransferArgs = {
+                                    memo = 0;
+                                    amount;
+                                    fee = {e8s = _fee};
+                                    from_subaccount = ?purchaseSubAccount;
+                                    to = Cluster.treasury_address(_conf);
+                                    created_at_time = null;
+                                    };
+
+                                switch(await Cluster.ledger(_conf).transfer(transfer)) {
+                                    case (#Ok(ledgerBlock)) {
+                                        
+                                        let notifyRequest = {
+                                            created = Time.now();
+                                            buyer = toUserAID;
+                                            ledgerBlock;
+                                            amount; 
+                                            seller;
+                                            token = request.token;
+                                            author = {address=meta.author; share=meta.authorShare};
+                                            marketplace = vars.price.marketplace;
+                                            affiliate = vars.price.affiliate;
+                                            purchaseAccount = purchaseAccountId; 
+                                        };
+
+                                        switch(await Cluster.treasury(_conf).notify_NFTPurchase(notifyRequest)) {
+                                            case (#ok()) {
+
+                                                let transactionId =  await Cluster.history(_conf).add(#nft(#purchase(notifyRequest)));
+
+                                                #ok({transactionId});
+                                            };
+                                            case (#err(e)) {
+                                                //TODO: ADD to QUEUE for later notify attempt
+                                                #err(#TreasuryNotifyFailed);
                                             }
                                         };
-
-                                    case(false) {
-                                        fullRefund;
-                                        }
-                                };
-                                                    
-
-                                switch (purchaseOk) {
-                                    case (true) {
-                                        let amount = {e8s = payment - _fee};
-                                        // move
-                                        let transfer : Ledger.TransferArgs = {
-                                            memo = 0;
-                                            amount;
-                                            fee = {e8s = _fee};
-                                            from_subaccount = ?purchaseSubAccount;
-                                            to = Cluster.treasury_address(_conf);
-                                            created_at_time = null;
-                                            };
-
-                                        switch(await Cluster.ledger(_conf).transfer(transfer)) {
-                                            case (#Ok(ledgerBlock)) {
-                                                
-                                                let notifyRequest = {
-                                                    created = Time.now();
-                                                    buyer = toUserAID;
-                                                    ledgerBlock;
-                                                    amount; 
-                                                    seller;
-                                                    token = Nft.TokenIdentifier.toBlob(request.token);
-                                                    author = {address=meta.author; share=meta.authorShare};
-                                                    marketplace = vars.price.marketplace;
-                                                    affiliate = vars.price.affiliate;
-                                                    purchaseAccount = purchaseAccountId; 
-                                                };
-
-                                                switch(await Cluster.treasury(_conf).notify_NFTPurchase(notifyRequest)) {
-                                                    case (#ok()) {
-
-                                                        let transactionId =  await Cluster.history(_conf).add(#nft(#purchase(notifyRequest)));
-
-                                                        #ok({transactionId});
-                                                    };
-                                                    case (#err(e)) {
-                                                        //TODO: ADD to QUEUE for later notify attempt
-                                                        #err(#TreasuryNotifyFailed);
-                                                    }
-                                                };
-                                            
-                                               
-                                            };
-                                            case (#Err(e)) {
-                                                //TODO: ADD to QUEUE for later transfer attempt
-                                                return #err(#ErrorWhileRefunding);
-                                            };
-                                        };
-
-                                    };
-
-                                    case (false) {
-                                        if (refundAmount <= _fee) return #err(#NotEnoughToRefund);
-
-                                        // refund
-                                        let transfer : Ledger.TransferArgs = {
-                                            memo = 0;
-                                            amount = {e8s = refundAmount};
-                                            fee = {e8s = _fee};
-                                            from_subaccount = ?purchaseSubAccount;
-                                            to = toUserAID;
-                                            created_at_time = null;
-                                            };
-
-                                        switch(await Cluster.ledger(_conf).transfer(transfer)) {
-                                                case (#Ok(blockIndex)) {
-                                                    #err(#Refunded)
-                                                };
-                                                case (#Err(e)) {
-                                                    #err(#ErrorWhileRefunding);
-                                                }
-                                            };
+                                    
                                         
-                                        };
                                     };
+                                    case (#Err(e)) {
+                                        //TODO: ADD to QUEUE for later transfer attempt
+                                        return #err(#ErrorWhileRefunding);
+                                    };
+                                };
 
                             };
-                            case (_) {
-                                #err(#InvalidToken(request.token));
+
+                            case (false) {
+                                if (refundAmount <= _fee) return #err(#NotEnoughToRefund);
+
+                                // refund
+                                let transfer : Ledger.TransferArgs = {
+                                    memo = 0;
+                                    amount = {e8s = refundAmount};
+                                    fee = {e8s = _fee};
+                                    from_subaccount = ?purchaseSubAccount;
+                                    to = toUserAID;
+                                    created_at_time = null;
+                                    };
+
+                                switch(await Cluster.ledger(_conf).transfer(transfer)) {
+                                        case (#Ok(blockIndex)) {
+                                            #err(#Refunded)
+                                        };
+                                        case (#Err(e)) {
+                                            #err(#ErrorWhileRefunding);
+                                        }
+                                    };
+                                
+                                };
                             };
-                        };
+
                     };
-                    case (#err(e)) #err(#InvalidToken(request.token))
-                    }
-             };
-             case (#err(e)) #err(#InvalidToken(request.token));
+                    case (_) {
+                        #err(#InvalidToken(request.token));
+                    };
+                };
+            };
+            case (#err(e)) #err(#InvalidToken(request.token))
             }
+
   
     }; 
 
@@ -532,7 +535,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                             resetTransferBindings(meta, vars);
 
-                            let transactionId = await Cluster.history(_conf).add(#nft(#transaction({created=Time.now(); token = Nft.TokenIdentifier.toBlob(tokenId(tokenIndex)); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo= request.memo})));
+                            let transactionId = await Cluster.history(_conf).add(#nft(#transaction({created=Time.now(); token =tokenId(tokenIndex); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo= request.memo})));
 
                             return #ok({transactionId});
                     };
@@ -598,7 +601,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                     };
                                 };
 
-                                let transactionId = await Cluster.history(_conf).add(#nft(#use({created=Time.now();token = Nft.TokenIdentifier.toBlob(tokenId(tokenIndex)); user=Nft.User.toAccountIdentifier(request.user); use=request.use; memo= request.memo})));
+                                let transactionId = await Cluster.history(_conf).add(#nft(#use({created=Time.now();token = tokenId(tokenIndex); user=Nft.User.toAccountIdentifier(request.user); use=request.use; memo= request.memo})));
 
                                 #ok({transactionId});
                            
@@ -636,59 +639,55 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     public query func metadata(token : Nft.TokenIdentifier) : async Nft.MetadataResponse {
-        switch (Nft.TokenIdentifier.decode(token)) {
-            case (#ok(cannisterId, tokenIndex)) {
-               
-                if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
+       
+       let (slot, tokenIndex) = Nft.TokenIdentifier.decode(token);
 
-                switch(SNFT_tidxGet(tokenIndex)) {
-                    case (?bearer) {
 
-                       switch(getMeta(tokenIndex)) {
-                            case (#ok((m,v))) {
-                                    #ok({
-                                    bearer = bearer;
-                                    data = m; 
-                                    vars = Nft.MetavarsFreeze(v)
-                                    });
-                            };
-                            case (#err()) {
-                                #err(#InvalidToken(token));
-                            }
+        
+        if (slot != _slot) return #err(#InvalidToken(token));
 
-                        };
+        switch(SNFT_tidxGet(tokenIndex)) {
+            case (?bearer) {
 
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((m,v))) {
+                            #ok({
+                            bearer = bearer;
+                            data = m; 
+                            vars = Nft.MetavarsFreeze(v)
+                            });
                     };
-                    case (_) {
+                    case (#err()) {
                         #err(#InvalidToken(token));
-                    };
-                }
+                    }
+
+                };
 
             };
-            case (#err(e)) {
-              #err(#InvalidToken(token));
+            case (_) {
+                #err(#InvalidToken(token));
             };
-        };
+        }
+
+           
     };
  
     public query func supply(token : Nft.TokenIdentifier) : async Nft.SupplyResponse {
-        switch (Nft.TokenIdentifier.decode(token)) {
-            case (#ok(cannisterId, tokenIndex)) {
-                if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
 
-                switch(SNFT_tidxGet(tokenIndex)) {
-                    case (?holder_stored) {
-                        #ok(1);
-                    };
-                    case (_) {
-                        #err(#InvalidToken(token));
-                    };
-                }
-                 };
-            case (#err(e)) {
-              #err(#InvalidToken(token));
+        let (slot, tokenIndex) = Nft.TokenIdentifier.decode(token);
+
+        if (slot != _slot) return #err(#InvalidToken(token));
+
+        switch(SNFT_tidxGet(tokenIndex)) {
+            case (?holder_stored) {
+                #ok(1);
             };
-        };         
+            case (_) {
+                #err(#InvalidToken(token));
+            };
+        }
+       
+           
     };
 
 
@@ -1005,9 +1004,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         SNFT_put(receiver, tokenIndex);
         await ACC_put(receiver, tokenIndex);
 
-        
-
-        let transactionId = await Cluster.history(_conf).add(#nft(#mint({created=Time.now();token = Nft.TokenIdentifier.toBlob(tokenId(tokenIndex)) })));
+        let transactionId = await Cluster.history(_conf).add(#nft(#mint({created=Time.now();token = tokenId(tokenIndex) })));
 
         return #ok({tokenIndex; transactionId});
 
@@ -1094,29 +1091,24 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
-                            switch (Nft.TokenIdentifier.decode(request.socket)) {
-                                case (#ok(socketCanister, _)) {
+                            let (slot, _) = Nft.TokenIdentifier.decode(request.socket);
+                            let socketCanister = Nft.APrincipal.fromSlot(_conf.space, slot);
+                            let socketActor = actor (Principal.toText(socketCanister)) : Class;
+                            switch(await socketActor.socket(request)) {
+                                case (#ok()) {
+                                    let to = Nft.User.toAccountIdentifier( #principal(socketCanister) );
+                                    SNFT_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
+                                    await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
 
-                                    let socketActor = actor (Principal.toText(socketCanister)) : Class;
-                                    switch(await socketActor.socket(request)) {
-                                        case (#ok()) {
-                                            let to = Nft.User.toAccountIdentifier( #principal(socketCanister) );
-                                            SNFT_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
-                                            await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
+                                    let transactionId = await Cluster.history(_conf).add(#nft(#socket({created=Time.now();plug = request.plug; socket=request.socket; memo=request.memo})));
 
-                                            let transactionId = await Cluster.history(_conf).add(#nft(#socket({created=Time.now();plug = Nft.TokenIdentifier.toBlob(request.plug); socket=Nft.TokenIdentifier.toBlob(request.socket); memo=request.memo})));
-
-                                            #ok({transactionId});
-                                        };
-                                        case (#err(e)) {
-                                             #err(#SocketError(e));
-                                        }
-                                    };
+                                    #ok({transactionId});
                                 };
                                 case (#err(e)) {
-                                    #err(#InvalidToken(request.socket));
+                                        #err(#SocketError(e));
                                 }
-                            }
+                            };
+                      
 
                     };
                     case (#err()) {
@@ -1135,8 +1127,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     // Calls the extension canister and asks if it accepts the plug
     public shared({caller}) func socket(request: Nft.SocketRequest) : async Nft.SocketResponse {
         
-        if (Nft.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
-        let plugBlob = Nft.TokenIdentifier.toBlob(request.plug);
 
 
         if ( Nft.APrincipal.isLegitimate(_conf.space, caller) == false ) return #err(#NotLegitimateCaller);
@@ -1168,7 +1158,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                         // }) {
                         //     case (#ok()) {
                                 if (Iter.size(Iter.fromArray(vars.sockets)) >= 10) return #err(#SocketsFull);
-                                vars.sockets := Array.append(vars.sockets, [plugBlob]);
+                                vars.sockets := Array.append(vars.sockets, [request.plug]);
                                 #ok();
                         //     };
                         //     case (#err(e)) #err(e);
@@ -1191,10 +1181,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     // Unsockets and returns it to owner
     public shared({caller}) func unsocket(request: Nft.UnsocketRequest) : async Nft.UnsocketResponse {
 
-        if (Nft.TokenIdentifier.validate(request.plug) == false) return #err(#Other("Bad plug tokenIdentifier"));
+        
         if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
-        let plugBlob = Nft.TokenIdentifier.toBlob(request.plug);
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     
@@ -1204,27 +1193,24 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
 
-                        
-                                switch (Nft.TokenIdentifier.decode(request.plug)) {
-                                    case (#ok(plugCanister, _)) {
-                                        let plugActor = actor (Principal.toText(plugCanister)) : Class;
-                                        switch(await plugActor.unplug(request)) {
-                                            case (#ok()) {
-                                                
-                                                //remove from socket metavars
-                                                vars.sockets := Array.filter( vars.sockets, func (tid:TokenIdentifierBlob) : Bool {
-                                                    tid != plugBlob
-                                                });
+                                let (slot, _) = Nft.TokenIdentifier.decode(request.plug);
+                          
+                                let plugActor = actor (Principal.toText(Nft.APrincipal.fromSlot(_conf.space, slot))) : Class;
+                                switch(await plugActor.unplug(request)) {
+                                    case (#ok()) {
+                                        
+                                        //remove from socket metavars
+                                        vars.sockets := Array.filter( vars.sockets, func (tid:TokenIdentifier) : Bool {
+                                            tid != request.plug
+                                        });
 
-                                                let transactionId =  await Cluster.history(_conf).add(#nft(#unsocket({created=Time.now();plug = Nft.TokenIdentifier.toBlob(request.plug); socket=Nft.TokenIdentifier.toBlob(request.socket); memo = request.memo})));
+                                        let transactionId =  await Cluster.history(_conf).add(#nft(#unsocket({created=Time.now();plug = request.plug; socket=request.socket; memo = request.memo})));
 
-                                                #ok({transactionId});
-                                            };
-                                            case (#err(e)) #err(#UnplugError(e));
-                                        }
+                                        #ok({transactionId});
                                     };
-                                    case (#err(e)) #err(#InvalidToken(request.socket));
+                                    case (#err(e)) #err(#UnplugError(e));
                                 }
+                             
                               
                             
                         };
@@ -1276,23 +1262,18 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     public query func bearer(token : Nft.TokenIdentifier) : async Nft.BearerResponse {
-           switch (Nft.TokenIdentifier.decode(token)) {
-            case (#ok(cannisterId, tokenIndex)) {
-                if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(token));
-               
-                switch(SNFT_tidxGet(tokenIndex)) {
-                    case (?holder_stored) {
-                        #ok(holder_stored);
-                    };
-                    case (_) {
-                        #err(#InvalidToken(token));
-                    };
-                }
-            };
-            case (#err(e)) {
-              #err(#InvalidToken(token));
-            };
-        };
+           let (slot, tokenIndex) = Nft.TokenIdentifier.decode(token);
+           
+            if (slot != _slot) return #err(#InvalidToken(token));
+            
+            switch(SNFT_tidxGet(tokenIndex)) {
+                case (?holder_stored) {
+                    #ok(holder_stored);
+                };
+                case (_) {
+                    #err(#InvalidToken(token));
+                };
+            }
     };
 
     public query func allowance(request : Nft.Allowance.Request) : async Nft.Allowance.Response {
@@ -1325,7 +1306,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     _allowance.put(tokenIndex, request.spender);
                     };
 
-                let transactionId = await Cluster.history(_conf).add(#nft(#approve({created=Time.now();token = Nft.TokenIdentifier.toBlob(request.token); user=Nft.User.toAccountIdentifier(caller_user); spender=request.spender})));
+                let transactionId = await Cluster.history(_conf).add(#nft(#approve({created=Time.now();token = request.token; user=Nft.User.toAccountIdentifier(caller_user); spender=request.spender})));
                 #ok({transactionId});
 
             };
@@ -1399,12 +1380,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     private func ACC_put(aid: AccountIdentifier, tidx: TokenIndex) : async () {
-        await Cluster.accountFromAid(_conf, aid).add(aid, tidx, _conf.slot);
+        await Cluster.accountFromAid(_conf, aid).add(aid, tidx);
         
     };
 
     private func ACC_del(aid: AccountIdentifier, tidx: TokenIndex) : async () {
-        await Cluster.accountFromAid(_conf, aid).rem(aid, tidx, _conf.slot);   
+        await Cluster.accountFromAid(_conf, aid).rem(aid, tidx);   
     };
 
     private func ACC_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : async () {
@@ -1423,36 +1404,32 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     private func tokenId(idx: TokenIndex) : TokenIdentifier {
-        Nft.TokenIdentifier.encode( Principal.fromActor(this), idx);
+        Nft.TokenIdentifier.encode(_slot, idx);
     };
 
     // ***** Balance 
     private func balGet(request : BalanceRequest) : BalanceInt {
 
-       switch (Nft.TokenIdentifier.decode(request.token)) {
-            case (#ok(cannisterId, tokenIndex)) {
-                if (checkCorrectCannister(cannisterId) == false) return #err(#InvalidToken(request.token));
-                
-               switch(SNFT_tidxGet(tokenIndex)) {
-     
-                    case (?holder_stored) {
-                        let holder = request.user;
-                        if (Nft.AccountIdentifier.equal(holder_stored, Nft.User.toAccountIdentifier(holder)) == true) {
-                            #ok(holder, tokenIndex,1,0);
-                        } else {
-                            #ok(holder, tokenIndex,0,0);
-                        }
-                    };
-                    case (_) {
-                        #err(#InvalidToken(request.token));
-                    };
-                }
+       let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
+        if (slot != _slot) return #err(#InvalidToken(request.token));
+        
+        switch(SNFT_tidxGet(tokenIndex)) {
+
+            case (?holder_stored) {
+                let holder = request.user;
+                if (Nft.AccountIdentifier.equal(holder_stored, Nft.User.toAccountIdentifier(holder)) == true) {
+                    #ok(holder, tokenIndex,1,0);
+                } else {
+                    #ok(holder, tokenIndex,0,0);
+                }
             };
-            case (#err(e)) {
-              #err(#InvalidToken(request.token));
+            case (_) {
+                #err(#InvalidToken(request.token));
             };
-        };
+        }
+
+    
     };
 
     private func balRequireMinimum(bal : BalanceInt, min:Balance) :  BalanceInt {

@@ -50,9 +50,6 @@ shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
       _tmpBlockchain := [];
     };
 
-    private func myTokenId() : TokenIdentifier {
-      Nft.TokenIdentifier.encode( Principal.fromActor(this), 0);
-    };
 
    
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
@@ -60,9 +57,6 @@ shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
         _conf := conf
     };
 
-    public query func tokenId() : async TokenIdentifier {
-      myTokenId();
-    };
 
     public query func balance(request: Anv.BalanceRequest) : async Anv.BalanceResponse {
       

@@ -30,7 +30,6 @@ module {
     }; 
 
     public type AccountIdentifier = Nft.AccountIdentifier;
-    public type TokenIdentifierBlob = Nft.TokenIdentifierBlob;
 
     public type Balance = Nft.Balance;
     public type Memo = Nft.Memo;
@@ -102,21 +101,21 @@ module {
             created: Timestamp;
             from: AccountIdentifier;
             to: AccountIdentifier;
-            token: TokenIdentifierBlob;
+            token: TokenIdentifier;
             memo: Memo;
         };
 
         #burn : {
             created: Timestamp;
             user: AccountIdentifier;
-            token: TokenIdentifierBlob;
+            token: TokenIdentifier;
             memo: Memo;
         };
 
         #use : {
             created: Timestamp;
             user: AccountIdentifier;
-            token: TokenIdentifierBlob;
+            token: TokenIdentifier;
             use: ItemUse;
             memo: Memo;
         };
@@ -125,27 +124,27 @@ module {
 
         #mint : {
             created: Timestamp;
-            token: TokenIdentifierBlob;
+            token: TokenIdentifier;
         };
 
         #approve : {
             created: Timestamp;
-            token: TokenIdentifierBlob;
+            token: TokenIdentifier;
             user: AccountIdentifier;
             spender: Principal;
         };
 
         #socket : {
             created: Timestamp;
-            socket : TokenIdentifierBlob;
-            plug   : TokenIdentifierBlob;
+            socket : TokenIdentifier;
+            plug   : TokenIdentifier;
             memo: Memo;
         };
 
         #unsocket : {
             created: Timestamp;
-            socket : TokenIdentifierBlob;
-            plug   : TokenIdentifierBlob;
+            socket : TokenIdentifier;
+            plug   : TokenIdentifier;
             memo: Memo;
         };
 
@@ -159,7 +158,7 @@ module {
                         [1:Nat8],
                         Blob.toArray(from),
                         Blob.toArray(to),
-                        Blob.toArray(token),
+                        Blob_.nat32ToBytes(token),
                         Blob_.nat64ToBytes(amount),
                         Blob.toArray(memo)
                     ])
@@ -176,7 +175,7 @@ module {
                         [2:Nat8],
                         Blob.toArray(from),
                         Blob.toArray(to),
-                        Blob.toArray(token),
+                       Blob_.nat32ToBytes(token),
                         Blob_.nat64ToBytes(amount),
                         Blob.toArray(memo)
                     ])
@@ -194,7 +193,7 @@ module {
                         Blob_.intToBytes(created),
                         Blob.toArray(from),
                         Blob.toArray(to),
-                        Blob.toArray(token),
+                       Blob_.nat32ToBytes(token),
                         Blob.toArray(memo)
                     ])
                 };
@@ -203,7 +202,7 @@ module {
                         [4:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
-                        Blob.toArray(token),
+                       Blob_.nat32ToBytes(token),
                         Blob.toArray(memo)
                     ])
                 };
@@ -212,7 +211,7 @@ module {
                         [5:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
-                        Blob.toArray(token),
+                       Blob_.nat32ToBytes(token),
                         Nft.ItemUse.hash(use),
                         Blob.toArray(memo)
                     ])
@@ -221,15 +220,15 @@ module {
                     Array.flatten<Nat8>([
                         [6:Nat8],
                         Blob_.intToBytes(created),
-                        Blob.toArray(token),
+                       Blob_.nat32ToBytes(token),
                     ])
                 };
                 case (#socket({created;socket; plug; memo})) {
                     Array.flatten<Nat8>([
                         [7:Nat8],
                         Blob_.intToBytes(created),
-                        Blob.toArray(socket),
-                        Blob.toArray(plug),
+                        Blob_.nat32ToBytes(socket),
+                        Blob_.nat32ToBytes(plug),
                         Blob.toArray(memo)
                     ])
                 };
@@ -237,8 +236,8 @@ module {
                     Array.flatten<Nat8>([
                         [8:Nat8],
                         Blob_.intToBytes(created),
-                        Blob.toArray(socket),
-                        Blob.toArray(plug),
+                        Blob_.nat32ToBytes(socket),
+                        Blob_.nat32ToBytes(plug),
                         Blob.toArray(memo)
                     ])
                 };
@@ -252,7 +251,7 @@ module {
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
                         Blob.toArray(Principal.toBlob(spender)),
-                        Blob.toArray(token)
+                       Blob_.nat32ToBytes(token)
                     ])
                 };
             
@@ -267,7 +266,7 @@ module {
                     created: Timestamp;
                     from: AccountIdentifier;
                     to: AccountIdentifier;
-                    token: TokenIdentifierBlob;
+                    token: TokenIdentifier;
                     amount: Balance;
                     memo: Memo;
                 };

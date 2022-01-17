@@ -32,7 +32,6 @@ module {
     };
 
     public type AccountIdentifier = Nft.AccountIdentifier;
-    public type TokenIdentifierBlob = Nft.TokenIdentifierBlob;
 
     public type Share = Nft.Share;
     public type Balance = Nft.Balance;
@@ -60,7 +59,7 @@ module {
             ledgerBlock : Ledger.BlockIndex;
             amount : Ledger.ICP;
 
-            token: TokenIdentifierBlob;
+            token: TokenIdentifier;
             
             buyer : AccountIdentifier;
             seller : AccountIdentifier;
@@ -90,7 +89,7 @@ module {
                         Blob_.intToBytes(e.created),
                         Blob_.nat64ToBytes(e.ledgerBlock),
                         Blob_.nat64ToBytes(e.amount.e8s),
-                        Blob.toArray(e.token),
+                        Blob_.nat32ToBytes(e.token),
                         Blob.toArray(e.buyer),
                         Blob.toArray(e.seller),
                         Blob.toArray(e.author.address),

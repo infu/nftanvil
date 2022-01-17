@@ -28,25 +28,35 @@ module {
         public type AccountIdentifier = Blob; //32 bytes
         public type AccountIdentifierShort = Blob; //28bytes
 
+        public type CanisterSlot = Nat16;
+
         public module APrincipal = { 
        
-            public func fromIdx(space:[[Nat64]], idx: Nat64) : Principal {
+            public func fromSlot(space:[[Nat64]], slot: CanisterSlot) : Principal {
                 let start = space[0][0];
                 Principal.fromBlob(Blob.fromArray(Array.append<Nat8>(
-                    Blob_.nat64ToBytes(start + idx),
+                    Blob_.nat64ToBytes(start + Nat64.fromNat(Nat16.toNat(slot))),
                     [1,1]
                 )));
             };
 
             public func isLegitimate(space:[[Nat64]], p: Principal) : Bool {
-                let start = space[0][0];
-                let end = space[0][1];
+                switch(toSlot(space, p)) {
+                    case (?a) true;
+                    case (null) false;
+                }
+            };
 
+            // After exhausting the first range, this function will be modified to support multiple ranges
+            public func toSlot(space:[[Nat64]], p: Principal) : ?CanisterSlot {
                 let (idxarr, flags) = Array_.split<Nat8>(Blob.toArray(Principal.toBlob(p)), 8);
                 let idx = Blob_.bytesToNat64(idxarr);
-                
-                idx >= start and idx <= end and flags[0] == 1 and flags[1] == 1
-            };
+                if (flags[0] != 1 or flags[1] != 1) return null;
+                let start = space[0][0];
+                let end = space[0][1];
+                if (idx < start and idx > end) return null;
+                return ?Nat16.fromNat(Nat64.toNat(idx - start));
+            }
         };
 
         public module AccountIdentifier = {
@@ -161,50 +171,63 @@ module {
             };
         };
 
-        public type TokenIdentifier = Text;
-        public type TokenIdentifierBlob = Blob;
+        public type TokenIdentifier = Nat32;
+        // public type TokenIdentifierBlob = Blob;
 
         public module TokenIdentifier = {
-            private let prefix : [Nat8] = [10, 116, 105, 100]; // \x0A "tid"
         
-            public func encode(canisterId : Principal, tokenIndex : TokenIndex) : Text {
-                let rawTokenId = Array.flatten<Nat8>([
-                    prefix,
-                    Blob.toArray(Principal.toBlob(canisterId)),
-                    Binary.BigEndian.fromNat32(tokenIndex),
-                ]);
+            public func encode(slot : CanisterSlot, tokenIndex : TokenIndex) : TokenIdentifier {
+                Nat32.fromNat(Nat16.toNat(slot)) << 16 | tokenIndex
+                // let rawTokenId = Array.flatten<Nat8>([
+                //     Blob.toArray(Principal.toBlob(canisterId)),
+                //     Binary.BigEndian.fromNat32(tokenIndex),
+                // ]);
                 
-                Principal.toText(Principal.fromBlob(Blob.fromArray(rawTokenId)));
+                // Principal.toText(Principal.fromBlob(Blob.fromArray(rawTokenId)));
             };
 
-            public func decode(tokenId : TokenIdentifier) : Result.Result<(Principal, TokenIndex), Text> {
-                let bs = Blob.toArray(Principal.toBlob(Principal.fromText(tokenId)));
-                let (rawPrefix, rawToken) = Array_.split(bs, 4);
-                if (rawPrefix != prefix) return #err("invalid prefix");
-                let (rawCanister, rawIndex) = Array_.split(rawToken, rawToken.size() - 4 : Nat);
-                #ok(
-                    Principal.fromBlob(Blob.fromArray(rawCanister)),
-                    Binary.BigEndian.toNat32(rawIndex),
-                );
+            public func decode(tokenId : TokenIdentifier) : (CanisterSlot, TokenIndex) {
+                let slot:Nat16 = Nat16.fromNat(Nat32.toNat(tokenId >> 16));
+                let idx:Nat32 = (tokenId << 16) >> 16; 
+                (slot, idx)
+
+                // let bs = Blob.toArray(Principal.toBlob(Principal.fromText(tokenId)));
+                // let (rawPrefix, rawToken) = Array_.split(bs, 4);
+                // if (rawPrefix != prefix) return #err("invalid prefix");
+                // let (rawCanister, rawIndex) = Array_.split(rawToken, rawToken.size() - 4 : Nat);
+                // #ok(
+                //     Principal.fromBlob(Blob.fromArray(rawCanister)),
+                //     Binary.BigEndian.toNat32(rawIndex),
+                // );
             };
 
-            public func toBlob(tokenId : TokenIdentifier) : TokenIdentifierBlob {
-                let bl = Principal.toBlob(Principal.fromText(tokenId));
+            public func equal(a: TokenIdentifier, b:TokenIdentifier) : Bool {
+                 Nat32.equal(a, b);
             };
 
-            public func validate(tokenId : TokenIdentifier) : Bool {
-                let bl = toBlob(tokenId);
-                if (bl.size() > 100) return false;
-                let bs = Blob.toArray(bl);
-                let (rawPrefix, rawToken) = Array_.split(bs, 4);
-                if (rawPrefix != prefix) return false;
-                return true;
+            public func hash(x: TokenIdentifier) : Hash.Hash {
+                 return x;
+            
+            };
+
+
+            // public func toBlob(tokenId : TokenIdentifier) : TokenIdentifierBlob {
+            //     let bl = Principal.toBlob(Principal.fromText(tokenId));
+            // };
+
+            // public func validate(tokenId : TokenIdentifier) : Bool {
+            //     let bl = toBlob(tokenId);
+            //     if (bl.size() > 100) return false;
+            //     let bs = Blob.toArray(bl);
+            //     let (rawPrefix, rawToken) = Array_.split(bs, 4);
+            //     if (rawPrefix != prefix) return false;
+            //     return true;
                 
-            };
+            // };
 
-            public func fromBlob(b:TokenIdentifierBlob) : Text {
-                Principal.toText(Principal.fromBlob(b));
-            };
+            // public func fromBlob(b:TokenIdentifierBlob) : Text {
+            //     Principal.toText(Principal.fromBlob(b));
+            // };
         };
 
         public type User = {
@@ -410,7 +433,7 @@ module {
         #Other        : Text;
     }>;
 
-    public type TransferLinkResponse = Result.Result<Nat32, {
+    public type TransferLinkResponse = Result.Result<CanisterSlot, {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;
@@ -577,7 +600,7 @@ module {
         }
     };
 
-    public type Sockets = [TokenIdentifierBlob];
+    public type Sockets = [TokenIdentifier];
     public module Sockets = {
         public func validate(x : Sockets) : Bool {
             Iter.size(Iter.fromArray(x)) <= 10

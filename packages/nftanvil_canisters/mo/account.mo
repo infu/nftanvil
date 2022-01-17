@@ -32,11 +32,11 @@ shared({ caller = _installer }) actor class Class() = this {
     type AccountIdentifier = Nft.AccountIdentifier;
     type TokenIdentifier = Nft.TokenIdentifier;
     type TokenIndex = Nft.TokenIndex;
-    type TokenStore = HashMap.HashMap<Account.Gid, Bool>;
-    type Slot = Nat32;
+    type TokenStore = HashMap.HashMap<TokenIdentifier, Bool>;
+    type Slot = Nft.CanisterSlot;
 
-    private stable var _tmpAccount: [(AccountIdentifier, [Account.Gid])] = [];
-    private var _account: HashMap.HashMap<AccountIdentifier, TokenStore> =  HashSmash.init<AccountIdentifier,Account.Gid>(_tmpAccount, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Account.Gid.equal, Account.Gid.hash );
+    private stable var _tmpAccount: [(AccountIdentifier, [TokenIdentifier])] = [];
+    private var _account: HashMap.HashMap<AccountIdentifier, TokenStore> =  HashSmash.init<AccountIdentifier,TokenIdentifier>(_tmpAccount, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Nft.TokenIdentifier.equal, Nft.TokenIdentifier.hash);
   
     //Handle canister upgrades
     system func preupgrade() {
@@ -47,37 +47,30 @@ shared({ caller = _installer }) actor class Class() = this {
         _tmpAccount := [];
     };
 
-    private func can2idx(can:Principal) : ?Slot {
-        var found:?Slot = null;
-        Iter.iterate<Principal>(Iter.fromArray(_conf.nft), func (x, index) {
-            if (can == x) found := ?Nat32.fromNat(index);
-        });
-        return found;
-    };
-
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);
         _conf := conf
     };
 
-    public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex, slot: Nat) : async () {
+    public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
-        let gid = Account.Gid.fromTokenIdentifier(idx, slot);
-        switch(can2idx(caller)) {
-            case (?a) {
-               HashSmash.add<AccountIdentifier, Account.Gid>(_account, aid, gid, Account.Gid.equal, Account.Gid.hash );
+        
+        switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
+            case (?slot) {
+               let tid = Nft.TokenIdentifier.encode(slot, idx);
+               HashSmash.add<AccountIdentifier, TokenIdentifier>(_account, aid, tid, Nft.TokenIdentifier.equal, Nft.TokenIdentifier.hash );
             };
             case (_) { () }
         }
     };
 
-    public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex, slot: Nat) : async () {
+    public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
-        let gid = Account.Gid.fromTokenIdentifier(idx, slot);
 
-        switch(can2idx(caller)) { 
-            case (?a) { 
-               HashSmash.rem<AccountIdentifier,Account.Gid>(_account, aid, gid);
+        switch(Nft.APrincipal.toSlot(_conf.space, caller)) { 
+            case (?slot) { 
+               let tid = Nft.TokenIdentifier.encode(slot, idx);
+               HashSmash.rem<AccountIdentifier,TokenIdentifier>(_account, aid, tid);
             };
             case (_) { () }
         }
@@ -86,17 +79,17 @@ shared({ caller = _installer }) actor class Class() = this {
     public query func list(aid: AccountIdentifier, page:Nat) : async [TokenIdentifier] {
         assert(Nft.User.validate(#address(aid)) == true); 
 
-        let rez:[var TokenIdentifier] = Array.init<TokenIdentifier>(100,"");
-        let it = HashSmash.list<AccountIdentifier,Account.Gid>(_account, aid);
+        let rez:[var TokenIdentifier] = Array.init<TokenIdentifier>(100,0);
+        let it = HashSmash.list<AccountIdentifier,TokenIdentifier>(_account, aid);
 
         var index = 0;
         let pstart = page*100;
         let pend = (page+1)*100;
-        label l for (gid:Account.Gid in it) {
+        label l for (tid:TokenIdentifier in it) {
             if (index >= pend) break l;
 
             if ((index >= pstart)) {
-                  rez[index - pstart] := Account.Gid.toTokenIdentifier(gid, _conf.nft);
+                  rez[index - pstart] :=  tid;
             };
             index := index + 1;
         };

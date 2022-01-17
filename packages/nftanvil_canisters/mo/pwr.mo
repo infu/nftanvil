@@ -54,18 +54,10 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         _oracle := oracle
   };
 
-
   public query func dumpBalances() : async [(AccountIdentifier, Balance)] {
      Iter.toArray(_balance.entries());
   };
 
-  private func myTokenId() : TokenIdentifier {
-    Nft.TokenIdentifier.encode( Principal.fromActor(this), 0);
-  };
-
-  public query func tokenId() : async TokenIdentifier {
-    myTokenId();
-  };
 
   public query func balance(request: Pwr.BalanceRequest) : async Pwr.BalanceResponse {
     
