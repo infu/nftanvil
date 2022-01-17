@@ -175,7 +175,7 @@ module {
                         [2:Nat8],
                         Blob.toArray(from),
                         Blob.toArray(to),
-                       Blob_.nat32ToBytes(token),
+                        Blob_.nat32ToBytes(token),
                         Blob_.nat64ToBytes(amount),
                         Blob.toArray(memo)
                     ])
@@ -193,7 +193,7 @@ module {
                         Blob_.intToBytes(created),
                         Blob.toArray(from),
                         Blob.toArray(to),
-                       Blob_.nat32ToBytes(token),
+                        Blob_.nat32ToBytes(token),
                         Blob.toArray(memo)
                     ])
                 };
@@ -202,7 +202,7 @@ module {
                         [4:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
-                       Blob_.nat32ToBytes(token),
+                        Blob_.nat32ToBytes(token),
                         Blob.toArray(memo)
                     ])
                 };
@@ -211,7 +211,7 @@ module {
                         [5:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
-                       Blob_.nat32ToBytes(token),
+                        Blob_.nat32ToBytes(token),
                         Nft.ItemUse.hash(use),
                         Blob.toArray(memo)
                     ])
@@ -220,7 +220,7 @@ module {
                     Array.flatten<Nat8>([
                         [6:Nat8],
                         Blob_.intToBytes(created),
-                       Blob_.nat32ToBytes(token),
+                        Blob_.nat32ToBytes(token),
                     ])
                 };
                 case (#socket({created;socket; plug; memo})) {
@@ -251,13 +251,12 @@ module {
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
                         Blob.toArray(Principal.toBlob(spender)),
-                       Blob_.nat32ToBytes(token)
+                        Blob_.nat32ToBytes(token)
                     ])
                 };
             
             }
-               
-
+                
         };
 
     };

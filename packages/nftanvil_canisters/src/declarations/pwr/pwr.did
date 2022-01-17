@@ -38,8 +38,7 @@ type TransferError =
    TxDuplicate: record {duplicate_of: BlockIndex;};
    TxTooOld: record {allowed_window_nanos: nat64;};
  };
-type TokenIdentifier__1 = text;
-type TokenIdentifier = text;
+type TokenIdentifier = nat32;
 type SubAccount = blob;
 type PurchaseIntentResponse = 
  variant {
@@ -69,15 +68,15 @@ type Memo = blob;
 type ICP = record {e8s: nat64;};
 type Config = 
  record {
-   account: vec principal;
-   anv: principal;
-   history: principal;
-   nft: vec principal;
-   nft_avail: vec principal;
-   pwr: principal;
-   router: principal;
-   slot: nat;
-   treasury: principal;
+   account: CanisterRange;
+   anv: CanisterSlot__1;
+   history: CanisterSlot__1;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot__1;
+   pwr: CanisterSlot__1;
+   router: CanisterSlot__1;
+   space: vec vec nat64;
+   treasury: CanisterSlot__1;
  };
 type Class = 
  service {
@@ -90,8 +89,14 @@ type Class =
    oracle_set: (Oracle) -> ();
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
-   tokenId: () -> (TokenIdentifier__1) query;
    transfer: (TransferRequest) -> (TransferResponse);
+ };
+type CanisterSlot__1 = nat16;
+type CanisterSlot = nat16;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
  };
 type BlockIndex = nat64;
 type Balance__1 = nat64;

@@ -7,6 +7,9 @@ export interface BalanceRequest { 'user' : User__1 }
 export type BalanceResponse = bigint;
 export type Balance__1 = bigint;
 export type BlockIndex = bigint;
+export type CanisterRange = [CanisterSlot, CanisterSlot];
+export type CanisterSlot = number;
+export type CanisterSlot__1 = number;
 export interface Class {
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
@@ -18,19 +21,18 @@ export interface Class {
   'purchase_intent' : (arg_0: PurchaseIntentRequest) => Promise<
       PurchaseIntentResponse
     >,
-  'tokenId' : () => Promise<TokenIdentifier__1>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
 }
 export interface Config {
-  'anv' : Principal,
-  'nft' : Array<Principal>,
-  'pwr' : Principal,
-  'slot' : bigint,
-  'history' : Principal,
-  'nft_avail' : Array<Principal>,
-  'account' : Array<Principal>,
-  'router' : Principal,
-  'treasury' : Principal,
+  'anv' : CanisterSlot__1,
+  'nft' : CanisterRange,
+  'pwr' : CanisterSlot__1,
+  'history' : CanisterSlot__1,
+  'nft_avail' : Array<CanisterSlot__1>,
+  'space' : Array<Array<bigint>>,
+  'account' : CanisterRange,
+  'router' : CanisterSlot__1,
+  'treasury' : CanisterSlot__1,
 }
 export interface ICP { 'e8s' : bigint }
 export type Memo = Array<number>;
@@ -48,8 +50,7 @@ export interface PurchaseIntentRequest {
 export type PurchaseIntentResponse = { 'ok' : AccountIdentifier__1 } |
   { 'err' : string };
 export type SubAccount = Array<number>;
-export type TokenIdentifier = string;
-export type TokenIdentifier__1 = string;
+export type TokenIdentifier = number;
 export type TransferError = {
     'TxTooOld' : { 'allowed_window_nanos' : bigint }
   } |

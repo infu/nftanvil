@@ -1,14 +1,17 @@
 export const idlFactory = ({ IDL }) => {
+  const CanisterSlot__1 = IDL.Nat16;
+  const CanisterSlot = IDL.Nat16;
+  const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
-    'anv' : IDL.Principal,
-    'nft' : IDL.Vec(IDL.Principal),
-    'pwr' : IDL.Principal,
-    'slot' : IDL.Nat,
-    'history' : IDL.Principal,
-    'nft_avail' : IDL.Vec(IDL.Principal),
-    'account' : IDL.Vec(IDL.Principal),
-    'router' : IDL.Principal,
-    'treasury' : IDL.Principal,
+    'anv' : CanisterSlot__1,
+    'nft' : CanisterRange,
+    'pwr' : CanisterSlot__1,
+    'history' : CanisterSlot__1,
+    'nft_avail' : IDL.Vec(CanisterSlot__1),
+    'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
+    'account' : CanisterRange,
+    'router' : CanisterSlot__1,
+    'treasury' : CanisterSlot__1,
   });
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
@@ -20,24 +23,8 @@ export const idlFactory = ({ IDL }) => {
     'rts_version' : IDL.Text,
   });
   const Router = IDL.Service({
+    'config_get' : IDL.Func([], [Config], ['query']),
     'config_set' : IDL.Func([Config], [], []),
-    'fetchNFTCan' : IDL.Func([IDL.Nat], [IDL.Text], ['query']),
-    'fetchNFTCanisters' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
-    'fetchSetup' : IDL.Func(
-        [],
-        [
-          IDL.Record({
-            'anv' : IDL.Text,
-            'pwr' : IDL.Text,
-            'history' : IDL.Text,
-            'acclist' : IDL.Vec(IDL.Text),
-            'treasury' : IDL.Text,
-          }),
-        ],
-        ['query'],
-      ),
-    'getAvailable' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
-    'isLegitimate' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'reportOutOfMemory' : IDL.Func([], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
   });

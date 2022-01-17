@@ -16,7 +16,7 @@ type User =
    address: AccountIdentifier;
    "principal": principal;
  };
-type TokenIdentifierBlob = blob;
+type TokenIdentifier = nat32;
 type Time = int;
 type SubAccount = blob;
 type Share = nat16;
@@ -45,20 +45,20 @@ type NFTPurchase =
                     };
    purchaseAccount: AccountIdentifier__1;
    seller: AccountIdentifier__1;
-   token: TokenIdentifierBlob;
+   token: TokenIdentifier;
  };
 type ICP = record {e8s: nat64;};
 type Config = 
  record {
-   account: vec principal;
-   anv: principal;
-   history: principal;
-   nft: vec principal;
-   nft_avail: vec principal;
-   pwr: principal;
-   router: principal;
-   slot: nat;
-   treasury: principal;
+   account: CanisterRange;
+   anv: CanisterSlot__1;
+   history: CanisterSlot__1;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot__1;
+   pwr: CanisterSlot__1;
+   router: CanisterSlot__1;
+   space: vec vec nat64;
+   treasury: CanisterSlot__1;
  };
 type Class = 
  service {
@@ -70,6 +70,13 @@ type Class =
                             }) query;
    notify_NFTPurchase: (NFTPurchase) -> (NFTPurchaseResponse);
    withdraw: (WithdrawRequest) -> (WithdrawResponse);
+ };
+type CanisterSlot__1 = nat16;
+type CanisterSlot = nat16;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
  };
 type BlockIndex = nat64;
 type Balance__1 = nat64;

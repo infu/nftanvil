@@ -24,6 +24,7 @@ import { setNftStorageModal } from "./user";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TokenIdentifier from "@vvv-interactive/nftanvil-tools/cjs/tokenidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
+import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 
@@ -524,8 +525,9 @@ export const mint_quote = (vals) => async (dispatch, getState) => {
 
   let identity = authentication.client.getIdentity();
 
-  let available = await router.getAvailable();
-  let canisterId = Principal.fromText(
+  let available = s.user.map.nft_avail;
+  let canisterId = PrincipalFromSlot(
+    s.user.map.space,
     available[Math.floor(Math.random() * available.length)]
   );
 
@@ -578,8 +580,9 @@ export const mint = (vals) => async (dispatch, getState) => {
     vals.thumb.ipfs.cid = await uploadIPFS(key_nftstorage, vals.thumb.ipfs.url);
   }
 
-  let available = await router.getAvailable();
-  let canisterId = Principal.fromText(
+  let available = s.user.map.nft_avail;
+  let canisterId = PrincipalFromSlot(
+    s.user.map.space,
     available[Math.floor(Math.random() * available.length)]
   );
 

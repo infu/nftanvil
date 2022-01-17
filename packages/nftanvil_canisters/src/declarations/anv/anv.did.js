@@ -19,20 +19,22 @@ export const idlFactory = ({ IDL }) => {
   );
   const BalanceRequest = IDL.Record({ 'user' : User__1 });
   const BalanceResponse = IDL.Nat64;
+  const CanisterSlot__1 = IDL.Nat16;
+  const CanisterSlot = IDL.Nat16;
+  const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
-    'anv' : IDL.Principal,
-    'nft' : IDL.Vec(IDL.Principal),
-    'pwr' : IDL.Principal,
-    'slot' : IDL.Nat,
-    'history' : IDL.Principal,
-    'nft_avail' : IDL.Vec(IDL.Principal),
-    'account' : IDL.Vec(IDL.Principal),
-    'router' : IDL.Principal,
-    'treasury' : IDL.Principal,
+    'anv' : CanisterSlot__1,
+    'nft' : CanisterRange,
+    'pwr' : CanisterSlot__1,
+    'history' : CanisterSlot__1,
+    'nft_avail' : IDL.Vec(CanisterSlot__1),
+    'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
+    'account' : CanisterRange,
+    'router' : CanisterSlot__1,
+    'treasury' : CanisterSlot__1,
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__1 = IDL.Nat64;
-  const TokenIdentifier = IDL.Text;
   const User = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
@@ -75,7 +77,6 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(BlockIndex, Block))],
         ['query'],
       ),
-    'tokenId' : IDL.Func([], [TokenIdentifier], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
   });
   return Class;

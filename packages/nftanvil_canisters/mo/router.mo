@@ -7,6 +7,7 @@ import Principal "mo:base/Principal";
 import Nat32 "mo:base/Nat32";
 import HashMap "mo:base/HashMap";
 import Cluster  "./type/Cluster";
+import Nft "./type/nft_interface";
 
 //import AAA "./type/aaa_interface";
 
@@ -24,31 +25,8 @@ shared({caller = _installer}) actor class Router() = this {
         _conf := conf
     };
 
-    public query func getAvailable() : async [Text] {
-          Iter.toArray(Iter.map(Iter.fromArray(_conf.nft_avail), func(x:Principal) : Text { Principal.toText(x); }));
-    };
-
-    public query func fetchNFTCanisters() : async [Text] {
-        Iter.toArray(Iter.map(Iter.fromArray(_conf.nft), func(x:Principal) : Text { Principal.toText(x); }));
-    };
-
-    private func getAccountCanisters() : [Text] {
-        Iter.toArray(Iter.map(Iter.fromArray(_conf.account), func(x:Principal) : Text { Principal.toText(x); }));
-    };
-
-    public query func fetchNFTCan(slot: Nat) : async Text {
-        Principal.toText(_conf.nft[slot]);
-    };
-
-
-    public query func fetchSetup() : async {acclist: [Text];anv:Text;pwr:Text;history:Text;treasury:Text} {
-         {
-         acclist = getAccountCanisters();
-         anv = Principal.toText(_conf.anv);
-         pwr = Principal.toText(_conf.pwr);
-         history = Principal.toText(_conf.history);
-         treasury = Principal.toText(_conf.treasury);
-         }
+    public query func config_get() : async Cluster.Config {
+        return _conf;
     };
 
     public type StatsResponse = {

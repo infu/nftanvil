@@ -16,6 +16,9 @@ export type Block = [
 export type BlockHash = Array<number>;
 export type BlockIndex = number;
 export type BlockTimestamp = bigint;
+export type CanisterRange = [CanisterSlot, CanisterSlot];
+export type CanisterSlot = number;
+export type CanisterSlot__1 = number;
 export interface Class {
   'adminAllocate' : (
       arg_0: { 'user' : User__1, 'amount' : TransactionAmount },
@@ -24,23 +27,21 @@ export interface Class {
   'config_set' : (arg_0: Config) => Promise<undefined>,
   'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__1]>>,
   'dumpBlockchain' : () => Promise<Array<[BlockIndex, Block]>>,
-  'tokenId' : () => Promise<TokenIdentifier>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
 }
 export interface Config {
-  'anv' : Principal,
-  'nft' : Array<Principal>,
-  'pwr' : Principal,
-  'slot' : bigint,
-  'history' : Principal,
-  'nft_avail' : Array<Principal>,
-  'account' : Array<Principal>,
-  'router' : Principal,
-  'treasury' : Principal,
+  'anv' : CanisterSlot__1,
+  'nft' : CanisterRange,
+  'pwr' : CanisterSlot__1,
+  'history' : CanisterSlot__1,
+  'nft_avail' : Array<CanisterSlot__1>,
+  'space' : Array<Array<bigint>>,
+  'account' : CanisterRange,
+  'router' : CanisterSlot__1,
+  'treasury' : CanisterSlot__1,
 }
 export type Memo = Array<number>;
 export type SubAccount = Array<number>;
-export type TokenIdentifier = string;
 export type TransactionAmount = bigint;
 export type TransactionFrom = Array<number>;
 export type TransactionTo = Array<number>;

@@ -10,6 +10,9 @@ export interface BalanceRequest {
 export type BalanceResponse = bigint;
 export type Balance__1 = bigint;
 export type BlockIndex = bigint;
+export type CanisterRange = [CanisterSlot, CanisterSlot];
+export type CanisterSlot = number;
+export type CanisterSlot__1 = number;
 export interface Class {
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
@@ -18,20 +21,20 @@ export interface Class {
   'withdraw' : (arg_0: WithdrawRequest) => Promise<WithdrawResponse>,
 }
 export interface Config {
-  'anv' : Principal,
-  'nft' : Array<Principal>,
-  'pwr' : Principal,
-  'slot' : bigint,
-  'history' : Principal,
-  'nft_avail' : Array<Principal>,
-  'account' : Array<Principal>,
-  'router' : Principal,
-  'treasury' : Principal,
+  'anv' : CanisterSlot__1,
+  'nft' : CanisterRange,
+  'pwr' : CanisterSlot__1,
+  'history' : CanisterSlot__1,
+  'nft_avail' : Array<CanisterSlot__1>,
+  'space' : Array<Array<bigint>>,
+  'account' : CanisterRange,
+  'router' : CanisterSlot__1,
+  'treasury' : CanisterSlot__1,
 }
 export interface ICP { 'e8s' : bigint }
 export interface NFTPurchase {
   'created' : Time,
-  'token' : TokenIdentifierBlob,
+  'token' : TokenIdentifier,
   'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
   'seller' : AccountIdentifier__1,
   'author' : { 'share' : Share, 'address' : AccountIdentifier__1 },
@@ -46,7 +49,7 @@ export type NFTPurchaseResponse = { 'ok' : null } |
 export type Share = number;
 export type SubAccount = Array<number>;
 export type Time = bigint;
-export type TokenIdentifierBlob = Array<number>;
+export type TokenIdentifier = number;
 export type User = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
 export interface WithdrawRequest {

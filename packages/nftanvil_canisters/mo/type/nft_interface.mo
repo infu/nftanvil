@@ -29,6 +29,7 @@ module {
         public type AccountIdentifierShort = Blob; //28bytes
 
         public type CanisterSlot = Nat16;
+        public type CanisterRange = (CanisterSlot, CanisterSlot);
 
         public module APrincipal = { 
        
@@ -101,13 +102,13 @@ module {
                 });
             };
 
-            public func slot(accountId : AccountIdentifier, max:Nat) : Nat {
+            public func slot(accountId : AccountIdentifier, max:CanisterSlot) : CanisterSlot {
                 let bl = Blob.toArray(accountId);
                 let (rawPrefix, rawToken) = Array_.split(bl, 4);
 
                 let crc = Blob_.bytesToNat32(rawPrefix);
 
-                Nat32.toNat( crc  % Nat32.fromNat(max) );
+                Nat16.fromNat(Nat32.toNat(crc  %  Nat32.fromNat(Nat16.toNat(max))));
             };
 
             public func equal(a : AccountIdentifier, b : AccountIdentifier) : Bool {

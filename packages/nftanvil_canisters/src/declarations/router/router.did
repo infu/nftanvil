@@ -10,32 +10,28 @@ type StatsResponse =
  };
 type Router = 
  service {
+   config_get: () -> (Config) query;
    config_set: (Config) -> ();
-   fetchNFTCan: (nat) -> (text) query;
-   fetchNFTCanisters: () -> (vec text) query;
-   fetchSetup: () ->
-    (record {
-       acclist: vec text;
-       anv: text;
-       history: text;
-       pwr: text;
-       treasury: text;
-     }) query;
-   getAvailable: () -> (vec text) query;
-   isLegitimate: (principal) -> (bool) query;
    reportOutOfMemory: () -> ();
    stats: () -> (StatsResponse) query;
  };
 type Config = 
  record {
-   account: vec principal;
-   anv: principal;
-   history: principal;
-   nft: vec principal;
-   nft_avail: vec principal;
-   pwr: principal;
-   router: principal;
-   slot: nat;
-   treasury: principal;
+   account: CanisterRange;
+   anv: CanisterSlot__1;
+   history: CanisterSlot__1;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot__1;
+   pwr: CanisterSlot__1;
+   router: CanisterSlot__1;
+   space: vec vec nat64;
+   treasury: CanisterSlot__1;
+ };
+type CanisterSlot__1 = nat16;
+type CanisterSlot = nat16;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
  };
 service : () -> Router

@@ -104,7 +104,7 @@ type TransferLinkResponse =
       Rejected;
       Unauthorized: AccountIdentifier;
     };
-   ok: nat32;
+   ok: CanisterSlot;
  };
 type TransferLinkRequest = 
  record {
@@ -115,8 +115,7 @@ type TransferLinkRequest =
    token: TokenIdentifier;
  };
 type TokenIndex = nat32;
-type TokenIdentifierBlob = blob;
-type TokenIdentifier = text;
+type TokenIdentifier = nat32;
 type Token = 
  record {
    content_encoding: text;
@@ -151,7 +150,7 @@ type StatsResponse =
    rts_version: text;
    transfers: nat32;
  };
-type Sockets = vec TokenIdentifierBlob;
+type Sockets = vec TokenIdentifier;
 type SocketResponse = 
  variant {
    err: SocketError;
@@ -421,15 +420,15 @@ type Content =
  };
 type Config = 
  record {
-   account: vec principal;
-   anv: principal;
-   history: principal;
-   nft: vec principal;
-   nft_avail: vec principal;
-   pwr: principal;
-   router: principal;
-   slot: nat;
-   treasury: principal;
+   account: CanisterRange;
+   anv: CanisterSlot__1;
+   history: CanisterSlot__1;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot__1;
+   pwr: CanisterSlot__1;
+   router: CanisterSlot__1;
+   space: vec vec nat64;
+   treasury: CanisterSlot__1;
  };
 type CommonError = 
  variant {
@@ -481,6 +480,13 @@ type ClaimLinkRequest =
    key: blob;
    to: User;
    token: TokenIdentifier;
+ };
+type CanisterSlot__1 = nat16;
+type CanisterSlot = nat16;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
  };
 type CallbackFunc = func () -> ();
 type Callback = 

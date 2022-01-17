@@ -168,11 +168,6 @@ function ICP({ mobile }) {
   const initialRef = React.useRef();
   const amountRef = React.useRef();
 
-  setTimeout(() => {
-    console.log("FUN");
-    dispatch(create_canister());
-  }, 3000);
-
   const icp = AccountIdentifier.e8sToIcp(
     useSelector((state) => state.user.icp)
   );

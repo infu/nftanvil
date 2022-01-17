@@ -1,5 +1,5 @@
 export const idlFactory = ({ IDL }) => {
-  const TokenIdentifier = IDL.Text;
+  const TokenIdentifier = IDL.Nat32;
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const User = IDL.Variant({
     'principal' : IDL.Principal,
@@ -70,16 +70,19 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'Other' : IDL.Text }),
   });
+  const CanisterSlot__1 = IDL.Nat16;
+  const CanisterSlot = IDL.Nat16;
+  const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
-    'anv' : IDL.Principal,
-    'nft' : IDL.Vec(IDL.Principal),
-    'pwr' : IDL.Principal,
-    'slot' : IDL.Nat,
-    'history' : IDL.Principal,
-    'nft_avail' : IDL.Vec(IDL.Principal),
-    'account' : IDL.Vec(IDL.Principal),
-    'router' : IDL.Principal,
-    'treasury' : IDL.Principal,
+    'anv' : CanisterSlot__1,
+    'nft' : CanisterRange,
+    'pwr' : CanisterSlot__1,
+    'history' : CanisterSlot__1,
+    'nft_avail' : IDL.Vec(CanisterSlot__1),
+    'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
+    'account' : CanisterRange,
+    'router' : CanisterSlot__1,
+    'treasury' : CanisterSlot__1,
   });
   const TokenIndex = IDL.Nat32;
   const FetchChunkRequest = IDL.Record({
@@ -162,8 +165,7 @@ export const idlFactory = ({ IDL }) => {
     'attributes' : Attributes,
     'transfer' : ItemTransfer,
   });
-  const TokenIdentifierBlob = IDL.Vec(IDL.Nat8);
-  const Sockets = IDL.Vec(TokenIdentifierBlob);
+  const Sockets = IDL.Vec(TokenIdentifier);
   const Price = IDL.Record({
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
@@ -343,7 +345,7 @@ export const idlFactory = ({ IDL }) => {
     'amount' : Balance,
   });
   const TransferLinkResponse = IDL.Variant({
-    'ok' : IDL.Nat32,
+    'ok' : CanisterSlot,
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,

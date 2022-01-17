@@ -1,6 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 const dev = process.env.NODE_ENV !== "production";
+const { Principal } = require("@dfinity/principal");
+const {
+  PrincipalFromIdx,
+  PrincipalFromSlot,
+  PrincipalToIdx,
+} = require("@vvv-interactive/nftanvil-tools/cjs/principal.js");
+
+// const ic_config = require("./config.js");
 
 let canistersFile = path.resolve(
   dev ? "./.dfx/local/canister_ids.json" : "./canister_ids.json"
@@ -21,39 +29,67 @@ let dfxd = "#!/bin/sh\n\n";
 
 const network_target = dev ? "" : "--network ic";
 let postproc = [];
+let pidxs = [];
+
+let acc_from = 9999999999;
+let acc_to = -1;
+let nft_from = 9999999999;
+let nft_to = -1;
+let conf = {};
 
 for (let name in dfx.canisters) {
-  let id,
-    slot = 0;
+  let id;
 
   try {
     id = canisters[name][dev ? "local" : "ic"];
   } catch (e) {
     console.log("Canister " + name + " not found in " + canistersFile);
   }
+  let p = Principal.fromText(id);
+  let pidx = PrincipalToIdx(p);
 
   let m = /(\w*)\_(\d+)/gm.exec(name);
   if (m) {
     let prefix = m[1];
     slot = m[2];
-    if (!cans[prefix]) cans[prefix] = [];
-    if (id) cans[prefix].push(id);
+    if (prefix === "nft") {
+      if (pidx <= nft_from) nft_from = pidx;
+      if (pidx >= nft_to) nft_to = pidx;
+    }
+    if (prefix === "account") {
+      if (pidx <= acc_from) acc_from = pidx;
+      if (pidx >= acc_to) acc_to = pidx;
+    }
   } else {
-    cans[name] = id ? id : "aaaaa-aa";
+    conf[name] = pidx;
   }
 
-  postproc.push({ name, slot });
+  pidxs.push(pidx);
+  postproc.push({ name, slot: pidx });
 }
 
+pidxs = pidxs.sort((a, b) => a - b);
+let range_start = pidxs[0];
+let range_end = pidxs[pidxs.length - 1];
+
+conf.nft = [nft_from, nft_to];
+conf.account = [acc_from, acc_to];
+conf.space = [[range_start, range_end]];
+conf.nft_avail = [];
+
+for (let i = nft_from; i <= nft_to; i++) {
+  conf.nft_avail.push(i);
+}
+
+console.log(conf);
+
 for (let { name, slot } of postproc) {
-  dfxd += config_set(name, slot);
+  dfxd += config_set(name);
   dfxd += oracle_set(name);
 }
 
-function config_set(name, slot) {
-  return `dfx canister --wallet=$(dfx identity ${network_target} get-wallet) ${network_target} call ${name} config_set ${config(
-    { slot }
-  )} & \n`;
+function config_set(name) {
+  return `dfx canister --wallet=$(dfx identity ${network_target} get-wallet) ${network_target} call ${name} config_set ${config()} & \n`;
 }
 
 function oracle_set(name) {
@@ -64,22 +100,25 @@ function oracle() {
   return `'(record {cycle_to_pwr = 0.000003703703703704})'`;
 }
 
-function config({ slot }) {
-  return `'(record {
-    nft= vec { ${cans["nft"].map((x) => `principal "${x}"`).join("; ")} };
-    nft_avail = vec { ${cans["nft"]
-      .map((x) => `principal "${x}"`)
+function config() {
+  let r = `'(record {
+    nft= record { ${conf.nft[0] - range_start}:nat16; ${
+    conf.nft[1] - range_start
+  }:nat16 };
+    nft_avail = vec { ${conf["nft_avail"]
+      .map((x) => ` ${x - range_start}:nat16`)
       .join("; ")} };
-    account= vec { ${cans["account"]
-      .map((x) => `principal "${x}"`)
-      .join("; ")} };
-    pwr= principal "${cans["pwr"]}";
-    anv= principal "${cans["anv"]}";
-    history= principal "${cans["history"]}";
-    treasury= principal "${cans["treasury"]}";
-    router= principal "${cans["router"]}";
-    slot=${slot}:nat;
+    account= record { ${conf.account[0] - range_start}:nat16; ${
+    conf.account[1] - range_start
+  }:nat16 };
+    pwr= ${conf["pwr"] - range_start}:nat16;
+    anv= ${conf["anv"] - range_start}:nat16;
+    history= ${conf["history"] - range_start}:nat16;
+    treasury= ${conf["treasury"] - range_start}:nat16;
+    router=  ${conf["router"] - range_start}:nat16;
+    space= vec { vec {${conf.space[0][0]}:nat64; ${conf.space[0][1]}:nat64 }}
   })'`;
+  return r;
 }
 
 fs.writeFileSync("./dfx_config_set.sh", dfxd);

@@ -14,7 +14,7 @@ import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cj
 import { Principal } from "@dfinity/principal";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
-
+import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 import { toast } from "react-toastify";
 
 export const userSlice = createSlice({
@@ -122,10 +122,17 @@ export const auth =
       agentOptions: { identity },
     });
 
-    let map = await router.fetchSetup();
+    let map = await router.config_get();
+    console.log("MAP", map);
+    map.space = map.space.map((x) => {
+      return [x[0].toString(), x[1].toString()];
+    });
 
     let acccan = address
-      ? AccountIdentifier.TextToSlot(address, map.acclist)
+      ? PrincipalFromSlot(
+          map.space,
+          AccountIdentifier.TextToSlot(address, map.account)
+        ).toText()
       : null;
 
     dispatch(authSet({ address, principal, anonymous, map, acccan }));
@@ -192,7 +199,7 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
 
   let address = s.user.address;
 
-  let pwr = pwrCanister(s.user.map.pwr, {
+  let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
     agentOptions: { identity },
   });
 
@@ -213,9 +220,12 @@ export const claim_treasury_balance = () => async (dispatch, getState) => {
   let address = AccountIdentifier.TextToArray(s.user.address);
   let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
-  let treasury = treasuryCanister(s.user.map.treasury, {
-    agentOptions: { identity },
-  });
+  let treasury = treasuryCanister(
+    PrincipalFromSlot(s.user.map.space, s.user.map.treasury),
+    {
+      agentOptions: { identity },
+    }
+  );
 
   let icp = await treasury.balance({
     user: { address },

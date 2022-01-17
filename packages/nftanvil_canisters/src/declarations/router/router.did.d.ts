@@ -1,30 +1,21 @@
 import type { Principal } from '@dfinity/principal';
+export type CanisterRange = [CanisterSlot, CanisterSlot];
+export type CanisterSlot = number;
+export type CanisterSlot__1 = number;
 export interface Config {
-  'anv' : Principal,
-  'nft' : Array<Principal>,
-  'pwr' : Principal,
-  'slot' : bigint,
-  'history' : Principal,
-  'nft_avail' : Array<Principal>,
-  'account' : Array<Principal>,
-  'router' : Principal,
-  'treasury' : Principal,
+  'anv' : CanisterSlot__1,
+  'nft' : CanisterRange,
+  'pwr' : CanisterSlot__1,
+  'history' : CanisterSlot__1,
+  'nft_avail' : Array<CanisterSlot__1>,
+  'space' : Array<Array<bigint>>,
+  'account' : CanisterRange,
+  'router' : CanisterSlot__1,
+  'treasury' : CanisterSlot__1,
 }
 export interface Router {
+  'config_get' : () => Promise<Config>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
-  'fetchNFTCan' : (arg_0: bigint) => Promise<string>,
-  'fetchNFTCanisters' : () => Promise<Array<string>>,
-  'fetchSetup' : () => Promise<
-      {
-        'anv' : string,
-        'pwr' : string,
-        'history' : string,
-        'acclist' : Array<string>,
-        'treasury' : string,
-      }
-    >,
-  'getAvailable' : () => Promise<Array<string>>,
-  'isLegitimate' : (arg_0: Principal) => Promise<boolean>,
   'reportOutOfMemory' : () => Promise<undefined>,
   'stats' : () => Promise<StatsResponse>,
 }

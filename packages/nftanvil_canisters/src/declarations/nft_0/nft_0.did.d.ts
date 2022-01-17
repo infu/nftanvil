@@ -32,6 +32,9 @@ export type BurnResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   { 'err' : TransferResponseError };
 export interface Callback { 'token' : [] | [Token], 'body' : Array<number> }
 export type CallbackFunc = () => Promise<undefined>;
+export type CanisterRange = [CanisterSlot, CanisterSlot];
+export type CanisterSlot = number;
+export type CanisterSlot__1 = number;
 export interface ClaimLinkRequest {
   'to' : User,
   'key' : Array<number>,
@@ -79,15 +82,15 @@ export interface Class {
 export type CommonError = { 'InvalidToken' : TokenIdentifier } |
   { 'Other' : string };
 export interface Config {
-  'anv' : Principal,
-  'nft' : Array<Principal>,
-  'pwr' : Principal,
-  'slot' : bigint,
-  'history' : Principal,
-  'nft_avail' : Array<Principal>,
-  'account' : Array<Principal>,
-  'router' : Principal,
-  'treasury' : Principal,
+  'anv' : CanisterSlot__1,
+  'nft' : CanisterRange,
+  'pwr' : CanisterSlot__1,
+  'history' : CanisterSlot__1,
+  'nft_avail' : Array<CanisterSlot__1>,
+  'space' : Array<Array<bigint>>,
+  'account' : CanisterRange,
+  'router' : CanisterSlot__1,
+  'treasury' : CanisterSlot__1,
 }
 export type Content = {
     'internal' : { 'contentType' : ContentType, 'size' : number }
@@ -285,7 +288,7 @@ export interface SocketRequest {
 }
 export type SocketResponse = { 'ok' : null } |
   { 'err' : SocketError };
-export type Sockets = Array<TokenIdentifierBlob>;
+export type Sockets = Array<TokenIdentifier>;
 export interface StatsResponse {
   'rts_max_live_size' : bigint,
   'transfers' : number,
@@ -312,8 +315,7 @@ export interface Token {
   'index' : bigint,
   'content_encoding' : string,
 }
-export type TokenIdentifier = string;
-export type TokenIdentifierBlob = Array<number>;
+export type TokenIdentifier = number;
 export type TokenIndex = number;
 export interface TransferLinkRequest {
   'token' : TokenIdentifier,
@@ -322,7 +324,7 @@ export interface TransferLinkRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type TransferLinkResponse = { 'ok' : number } |
+export type TransferLinkResponse = { 'ok' : CanisterSlot } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |

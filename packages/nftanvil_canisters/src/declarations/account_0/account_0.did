@@ -1,5 +1,5 @@
 type TokenIndex = nat32;
-type TokenIdentifier = text;
+type TokenIdentifier = nat32;
 type StatsResponse = 
  record {
    cycles: nat;
@@ -12,23 +12,30 @@ type StatsResponse =
  };
 type Config = 
  record {
-   account: vec principal;
-   anv: principal;
-   history: principal;
-   nft: vec principal;
-   nft_avail: vec principal;
-   pwr: principal;
-   router: principal;
-   slot: nat;
-   treasury: principal;
+   account: CanisterRange;
+   anv: CanisterSlot__1;
+   history: CanisterSlot__1;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot__1;
+   pwr: CanisterSlot__1;
+   router: CanisterSlot__1;
+   space: vec vec nat64;
+   treasury: CanisterSlot__1;
  };
 type Class = 
  service {
-   add: (AccountIdentifier, TokenIndex, nat) -> ();
+   add: (AccountIdentifier, TokenIndex) -> ();
    config_set: (Config) -> ();
    list: (AccountIdentifier, nat) -> (vec TokenIdentifier) query;
-   rem: (AccountIdentifier, TokenIndex, nat) -> ();
+   rem: (AccountIdentifier, TokenIndex) -> ();
    stats: () -> (StatsResponse) query;
+ };
+type CanisterSlot__1 = nat16;
+type CanisterSlot = nat16;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
  };
 type AccountIdentifier = blob;
 service : () -> Class

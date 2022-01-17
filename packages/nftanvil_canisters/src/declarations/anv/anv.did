@@ -30,20 +30,19 @@ type TransferRequest =
 type TransactionTo = blob;
 type TransactionFrom = blob;
 type TransactionAmount = nat64;
-type TokenIdentifier = text;
 type SubAccount = blob;
 type Memo = blob;
 type Config = 
  record {
-   account: vec principal;
-   anv: principal;
-   history: principal;
-   nft: vec principal;
-   nft_avail: vec principal;
-   pwr: principal;
-   router: principal;
-   slot: nat;
-   treasury: principal;
+   account: CanisterRange;
+   anv: CanisterSlot__1;
+   history: CanisterSlot__1;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot__1;
+   pwr: CanisterSlot__1;
+   router: CanisterSlot__1;
+   space: vec vec nat64;
+   treasury: CanisterSlot__1;
  };
 type Class = 
  service {
@@ -61,8 +60,14 @@ type Class =
                                 BlockIndex;
                                 Block;
                               }) query;
-   tokenId: () -> (TokenIdentifier) query;
    transfer: (TransferRequest) -> (TransferResponse);
+ };
+type CanisterSlot__1 = nat16;
+type CanisterSlot = nat16;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
  };
 type BlockTimestamp = int;
 type BlockIndex = nat32;

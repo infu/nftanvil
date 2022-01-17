@@ -30,7 +30,7 @@ export const Inventory = (p) => {
   const address = p.match.params.address;
   const pageIdx = p.match.params.pageIdx;
 
-  const acclist = useSelector((state) => state.user.map.acclist);
+  const acc = useSelector((state) => state.user.map.account);
   const { width, height } = useWindowSize();
 
   const [isLoading, setLoading] = useState(true);
@@ -43,9 +43,9 @@ export const Inventory = (p) => {
   };
 
   useEffect(() => {
-    if (!acclist?.length) return null;
+    if (!acc?.length) return null;
     load();
-  }, [address, acclist]);
+  }, [address, acc]);
 
   const items = useSelector(
     (state) => state.inventory[address] && state.inventory[address][pageIdx]

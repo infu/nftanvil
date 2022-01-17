@@ -3,6 +3,7 @@ import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account
 import authentication from "../auth";
 import { produce } from "immer";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 
 export const inventorySlice = createSlice({
   name: "inventory",
@@ -25,12 +26,15 @@ export const loadInventory = (aid, pageIdx) => async (dispatch, getState) => {
     ? authentication.client.getIdentity()
     : null;
   let s = getState();
-  if (!s.user.map.acclist?.length) return null;
-  let can = AccountIdentifier.TextToSlot(aid, s.user.map.acclist);
+  if (!s.user.map.account?.length) return null;
+  let can = PrincipalFromSlot(
+    s.user.map.space,
+    AccountIdentifier.TextToSlot(aid, s.user.map.account)
+  );
   let acc = accountCanister(can, { agentOptions: { identity } });
   pageIdx = parseInt(pageIdx, 10);
   let list = await acc.list(AccountIdentifier.TextToArray(aid), pageIdx);
-  list = list.filter((x) => x !== "");
+  list = list.filter((x) => x !== 0);
 
   dispatch(pageSet({ aid, pageIdx, list }));
 };

@@ -12,6 +12,7 @@ import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cj
 import { Principal } from "@dfinity/principal";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 
 import { toast } from "react-toastify";
 import _ from "lodash";
@@ -46,12 +47,18 @@ export const loadInfo = () => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
   let s = getState();
 
-  let history = historyCanister(Principal.fromText(s.user.map.history), {
-    agentOptions: { identity },
-  });
+  let history = historyCanister(
+    PrincipalFromSlot(s.user.map.space, s.user.map.history),
+    {
+      agentOptions: { identity },
+    }
+  );
 
   let { total, previous } = await history.info();
-  let p = { total, canister: s.user.map.history };
+  let p = {
+    total,
+    canister: PrincipalFromSlot(s.user.map.space, s.user.map.history).toText(),
+  };
   dispatch(setInfo({ total }));
   return p;
 };

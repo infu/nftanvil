@@ -1,13 +1,13 @@
 export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const Timestamp = IDL.Int;
-  const TokenIdentifierBlob = IDL.Vec(IDL.Nat8);
+  const TokenIdentifier = IDL.Nat32;
   const Memo = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
   const EventFungibleTransaction = IDL.Record({
     'to' : AccountIdentifier,
     'created' : Timestamp,
-    'token' : TokenIdentifierBlob,
+    'token' : TokenIdentifier,
     'from' : AccountIdentifier,
     'memo' : Memo,
     'amount' : Balance,
@@ -20,14 +20,14 @@ export const idlFactory = ({ IDL }) => {
     'cooldown' : Cooldown,
   });
   const Time = IDL.Int;
-  const TokenIdentifierBlob__1 = IDL.Vec(IDL.Nat8);
+  const TokenIdentifier__1 = IDL.Nat32;
   const Share = IDL.Nat16;
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
   const ICP = IDL.Record({ 'e8s' : IDL.Nat64 });
   const BlockIndex = IDL.Nat64;
   const NFTPurchase = IDL.Record({
     'created' : Time,
-    'token' : TokenIdentifierBlob__1,
+    'token' : TokenIdentifier__1,
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier__1 })
     ),
@@ -48,42 +48,39 @@ export const idlFactory = ({ IDL }) => {
     'use' : IDL.Record({
       'use' : ItemUse,
       'created' : Timestamp,
-      'token' : TokenIdentifierBlob,
+      'token' : TokenIdentifier,
       'memo' : Memo,
       'user' : AccountIdentifier,
     }),
     'socket' : IDL.Record({
       'created' : Timestamp,
-      'socket' : TokenIdentifierBlob,
+      'socket' : TokenIdentifier,
       'memo' : Memo,
-      'plug' : TokenIdentifierBlob,
+      'plug' : TokenIdentifier,
     }),
     'unsocket' : IDL.Record({
       'created' : Timestamp,
-      'socket' : TokenIdentifierBlob,
+      'socket' : TokenIdentifier,
       'memo' : Memo,
-      'plug' : TokenIdentifierBlob,
+      'plug' : TokenIdentifier,
     }),
     'burn' : IDL.Record({
       'created' : Timestamp,
-      'token' : TokenIdentifierBlob,
+      'token' : TokenIdentifier,
       'memo' : Memo,
       'user' : AccountIdentifier,
     }),
-    'mint' : IDL.Record({
-      'created' : Timestamp,
-      'token' : TokenIdentifierBlob,
-    }),
+    'mint' : IDL.Record({ 'created' : Timestamp, 'token' : TokenIdentifier }),
     'transaction' : IDL.Record({
       'to' : AccountIdentifier,
       'created' : Timestamp,
-      'token' : TokenIdentifierBlob,
+      'token' : TokenIdentifier,
       'from' : AccountIdentifier,
       'memo' : Memo,
     }),
     'approve' : IDL.Record({
       'created' : Timestamp,
-      'token' : TokenIdentifierBlob,
+      'token' : TokenIdentifier,
       'user' : AccountIdentifier,
       'spender' : IDL.Principal,
     }),
@@ -98,16 +95,19 @@ export const idlFactory = ({ IDL }) => {
     'treasury' : TreasuryEvent,
   });
   const AddResponse = IDL.Vec(IDL.Nat8);
+  const CanisterSlot__1 = IDL.Nat16;
+  const CanisterSlot = IDL.Nat16;
+  const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
-    'anv' : IDL.Principal,
-    'nft' : IDL.Vec(IDL.Principal),
-    'pwr' : IDL.Principal,
-    'slot' : IDL.Nat,
-    'history' : IDL.Principal,
-    'nft_avail' : IDL.Vec(IDL.Principal),
-    'account' : IDL.Vec(IDL.Principal),
-    'router' : IDL.Principal,
-    'treasury' : IDL.Principal,
+    'anv' : CanisterSlot__1,
+    'nft' : CanisterRange,
+    'pwr' : CanisterSlot__1,
+    'history' : CanisterSlot__1,
+    'nft_avail' : IDL.Vec(CanisterSlot__1),
+    'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
+    'account' : CanisterRange,
+    'router' : CanisterSlot__1,
+    'treasury' : CanisterSlot__1,
   });
   const EventIndex = IDL.Nat32;
   const InfoResponse = IDL.Record({
