@@ -704,7 +704,7 @@ module {
     };
 
     public module Pricing = {
-        public let QUALITY_PRICE : Nat64 = 2; // max quality price per min
+        public let QUALITY_PRICE : Nat64 = 1000; // max quality price per min
         public let STORAGE_KB_PER_MIN : Nat64 = 8; // prices are in cycles
         public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
         public let FULLY_CHARGED_MINUTES : Nat64 = 8409600; //(16 * 365 * 24 * 60) 16 years

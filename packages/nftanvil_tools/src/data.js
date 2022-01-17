@@ -1,5 +1,6 @@
 import basex from "base-x";
 import { sha224 } from "@dfinity/principal/lib/cjs/utils/sha224";
+import { Principal } from "@dfinity/candid/lib/cjs/idl";
 
 var BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 var bs58 = basex(BASE58);

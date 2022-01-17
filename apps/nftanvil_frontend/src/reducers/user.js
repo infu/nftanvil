@@ -16,6 +16,7 @@ import { Principal } from "@dfinity/principal";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 import { toast } from "react-toastify";
+
 export const userSlice = createSlice({
   name: "user",
   initialState: {

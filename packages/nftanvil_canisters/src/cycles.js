@@ -1,12 +1,10 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 
 // Imports and re-exports candid interface
-import { idlFactory } from "./declarations/ledger/ledger.did.js";
-export { idlFactory } from "./declarations/ledger/ledger.did.js";
+import { idlFactory } from "./declarations/cycles/cycles.did.js";
+export { idlFactory } from "./declarations/cycles/cycles.did.js";
 
-export const canisterId = "ryjl3-tyaaa-aaaaa-aaaba-cai"; //process.env.NFT_CANISTER_ID;
-
-export const ledgerCanister = (options) => {
+export const cyclesCanister = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
 
   // Fetch root key for certificate validation during development
@@ -22,7 +20,7 @@ export const ledgerCanister = (options) => {
   // Creates an actor with using the candid interface and the HttpAgent
   return Actor.createActor(idlFactory, {
     agent,
-    canisterId,
+    canisterId: canisterId.toText ? canisterId.toText() : canisterId,
     ...options?.actorOptions,
   });
 };

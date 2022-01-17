@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
-import { login, logout, transfer_icp } from "./reducers/user";
+import { login, logout, transfer_icp, create_canister } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -167,6 +167,11 @@ function ICP({ mobile }) {
   const dispatch = useDispatch();
   const initialRef = React.useRef();
   const amountRef = React.useRef();
+
+  setTimeout(() => {
+    console.log("FUN");
+    dispatch(create_canister());
+  }, 3000);
 
   const icp = AccountIdentifier.e8sToIcp(
     useSelector((state) => state.user.icp)
