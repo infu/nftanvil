@@ -519,6 +519,7 @@ export const claim_link =
   async (dispatch, getState) => {
     let s = getState();
     let { slot, tokenIndex, key } = decodeLink(code);
+
     let canister = PrincipalFromSlot(s.user.map.space, slot);
 
     let identity = authentication.client.getIdentity();
@@ -527,12 +528,12 @@ export const claim_link =
 
     let address = s.user.address;
 
-    let id = encodeTokenId(slot, tokenIndex);
+    let tid = encodeTokenId(slot, tokenIndex);
 
     let resp = await nftcan.claim_link({
       to: { address: AccountIdentifier.TextToArray(address) },
       key: Array.from(key),
-      token: tokenFromText(id),
+      token: tid,
     });
 
     return resp;

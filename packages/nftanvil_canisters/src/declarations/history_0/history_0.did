@@ -1,0 +1,156 @@
+type TreasuryEvent = record {};
+type TokenIdentifier__1 = nat32;
+type TokenIdentifier = nat32;
+type Timestamp = int;
+type Time = int;
+type Share = nat16;
+type PwrEvent = variant {transaction: EventFungibleTransaction;};
+type NftEvent = 
+ variant {
+   approve:
+    record {
+      created: Timestamp;
+      spender: principal;
+      token: TokenIdentifier;
+      user: AccountIdentifier;
+    };
+   burn:
+    record {
+      created: Timestamp;
+      memo: Memo;
+      token: TokenIdentifier;
+      user: AccountIdentifier;
+    };
+   mint: record {
+           created: Timestamp;
+           token: TokenIdentifier;
+         };
+   purchase: NFTPurchase;
+   socket:
+    record {
+      created: Timestamp;
+      memo: Memo;
+      plug: TokenIdentifier;
+      socket: TokenIdentifier;
+    };
+   transaction:
+    record {
+      created: Timestamp;
+      from: AccountIdentifier;
+      memo: Memo;
+      to: AccountIdentifier;
+      token: TokenIdentifier;
+    };
+   unsocket:
+    record {
+      created: Timestamp;
+      memo: Memo;
+      plug: TokenIdentifier;
+      socket: TokenIdentifier;
+    };
+   use:
+    record {
+      created: Timestamp;
+      memo: Memo;
+      token: TokenIdentifier;
+      use: ItemUse;
+      user: AccountIdentifier;
+    };
+ };
+type NFTPurchase = 
+ record {
+   affiliate: opt record {
+                    address: AccountIdentifier__1;
+                    share: Share;
+                  };
+   amount: ICP;
+   author: record {
+             address: AccountIdentifier__1;
+             share: Share;
+           };
+   buyer: AccountIdentifier__1;
+   created: Time;
+   ledgerBlock: BlockIndex;
+   marketplace: opt record {
+                      address: AccountIdentifier__1;
+                      share: Share;
+                    };
+   purchaseAccount: AccountIdentifier__1;
+   seller: AccountIdentifier__1;
+   token: TokenIdentifier__1;
+ };
+type Memo = blob;
+type ListResponse = vec opt Event;
+type ListRequest = 
+ record {
+   from: EventIndex;
+   to: EventIndex;
+ };
+type ItemUse = 
+ variant {
+   consume;
+   cooldown: Cooldown;
+   prove;
+ };
+type InfoResponse = 
+ record {
+   previous: opt principal;
+   total: EventIndex;
+ };
+type ICP = record {e8s: nat64;};
+type EventInfo = 
+ variant {
+   anv: AnvEvent;
+   nft: NftEvent;
+   pwr: PwrEvent;
+   treasury: TreasuryEvent;
+ };
+type EventIndex = nat32;
+type EventFungibleTransaction = 
+ record {
+   amount: Balance;
+   created: Timestamp;
+   from: AccountIdentifier;
+   memo: Memo;
+   to: AccountIdentifier;
+   token: TokenIdentifier;
+ };
+type Event = 
+ record {
+   hash: blob;
+   info: EventInfo;
+ };
+type Cooldown = nat32;
+type Config = 
+ record {
+   account: CanisterRange;
+   anv: CanisterSlot__1;
+   history: CanisterSlot__1;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot__1;
+   pwr: CanisterSlot__1;
+   router: CanisterSlot__1;
+   space: vec vec nat64;
+   treasury: CanisterSlot__1;
+ };
+type Class = 
+ service {
+   add: (EventInfo) -> (AddResponse);
+   config_set: (Config) -> ();
+   info: () -> (InfoResponse) query;
+   list: (ListRequest) -> (ListResponse) query;
+ };
+type CanisterSlot__1 = nat16;
+type CanisterSlot = nat16;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
+ };
+type BlockIndex = nat64;
+type Balance = nat64;
+type AnvEvent = variant {transaction: EventFungibleTransaction;};
+type AddResponse = blob;
+type AccountIdentifier__1 = blob;
+type AccountIdentifier = blob;
+service : () -> Class

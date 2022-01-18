@@ -345,7 +345,7 @@ export const idlFactory = ({ IDL }) => {
     'amount' : Balance,
   });
   const TransferLinkResponse = IDL.Variant({
-    'ok' : CanisterSlot,
+    'ok' : IDL.Null,
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,

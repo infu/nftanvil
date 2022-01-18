@@ -35,6 +35,8 @@ let acc_from = 9999999999;
 let acc_to = -1;
 let nft_from = 9999999999;
 let nft_to = -1;
+let history_from = 9999999999;
+let history_to = -1;
 let conf = {};
 
 for (let name in dfx.canisters) {
@@ -60,6 +62,10 @@ for (let name in dfx.canisters) {
       if (pidx <= acc_from) acc_from = pidx;
       if (pidx >= acc_to) acc_to = pidx;
     }
+    if (prefix === "history") {
+      if (pidx <= history_from) history_from = pidx;
+      if (pidx >= history_to) history_to = pidx;
+    }
   } else {
     conf[name] = pidx;
   }
@@ -76,10 +82,12 @@ conf.nft = [nft_from, nft_to];
 conf.account = [acc_from, acc_to];
 conf.space = [[range_start, range_end]];
 conf.nft_avail = [];
-
+conf.history = history_to;
 for (let i = nft_from; i <= nft_to; i++) {
   conf.nft_avail.push(i);
 }
+
+const LATEST_HISTORY_IDX = 0;
 
 console.log(conf);
 
@@ -118,6 +126,7 @@ function config() {
     router=  ${conf["router"] - range_start}:nat16;
     space= vec { vec {${conf.space[0][0]}:nat64; ${conf.space[0][1]}:nat64 }}
   })'`;
+
   return r;
 }
 

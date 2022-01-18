@@ -2,18 +2,19 @@ import { Principal } from "@dfinity/principal";
 import { bytesArrayToNumber, numberToBytesArray } from "./data.js";
 import basex from "base-x";
 
-var bs = basex("0123456789abcdefghijkmnopqrstuvwxyz");
+var bs = basex("812345679abcdefghijkmnopqrstuvwxyz");
 
-export function encode(can, idx) {
-  let p = Principal.fromText(can);
-  return [...p.toUint8Array(), ...numberToBytesArray(idx, 4)];
+export function encode(slot, idx) {
+  console.log("ENCODE", slot, idx);
+  return [...numberToBytesArray(slot, 2), ...numberToBytesArray(idx, 4)];
 }
 
 export function decode(tx) {
   let p = fromText(tx);
   let idx = bytesArrayToNumber(p.slice(-4));
-  let can = Principal.fromUint8Array(p.slice(0, -4));
-  return { can, idx };
+  let slot = bytesArrayToNumber(p.slice(0, -4));
+  console.log("DECODE", idx, slot);
+  return { slot, idx };
 }
 
 export function toText(bytes) {

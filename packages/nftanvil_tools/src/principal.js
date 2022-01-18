@@ -15,3 +15,9 @@ export const PrincipalToIdx = (p) => {
   let idx = bytesArrayToNumber(a);
   return idx;
 };
+
+export const PrincipalToSlot = (space, p) => {
+  let idx = PrincipalToIdx(p);
+  let start = Number(space[0][0]);
+  return idx - start;
+};

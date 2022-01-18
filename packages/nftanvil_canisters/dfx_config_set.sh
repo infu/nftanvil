@@ -1,17 +1,5 @@
 #!/bin/sh
 
-dfx canister --wallet=$(dfx identity  get-wallet)  call router config_set '(record {
-    nft= record { 5:nat16; 7:nat16 };
-    nft_avail = vec {  5:nat16;  6:nat16;  7:nat16 };
-    account= record { 0:nat16; 2:nat16 };
-    pwr= 8:nat16;
-    anv= 3:nat16;
-    history= 4:nat16;
-    treasury= 10:nat16;
-    router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
-  })' & 
-dfx canister --wallet=$(dfx identity  get-wallet)  call router oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call nft_0 config_set '(record {
     nft= record { 5:nat16; 7:nat16 };
     nft_avail = vec {  5:nat16;  6:nat16;  7:nat16 };
@@ -21,7 +9,7 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call nft_0 config_set '(recor
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call nft_0 oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call nft_1 config_set '(record {
@@ -33,7 +21,7 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call nft_1 config_set '(recor
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call nft_1 oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call nft_2 config_set '(record {
@@ -45,7 +33,7 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call nft_2 config_set '(recor
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call nft_2 oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call account_0 config_set '(record {
@@ -57,7 +45,7 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call account_0 config_set '(r
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call account_0 oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call account_1 config_set '(record {
@@ -69,7 +57,7 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call account_1 config_set '(r
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call account_1 oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call account_2 config_set '(record {
@@ -81,10 +69,10 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call account_2 config_set '(r
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call account_2 oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
-dfx canister --wallet=$(dfx identity  get-wallet)  call anv config_set '(record {
+dfx canister --wallet=$(dfx identity  get-wallet)  call history_0 config_set '(record {
     nft= record { 5:nat16; 7:nat16 };
     nft_avail = vec {  5:nat16;  6:nat16;  7:nat16 };
     account= record { 0:nat16; 2:nat16 };
@@ -93,9 +81,9 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call anv config_set '(record 
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
-dfx canister --wallet=$(dfx identity  get-wallet)  call anv oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
+dfx canister --wallet=$(dfx identity  get-wallet)  call history_0 oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call pwr config_set '(record {
     nft= record { 5:nat16; 7:nat16 };
     nft_avail = vec {  5:nat16;  6:nat16;  7:nat16 };
@@ -105,9 +93,21 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call pwr config_set '(record 
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call pwr oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
+dfx canister --wallet=$(dfx identity  get-wallet)  call anv config_set '(record {
+    nft= record { 5:nat16; 7:nat16 };
+    nft_avail = vec {  5:nat16;  6:nat16;  7:nat16 };
+    account= record { 0:nat16; 2:nat16 };
+    pwr= 8:nat16;
+    anv= 3:nat16;
+    history= 4:nat16;
+    treasury= 10:nat16;
+    router=  9:nat16;
+    space= vec { vec {16:nat64; 26:nat64 }}
+  })' & 
+dfx canister --wallet=$(dfx identity  get-wallet)  call anv oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call treasury config_set '(record {
     nft= record { 5:nat16; 7:nat16 };
     nft_avail = vec {  5:nat16;  6:nat16;  7:nat16 };
@@ -117,10 +117,10 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call treasury config_set '(re
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
 dfx canister --wallet=$(dfx identity  get-wallet)  call treasury oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
-dfx canister --wallet=$(dfx identity  get-wallet)  call history config_set '(record {
+dfx canister --wallet=$(dfx identity  get-wallet)  call router config_set '(record {
     nft= record { 5:nat16; 7:nat16 };
     nft_avail = vec {  5:nat16;  6:nat16;  7:nat16 };
     account= record { 0:nat16; 2:nat16 };
@@ -129,6 +129,6 @@ dfx canister --wallet=$(dfx identity  get-wallet)  call history config_set '(rec
     history= 4:nat16;
     treasury= 10:nat16;
     router=  9:nat16;
-    space= vec { vec {3:nat64; 13:nat64 }}
+    space= vec { vec {16:nat64; 26:nat64 }}
   })' & 
-dfx canister --wallet=$(dfx identity  get-wallet)  call history oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 
+dfx canister --wallet=$(dfx identity  get-wallet)  call router oracle_set '(record {cycle_to_pwr = 0.000003703703703704})' & 

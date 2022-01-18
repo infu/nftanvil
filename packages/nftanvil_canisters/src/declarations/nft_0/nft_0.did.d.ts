@@ -324,7 +324,7 @@ export interface TransferLinkRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type TransferLinkResponse = { 'ok' : CanisterSlot } |
+export type TransferLinkResponse = { 'ok' : null } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |

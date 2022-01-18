@@ -280,7 +280,7 @@ function LoginBox() {
 
   const dispatch = useDispatch();
   return (
-    <Box w={380} sx={{ textAlign: "right" }}>
+    <Box w={420} sx={{ textAlign: "right" }}>
       <ButtonGroup variant="outline" spacing="3">
         {anonymous ? (
           <>
@@ -422,7 +422,7 @@ function Logo(props) {
 function DesktopMenu() {
   return (
     <Flex>
-      <Logo w={380} />
+      <Logo w={420} />
       <Spacer />
       <PageTabs />
       <Spacer />

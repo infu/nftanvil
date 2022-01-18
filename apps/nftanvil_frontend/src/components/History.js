@@ -35,6 +35,11 @@ import {
   tokenToText,
   decodeTokenId,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+import {
+  PrincipalFromSlot,
+  PrincipalToIdx,
+  PrincipalToSlot,
+} from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
@@ -88,11 +93,19 @@ const Val = styled.div`
 
 const HistoryEvent = ({ ev, canister, idx }) => {
   const boxColor = useColorModeValue("white", "gray.600");
+  const space = useSelector((state) => state.user.map.space);
+
   if (!ev?.info) return null;
   let etype = Object.keys(ev.info)[0];
   let action = Object.keys(ev.info[etype])[0];
   let details = ev.info[etype][action];
-  let transactionId = TransactionId.toText(TransactionId.encode(canister, idx));
+
+  let transactionId = TransactionId.toText(
+    TransactionId.encode(
+      PrincipalToSlot(space, Principal.fromText(canister)),
+      idx
+    )
+  );
   let timestamp = Number(BigInt(details.created) / 1000000n);
 
   //TODO: This is will be done in a better way
@@ -250,11 +263,13 @@ export const HistoryTx = (p) => {
   const total = useSelector((state) => state.history.total);
   const events = useSelector((state) => state.history.events);
   const mapLoaded = useSelector((state) => state.user.map.history);
+  const space = useSelector((state) => state.user.map.space);
 
   const tx = p.match.params.tx;
 
-  const { can, idx: from } = TransactionId.decode(tx);
-  let canister = can.toText();
+  const { slot, idx: from } = TransactionId.decode(tx);
+  let canister = PrincipalFromSlot(space, slot).toText();
+  console.log({ canister, slot, from, space });
   // const from = parseInt(tx.substr(tx.lastIndexOf("-") + 1), 10);
 
   const to = from + 1;

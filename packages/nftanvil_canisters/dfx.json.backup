@@ -1,0 +1,62 @@
+{
+  "canisters": {
+    "router": {
+      "main": "mo/router.mo",
+      "type": "motoko"
+    },
+    "nft_0": {
+      "main": "mo/nft.mo",
+      "type": "motoko"
+    },
+    "nft_1": {
+      "main": "mo/nft.mo",
+      "type": "motoko"
+    },
+    "nft_2": {
+      "main": "mo/nft.mo",
+      "type": "motoko"
+    },
+    "account_0": {
+      "main": "mo/account.mo",
+      "type": "motoko"
+    },
+    "account_1": {
+      "main": "mo/account.mo",
+      "type": "motoko"
+    },
+    "account_2": {
+      "main": "mo/account.mo",
+      "type": "motoko"
+    },
+    "anv": {
+      "main": "mo/anv.mo",
+      "type": "motoko"
+    },
+    "pwr": {
+      "main": "mo/pwr.mo",
+      "type": "motoko"
+    },
+    "treasury": {
+      "main": "mo/treasury.mo",
+      "type": "motoko"
+    },
+    "history": {
+      "main": "mo/history.mo",
+      "type": "motoko"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": "vessel sources"
+    }
+  },
+  "dfx": "0.8.4",
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    }
+  },
+  "version": 1
+}
