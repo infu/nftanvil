@@ -36,12 +36,19 @@ export interface Config {
 }
 export interface ICP { 'e8s' : bigint }
 export type Memo = Array<number>;
-export interface Oracle { 'cycle_to_pwr' : number }
+export interface Oracle {
+  'cycle_to_pwr' : number,
+  'icpFee' : bigint,
+  'anvFee' : bigint,
+  'pwrFee' : bigint,
+}
 export interface PurchaseClaimRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type PurchaseClaimResponse = { 'ok' : null } |
+export type PurchaseClaimResponse = {
+    'ok' : { 'transactionId' : Array<number> }
+  } |
   { 'err' : { 'PaymentTooSmall' : null } | { 'Ledger' : TransferError } };
 export interface PurchaseIntentRequest {
   'user' : User,
@@ -65,7 +72,7 @@ export interface TransferRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type TransferResponse = { 'ok' : Balance } |
+export type TransferResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   { 'err' : TransferResponseError };
 export type TransferResponseError = { 'InsufficientBalance' : null } |
   { 'NotTransferable' : null } |

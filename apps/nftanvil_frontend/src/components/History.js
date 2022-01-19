@@ -163,7 +163,9 @@ const HistoryEvent = ({ ev, canister, idx }) => {
           val = Principal.fromUint8Array(val._arr).toText();
         }
 
-        if (key === "amount") val = val.e8s;
+        if (key === "amount") {
+          if (val.e8s) val = val.e8s;
+        }
 
         return <KeyVal key={idx} k={key} v={val} />;
       })}
@@ -268,8 +270,8 @@ export const HistoryTx = (p) => {
   const tx = p.match.params.tx;
 
   const { slot, idx: from } = TransactionId.decode(tx);
-  let canister = PrincipalFromSlot(space, slot).toText();
-  console.log({ canister, slot, from, space });
+  let canister = mapLoaded ? PrincipalFromSlot(space, slot).toText() : null;
+  //console.log({ canister, slot, from, space });
   // const from = parseInt(tx.substr(tx.lastIndexOf("-") + 1), 10);
 
   const to = from + 1;
@@ -288,6 +290,7 @@ export const HistoryTx = (p) => {
   }, [dispatch, from, to, canister, mapLoaded]);
 
   if (!events || !events.length) return null;
+  if (!mapLoaded) return null;
 
   return (
     <Box mt={8}>

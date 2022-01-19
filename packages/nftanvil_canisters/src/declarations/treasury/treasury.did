@@ -4,7 +4,7 @@ type WithdrawResponse =
           NotEnoughForTransfer;
           TransferFailed;
         };
-   ok: Balance;
+   ok: record {transactionId: blob;};
  };
 type WithdrawRequest = 
  record {
@@ -66,7 +66,7 @@ type Class =
    config_set: (Config) -> ();
    dumpBalances: () -> (vec record {
                               AccountIdentifier__2;
-                              Balance__1;
+                              Balance;
                             }) query;
    notify_NFTPurchase: (NFTPurchase) -> (NFTPurchaseResponse);
    withdraw: (WithdrawRequest) -> (WithdrawResponse);
@@ -79,7 +79,6 @@ type CanisterRange =
    CanisterSlot;
  };
 type BlockIndex = nat64;
-type Balance__1 = nat64;
 type BalanceResponse = nat64;
 type BalanceRequest = 
  record {

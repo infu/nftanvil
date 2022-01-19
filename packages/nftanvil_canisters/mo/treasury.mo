@@ -155,7 +155,11 @@ shared({caller = _installer}) actor class Class() = this {
 
             switch(await ledger.transfer(transfer)) {
                 case (#Ok(blockIndex)) {
-                    #ok(amount)
+                    // #ok(amount)
+
+                     let transactionId = await Cluster.history(_conf).add(#treasury(#withdraw({created=Time.now(); user=Nft.User.toAccountIdentifier(request.user); amount=amount})));
+                     #ok({transactionId});
+
                 };
 
                 case (#Err(e)) {
@@ -164,7 +168,7 @@ shared({caller = _installer}) actor class Class() = this {
                 }
             };
         };
-        case (_) #ok(0);
+        case (_) #err(#NotEnoughForTransfer);
     };
 
 

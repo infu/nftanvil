@@ -22,7 +22,12 @@ export const idlFactory = ({ IDL }) => {
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__1 = IDL.Nat64;
-  const Oracle = IDL.Record({ 'cycle_to_pwr' : IDL.Float64 });
+  const Oracle = IDL.Record({
+    'cycle_to_pwr' : IDL.Float64,
+    'icpFee' : IDL.Nat64,
+    'anvFee' : IDL.Nat64,
+    'pwrFee' : IDL.Nat64,
+  });
   const User = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
@@ -42,7 +47,7 @@ export const idlFactory = ({ IDL }) => {
     'InsufficientFunds' : IDL.Record({ 'balance' : ICP }),
   });
   const PurchaseClaimResponse = IDL.Variant({
-    'ok' : IDL.Null,
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Variant({
       'PaymentTooSmall' : IDL.Null,
       'Ledger' : TransferError,
@@ -76,7 +81,7 @@ export const idlFactory = ({ IDL }) => {
     'Other' : IDL.Text,
   });
   const TransferResponse = IDL.Variant({
-    'ok' : Balance,
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : TransferResponseError,
   });
   const Class = IDL.Service({

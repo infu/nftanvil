@@ -6,27 +6,17 @@ export type Balance = bigint;
 export interface BalanceRequest { 'user' : User__1 }
 export type BalanceResponse = bigint;
 export type Balance__1 = bigint;
-export type Block = [
-  TransactionFrom,
-  TransactionTo,
-  TransactionAmount,
-  BlockTimestamp,
-  BlockHash,
-];
-export type BlockHash = Array<number>;
-export type BlockIndex = number;
-export type BlockTimestamp = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
 export type CanisterSlot = number;
 export type CanisterSlot__1 = number;
 export interface Class {
   'adminAllocate' : (
       arg_0: { 'user' : User__1, 'amount' : TransactionAmount },
-    ) => Promise<[BlockIndex, Block]>,
+    ) => Promise<undefined>,
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
   'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__1]>>,
-  'dumpBlockchain' : () => Promise<Array<[BlockIndex, Block]>>,
+  'oracle_set' : (arg_0: Oracle) => Promise<undefined>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
 }
 export interface Config {
@@ -41,10 +31,14 @@ export interface Config {
   'treasury' : CanisterSlot__1,
 }
 export type Memo = Array<number>;
+export interface Oracle {
+  'cycle_to_pwr' : number,
+  'icpFee' : bigint,
+  'anvFee' : bigint,
+  'pwrFee' : bigint,
+}
 export type SubAccount = Array<number>;
 export type TransactionAmount = bigint;
-export type TransactionFrom = Array<number>;
-export type TransactionTo = Array<number>;
 export interface TransferRequest {
   'to' : User,
   'from' : User,
@@ -52,7 +46,7 @@ export interface TransferRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type TransferResponse = { 'ok' : Balance } |
+export type TransferResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'Rejected' : null } |

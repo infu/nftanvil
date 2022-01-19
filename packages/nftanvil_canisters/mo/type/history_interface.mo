@@ -49,9 +49,9 @@ module {
 
     public type TransactionId = Blob;
     public module TransactionId = { 
-        public func encode(historyCanisterId: Principal, idx: EventIndex) : TransactionId { 
+        public func encode(history_slot: Nft.CanisterSlot, idx: EventIndex) : TransactionId { 
                 let raw = Array.flatten<Nat8>([
-                    Blob.toArray(Principal.toBlob(historyCanisterId)),
+                    Blob_.nat16ToBytes(history_slot),
                     Binary.BigEndian.fromNat32(idx),
                 ]);
                 
@@ -83,21 +83,23 @@ module {
     };
 
     public type AnvEvent = {
-        #transaction : EventFungibleTransaction;
+        #transfer : EventFungibleTransaction;
         // vote
     };
 
     public type PwrEvent = {
-        #transaction : EventFungibleTransaction;
+        #transfer : EventFungibleTransaction;
+        #mint : EventFungibleMint;
+
     };
 
     public type TreasuryEvent = {
-        //treasury withdraw
+        #withdraw : TreasuryWithdraw
     };
 
     public type NftEvent = {
   
-        #transaction : {
+        #transfer : {
             created: Timestamp;
             from: AccountIdentifier;
             to: AccountIdentifier;
@@ -125,6 +127,7 @@ module {
         #mint : {
             created: Timestamp;
             token: TokenIdentifier;
+            pwr: Balance;
         };
 
         #approve : {
@@ -150,15 +153,31 @@ module {
 
     };
 
+
+    public module TreasuryEvent = {
+        public func hash(e : TreasuryEvent) : [Nat8] {
+             switch (e) {
+                case (#withdraw({created;user;amount})) {
+                    Array.flatten<Nat8>([
+                        [1:Nat8],
+                        Blob_.intToBytes(created),
+                        Blob.toArray(user),
+                        Blob_.nat64ToBytes(amount),
+                    ])
+                };
+             }
+        }
+    };
+
     public module AnvEvent = {
         public func hash(e : AnvEvent) : [Nat8] {
              switch (e) {
-                case (#transaction({from;to;token;amount;memo})) {
+                case (#transfer({created;from;to;amount;memo})) {
                     Array.flatten<Nat8>([
                         [1:Nat8],
+                        Blob_.intToBytes(created),
                         Blob.toArray(from),
                         Blob.toArray(to),
-                        Blob_.nat32ToBytes(token),
                         Blob_.nat64ToBytes(amount),
                         Blob.toArray(memo)
                     ])
@@ -170,14 +189,22 @@ module {
     public module PwrEvent = {
         public func hash(e : PwrEvent) : [Nat8] {
              switch (e) {
-                case (#transaction({from;to;token;amount;memo})) {
+                case (#transfer({from;to;amount;memo;created})) {
                     Array.flatten<Nat8>([
                         [2:Nat8],
+                        Blob_.intToBytes(created),
                         Blob.toArray(from),
                         Blob.toArray(to),
-                        Blob_.nat32ToBytes(token),
                         Blob_.nat64ToBytes(amount),
                         Blob.toArray(memo)
+                    ])
+                };
+                case (#mint({created;user;amount})) {
+                    Array.flatten<Nat8>([
+                        [3:Nat8],
+                        Blob_.intToBytes(created),
+                        Blob.toArray(user),
+                        Blob_.nat64ToBytes(amount),
                     ])
                 };
              }
@@ -187,7 +214,7 @@ module {
     public module NftEvent = {
         public func hash(e : NftEvent) : [Nat8] {
             switch (e) {
-                case (#transaction({created;from;to;token;memo})) {
+                case (#transfer({created;from;to;token;memo})) {
                     Array.flatten<Nat8>([
                         [3:Nat8],
                         Blob_.intToBytes(created),
@@ -216,11 +243,12 @@ module {
                         Blob.toArray(memo)
                     ])
                 };
-                case (#mint({created;token;})) { // todo add use
+                case (#mint({created;token;pwr})) { // todo add use
                     Array.flatten<Nat8>([
                         [6:Nat8],
                         Blob_.intToBytes(created),
                         Blob_.nat32ToBytes(token),
+                        Blob_.nat64ToBytes(pwr),
                     ])
                 };
                 case (#socket({created;socket; plug; memo})) {
@@ -255,17 +283,29 @@ module {
                     ])
                 };
             
-            }
+            };
                 
         };
 
     };
 
+
+    public type TreasuryWithdraw =  {
+                    created: Timestamp;
+                    user: AccountIdentifier;
+                    amount: Balance;
+                };
+
+    public type EventFungibleMint =  {
+                    created: Timestamp;
+                    user: AccountIdentifier;
+                    amount: Balance;
+                };
+
     public type EventFungibleTransaction =  {
                     created: Timestamp;
                     from: AccountIdentifier;
                     to: AccountIdentifier;
-                    token: TokenIdentifier;
                     amount: Balance;
                     memo: Memo;
                 };

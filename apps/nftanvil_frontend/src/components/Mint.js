@@ -35,6 +35,8 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Stack,
+  Center,
+  Spinner,
 } from "@chakra-ui/react";
 import {
   Slider,
@@ -112,14 +114,41 @@ export const PwrPrice = ({ record, valid }) => {
   useDebounce(
     () => {
       if (!valid) return;
-
-      dispatch(mint_quote(record2request(record))).then(setPwrPrice);
+      setPwrPrice(0);
+      dispatch(mint_quote(record2request(record))).then((re) => {
+        setPwrPrice(re.transfer + re.ops + re.storage);
+      });
     },
-    2000,
+    1000,
     [record, valid, dispatch]
   );
 
-  return <Text mt={3}>{AccountIdentifier.e8sToIcp(pwrPrice)}</Text>;
+  return (
+    <Center>
+      <Box
+        bg="teal.300"
+        color="teal.900"
+        p="1"
+        mt="0"
+        w={"50%"}
+        sx={{ borderRadius: "0px 0px 6px 6px" }}
+        textAlign={"center"}
+        fontSize="13px"
+      >
+        {!pwrPrice ? (
+          <Spinner
+            thickness="2px"
+            speed="0.85s"
+            emptyColor="teal.200"
+            color="teal.800"
+            size="xs"
+          />
+        ) : (
+          <>costs {AccountIdentifier.e8sToIcp(pwrPrice)} PWR</>
+        )}
+      </Box>
+    </Center>
+  );
 };
 
 const form2record = (v) => {
@@ -305,13 +334,7 @@ export const MintForm = () => {
                     >
                       Mint
                     </Text>
-                    <Spacer />
-                    <PwrPrice
-                      record={record}
-                      valid={
-                        !props.isValidating && props.dirty && props.isValid
-                      }
-                    />
+
                     <Spacer />
                     <ProToggle />
                   </Flex>
@@ -638,7 +661,7 @@ export const MintForm = () => {
 
                             <Select
                               {...field}
-                              placeholder="Select option"
+                              //placeholder="Select option"
                               variant="filled"
                             >
                               {itemQuality.map((x, idx) => (
@@ -785,7 +808,7 @@ export const MintForm = () => {
 
                               <Select
                                 {...field}
-                                placeholder="Select option"
+                                //placeholder="Select option"
                                 variant="filled"
                               >
                                 {itemTransfer.map((x) => (
@@ -912,6 +935,14 @@ export const MintForm = () => {
                     >
                       Mint
                     </Button>
+                    {props.dirty && props.isValid ? (
+                      <PwrPrice
+                        record={record}
+                        valid={
+                          !props.isValidating && props.dirty && props.isValid
+                        }
+                      />
+                    ) : null}
                   </LoginRequired>
                   {!pro ? (
                     <Box fontSize="11px" align="center" mt="16px">

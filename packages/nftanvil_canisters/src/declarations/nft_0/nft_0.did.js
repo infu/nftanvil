@@ -176,11 +176,12 @@ export const idlFactory = ({ IDL }) => {
     'amount' : IDL.Nat64,
   });
   const MetavarsFrozen = IDL.Record({
-    'pwr' : IDL.Nat64,
     'ttl' : IDL.Opt(IDL.Nat32),
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
     'sockets' : Sockets,
+    'pwrOps' : IDL.Nat64,
+    'pwrStorage' : IDL.Nat64,
     'price' : Price,
   });
   const MetadataResponse = IDL.Variant({
@@ -227,7 +228,17 @@ export const idlFactory = ({ IDL }) => {
       'OutOfMemory' : IDL.Null,
     }),
   });
-  const Oracle = IDL.Record({ 'cycle_to_pwr' : IDL.Float64 });
+  const MintQuoteResponse = IDL.Record({
+    'ops' : IDL.Nat64,
+    'storage' : IDL.Nat64,
+    'transfer' : IDL.Nat64,
+  });
+  const Oracle = IDL.Record({
+    'cycle_to_pwr' : IDL.Float64,
+    'icpFee' : IDL.Nat64,
+    'anvFee' : IDL.Nat64,
+    'pwrFee' : IDL.Nat64,
+  });
   const PlugRequest = IDL.Record({
     'socket' : TokenIdentifier,
     'memo' : Memo,
@@ -436,7 +447,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
     'mint' : IDL.Func([MintRequest], [MintResponse], []),
-    'mint_quote' : IDL.Func([MetadataInput], [IDL.Nat64], []),
+    'mint_quote' : IDL.Func([MetadataInput], [MintQuoteResponse], []),
     'oracle_set' : IDL.Func([Oracle], [], []),
     'plug' : IDL.Func([PlugRequest], [PlugResponse], []),
     'purchase_claim' : IDL.Func(

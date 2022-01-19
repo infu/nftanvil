@@ -67,6 +67,10 @@ import thumb_over from "../assets/over.png";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 import { Principal } from "@dfinity/principal";
+import {
+  TransactionToast,
+  TransactionFailed,
+} from "../components/TransactionToast";
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -188,10 +192,7 @@ function SetPriceButton({ id }) {
         closeOnClick: true,
 
         render: (
-          <div>
-            <div>Setting price failed.</div>
-            <div style={{ fontSize: "10px" }}>{e.message}</div>
-          </div>
+          <TransactionFailed title="Setting price failed" message={e.message} />
         ),
       });
     }
@@ -238,47 +239,8 @@ function TransferButton({ id, meta }) {
   const transferOk = async () => {
     let toAddress = initialRef.current.value.toUpperCase();
     onClose();
-    let toastId = toast("Sending...", {
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    });
-    try {
-      let { transactionId } = await dispatch(transfer({ id, toAddress }));
 
-      toast.update(toastId, {
-        type: toast.TYPE.SUCCESS,
-        isLoading: false,
-        render: (
-          <div>
-            <div>Transfer successfull.</div>
-            <div style={{ fontSize: "10px", color: "green" }}>
-              transactionId: {TransactionId.toText(transactionId)}
-            </div>
-          </div>
-        ),
-        autoClose: 9000,
-        pauseOnHover: true,
-      });
-    } catch (e) {
-      console.error("Transfer error", e);
-      toast.update(toastId, {
-        type: toast.TYPE.ERROR,
-        isLoading: false,
-        closeOnClick: true,
-
-        render: (
-          <div>
-            <div>Transfer failed.</div>
-            <div style={{ fontSize: "10px" }}>{e.message}</div>
-          </div>
-        ),
-      });
-    }
+    await dispatch(transfer({ id, toAddress }));
   };
 
   return (
@@ -341,12 +303,10 @@ function ApproveButton({ id, meta }) {
         type: toast.TYPE.SUCCESS,
         isLoading: false,
         render: (
-          <div>
-            <div>Approve successfull.</div>
-            <div style={{ fontSize: "10px", color: "green" }}>
-              transactionId: {TransactionId.toText(transactionId)}
-            </div>
-          </div>
+          <TransactionToast
+            title="Approve successfull"
+            transactionId={transactionId}
+          />
         ),
         autoClose: 9000,
         pauseOnHover: true,
@@ -359,10 +319,7 @@ function ApproveButton({ id, meta }) {
         closeOnClick: true,
 
         render: (
-          <div>
-            <div>Approve failed.</div>
-            <div style={{ fontSize: "10px" }}>{e.message}</div>
-          </div>
+          <TransactionFailed title="Approve failed" message={e.message} />
         ),
       });
     }
@@ -433,12 +390,10 @@ function UnsocketButton({ id }) {
         type: toast.TYPE.SUCCESS,
         isLoading: false,
         render: (
-          <div>
-            <div>Unplugging successfull.</div>
-            <div style={{ fontSize: "10px", color: "green" }}>
-              transactionId: {TransactionId.toText(transactionId)}
-            </div>
-          </div>
+          <TransactionToast
+            title="Unplugging successfull"
+            transactionId={transactionId}
+          />
         ),
         autoClose: 9000,
         pauseOnHover: true,
@@ -451,10 +406,7 @@ function UnsocketButton({ id }) {
         closeOnClick: true,
 
         render: (
-          <div>
-            <div>Unplugging failed.</div>
-            <div style={{ fontSize: "10px" }}>{e.message}</div>
-          </div>
+          <TransactionFailed title="Unplugging failed" message={e.message} />
         ),
       });
     }
@@ -516,12 +468,10 @@ function SocketButton({ id }) {
         type: toast.TYPE.SUCCESS,
         isLoading: false,
         render: (
-          <div>
-            <div>Plugging successfull.</div>
-            <div style={{ fontSize: "10px", color: "green" }}>
-              transactionId: {TransactionId.toText(transactionId)}
-            </div>
-          </div>
+          <TransactionToast
+            title="Plugging successfull"
+            transactionId={transactionId}
+          />
         ),
         autoClose: 9000,
         pauseOnHover: true,
@@ -533,12 +483,7 @@ function SocketButton({ id }) {
         isLoading: false,
         closeOnClick: true,
 
-        render: (
-          <div>
-            <div>Socket failed.</div>
-            <div style={{ fontSize: "10px" }}>{e.message}</div>
-          </div>
-        ),
+        render: <TransactionFailed title="Socket failed" message={e.message} />,
       });
     }
   };
@@ -607,12 +552,10 @@ export const UseButton = ({ id, meta }) => {
         type: toast.TYPE.SUCCESS,
         isLoading: false,
         render: (
-          <div>
-            <div>Use successfull.</div>
-            <div style={{ fontSize: "10px", color: "green" }}>
-              transactionId: {TransactionId.toText(transactionId)}
-            </div>
-          </div>
+          <TransactionToast
+            title="Use successfull"
+            transactionId={transactionId}
+          />
         ),
         autoClose: 9000,
         pauseOnHover: true,
@@ -837,32 +780,22 @@ export const BurnButton = ({ id }) => {
         type: toast.TYPE.SUCCESS,
         isLoading: false,
         render: (
-          <div
-            onClick={() => {
-              dispatch(push("/tx/" + TransactionId.toText(transactionId)));
-            }}
-          >
-            <div>Burning successfull.</div>
-            <div style={{ fontSize: "10px", color: "green" }}>
-              transactionId: {TransactionId.toText(transactionId)}
-            </div>
-          </div>
+          <TransactionToast
+            title="Burning successfull"
+            transactionId={transactionId}
+          />
         ),
         autoClose: 9000,
         pauseOnHover: true,
       });
     } catch (e) {
-      console.error("Plugging error", e);
       toast.update(toastId, {
         type: toast.TYPE.ERROR,
         isLoading: false,
         closeOnClick: true,
 
         render: (
-          <div>
-            <div>Socket failed.</div>
-            <div style={{ fontSize: "10px" }}>{e.message}</div>
-          </div>
+          <TransactionFailed title="Burning failed" message={e.message} />
         ),
       });
     }
@@ -1017,7 +950,11 @@ export const NFTPage = (p) => {
         <NFTContent meta={meta} />
       </Center>
       <Center>
-        <NFTInfo meta={meta} />
+        <Stack>
+          <NFTThumb meta={p} />
+          <NFTInfo id={id} meta={meta} />
+          <NFTProInfo id={id} meta={meta} />
+        </Stack>
       </Center>
 
       <Center>
@@ -1179,15 +1116,15 @@ const MetaDomain = ({ meta }) => {
   );
 };
 
-export const NFTInfo = ({ meta }) => {
+export const NFTInfo = ({ id, meta }) => {
   const bg = useColorModeValue("gray.500", "gray.700");
-  if (!meta || !meta.quality) return null;
+  if (!meta || !("quality" in meta)) return null;
   const qcolor = itemQuality[meta.quality].color;
   let nowMinutes = Math.floor(Date.now() / 1000 / 60);
 
   //if (!meta.name) return null;
   return (
-    <Box bg={bg} borderRadius="md" borderWidth={"2px"} w={350} p={2}>
+    <Box bg={bg} borderRadius="md" w={350} p={2}>
       {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
 
       <Stack spacing={0}>
@@ -1279,6 +1216,40 @@ export const NFTInfo = ({ meta }) => {
         ) : null}
         {meta.price.amount && meta.price.amount !== "0" ? (
           <Text>{AccountIdentifier.e8sToIcp(meta.price.amount)} ICP</Text>
+        ) : null}
+      </Stack>
+    </Box>
+  );
+};
+
+export const NFTProInfo = ({ id, meta }) => {
+  const bg = useColorModeValue("gray.300", "gray.900");
+  if (!meta || !("quality" in meta)) return null;
+
+  let nowMinutes = Math.floor(Date.now() / 1000 / 60);
+
+  //if (!meta.name) return null;
+  return (
+    <Box bg={bg} borderRadius="md" w={350} p={2}>
+      {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
+
+      <Stack spacing={0}>
+        {id ? (
+          <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
+            ID: {id}
+          </Text>
+        ) : null}
+        {meta.pwr ? (
+          <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
+            Ops: {meta.pwr[0]} Storage: {meta.pwr[1]}
+          </Text>
+        ) : null}
+        {meta.bearer ? (
+          <Link to={"/address/0/" + meta.bearer}>
+            <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
+              Bearer: {meta.bearer}
+            </Text>
+          </Link>
         ) : null}
       </Stack>
     </Box>

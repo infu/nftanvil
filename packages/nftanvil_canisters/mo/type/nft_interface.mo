@@ -14,6 +14,7 @@ import Nat8 "mo:base/Nat8";
 import Nat16 "mo:base/Nat16";
 import Nat32 "mo:base/Nat32";
 import Nat64 "mo:base/Nat64";
+import Nat "mo:base/Nat";
 import Principal "mo:principal/Principal";
 import RawAccountId "mo:principal/AccountIdentifier";
 import Result "mo:base/Result";
@@ -208,9 +209,7 @@ module {
 
             public func hash(x: TokenIdentifier) : Hash.Hash {
                  return x;
-            
             };
-
 
             // public func toBlob(tokenId : TokenIdentifier) : TokenIdentifierBlob {
             //     let bl = Principal.toBlob(Principal.fromText(tokenId));
@@ -287,7 +286,7 @@ module {
         // (PWR) Mints a new NFT
         mint : shared (request :  MintRequest) -> async  MintResponse;
 
-        mint_quote : shared (request : MetadataInput) -> async Nat64;
+        mint_quote : shared (request : MetadataInput) -> async MintQuoteResponse;
 
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
         allowance : query (request : Allowance.Request) -> async Allowance.Response;
@@ -749,7 +748,7 @@ module {
     };
 
     public module Pricing = {
-        public let QUALITY_PRICE : Nat64 = 1000; // max quality price per min
+        public let QUALITY_PRICE : Nat64 = 10000; // max quality price per min
         public let STORAGE_KB_PER_MIN : Nat64 = 8; // prices are in cycles
         public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
         public let FULLY_CHARGED_MINUTES : Nat64 = 8409600; //(16 * 365 * 24 * 60) 16 years
@@ -762,9 +761,10 @@ module {
         public func validate(t : Quality) : Bool {
             t <= 6; // Poor, Common, Uncommon, Rare, Epic, Legendary, Artifact
         };
+
         public func price(t: Quality) : Nat64 {
-            Nat64.fromNat(Nat8.toNat(t)) * Pricing.QUALITY_PRICE
-        }
+            Nat64.fromNat(Nat.pow(Nat8.toNat(t), 2)) * Pricing.QUALITY_PRICE
+        };
     };
 
  
@@ -793,7 +793,7 @@ module {
             and OptValid(m.custom, CustomData.validate)
         };
         
-        public func price(m: MetadataInput) : Nat64 {
+        public func priceStorage(m: MetadataInput) : Nat64 {
             let cost_per_min = Pricing.STORAGE_KB_PER_MIN * 50 // cost for nft metadata stored in the cluster
             + OptPrice(m.custom, CustomData.price)
             + OptPrice(m.content, Content.price)
@@ -803,14 +803,27 @@ module {
             switch(m.ttl) {
                 case (null) {
                     cost_per_min * Pricing.FULLY_CHARGED_MINUTES
-                    + Pricing.FULLY_CHARGED_MESSAGES * Pricing.AVG_MESSAGE_COST
                 };
                 case (?t) {
-                    Nat64.fromNat(Nat32.toNat(t)) * Pricing.AVG_MESSAGE_COST / 60 / 24 
-                    + Pricing.AVG_MESSAGE_COST * 50 // minimum 50 messages
+                    cost_per_min * Nat64.fromNat(Nat32.toNat(t)) 
                 }
             }
         };
+
+        public func priceOps(m: MetadataInput) : Nat64 {
+
+            switch(m.ttl) {
+                case (null) {
+                     Pricing.FULLY_CHARGED_MESSAGES * Pricing.AVG_MESSAGE_COST
+                };
+
+                case (?t) {
+                     Nat64.fromNat(Nat32.toNat(t)) * Pricing.AVG_MESSAGE_COST / 60 / 24 // 1 message a day
+                    + Pricing.AVG_MESSAGE_COST * 100 // minimum 100 messages
+                }
+            }
+        };
+
     };
 
     public type Metavars = {
@@ -818,7 +831,8 @@ module {
         var cooldownUntil: ?Nat32; // in minutes
         var sockets: Sockets;
         var price: Price;
-        var pwr : Nat64;
+        var pwrStorage : Nat64;
+        var pwrOps : Nat64;
         var ttl : ?Nat32; // time to live
     };
 
@@ -827,7 +841,8 @@ module {
             cooldownUntil: ?Nat32; 
             sockets: Sockets;
             price: Price;
-            pwr: Nat64;
+            pwrStorage: Nat64;
+            pwrOps: Nat64;
             ttl: ?Nat32;
     };
 
@@ -837,7 +852,8 @@ module {
             cooldownUntil= a.cooldownUntil; 
             sockets= a.sockets; 
             price = a.price;
-            pwr = a.pwr;
+            pwrStorage = a.pwrStorage;
+            pwrOps = a.pwrOps;
             ttl = a.ttl;
         }
     };
@@ -940,6 +956,11 @@ module {
         price : Price;
     };
 
+    public type MintQuoteResponse = {
+        transfer : Nat64;
+        ops : Nat64;
+        storage : Nat64;
+    };
 
     public type SetPriceResponse = Result.Result<
         (), {
@@ -1023,6 +1044,11 @@ module {
     public type MintBatchResponse = Result.Result<
         [TokenIndex],
         CommonError
+    >;
+
+    public type PWRConsumeResponse = Result.Result<
+        (),
+        ()
     >;
 
     public module Allowance = {

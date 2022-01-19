@@ -105,7 +105,7 @@ function oracle_set(name) {
 }
 
 function oracle() {
-  return `'(record {cycle_to_pwr = 0.000003703703703704})'`;
+  return `'(record {cycle_to_pwr = 0.000003703703703704; icpFee = 10000; pwrFee = 10000; anvFee = 10000;})'`;
 }
 
 function config() {

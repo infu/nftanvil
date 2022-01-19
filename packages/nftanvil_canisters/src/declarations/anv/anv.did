@@ -17,7 +17,7 @@ type TransferResponse =
       Rejected;
       Unauthorized: AccountIdentifier__1;
     };
-   ok: Balance;
+   ok: record {transactionId: blob;};
  };
 type TransferRequest = 
  record {
@@ -27,10 +27,15 @@ type TransferRequest =
    subaccount: opt SubAccount;
    to: User;
  };
-type TransactionTo = blob;
-type TransactionFrom = blob;
 type TransactionAmount = nat64;
 type SubAccount = blob;
+type Oracle = 
+ record {
+   anvFee: nat64;
+   cycle_to_pwr: float64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
 type Memo = blob;
 type Config = 
  record {
@@ -49,17 +54,14 @@ type Class =
    adminAllocate: (record {
                      amount: TransactionAmount;
                      user: User__1;
-                   }) -> (BlockIndex, Block);
+                   }) -> ();
    balance: (BalanceRequest) -> (BalanceResponse) query;
    config_set: (Config) -> ();
    dumpBalances: () -> (vec record {
                               AccountIdentifier__2;
                               Balance__1;
                             }) query;
-   dumpBlockchain: () -> (vec record {
-                                BlockIndex;
-                                Block;
-                              }) query;
+   oracle_set: (Oracle) -> ();
    transfer: (TransferRequest) -> (TransferResponse);
  };
 type CanisterSlot__1 = nat16;
@@ -68,17 +70,6 @@ type CanisterRange =
  record {
    CanisterSlot;
    CanisterSlot;
- };
-type BlockTimestamp = int;
-type BlockIndex = nat32;
-type BlockHash = blob;
-type Block = 
- record {
-   TransactionFrom;
-   TransactionTo;
-   TransactionAmount;
-   BlockTimestamp;
-   BlockHash;
  };
 type Balance__1 = nat64;
 type BalanceResponse = nat64;

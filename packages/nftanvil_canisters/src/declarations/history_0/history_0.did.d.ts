@@ -2,7 +2,7 @@ import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
 export type AccountIdentifier__1 = Array<number>;
 export type AddResponse = Array<number>;
-export type AnvEvent = { 'transaction' : EventFungibleTransaction };
+export type AnvEvent = { 'transfer' : EventFungibleTransaction };
 export type Balance = bigint;
 export type BlockIndex = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
@@ -27,10 +27,14 @@ export interface Config {
 }
 export type Cooldown = number;
 export interface Event { 'hash' : Array<number>, 'info' : EventInfo }
+export interface EventFungibleMint {
+  'created' : Timestamp,
+  'user' : AccountIdentifier,
+  'amount' : Balance,
+}
 export interface EventFungibleTransaction {
   'to' : AccountIdentifier,
   'created' : Timestamp,
-  'token' : TokenIdentifier,
   'from' : AccountIdentifier,
   'memo' : Memo,
   'amount' : Balance,
@@ -96,14 +100,11 @@ export type NftEvent = {
       'user' : AccountIdentifier,
     }
   } |
-  { 'mint' : { 'created' : Timestamp, 'token' : TokenIdentifier } } |
   {
-    'transaction' : {
-      'to' : AccountIdentifier,
+    'mint' : {
+      'pwr' : Balance,
       'created' : Timestamp,
       'token' : TokenIdentifier,
-      'from' : AccountIdentifier,
-      'memo' : Memo,
     }
   } |
   {
@@ -114,12 +115,27 @@ export type NftEvent = {
       'spender' : Principal,
     }
   } |
+  {
+    'transfer' : {
+      'to' : AccountIdentifier,
+      'created' : Timestamp,
+      'token' : TokenIdentifier,
+      'from' : AccountIdentifier,
+      'memo' : Memo,
+    }
+  } |
   { 'purchase' : NFTPurchase };
-export type PwrEvent = { 'transaction' : EventFungibleTransaction };
+export type PwrEvent = { 'mint' : EventFungibleMint } |
+  { 'transfer' : EventFungibleTransaction };
 export type Share = number;
 export type Time = bigint;
 export type Timestamp = bigint;
 export type TokenIdentifier = number;
 export type TokenIdentifier__1 = number;
-export type TreasuryEvent = {};
+export type TreasuryEvent = { 'withdraw' : TreasuryWithdraw };
+export interface TreasuryWithdraw {
+  'created' : Timestamp,
+  'user' : AccountIdentifier,
+  'amount' : Balance,
+}
 export interface _SERVICE extends Class {}

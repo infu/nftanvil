@@ -5,18 +5,6 @@ export const idlFactory = ({ IDL }) => {
     'address' : AccountIdentifier,
   });
   const TransactionAmount = IDL.Nat64;
-  const BlockIndex = IDL.Nat32;
-  const TransactionFrom = IDL.Vec(IDL.Nat8);
-  const TransactionTo = IDL.Vec(IDL.Nat8);
-  const BlockTimestamp = IDL.Int;
-  const BlockHash = IDL.Vec(IDL.Nat8);
-  const Block = IDL.Tuple(
-    TransactionFrom,
-    TransactionTo,
-    TransactionAmount,
-    BlockTimestamp,
-    BlockHash,
-  );
   const BalanceRequest = IDL.Record({ 'user' : User__1 });
   const BalanceResponse = IDL.Nat64;
   const CanisterSlot__1 = IDL.Nat16;
@@ -35,6 +23,12 @@ export const idlFactory = ({ IDL }) => {
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__1 = IDL.Nat64;
+  const Oracle = IDL.Record({
+    'cycle_to_pwr' : IDL.Float64,
+    'icpFee' : IDL.Nat64,
+    'anvFee' : IDL.Nat64,
+    'pwrFee' : IDL.Nat64,
+  });
   const User = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
@@ -51,7 +45,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
   const TransferResponse = IDL.Variant({
-    'ok' : Balance,
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
       'Rejected' : IDL.Null,
@@ -62,7 +56,7 @@ export const idlFactory = ({ IDL }) => {
   const Class = IDL.Service({
     'adminAllocate' : IDL.Func(
         [IDL.Record({ 'user' : User__1, 'amount' : TransactionAmount })],
-        [BlockIndex, Block],
+        [],
         [],
       ),
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
@@ -72,11 +66,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance__1))],
         ['query'],
       ),
-    'dumpBlockchain' : IDL.Func(
-        [],
-        [IDL.Vec(IDL.Tuple(BlockIndex, Block))],
-        ['query'],
-      ),
+    'oracle_set' : IDL.Func([Oracle], [], []),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
   });
   return Class;

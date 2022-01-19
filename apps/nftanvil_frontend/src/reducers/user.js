@@ -16,6 +16,11 @@ import { Principal } from "@dfinity/principal";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 import { toast } from "react-toastify";
+import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
+import {
+  TransactionToast,
+  TransactionFailed,
+} from "../components/TransactionToast";
 
 export const userSlice = createSlice({
   name: "user",
@@ -243,17 +248,22 @@ export const claim_treasury_balance = () => async (dispatch, getState) => {
     console.log("TREASURY Withdraw response", bal);
 
     if (bal.ok) {
-      let msg = `${AccountIdentifier.e8sToIcp(bal.ok)} ICP recieved`;
-      let toastId = toast(msg, {
-        isLoading: false,
-        type: toast.TYPE.SUCCESS,
-        position: "bottom-right",
-        autoClose: true,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: false,
-      });
+      let toastId = toast(
+        <TransactionToast
+          title="Treasury balance widthdrawn"
+          transactionId={bal.ok.transactionId}
+        />,
+        {
+          isLoading: false,
+          type: toast.TYPE.SUCCESS,
+          position: "bottom-right",
+          autoClose: true,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: false,
+        }
+      );
 
       dispatch(refresh_icp_balance());
     }
@@ -272,18 +282,161 @@ export const transfer_icp =
 
     let ledger = ledgerCanister({ agentOptions: { identity } });
 
-    let trez = await ledger.transfer({
+    let toastId = toast("Sending...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+    let trez;
+    try {
+      trez = await ledger.transfer({
+        memo: 0,
+        amount: { e8s: amount },
+        fee: { e8s: 10000n },
+        from_subaccount: subaccount,
+        to: to,
+        created_at_time: [],
+      });
+
+      if ("Err" in trez) throw trez["Err"];
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <TransactionToast
+            title={`Transfer of ${AccountIdentifier.e8sToIcp(
+              amount
+            )} ICP successfull.`}
+          />
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+
+      dispatch(refresh_icp_balance());
+    } catch (e) {
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <TransactionFailed title="Transfer failed" message={e.message} />
+        ),
+      });
+    }
+
+    return trez;
+  };
+
+export const pwr_buy =
+  ({ amount }) =>
+  async (dispatch, getState) => {
+    let s = getState();
+
+    let identity = authentication.client.getIdentity();
+
+    let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
+      agentOptions: { identity },
+    });
+
+    let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+
+    let toastId = toast("Purchasing PWR...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+      isLoading: true,
+    });
+
+    let intent = await pwr.purchase_intent({
+      user: { address: AccountIdentifier.TextToArray(address) },
+      subaccount,
+    });
+    if (intent.err) throw intent.err;
+
+    let paymentAddress = intent.ok;
+
+    let ledger = ledgerCanister({ agentOptions: { identity } });
+
+    let ledger_result = await ledger.transfer({
       memo: 0,
       amount: { e8s: amount },
       fee: { e8s: 10000n },
       from_subaccount: subaccount,
-      to: to,
+      to: paymentAddress,
       created_at_time: [],
     });
 
-    dispatch(refresh_icp_balance());
+    if (ledger_result.Ok) {
+      toast.update(toastId, {
+        type: toast.TYPE.INFO,
+        isLoading: true,
+        render: "ICP transfer successfull. Claiming...",
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } else {
+      console.error(ledger_result.Err);
 
-    return trez;
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: true,
+        closeOnClick: true,
+
+        render: <TransactionFailed title="ICP transfer failed" />,
+      });
+
+      return;
+    }
+
+    try {
+      let claim = await pwr.purchase_claim({
+        user: { address: AccountIdentifier.TextToArray(address) },
+        subaccount,
+      });
+      console.log("CLAIM", claim);
+
+      if (claim.err) throw claim.err;
+
+      let { transactionId } = claim.ok;
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <TransactionToast
+            title="PWR purchase successfull"
+            transactionId={transactionId}
+          />
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <TransactionFailed
+            title="PWR purchase failed"
+            message={JSON.stringify(e)}
+          />
+        ),
+      });
+    }
   };
 
 export default userSlice.reducer;

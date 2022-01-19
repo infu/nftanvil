@@ -30,17 +30,17 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [];
   private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
   
-  private stable var _fee:Nat64 = 10000;
-  private stable var _feePwr:Nat64 = 10000;
 
 
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
   system func preupgrade() {
-    _tmpBalance := Iter.toArray(_balance.entries());
+    //    _tmpBalance := Iter.toArray(_balance.entries());
+    _tmpBalance := [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000)];
   };
 
   system func postupgrade() {
+    // TODO: Remove in production
     _tmpBalance := [];
   };
 
@@ -71,26 +71,39 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   public shared({caller}) func transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {
     let aid = Nft.User.toAccountIdentifier(request.from);
-    let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+
+
+    let caller_user:Nft.User = switch(Nft.APrincipal.isLegitimate(_conf.space, caller)) {
+      case (true) {
+        #address(Nft.User.toAccountIdentifier(request.from))
+      };
+      case (false) {
+         #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+      };
+    }; 
+
+    if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
     if (caller_user != request.from) return #err(#Unauthorized(aid));
 
     switch(_balance.get(aid)) {
           case (?bal) {
 
-            if (bal < (request.amount + _feePwr)) return #err(#InsufficientBalance);
+            if (bal < (request.amount + _oracle.pwrFee)) return #err(#InsufficientBalance);
 
             let to_aid = Nft.User.toAccountIdentifier(request.to);
 
-            let new_balance = bal - request.amount - _feePwr;
-            if (new_balance > _feePwr) {
+            let new_balance = bal - request.amount - _oracle.pwrFee;
+            if (new_balance > _oracle.pwrFee) {
               _balance.put(aid, new_balance);
             } else {
-              _balance.delete(aid);
+              _balance.delete(aid); // Will free memory of empty accounts
             };
 
             balanceAdd(to_aid, request.amount);
-            #ok(new_balance);
+
+            let transactionId = await Cluster.history(_conf).add(#pwr(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
+            #ok({transactionId});
 
           };
           case (_) return #err(#InsufficientBalance);
@@ -123,14 +136,14 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
             account = purchaseAccountId
         });
 
-        if (payment <= _fee) return #err(#PaymentTooSmall);
+        if (payment <= _oracle.icpFee) return #err(#PaymentTooSmall);
 
-        let amount = {e8s = payment - _fee};
+        let amount = {e8s = payment - _oracle.icpFee};
 
         let transfer : Ledger.TransferArgs = {
             memo = 0;
             amount;
-            fee = {e8s = _fee};
+            fee = {e8s = _oracle.icpFee};
             from_subaccount = ?purchaseSubAccount;
             to = NFTAnvil_PWR_ICP_address;
             created_at_time = null;
@@ -139,9 +152,11 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         switch(await ledger.transfer(transfer)) {
             case (#Ok(blockIndex)) {
 
-                balanceAdd(toUserAID, amount.e8s );
+                balanceAdd(toUserAID, 1000 * amount.e8s ); // This 1000 is here for demo only
                 
-                #ok();
+                let transactionId = await Cluster.history(_conf).add(#pwr(#mint({created=Time.now(); user=Nft.User.toAccountIdentifier(request.user); amount=amount.e8s})));
+
+                #ok({transactionId});
             };
             case (#Err(e)) {
                 //TODO: ADD to QUEUE for later transfer attempt

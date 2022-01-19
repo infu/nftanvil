@@ -25,7 +25,7 @@ export const idlFactory = ({ IDL }) => {
     'treasury' : CanisterSlot__1,
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
-  const Balance__1 = IDL.Nat64;
+  const Balance = IDL.Nat64;
   const Time = IDL.Int;
   const TokenIdentifier = IDL.Nat32;
   const Share = IDL.Nat16;
@@ -59,9 +59,8 @@ export const idlFactory = ({ IDL }) => {
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
   });
-  const Balance = IDL.Nat64;
   const WithdrawResponse = IDL.Variant({
-    'ok' : Balance,
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Variant({
       'NotEnoughForTransfer' : IDL.Null,
       'TransferFailed' : IDL.Null,
@@ -72,7 +71,7 @@ export const idlFactory = ({ IDL }) => {
     'config_set' : IDL.Func([Config], [], []),
     'dumpBalances' : IDL.Func(
         [],
-        [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance__1))],
+        [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance))],
         ['query'],
       ),
     'notify_NFTPurchase' : IDL.Func([NFTPurchase], [NFTPurchaseResponse], []),

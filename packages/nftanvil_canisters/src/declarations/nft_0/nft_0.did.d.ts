@@ -57,7 +57,7 @@ export interface Class {
   'http_request_streaming_callback' : (arg_0: Token) => Promise<Callback>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mint' : (arg_0: MintRequest) => Promise<MintResponse>,
-  'mint_quote' : (arg_0: MetadataInput) => Promise<bigint>,
+  'mint_quote' : (arg_0: MetadataInput) => Promise<MintQuoteResponse>,
   'oracle_set' : (arg_0: Oracle) => Promise<undefined>,
   'plug' : (arg_0: PlugRequest) => Promise<PlugResponse>,
   'purchase_claim' : (arg_0: PurchaseClaimRequest) => Promise<
@@ -164,12 +164,18 @@ export type MetadataResponse = {
   } |
   { 'err' : CommonError };
 export interface MetavarsFrozen {
-  'pwr' : bigint,
   'ttl' : [] | [number],
   'cooldownUntil' : [] | [number],
   'boundUntil' : [] | [number],
   'sockets' : Sockets,
+  'pwrOps' : bigint,
+  'pwrStorage' : bigint,
   'price' : Price,
+}
+export interface MintQuoteResponse {
+  'ops' : bigint,
+  'storage' : bigint,
+  'transfer' : bigint,
 }
 export interface MintRequest {
   'to' : User,
@@ -188,7 +194,12 @@ export type MintResponse = {
       { 'ClassError' : string } |
       { 'OutOfMemory' : null }
   };
-export interface Oracle { 'cycle_to_pwr' : number }
+export interface Oracle {
+  'cycle_to_pwr' : number,
+  'icpFee' : bigint,
+  'anvFee' : bigint,
+  'pwrFee' : bigint,
+}
 export interface PlugRequest {
   'socket' : TokenIdentifier,
   'memo' : Memo,

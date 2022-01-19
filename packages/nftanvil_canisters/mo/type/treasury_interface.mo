@@ -49,7 +49,7 @@ module {
         subaccount : ?Nft.SubAccount
     };
 
-    public type WithdrawResponse = Result.Result<Balance,{
+    public type WithdrawResponse = Result.Result<{transactionId: Blob},{
         #TransferFailed;
         #NotEnoughForTransfer;
     }>;

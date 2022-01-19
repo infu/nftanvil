@@ -20,7 +20,7 @@ type TransferResponseError =
 type TransferResponse = 
  variant {
    err: TransferResponseError;
-   ok: Balance;
+   ok: record {transactionId: blob;};
  };
 type TransferRequest = 
  record {
@@ -56,14 +56,20 @@ type PurchaseClaimResponse =
           Ledger: TransferError;
           PaymentTooSmall;
         };
-   ok;
+   ok: record {transactionId: blob;};
  };
 type PurchaseClaimRequest = 
  record {
    subaccount: opt SubAccount;
    user: User;
  };
-type Oracle = record {cycle_to_pwr: float64;};
+type Oracle = 
+ record {
+   anvFee: nat64;
+   cycle_to_pwr: float64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
 type Memo = blob;
 type ICP = record {e8s: nat64;};
 type Config = 

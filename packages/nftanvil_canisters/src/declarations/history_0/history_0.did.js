@@ -1,24 +1,23 @@
 export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const Timestamp = IDL.Int;
-  const TokenIdentifier = IDL.Nat32;
   const Memo = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
   const EventFungibleTransaction = IDL.Record({
     'to' : AccountIdentifier,
     'created' : Timestamp,
-    'token' : TokenIdentifier,
     'from' : AccountIdentifier,
     'memo' : Memo,
     'amount' : Balance,
   });
-  const AnvEvent = IDL.Variant({ 'transaction' : EventFungibleTransaction });
+  const AnvEvent = IDL.Variant({ 'transfer' : EventFungibleTransaction });
   const Cooldown = IDL.Nat32;
   const ItemUse = IDL.Variant({
     'consume' : IDL.Null,
     'prove' : IDL.Null,
     'cooldown' : Cooldown,
   });
+  const TokenIdentifier = IDL.Nat32;
   const Time = IDL.Int;
   const TokenIdentifier__1 = IDL.Nat32;
   const Share = IDL.Nat16;
@@ -70,13 +69,10 @@ export const idlFactory = ({ IDL }) => {
       'memo' : Memo,
       'user' : AccountIdentifier,
     }),
-    'mint' : IDL.Record({ 'created' : Timestamp, 'token' : TokenIdentifier }),
-    'transaction' : IDL.Record({
-      'to' : AccountIdentifier,
+    'mint' : IDL.Record({
+      'pwr' : Balance,
       'created' : Timestamp,
       'token' : TokenIdentifier,
-      'from' : AccountIdentifier,
-      'memo' : Memo,
     }),
     'approve' : IDL.Record({
       'created' : Timestamp,
@@ -84,10 +80,30 @@ export const idlFactory = ({ IDL }) => {
       'user' : AccountIdentifier,
       'spender' : IDL.Principal,
     }),
+    'transfer' : IDL.Record({
+      'to' : AccountIdentifier,
+      'created' : Timestamp,
+      'token' : TokenIdentifier,
+      'from' : AccountIdentifier,
+      'memo' : Memo,
+    }),
     'purchase' : NFTPurchase,
   });
-  const PwrEvent = IDL.Variant({ 'transaction' : EventFungibleTransaction });
-  const TreasuryEvent = IDL.Record({});
+  const EventFungibleMint = IDL.Record({
+    'created' : Timestamp,
+    'user' : AccountIdentifier,
+    'amount' : Balance,
+  });
+  const PwrEvent = IDL.Variant({
+    'mint' : EventFungibleMint,
+    'transfer' : EventFungibleTransaction,
+  });
+  const TreasuryWithdraw = IDL.Record({
+    'created' : Timestamp,
+    'user' : AccountIdentifier,
+    'amount' : Balance,
+  });
+  const TreasuryEvent = IDL.Variant({ 'withdraw' : TreasuryWithdraw });
   const EventInfo = IDL.Variant({
     'anv' : AnvEvent,
     'nft' : NftEvent,

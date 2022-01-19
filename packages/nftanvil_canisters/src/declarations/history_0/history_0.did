@@ -1,10 +1,20 @@
-type TreasuryEvent = record {};
+type TreasuryWithdraw = 
+ record {
+   amount: Balance;
+   created: Timestamp;
+   user: AccountIdentifier;
+ };
+type TreasuryEvent = variant {withdraw: TreasuryWithdraw;};
 type TokenIdentifier__1 = nat32;
 type TokenIdentifier = nat32;
 type Timestamp = int;
 type Time = int;
 type Share = nat16;
-type PwrEvent = variant {transaction: EventFungibleTransaction;};
+type PwrEvent = 
+ variant {
+   mint: EventFungibleMint;
+   transfer: EventFungibleTransaction;
+ };
 type NftEvent = 
  variant {
    approve:
@@ -23,6 +33,7 @@ type NftEvent =
     };
    mint: record {
            created: Timestamp;
+           pwr: Balance;
            token: TokenIdentifier;
          };
    purchase: NFTPurchase;
@@ -33,7 +44,7 @@ type NftEvent =
       plug: TokenIdentifier;
       socket: TokenIdentifier;
     };
-   transaction:
+   transfer:
     record {
       created: Timestamp;
       from: AccountIdentifier;
@@ -113,7 +124,12 @@ type EventFungibleTransaction =
    from: AccountIdentifier;
    memo: Memo;
    to: AccountIdentifier;
-   token: TokenIdentifier;
+ };
+type EventFungibleMint = 
+ record {
+   amount: Balance;
+   created: Timestamp;
+   user: AccountIdentifier;
  };
 type Event = 
  record {
@@ -149,7 +165,7 @@ type CanisterRange =
  };
 type BlockIndex = nat64;
 type Balance = nat64;
-type AnvEvent = variant {transaction: EventFungibleTransaction;};
+type AnvEvent = variant {transfer: EventFungibleTransaction;};
 type AddResponse = blob;
 type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;

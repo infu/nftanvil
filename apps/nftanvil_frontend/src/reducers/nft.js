@@ -31,6 +31,10 @@ import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.j
 
 import { NFTStorage } from "nft.storage/dist/bundle.esm.min.js";
 import { toast } from "react-toastify";
+import {
+  TransactionToast,
+  TransactionFailed,
+} from "../components/TransactionToast";
 
 export const nftSlice = createSlice({
   name: "nft",
@@ -94,6 +98,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     ttl: vars.ttl[0],
     cooldownUntil: vars.cooldownUntil[0],
     boundUntil: vars.boundUntil[0],
+    pwr: [vars.pwrOps.toString(), vars.pwrStorage.toString()],
     sockets: vars.sockets.map((x) => tokenToText(x)), //TokenIdentifier.ArrayToText(x)),
     price: { ...vars.price, amount: vars.price.amount.toString() },
   };
@@ -297,16 +302,53 @@ export const transfer =
 
     let address = s.user.address;
 
-    let t = await nftcan.transfer({
-      from: { address: AccountIdentifier.TextToArray(address) },
-      to: { address: AccountIdentifier.TextToArray(toAddress) },
-      token: tid,
-      amount: 1,
-      memo: [],
-      subaccount: [],
+    let toastId = toast("Sending...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
     });
-    if (!t.ok) throw t.err;
-    return t.ok;
+    let t;
+    try {
+      t = await nftcan.transfer({
+        from: { address: AccountIdentifier.TextToArray(address) },
+        to: { address: AccountIdentifier.TextToArray(toAddress) },
+        token: tid,
+        amount: 1,
+        memo: [],
+        subaccount: [],
+      });
+      if (!t.ok) throw t.err;
+      let { transactionId } = t.ok;
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <TransactionToast
+            title="Transfer successfull"
+            transactionId={transactionId}
+          />
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      console.error("Transfer error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <TransactionFailed title="Transfer failed" message={e.message} />
+        ),
+      });
+    }
+
+    return t;
   };
 
 export const plug =
@@ -650,9 +692,6 @@ export const mint = (vals) => async (dispatch, getState) => {
     let { tokenIndex, transactionId } = mint.ok;
     let id = tokenToText(encodeTokenId(slot, tokenIndex));
 
-    //console.log("Transaction ID", transactionId);
-    // Upload Internal
-
     if (vals?.content[0]?.internal?.url) {
       toast.update(toastId, {
         render: "Uploading content...",
@@ -683,17 +722,11 @@ export const mint = (vals) => async (dispatch, getState) => {
       type: toast.TYPE.SUCCESS,
       isLoading: false,
       render: (
-        <div
-          onClick={() => {
-            dispatch(push("/nft/" + id));
-          }}
-        >
-          <div>Minting successfull.</div>
-          <div style={{ fontSize: "10px" }}>TokenId: {id}</div>
-          <div style={{ fontSize: "10px", color: "green" }}>
-            TransactionId: {TransactionId.toText(transactionId)}
-          </div>
-        </div>
+        <TransactionToast
+          title="Minting successfull"
+          tokenId={id}
+          transactionId={transactionId}
+        />
       ),
       autoClose: 9000,
       pauseOnHover: true,
@@ -705,12 +738,7 @@ export const mint = (vals) => async (dispatch, getState) => {
 
       closeOnClick: true,
 
-      render: (
-        <div>
-          <div>Minting failed</div>
-          <div style={{ fontSize: "10px" }}>{e.message}</div>
-        </div>
-      ),
+      render: <TransactionFailed title="Minting failed" message={e.message} />,
       // autoClose: 9000,
     });
 

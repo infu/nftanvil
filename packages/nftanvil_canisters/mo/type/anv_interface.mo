@@ -47,7 +47,7 @@ module {
         subaccount : ?SubAccount;
     };
 
-    public type TransferResponse = Result.Result<Balance, {
+    public type TransferResponse = Result.Result<{transactionId:Blob}, {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;

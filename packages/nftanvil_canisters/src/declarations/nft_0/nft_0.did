@@ -291,7 +291,13 @@ type PlugRequest =
    subaccount: opt SubAccount;
    user: User;
  };
-type Oracle = record {cycle_to_pwr: float64;};
+type Oracle = 
+ record {
+   anvFee: nat64;
+   cycle_to_pwr: float64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
 type MintResponse = 
  variant {
    err:
@@ -315,12 +321,19 @@ type MintRequest =
    subaccount: opt SubAccount;
    to: User;
  };
+type MintQuoteResponse = 
+ record {
+   ops: nat64;
+   storage: nat64;
+   transfer: nat64;
+ };
 type MetavarsFrozen = 
  record {
    boundUntil: opt nat32;
    cooldownUntil: opt nat32;
    price: Price;
-   pwr: nat64;
+   pwrOps: nat64;
+   pwrStorage: nat64;
    sockets: Sockets;
    ttl: opt nat32;
  };
@@ -451,7 +464,7 @@ type Class =
    http_request_streaming_callback: (Token) -> (Callback) query;
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
    mint: (MintRequest) -> (MintResponse);
-   mint_quote: (MetadataInput) -> (nat64);
+   mint_quote: (MetadataInput) -> (MintQuoteResponse);
    oracle_set: (Oracle) -> ();
    plug: (PlugRequest) -> (PlugResponse);
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);

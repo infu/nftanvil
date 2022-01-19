@@ -46,13 +46,19 @@ module {
     };
     
     public type Oracle = {
-        cycle_to_pwr : Float
+        cycle_to_pwr : Float;
+        icpFee : Nat64; // ICP transfer fee
+        pwrFee : Nat64; 
+        anvFee : Nat64; 
     };
 
     public module Oracle = {
         public func default() : Oracle {
             {                  
                 cycle_to_pwr = 0.000000000000037037;
+                icpFee = 10000; 
+                pwrFee = 10000;
+                anvFee = 10000;
             }
         };
         public func cycle_to_pwr(oracle:Oracle, cycles:Nat64) : Nat64 {

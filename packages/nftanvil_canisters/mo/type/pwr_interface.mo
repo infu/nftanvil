@@ -55,7 +55,7 @@ module {
     };
 
     public type PurchaseClaimResponse = Result.Result<
-        (), {
+        {transactionId: Blob}, {
             #PaymentTooSmall; // if it's smaller than Ledger ICP transfer fee we can't move it to main account and use that value at all
             #Ledger: Ledger.TransferError
         }
@@ -70,6 +70,6 @@ module {
     };
 
 
-    public type TransferResponse = Result.Result<Balance, Nft.TransferResponseError>;
+    public type TransferResponse = Result.Result<{transactionId: Blob}, Nft.TransferResponseError>;
 
 }   

@@ -50,7 +50,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     type Metavars = Nft.Metavars;
     type MetavarsOut = Nft.MetavarsFrozen;
 
-    private stable var _fee:Nat64 = 10000;
 
     type BalanceRequest = Nft.BalanceRequest;
     type BalanceResponse = Nft.BalanceResponse;
@@ -66,7 +65,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         #Other        : Text;
     };
 
-    
 
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
 
@@ -74,6 +72,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private stable var _tmpBalance : [(TokenIndex, AccountIdentifier)] = [];
     private var _balance : HashMap.HashMap<TokenIndex, AccountIdentifier> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
+
     private stable var _tmpMeta : [(TokenIndex, Metadata)] = [];
     private var _meta : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tmpMeta.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
@@ -110,16 +109,21 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     //Handle canister upgrades
     system func preupgrade() {
         _tmpBalance := Iter.toArray(_balance.entries());
+
         _tmpAllowance := Iter.toArray(_allowance.entries());
         _tmpMeta := Iter.toArray(_meta.entries());
         _tmpMetavars := Iter.toArray(_metavars.entries());
 
         _tmpToken2Link := Iter.toArray(_token2link.entries());
         _tmpChunk := Iter.toArray(_chunk.entries());
+
+
+        
     };
 
     system func postupgrade() {
         _tmpBalance := [];
+
         _tmpAllowance := [];
         _tmpMeta := [];
         _tmpMetavars := [];
@@ -257,7 +261,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                                         resetTransferBindings(meta, vars);
                                         
-                                        let transactionId = await Cluster.history(_conf).add(#nft(#transaction({created=Time.now();token = tokenId(tokenIndex); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
+                                        let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now();token = tokenId(tokenIndex); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
 
                                         return #ok({transactionId});
                                 };
@@ -349,7 +353,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                         let purchaseOk = payment >= vars.price.amount;
 
-                        let fullRefund : Nat64 = payment - _fee;
+                        let fullRefund : Nat64 = payment - _oracle.icpFee;
                         let noRefund : Nat64 = 0;
 
                         let refundAmount:Nat64 = switch(purchaseOk) {
@@ -389,12 +393,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                         switch (purchaseOk) {
                             case (true) {
-                                let amount = {e8s = payment - _fee};
+                                let amount = {e8s = payment - _oracle.icpFee};
                                 // move
                                 let transfer : Ledger.TransferArgs = {
                                     memo = 0;
                                     amount;
-                                    fee = {e8s = _fee};
+                                    fee = {e8s = _oracle.icpFee};
                                     from_subaccount = ?purchaseSubAccount;
                                     to = Cluster.treasury_address(_conf);
                                     created_at_time = null;
@@ -440,13 +444,13 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             };
 
                             case (false) {
-                                if (refundAmount <= _fee) return #err(#NotEnoughToRefund);
+                                if (refundAmount <= _oracle.icpFee) return #err(#NotEnoughToRefund);
 
                                 // refund
                                 let transfer : Ledger.TransferArgs = {
                                     memo = 0;
                                     amount = {e8s = refundAmount};
-                                    fee = {e8s = _fee};
+                                    fee = {e8s = _oracle.icpFee};
                                     from_subaccount = ?purchaseSubAccount;
                                     to = toUserAID;
                                     created_at_time = null;
@@ -534,7 +538,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                             resetTransferBindings(meta, vars);
 
-                            let transactionId = await Cluster.history(_conf).add(#nft(#transaction({created=Time.now(); token =tokenId(tokenIndex); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo= request.memo})));
+                            let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now(); token =tokenId(tokenIndex); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo= request.memo})));
 
                             return #ok({transactionId});
                     };
@@ -896,6 +900,20 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
 
+    private func PWRConsume(tokenIndex: TokenIndex, ops: Nat64) : async Nft.PWRConsumeResponse {
+        switch( _metavars.get(tokenIndex) ) {
+            case (?vars) {
+                let cost = ops * Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.AVG_MESSAGE_COST);
+                if (cost > vars.pwrOps) return #err();
+
+                vars.pwrOps := vars.pwrOps - cost;
+                #ok()
+            };
+            case (_) {
+                #err()
+            }
+        }
+    };
 
     private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
@@ -928,33 +946,36 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         //         _nextTokenId
         //     }
         // };
+        
+
+        // Charge minting price
+        let mintPricePwrStorage : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request.metadata));
+        let mintPricePwrOps : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request.metadata));
+        let mintPricePwr : Nat64 = mintPricePwrOps + mintPricePwrStorage;
+
+
+        switch(await Cluster.pwr(_conf).transfer({
+            from = #address(author);
+            to = #address(Cluster.nft_address(_conf, _slot));
+            amount = mintPricePwr;
+            memo = Blob.fromArray([]);
+            subaccount = request.subaccount;
+            })) {
+                case (#ok({transactionId})) {
+                    
+                };
+                case (#err(e)) {
+                    return #err(#Pwr(e))
+                };
+            };
+
         let tokenIndex = _nextTokenId;
         _nextTokenId := _nextTokenId + 1;
 
-        // Charge minting price
-
-        let mintPricePwr:Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.price(request.metadata));
-
-        // switch(await Cluster.pwr(_conf).transfer({
-        //     from = #address(author);
-        //     to = #address(Cluster.nft_address(_conf, _conf.slot));
-        //     amount = mintPricePwr;
-        //     memo = 0;
-        //     subaccount = null;
-        //     })) {
-        //         case (#ok(bal)) {
- 
-        //         };
-        //         case (#err(e)) {
-        //             return #err(#Pwr(e))
-        //         }
-        //     };
-
-
+        
         let timestamp:Nat32 = timeInMinutes();
 
         // Get class info, check if principal is allowed to mint
-       
         
         let md : Metadata = {
             // collectionId = m.collectionId;
@@ -988,7 +1009,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
              var cooldownUntil = null; // in minutes
              var sockets = [];
              var price = m.price;
-             var pwr = mintPricePwr;
+             var pwrStorage = mintPricePwrStorage;
+             var pwrOps = mintPricePwrOps;
              var ttl = m.ttl;
         };
 
@@ -1003,15 +1025,18 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         SNFT_put(receiver, tokenIndex);
         await ACC_put(receiver, tokenIndex);
 
-        let transactionId = await Cluster.history(_conf).add(#nft(#mint({created=Time.now();token = tokenId(tokenIndex) })));
+        let transactionId = await Cluster.history(_conf).add(#nft(#mint({created=Time.now();token = tokenId(tokenIndex); pwr=mintPricePwr })));
 
         return #ok({tokenIndex; transactionId});
 
     };
 
-    public func mint_quote(request: Nft.MetadataInput) : async Nat64 {
-        let mintPricePwr:Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.price(request));
-        return mintPricePwr;
+    public func mint_quote(request: Nft.MetadataInput) : async Nft.MintQuoteResponse {
+        {
+            transfer = _oracle.pwrFee;
+            ops = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request));
+            storage = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request));
+        }
     };
 
     public shared({caller}) func mint(request: Nft.MintRequest) : async Nft.MintResponse {
@@ -1082,7 +1107,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     // Calls func socket on the target token
     public shared({caller}) func plug(request: Nft.PlugRequest) : async Nft.PlugResponse {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
-         if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
+        if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
+        if (request.plug == request.socket) return #err(#Other("Cant plug in itself"));
 
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.plug; user = request.user}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
@@ -1448,7 +1474,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 #ok(holder, tokenIndex, bal, allowance); 
             };
             case (#err(e)) #err(e);
-        } 
+        };
     }; 
 
     private func balGetAllowance(bal : BalanceInt, caller:Principal) : BalanceInt {

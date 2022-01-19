@@ -27,6 +27,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     private stable var _prevHistoryCanister : ?Principal = null;
 
     private stable var _conf : Cluster.Config = Cluster.Config.default();
+    private stable var _slot : Nft.CanisterSlot = 0;
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -80,7 +81,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         _events.put(index, event);
         _nextEvent := _nextEvent + 1;
 
-        let transactionId = H.TransactionId.encode(Principal.fromActor(this), index);
+        let transactionId = H.TransactionId.encode(_slot, index);
         transactionId;
     };
 
@@ -99,7 +100,17 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);
+        assert(switch(Nft.APrincipal.toSlot(conf.space, Principal.fromActor(this))) {
+            case (?slot) {
+                _slot := slot;
+                true;
+            };
+            case (null) {
+                false; // current principal is not in space, which means configuration is wrong or canister principal is not correct
+            }
+        });
         _conf := conf
+        
     };
 
 }

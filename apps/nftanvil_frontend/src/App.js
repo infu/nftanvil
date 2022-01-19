@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
-import { login, logout, transfer_icp, create_canister } from "./reducers/user";
+import { login, logout, transfer_icp, pwr_buy } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -177,48 +177,8 @@ function ICP({ mobile }) {
     let amount = AccountIdentifier.icpToE8s(amountRef.current.value);
 
     onClose();
-    let toastId = toast("Sending...", {
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    });
-    try {
-      let r = await dispatch(transfer_icp({ to, amount }));
-      if ("Err" in r) throw r["Err"];
 
-      toast.update(toastId, {
-        type: toast.TYPE.SUCCESS,
-        isLoading: false,
-        render: (
-          <div>
-            <div>
-              Transfer of {AccountIdentifier.e8sToIcp(amount)} ICP successfull.
-            </div>
-            <div>Block height: {r["Ok"]}</div>
-          </div>
-        ),
-        autoClose: 9000,
-        pauseOnHover: true,
-      });
-    } catch (e) {
-      console.error("Transfer error", e);
-      toast.update(toastId, {
-        type: toast.TYPE.ERROR,
-        isLoading: false,
-        closeOnClick: true,
-
-        render: (
-          <div>
-            <div>Transfer failed.</div>
-            <div style={{ fontSize: "10px" }}>{e}</div>
-          </div>
-        ),
-      });
-    }
+    await dispatch(transfer_icp({ to, amount }));
   };
   return (
     <>
@@ -248,6 +208,66 @@ function ICP({ mobile }) {
             </FormControl>
             <FormControl>
               <FormLabel>Amount</FormLabel>
+              <Input ref={amountRef} placeholder="" type="number" />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button ml={3} onClick={transferOk}>
+              Send
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
+  );
+}
+
+function PWR({ mobile }) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const dispatch = useDispatch();
+  const initialRef = React.useRef();
+  const amountRef = React.useRef();
+
+  const pwr = AccountIdentifier.e8sToIcp(
+    useSelector((state) => state.user.pwr)
+  );
+
+  const transferOk = async () => {
+    let amount = AccountIdentifier.icpToE8s(amountRef.current.value);
+
+    onClose();
+
+    await dispatch(pwr_buy({ amount }));
+  };
+  return (
+    <>
+      {mobile ? (
+        <MenuItem onClick={onOpen}>{pwr} PWR</MenuItem>
+      ) : (
+        <Tooltip hasArrow label="PWR tokens used for minting">
+          <Button onClick={onOpen}>{pwr} PWR</Button>
+        </Tooltip>
+      )}
+      {/* <img
+                  src={blueflame}
+                  style={{ marginLeft: "4px", width: "13px", height: "13px" }}
+                  alt=""
+                /> */}
+      <Modal
+        initialFocusRef={initialRef}
+        onClose={onClose}
+        isOpen={isOpen}
+        isCentered
+        size={"xl"}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Buy PWR</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Amount of ICP</FormLabel>
               <Input ref={amountRef} placeholder="" type="number" />
             </FormControl>
           </ModalBody>
@@ -302,16 +322,8 @@ function LoginBox() {
         ) : (
           <>
             <ICP mobile={false} />
-            <Tooltip hasArrow label="PWR tokens used for minting">
-              <Button>
-                {AccountIdentifier.e8sToIcp(pwr)}
-                <img
-                  src={blueflame}
-                  style={{ marginLeft: "4px", width: "13px", height: "13px" }}
-                  alt=""
-                />
-              </Button>
-            </Tooltip>
+            <PWR mobile={false} />
+
             <Popover trigger={"hover"}>
               <PopoverTrigger>
                 <Button

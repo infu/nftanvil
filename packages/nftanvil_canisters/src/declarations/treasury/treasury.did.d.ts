@@ -8,7 +8,6 @@ export interface BalanceRequest {
   'subaccount' : [] | [SubAccount],
 }
 export type BalanceResponse = bigint;
-export type Balance__1 = bigint;
 export type BlockIndex = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
 export type CanisterSlot = number;
@@ -16,7 +15,7 @@ export type CanisterSlot__1 = number;
 export interface Class {
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
-  'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__1]>>,
+  'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance]>>,
   'notify_NFTPurchase' : (arg_0: NFTPurchase) => Promise<NFTPurchaseResponse>,
   'withdraw' : (arg_0: WithdrawRequest) => Promise<WithdrawResponse>,
 }
@@ -56,6 +55,6 @@ export interface WithdrawRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type WithdrawResponse = { 'ok' : Balance } |
+export type WithdrawResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   { 'err' : { 'NotEnoughForTransfer' : null } | { 'TransferFailed' : null } };
 export interface _SERVICE extends Class {}
