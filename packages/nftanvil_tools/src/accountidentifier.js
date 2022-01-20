@@ -22,6 +22,19 @@ export function icpToE8s(x) {
   }
 }
 
+export function e8sToPwr(x) {
+  if (!x) return null;
+  return (Number((BigInt(x) * 10n) / 100000n) / 10).toFixed(2);
+}
+
+export function pwrToE8s(x) {
+  try {
+    return BigInt(Math.round(x * 100000));
+  } catch (e) {
+    return 0n;
+  }
+}
+
 export function TextToSlot(aid, range) {
   return (
     range[0] +

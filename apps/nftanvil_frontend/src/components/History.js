@@ -44,7 +44,7 @@ import {
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 
-import { TX, ACC, TID, HASH } from "./Code";
+import { TX, ACC, TID, HASH, PWR, ICP } from "./Code";
 
 const SHOW = 10; // max records shown on screen
 const TAIL_INTERVAL = 1000; // every 1 sec
@@ -90,6 +90,7 @@ const Key = styled.div`
 `;
 
 const Val = styled.div`
+  width: 100%;
   word-break: break-all;
   a {
     color: rgb(133, 200, 255);
@@ -184,7 +185,12 @@ const HistoryEvent = ({ ev, canister, idx }) => {
         }
 
         if (key === "amount") {
-          if (val.e8s) val = val.e8s;
+          if (val.e8s) val = <ICP>{val.e8s}</ICP>;
+          else val = <PWR>{val}</PWR>;
+        }
+
+        if (key === "pwr") {
+          val = <PWR>{val}</PWR>;
         }
 
         return <KeyVal key={idx} k={key} v={val} />;

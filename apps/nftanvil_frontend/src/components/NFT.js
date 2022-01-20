@@ -63,6 +63,8 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
+  Flex,
+  Spacer,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { VerifiedIcon } from "../icons";
@@ -77,7 +79,7 @@ import {
   TransactionToast,
   TransactionFailed,
 } from "../components/TransactionToast";
-import { TX, ACC, TID, HASH } from "./Code";
+import { TX, ACC, TID, HASH, ICP, PWR } from "./Code";
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -125,7 +127,7 @@ const Thumb = styled.div`
 
 export const NFTMenu = ({ id, meta, owner }) => {
   return (
-    <Box p={3}>
+    <Box p={3} maxWidth="375px" textAlign="justify">
       {owner ? (
         <Wrap spacing="3">
           <UseButton id={id} meta={meta} />
@@ -222,7 +224,9 @@ function SetPriceButton({ id }) {
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
-              <FormLabel>Price</FormLabel>
+              <FormLabel>
+                Price in <ICP />
+              </FormLabel>
               <Input ref={initialRef} placeholder="0.001" />
             </FormControl>
           </ModalBody>
@@ -956,7 +960,8 @@ export const NFTPage = (p) => {
         <Stack>
           <NFTThumb meta={meta} />
           <NFTInfo id={id} meta={meta} />
-          <NFTProInfo id={id} meta={meta} />
+
+          {/* <NFTProInfo id={id} meta={meta} /> */}
         </Stack>
       </Center>
 
@@ -1209,7 +1214,7 @@ export const NFTInfo = ({ id, meta }) => {
         ) : null}
         {meta.ttl && meta.ttl > 0 ? (
           <Text fontSize="14px" pt="14px" color={"red"}>
-            Lasts {moment.duration(meta.ttl, "minutes").humanize()}
+            Expires in {moment.duration(meta.ttl, "minutes").humanize()}
           </Text>
         ) : null}
         {meta.sockets && meta.sockets.length ? (
@@ -1220,15 +1225,52 @@ export const NFTInfo = ({ id, meta }) => {
           </Wrap>
         ) : null}
         {meta.price.amount && meta.price.amount !== "0" ? (
-          <Text>{AccountIdentifier.e8sToIcp(meta.price.amount)} ICP</Text>
+          <Text>
+            <ICP>{meta.price.amount}</ICP>
+          </Text>
         ) : null}
         {id ? (
-          <Text pt="1" pr="1" align="right" fontSize="10px">
-            <TID>{id}</TID>
-          </Text>
+          <Flex pt="1" pr="1" sx={{ lineHeight: "8px;" }} pb="2px">
+            <NFTBattery meta={meta} />
+            <Spacer />
+
+            <Text fontSize="10px">
+              <TID>{id}</TID>
+            </Text>
+          </Flex>
         ) : null}
       </Stack>
     </Box>
+  );
+};
+
+const NFTBatFull = styled.span`
+  display: inline-block;
+  background-color: ${(props) => props.color};
+  width: 4px;
+  margin-left: 1px;
+  border-radius: 1px;
+  height: 7px;
+`;
+
+export const NFTBattery = ({ meta }) => {
+  const fully_charged_min = 8409600;
+  const avg_msg_cost_pwr = 11.2; //TODO: calculate it from oracle data
+  let ttl = meta.ttl > 0 ? meta.ttl : fully_charged_min;
+  let msg_full = (ttl / 60 / 24 + 100) * avg_msg_cost_pwr;
+  let perc = meta.pwr[0] / msg_full;
+
+  let color = `rgb(${Math.floor(125 - 125 * perc)}, ${Math.floor(
+    200 * perc
+  )}, 255)`;
+  let colorEmpty = `rgb(${Math.floor(255 - 255 * perc)}, 70, 70)`;
+  return (
+    <span>
+      <NFTBatFull color={perc >= 0.15 ? color : colorEmpty} />
+      <NFTBatFull color={perc >= 0.5 ? color : colorEmpty} />
+      <NFTBatFull color={perc >= 0.75 ? color : colorEmpty} />
+      <NFTBatFull color={perc >= 0.9 ? color : colorEmpty} />
+    </span>
   );
 };
 
@@ -1254,13 +1296,13 @@ export const NFTProInfo = ({ id, meta }) => {
             Ops: {meta.pwr[0]} Storage: {meta.pwr[1]}
           </Text>
         ) : null}
-        {meta.bearer ? (
+        {/* {meta.bearer ? (
           <Link to={"/address/0/" + meta.bearer}>
             <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
               Bearer: <ACC>{meta.bearer}</ACC>
             </Text>
           </Link>
-        ) : null}
+        ) : null} */}
       </Stack>
     </Box>
   );

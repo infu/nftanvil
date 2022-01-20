@@ -1414,6 +1414,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private func SNFT_burn(aid: AccountIdentifier, tidx: TokenIndex) :  () {
         SNFT_del(aid, tidx);
         _meta.delete(tidx);
+        //TODO: Delete chunks of data too !!!
         _statsBurned := _statsBurned + 1;
     };
 

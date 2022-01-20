@@ -81,6 +81,7 @@ import {
   validateDomain,
   validateTagName,
 } from "@vvv-interactive/nftanvil-tools/cjs/validate.js";
+import { TX, ACC, TID, HASH, PWR, ICP } from "./Code";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { values } from "lodash";
@@ -144,7 +145,9 @@ export const PwrPrice = ({ record, valid }) => {
             size="xs"
           />
         ) : (
-          <>costs {AccountIdentifier.e8sToIcp(pwrPrice)} PWR</>
+          <>
+            costs <PWR>{pwrPrice}</PWR>
+          </>
         )}
       </Box>
     </Center>

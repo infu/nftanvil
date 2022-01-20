@@ -77,13 +77,15 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
+import { TX, ACC, TID, HASH, ICP, PWR, PRI } from "./components/Code";
+
 const ICP_FEE = 10000n;
 
-function PageTabs() {
+function PageTabs(p) {
   const address = useSelector((state) => state.user.address);
 
   return (
-    <Box>
+    <Box {...p}>
       <ButtonGroup variant="outline" spacing="3">
         <Link disabled={!address} to={"/address/0/" + address}>
           <Button disabled={!address} variant="solid" colorScheme="gray">
@@ -104,6 +106,18 @@ function PageTabs() {
         </Link>
       </ButtonGroup>
     </Box>
+  );
+}
+
+function Warning({ title, children }) {
+  return (
+    <Alert status="error" mt={"20px"}>
+      <AlertIcon />
+      <Box flex="1">
+        <AlertTitle>{title}</AlertTitle>
+        <AlertDescription display="block">{children}</AlertDescription>
+      </Box>
+    </Alert>
   );
 }
 
@@ -164,15 +178,13 @@ function AlertTestNet() {
   );
 }
 
-function ICP({ mobile }) {
+function ICPBOX({ mobile }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
   const initialRef = React.useRef();
   const amountRef = React.useRef();
 
-  const icp = AccountIdentifier.e8sToIcp(
-    useSelector((state) => state.user.icp)
-  );
+  const icp = useSelector((state) => state.user.icp);
 
   const transferOk = async () => {
     let to = AccountIdentifier.TextToArray(initialRef.current.value);
@@ -185,10 +197,14 @@ function ICP({ mobile }) {
   return (
     <>
       {mobile ? (
-        <MenuItem onClick={onOpen}>{icp} ICP</MenuItem>
+        <MenuItem onClick={onOpen}>
+          <ICP>{icp}</ICP>
+        </MenuItem>
       ) : (
         <Tooltip hasArrow label="Internet Computer main currency">
-          <Button onClick={onOpen}>{icp} ICP</Button>
+          <Button onClick={onOpen}>
+            <ICP>{icp}</ICP>
+          </Button>
         </Tooltip>
       )}
 
@@ -201,7 +217,9 @@ function ICP({ mobile }) {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Send ICP</ModalHeader>
+          <ModalHeader>
+            Send <ICP />
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -212,8 +230,7 @@ function ICP({ mobile }) {
               <FormLabel>Amount</FormLabel>
               <Input ref={amountRef} placeholder="" type="number" />
               <Text mt="2" fontSize="13px">
-                {AccountIdentifier.e8sToIcp(ICP_FEE * 1n)} ICP in transfer fees
-                paid to IC
+                <ICP>{ICP_FEE * 1n}</ICP> in transfer fees paid to IC
               </Text>
             </FormControl>
           </ModalBody>
@@ -229,15 +246,13 @@ function ICP({ mobile }) {
   );
 }
 
-function PWR({ mobile }) {
+function PWRBOX({ mobile }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
   const initialRef = React.useRef();
   const amountRef = React.useRef();
 
-  const pwr = AccountIdentifier.e8sToIcp(
-    useSelector((state) => state.user.pwr)
-  );
+  const pwr = useSelector((state) => state.user.pwr);
 
   const transferOk = async () => {
     let amount =
@@ -250,10 +265,14 @@ function PWR({ mobile }) {
   return (
     <>
       {mobile ? (
-        <MenuItem onClick={onOpen}>{pwr} PWR</MenuItem>
+        <MenuItem onClick={onOpen}>
+          <PWR>{pwr}</PWR>
+        </MenuItem>
       ) : (
         <Tooltip hasArrow label="PWR tokens used for minting">
-          <Button onClick={onOpen}>{pwr} PWR</Button>
+          <Button onClick={onOpen}>
+            <PWR>{pwr}</PWR>
+          </Button>
         </Tooltip>
       )}
       {/* <img
@@ -270,26 +289,30 @@ function PWR({ mobile }) {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Buy PWR</ModalHeader>
+          <ModalHeader>
+            Buy <PWR />
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
-              <FormLabel>Amount of ICP</FormLabel>
+              <FormLabel>
+                Amount of <ICP />
+              </FormLabel>
               <Input ref={amountRef} placeholder="" type="number" />
-              <Text mt="2" color="orange">
-                Testnet has 10000x bonus. Don't buy PWR for more than 0.0001
-                ICP, because its temporary
+              <Text mt="2">
+                Fixed exchange rate <ICP>{100000000n}</ICP> equals{" "}
+                <PWR>{100000000n}</PWR>
               </Text>
               <Text mt="2" fontSize="13px">
-                {AccountIdentifier.e8sToIcp(ICP_FEE * 2n)} ICP in transfer fees
-                paid to IC
+                <ICP>{ICP_FEE * 2n}</ICP> in transfer fees paid to IC
               </Text>
+              <Warning title="Testnet!">All PWR purchased is temporary</Warning>
             </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button onClick={onClose}>Cancel</Button>
             <Button ml={3} onClick={transferOk}>
-              Send
+              Buy
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -303,7 +326,6 @@ function LoginBox() {
     state.user.address ? state.user.address.toLowerCase() : null
   );
   const principal = useSelector((state) => state.user.principal);
-  const pwr = useSelector((state) => state.user.pwr);
 
   const pro = useSelector((state) => state.user.pro);
 
@@ -315,7 +337,7 @@ function LoginBox() {
 
   const dispatch = useDispatch();
   return (
-    <Box w={420} sx={{ textAlign: "right" }}>
+    <Box w={550} sx={{ textAlign: "right" }}>
       <ButtonGroup variant="outline" spacing="3">
         {anonymous ? (
           <>
@@ -336,8 +358,8 @@ function LoginBox() {
           </>
         ) : (
           <>
-            <ICP mobile={false} />
-            <PWR mobile={false} />
+            <ICPBOX mobile={false} />
+            <PWRBOX mobile={false} />
 
             <Popover trigger={"hover"}>
               <PopoverTrigger>
@@ -352,9 +374,7 @@ function LoginBox() {
                   }}
                   rightIcon={<CopyIcon />}
                 >
-                  {address.substring(0, 4).toLowerCase() +
-                    "..." +
-                    address.slice(-4).toLowerCase()}
+                  <ACC short={true}>{address}</ACC>
                 </Button>
               </PopoverTrigger>
               <PopoverContent w={350} sx={{ textAlign: "left" }}>
@@ -368,7 +388,9 @@ function LoginBox() {
                   >
                     Your address:
                   </Text>
-                  <Text>{address.toLowerCase()}</Text>
+                  <Text>
+                    <ACC>{address}</ACC>
+                  </Text>
                   {pro ? (
                     <>
                       <Text
@@ -379,7 +401,9 @@ function LoginBox() {
                       >
                         Your principal:
                       </Text>
-                      <Text>{principal}</Text>
+                      <Text>
+                        <PRI>{principal}</PRI>
+                      </Text>
                     </>
                   ) : null}
                 </PopoverBody>
@@ -447,14 +471,37 @@ function Logo(props) {
 }
 
 function DesktopMenu() {
+  const { width, height } = useWindowSize();
+
+  if (width > 1500)
+    return (
+      <>
+        <Flex>
+          <Logo w={120} />
+          <Spacer />
+          <LoginBox />
+        </Flex>
+        <PageTabs
+          sx={{
+            position: "absolute",
+            top: "17px",
+            left: "50%",
+            width: "280px",
+            marginLeft: "-140px",
+          }}
+        />
+      </>
+    );
+
   return (
-    <Flex>
-      <Logo w={420} />
-      <Spacer />
-      <PageTabs />
-      <Spacer />
-      <LoginBox />
-    </Flex>
+    <>
+      <Flex>
+        <Logo w={120} />
+        <PageTabs sx={{ marginLeft: "20px" }} />
+        <Spacer />
+        <LoginBox />
+      </Flex>
+    </>
   );
 }
 
@@ -528,8 +575,8 @@ function MobileMenu() {
               </MenuItem>
             ) : (
               <>
-                <ICP mobile={true} />
-                <PWR mobile={true} />
+                <ICPBOX mobile={true} />
+                <PWRBOX mobile={true} />
 
                 <MenuItem
                   onClick={() => {
@@ -575,7 +622,7 @@ function MobileMenu() {
 function MainMenu() {
   const { width, height } = useWindowSize();
 
-  const isDesktop = width > 930;
+  const isDesktop = width > 1100;
   // const [isDesktop] = useMediaQuery("(min-width: 480px)");
 
   return isDesktop ? <DesktopMenu /> : <MobileMenu />;
