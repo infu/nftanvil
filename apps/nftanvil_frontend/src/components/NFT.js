@@ -1,4 +1,10 @@
-import { Text, Stack, Box, useColorModeValue } from "@chakra-ui/react";
+import {
+  Text,
+  Stack,
+  Box,
+  useColorModeValue,
+  AbsoluteCenter,
+} from "@chakra-ui/react";
 import { itemQuality } from "@vvv-interactive/nftanvil-tools/cjs/items.js";
 import React, { useEffect, useState } from "react";
 import {
@@ -71,6 +77,7 @@ import {
   TransactionToast,
   TransactionFailed,
 } from "../components/TransactionToast";
+import { TX, ACC, TID, HASH } from "./Code";
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -898,13 +905,12 @@ export const NFT = ({ id }) => {
 
 export const NFTClaim = (p) => {
   const code = p.match.params.code;
-  const mapLoaded = useSelector((state) => state.user.map.account);
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (mapLoaded) dispatch(nftEnterCode(code));
-  }, [code, mapLoaded, dispatch]);
+    dispatch(nftEnterCode(code));
+  }, [code, dispatch]);
 
   return null;
 };
@@ -914,7 +920,6 @@ export const NFTPage = (p) => {
   const code = p.match.params.code;
 
   const address = useSelector((state) => state.user.address);
-  const mapLoaded = useSelector((state) => state.user.map.account);
 
   const meta = useSelector((state) => state.nft[id]);
   const [claimed, setClaimed] = useState(false);
@@ -924,9 +929,8 @@ export const NFTPage = (p) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!mapLoaded) return;
     dispatch(nftFetch(id));
-  }, [id, dispatch, mapLoaded]);
+  }, [id, dispatch]);
 
   const onClaim = async () => {
     setClaiming(true);
@@ -943,7 +947,6 @@ export const NFTPage = (p) => {
   };
 
   if (!meta) return null;
-  if (!mapLoaded) return null;
   return (
     <Stack ml={"10px"} mr={"10px"} mt={"80px"}>
       <Center>
@@ -951,7 +954,7 @@ export const NFTPage = (p) => {
       </Center>
       <Center>
         <Stack>
-          <NFTThumb meta={p} />
+          <NFTThumb meta={meta} />
           <NFTInfo id={id} meta={meta} />
           <NFTProInfo id={id} meta={meta} />
         </Stack>
@@ -1057,7 +1060,9 @@ export const NFTThumb = (p) => {
 
   const c =
     p.meta?.thumb?.internal || p.meta?.thumb?.ipfs || p.meta?.thumb?.external;
+
   if (!c) return null;
+
   return (
     <Thumb {...p}>
       {c.url ? <img className="custom" alt="" src={c.url} /> : ""}
@@ -1124,7 +1129,7 @@ export const NFTInfo = ({ id, meta }) => {
 
   //if (!meta.name) return null;
   return (
-    <Box bg={bg} borderRadius="md" w={350} p={2}>
+    <Box bg={bg} borderRadius="md" w={350} p={2} sx={{ position: "relative" }}>
       {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
 
       <Stack spacing={0}>
@@ -1217,6 +1222,11 @@ export const NFTInfo = ({ id, meta }) => {
         {meta.price.amount && meta.price.amount !== "0" ? (
           <Text>{AccountIdentifier.e8sToIcp(meta.price.amount)} ICP</Text>
         ) : null}
+        {id ? (
+          <Text pt="1" pr="1" align="right" fontSize="10px">
+            <TID>{id}</TID>
+          </Text>
+        ) : null}
       </Stack>
     </Box>
   );
@@ -1234,11 +1244,11 @@ export const NFTProInfo = ({ id, meta }) => {
       {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
 
       <Stack spacing={0}>
-        {id ? (
+        {/* {id ? (
           <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
-            ID: {id}
+            ID: <TID>{id}</TID>
           </Text>
-        ) : null}
+        ) : null} */}
         {meta.pwr ? (
           <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
             Ops: {meta.pwr[0]} Storage: {meta.pwr[1]}
@@ -1247,7 +1257,7 @@ export const NFTProInfo = ({ id, meta }) => {
         {meta.bearer ? (
           <Link to={"/address/0/" + meta.bearer}>
             <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
-              Bearer: {meta.bearer}
+              Bearer: <ACC>{meta.bearer}</ACC>
             </Text>
           </Link>
         ) : null}

@@ -1,8 +1,12 @@
 import { getCrc32 } from "@dfinity/principal/lib/cjs/utils/getCrc";
 import { sha224 } from "@dfinity/principal/lib/cjs/utils/sha224";
 import { Principal } from "@dfinity/principal";
-import { toHexString, numberToBytesArray } from "./data.js";
+import { toHexString, numberToBytesArray, bytesArrayToNumber } from "./data.js";
 import { PrincipalFromSlot } from "./principal.js";
+import basex from "base-x";
+
+//var token_base = basex("0123456789abcdefghijkmnopqrstuvwxyz");
+var token_base = basex("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ");
 
 export const principalToAccountIdentifier = (p, s) => {
   const padding = Buffer("\x0Aaccount-id");
@@ -45,12 +49,28 @@ export const decodeTokenId = (t) => {
 };
 
 export const tokenToText = (tid) => {
-  return tid.toString(32);
+  let p = new Uint8Array([
+    ...numberToBytesArray(getCrc32(numberToBytesArray(tid, 4)) & 65535, 2),
+    ...numberToBytesArray(tid, 4),
+  ]);
+
+  return token_base.encode(p);
 };
 
-export const tokenFromText = (tid) => {
-  return parseInt(tid, 32);
+export const tokenFromText = (str) => {
+  let p = [...token_base.decode(str)];
+  let t = bytesArrayToNumber(p.splice(-4));
+  if (tokenToText(t) !== str) throw new Error("Invalid token id");
+  return t;
 };
+
+// console.log(
+//   4294967295,
+//   tokenToText(4294967295),
+//   tokenFromText(tokenToText(4294967295))
+// );
+// console.log(123, tokenToText(123), tokenFromText(tokenToText(123)));
+
 // export const encodeTokenId = (principal, index) => {
 //   const padding = Buffer("\x0Atid");
 //   const array = new Uint8Array([

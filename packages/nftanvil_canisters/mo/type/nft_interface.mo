@@ -415,6 +415,7 @@ module {
         #NotTransferable;
         #InvalidToken : TokenIdentifier;
         #Other        : Text;
+        #OutOfPower;
     };
 
     public type TransferResponse = Result.Result<{transactionId: Blob}, TransferResponseError>;
@@ -431,6 +432,7 @@ module {
         #OnCooldown;
         #ExtensionError: Text;
         #Other        : Text;
+        #OutOfPower;
     }>;
 
     public type TransferLinkResponse = Result.Result<(), {
@@ -439,6 +441,7 @@ module {
         #Rejected;
         #InvalidToken : TokenIdentifier;
         #Other        : Text;
+        #OutOfPower;
     }>;
 
     public type ClaimLinkRequest = {
@@ -884,6 +887,7 @@ module {
         #Unauthorized :AccountIdentifier;
         #Other : Text;
         #SocketError: SocketError;
+        #OutOfPower;
         }
     >;
 
@@ -924,7 +928,8 @@ module {
         #InvalidToken :TokenIdentifier;
         #Unauthorized :AccountIdentifier;
         #Other : Text;
-        #UnplugError: UnplugError
+        #UnplugError: UnplugError;
+        #OutOfPower
         }
     >;
 
@@ -970,8 +975,8 @@ module {
             #NotTransferable;
             #InsufficientBalance;
             #Unauthorized : AccountIdentifier;
-
             #Other        : Text;
+            #OutOfPower;
         }
     >;
 
@@ -1046,10 +1051,7 @@ module {
         CommonError
     >;
 
-    public type PWRConsumeResponse = Result.Result<
-        (),
-        ()
-    >;
+    public type PWRConsumeResponse = Bool;
 
     public module Allowance = {
         public type Request = {
@@ -1077,6 +1079,7 @@ module {
             #InvalidToken : TokenIdentifier;
             #Unauthorized : AccountIdentifier;
             #InsufficientBalance;
+            #OutOfPower;
             }
         >;
 

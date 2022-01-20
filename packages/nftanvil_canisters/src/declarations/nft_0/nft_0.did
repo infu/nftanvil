@@ -12,6 +12,7 @@ type UseResponse =
       InvalidToken: TokenIdentifier;
       OnCooldown;
       Other: text;
+      OutOfPower;
       Rejected;
       Unauthorized: AccountIdentifier;
     };
@@ -43,6 +44,7 @@ type UnsocketResponse =
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
       Other: text;
+      OutOfPower;
       Rejected;
       Unauthorized: AccountIdentifier;
       UnplugError: UnplugError;
@@ -77,6 +79,7 @@ type TransferResponseError =
    InvalidToken: TokenIdentifier;
    NotTransferable;
    Other: text;
+   OutOfPower;
    Rejected;
    Unauthorized: AccountIdentifier;
  };
@@ -101,6 +104,7 @@ type TransferLinkResponse =
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
       Other: text;
+      OutOfPower;
       Rejected;
       Unauthorized: AccountIdentifier;
     };
@@ -183,6 +187,7 @@ type SetPriceResponse =
       InvalidToken: TokenIdentifier;
       NotTransferable;
       Other: text;
+      OutOfPower;
       TooHigh;
       TooLow;
       Unauthorized: AccountIdentifier;
@@ -277,6 +282,7 @@ type PlugResponse =
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
       Other: text;
+      OutOfPower;
       Rejected;
       SocketError: SocketError;
       Unauthorized: AccountIdentifier;
@@ -549,6 +555,7 @@ type ApproveResponse =
       InsufficientBalance;
       InvalidToken: TokenIdentifier;
       Other: text;
+      OutOfPower;
       Unauthorized: AccountIdentifier;
     };
    ok: record {transactionId: blob;};

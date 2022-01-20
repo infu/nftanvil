@@ -11,6 +11,7 @@ export type ApproveResponse = { 'ok' : { 'transactionId' : Array<number> } } |
     'err' : { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Unauthorized' : AccountIdentifier } |
+      { 'OutOfPower' : null } |
       { 'Other' : string }
   };
 export type Attribute = [string, number];
@@ -214,6 +215,7 @@ export type PlugResponse = { 'ok' : { 'transactionId' : Array<number> } } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
+      { 'OutOfPower' : null } |
       { 'Other' : string }
   };
 export interface Price {
@@ -279,6 +281,7 @@ export type SetPriceResponse = { 'ok' : null } |
       { 'NotTransferable' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Unauthorized' : AccountIdentifier } |
+      { 'OutOfPower' : null } |
       { 'TooLow' : null } |
       { 'Other' : string }
   };
@@ -341,6 +344,7 @@ export type TransferLinkResponse = { 'ok' : null } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
+      { 'OutOfPower' : null } |
       { 'Other' : string }
   };
 export interface TransferRequest {
@@ -358,6 +362,7 @@ export type TransferResponseError = { 'InsufficientBalance' : null } |
   { 'InvalidToken' : TokenIdentifier } |
   { 'Rejected' : null } |
   { 'Unauthorized' : AccountIdentifier } |
+  { 'OutOfPower' : null } |
   { 'Other' : string };
 export type UnplugError = { 'InsufficientBalance' : null } |
   { 'NotLegitimateCaller' : null } |
@@ -381,6 +386,7 @@ export type UnsocketResponse = { 'ok' : { 'transactionId' : Array<number> } } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
+      { 'OutOfPower' : null } |
       { 'Other' : string }
   };
 export interface UploadChunkRequest {
@@ -404,6 +410,7 @@ export type UseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
       { 'InvalidToken' : TokenIdentifier } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
+      { 'OutOfPower' : null } |
       { 'ExtensionError' : string } |
       { 'Other' : string } |
       { 'OnCooldown' : null }

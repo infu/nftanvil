@@ -35,13 +35,15 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
   system func preupgrade() {
-    //    _tmpBalance := Iter.toArray(_balance.entries());
-    _tmpBalance := [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000)];
+    _tmpBalance := Iter.toArray(_balance.entries());
+    //_tmpBalance := [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000)];
   };
 
   system func postupgrade() {
     // TODO: Remove in production
+    ignore 3;
     _tmpBalance := [];
+    
   };
 
   public shared({caller}) func config_set(conf : Cluster.Config) : async () {
@@ -152,7 +154,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         switch(await ledger.transfer(transfer)) {
             case (#Ok(blockIndex)) {
 
-                balanceAdd(toUserAID, 1000 * amount.e8s ); // This 1000 is here for demo only
+                balanceAdd(toUserAID, 100000 * (amount.e8s - _oracle.icpFee)); // This 1000 is here for demo only
                 
                 let transactionId = await Cluster.history(_conf).add(#pwr(#mint({created=Time.now(); user=Nft.User.toAccountIdentifier(request.user); amount=amount.e8s})));
 

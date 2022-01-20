@@ -78,6 +78,7 @@ export const idlFactory = ({ IDL }) => {
     'InvalidToken' : TokenIdentifier,
     'Rejected' : IDL.Null,
     'Unauthorized' : AccountIdentifier,
+    'OutOfPower' : IDL.Null,
     'Other' : IDL.Text,
   });
   const TransferResponse = IDL.Variant({

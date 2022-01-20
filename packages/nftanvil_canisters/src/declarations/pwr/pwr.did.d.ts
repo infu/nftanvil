@@ -79,6 +79,7 @@ export type TransferResponseError = { 'InsufficientBalance' : null } |
   { 'InvalidToken' : TokenIdentifier } |
   { 'Rejected' : null } |
   { 'Unauthorized' : AccountIdentifier } |
+  { 'OutOfPower' : null } |
   { 'Other' : string };
 export type User = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };

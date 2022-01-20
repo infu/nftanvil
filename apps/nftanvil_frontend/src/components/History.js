@@ -44,6 +44,8 @@ import {
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 
+import { TX, ACC, TID, HASH } from "./Code";
+
 const SHOW = 10; // max records shown on screen
 const TAIL_INTERVAL = 1000; // every 1 sec
 
@@ -82,6 +84,9 @@ const Key = styled.div`
   text-transform: capitalize;
   color: rgb(170, 200, 222);
   width: 130px;
+  font-size: 12px;
+  font-family: Greycliff;
+  text-transform: uppercase;
 `;
 
 const Val = styled.div`
@@ -89,10 +94,13 @@ const Val = styled.div`
   a {
     color: rgb(133, 200, 255);
   }
+
+  font-size: 12px;
+  font-weight: normal;
 `;
 
 const HistoryEvent = ({ ev, canister, idx }) => {
-  const boxColor = useColorModeValue("white", "gray.600");
+  const boxColor = useColorModeValue("white", "gray.700");
   const space = useSelector((state) => state.user.map.space);
 
   if (!ev?.info) return null;
@@ -113,7 +121,11 @@ const HistoryEvent = ({ ev, canister, idx }) => {
     <Box bg={boxColor} borderRadius={"4"} border={1} p={3} mb={2}>
       <KeyVal
         k={"Transaction ID"}
-        v={<Link to={"/tx/" + transactionId}>{transactionId}</Link>}
+        v={
+          <Link to={"/tx/" + transactionId}>
+            <TX>{transactionId}</TX>
+          </Link>
+        }
       />
       <KeyVal k={"Timestamp"} v={moment(timestamp).format("LLLL")} />
 
@@ -125,12 +137,20 @@ const HistoryEvent = ({ ev, canister, idx }) => {
         let val = details[key];
         if (val.length === 32) {
           val = AccountIdentifier.ArrayToText(val);
-          val = <Link to={"/address/0/" + val}>{val}</Link>;
+          val = (
+            <Link to={"/address/0/" + val}>
+              <ACC>{val}</ACC>
+            </Link>
+          );
         }
 
         if (key === "token" || key === "socket" || key === "plug") {
           val = tokenToText(val); //tokenFromBlob(val);
-          val = <Link to={"/nft/" + val}>{val}</Link>;
+          val = (
+            <Link to={"/nft/" + val}>
+              <TID>{val}</TID>
+            </Link>
+          );
         }
 
         if (key === "use") {
@@ -153,7 +173,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
               <KeyVal
                 key={idx + "addr"}
                 k={key + " address"}
-                v={AccountIdentifier.ArrayToText(val.address)}
+                v={<ACC>{AccountIdentifier.ArrayToText(val.address)}</ACC>}
               />
             </>
           );
@@ -169,7 +189,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
 
         return <KeyVal key={idx} k={key} v={val} />;
       })}
-      <KeyVal k={"Hash"} v={toHexString(ev.hash)} />
+      <KeyVal k={"Hash"} v={<HASH>{toHexString(ev.hash)}</HASH>} />
     </Box>
   );
 };
@@ -177,7 +197,6 @@ const HistoryEvent = ({ ev, canister, idx }) => {
 export const History = (p) => {
   const total = useSelector((state) => state.history.total);
   const events = useSelector((state) => state.history.events);
-  const mapLoaded = useSelector((state) => state.user.map.history);
 
   const canister = p.match.params.canister;
   let from = parseInt(p.match.params.from, 10);
@@ -196,8 +215,8 @@ export const History = (p) => {
   };
 
   useEffect(() => {
-    if (mapLoaded) load();
-  }, [dispatch, from, to, canister, mapLoaded]);
+    load();
+  }, [dispatch, from, to, canister]);
 
   useInterval(
     async () => {
@@ -264,13 +283,12 @@ export const History = (p) => {
 export const HistoryTx = (p) => {
   const total = useSelector((state) => state.history.total);
   const events = useSelector((state) => state.history.events);
-  const mapLoaded = useSelector((state) => state.user.map.history);
   const space = useSelector((state) => state.user.map.space);
 
   const tx = p.match.params.tx;
 
   const { slot, idx: from } = TransactionId.decode(tx);
-  let canister = mapLoaded ? PrincipalFromSlot(space, slot).toText() : null;
+  let canister = PrincipalFromSlot(space, slot).toText();
   //console.log({ canister, slot, from, space });
   // const from = parseInt(tx.substr(tx.lastIndexOf("-") + 1), 10);
 
@@ -286,11 +304,10 @@ export const HistoryTx = (p) => {
   };
 
   useEffect(() => {
-    if (mapLoaded) load();
-  }, [dispatch, from, to, canister, mapLoaded]);
+    load();
+  }, [dispatch, from, to, canister]);
 
   if (!events || !events.length) return null;
-  if (!mapLoaded) return null;
 
   return (
     <Box mt={8}>

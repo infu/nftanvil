@@ -77,6 +77,8 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
+const ICP_FEE = 10000n;
+
 function PageTabs() {
   const address = useSelector((state) => state.user.address);
 
@@ -174,7 +176,7 @@ function ICP({ mobile }) {
 
   const transferOk = async () => {
     let to = AccountIdentifier.TextToArray(initialRef.current.value);
-    let amount = AccountIdentifier.icpToE8s(amountRef.current.value);
+    let amount = AccountIdentifier.icpToE8s(amountRef.current.value) + ICP_FEE;
 
     onClose();
 
@@ -209,6 +211,10 @@ function ICP({ mobile }) {
             <FormControl>
               <FormLabel>Amount</FormLabel>
               <Input ref={amountRef} placeholder="" type="number" />
+              <Text mt="2" fontSize="13px">
+                {AccountIdentifier.e8sToIcp(ICP_FEE * 1n)} ICP in transfer fees
+                paid to IC
+              </Text>
             </FormControl>
           </ModalBody>
           <ModalFooter>
@@ -234,7 +240,8 @@ function PWR({ mobile }) {
   );
 
   const transferOk = async () => {
-    let amount = AccountIdentifier.icpToE8s(amountRef.current.value);
+    let amount =
+      AccountIdentifier.icpToE8s(amountRef.current.value) + ICP_FEE * 2n;
 
     onClose();
 
@@ -269,6 +276,14 @@ function PWR({ mobile }) {
             <FormControl>
               <FormLabel>Amount of ICP</FormLabel>
               <Input ref={amountRef} placeholder="" type="number" />
+              <Text mt="2" color="orange">
+                Testnet has 10000x bonus. Don't buy PWR for more than 0.0001
+                ICP, because its temporary
+              </Text>
+              <Text mt="2" fontSize="13px">
+                {AccountIdentifier.e8sToIcp(ICP_FEE * 2n)} ICP in transfer fees
+                paid to IC
+              </Text>
             </FormControl>
           </ModalBody>
           <ModalFooter>
@@ -449,6 +464,7 @@ function MobileMenu() {
   );
   const anonymous = useSelector((state) => state.user.anonymous);
   const pathname = useSelector((state) => state.router.location.pathname);
+
   const myroot = "/address/0/" + address;
 
   const { onCopy } = useClipboard(address);
@@ -513,8 +529,7 @@ function MobileMenu() {
             ) : (
               <>
                 <ICP mobile={true} />
-
-                <MenuItem>0 PWR</MenuItem>
+                <PWR mobile={true} />
 
                 <MenuItem
                   onClick={() => {
@@ -566,6 +581,10 @@ function MainMenu() {
   return isDesktop ? <DesktopMenu /> : <MobileMenu />;
 }
 function App() {
+  const mapLoaded = useSelector((state) => state.user.map.history);
+  const theme = useColorModeValue("light", "dark");
+  if (!mapLoaded) return null;
+
   return (
     <>
       <Box>
@@ -605,7 +624,7 @@ function App() {
       </Box>
 
       <Nftstorage />
-      <ToastContainer theme={useColorModeValue("light", "dark")} />
+      <ToastContainer theme={theme} />
     </>
   );
 }

@@ -219,7 +219,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     case (#ok((meta,vars))) {
 
                             if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#Rejected);
-                            
+
+                            if (PWRConsume(tokenIndex, 2) == false) return #err(#OutOfPower);
+
                             _token2link.put(tokenIndex, request.hash);
 
                             #ok();
@@ -495,6 +497,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     case (#ok((meta,vars))) {
 
                             if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#NotTransferable);
+                            
+                            if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
 
                             vars.price := request.price;
 
@@ -527,12 +531,15 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
  
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.from}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
-     
+                
+
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
                             if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#NotTransferable);
                             
+                            if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
+
                             SNFT_move(Nft.User.toAccountIdentifier(request.from),Nft.User.toAccountIdentifier(request.to), tokenIndex);
                             await ACC_move(Nft.User.toAccountIdentifier(request.from),Nft.User.toAccountIdentifier(request.to), tokenIndex);
 
@@ -590,20 +597,24 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                             case (null) false;
                                         };
                                         if (isOnCooldown) return #err(#OnCooldown);
-                                        
+
+                                        if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
+
                                         vars.cooldownUntil := ?(timeInMinutes() + duration);
                                     };
                                     case(#consume) {
                                         // Consumable USE save to History
 
+                                        if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
+
                                         SNFT_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
                                         await ACC_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
                                     };
                                     case(#prove) {
-                   
+                                        if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
                                     };
                                 };
-
+                                
                                 let transactionId = await Cluster.history(_conf).add(#nft(#use({created=Time.now();token = tokenId(tokenIndex); user=Nft.User.toAccountIdentifier(request.user); use=request.use; memo= request.memo})));
 
                                 #ok({transactionId});
@@ -900,17 +911,17 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
 
-    private func PWRConsume(tokenIndex: TokenIndex, ops: Nat64) : async Nft.PWRConsumeResponse {
+    private func PWRConsume(tokenIndex: TokenIndex, ops: Nat64) : Nft.PWRConsumeResponse {
         switch( _metavars.get(tokenIndex) ) {
             case (?vars) {
                 let cost = ops * Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.AVG_MESSAGE_COST);
-                if (cost > vars.pwrOps) return #err();
+                if (cost > vars.pwrOps) return false;
 
                 vars.pwrOps := vars.pwrOps - cost;
-                #ok()
+                true
             };
             case (_) {
-                #err()
+                false
             }
         }
     };
@@ -1112,7 +1123,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.plug; user = request.user}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
-     
+
+                if (PWRConsume(tokenIndex, 3) == false) return #err(#OutOfPower);
+
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
 
@@ -1215,6 +1228,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             switch (balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.socket; user = request.user}),1),caller_user, caller)) {
                 case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
         
+                    if (PWRConsume(tokenIndex, 3) == false) return #err(#OutOfPower);
+
                     switch(getMeta(tokenIndex)) {
                         case (#ok((meta,vars))) {
 
@@ -1324,6 +1339,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         switch ( balRequireOwner(balRequireMinimum(balGet({token = request.token; user = caller_user}), 1), caller_user)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
                 
+                if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
+
                 // caller being same as spender will remove previously approved spender
                 if (Principal.equal(caller, request.spender)) {
                     _allowance.delete(tokenIndex); // will save memory

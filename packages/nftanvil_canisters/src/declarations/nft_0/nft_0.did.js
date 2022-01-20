@@ -29,6 +29,7 @@ export const idlFactory = ({ IDL }) => {
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
       'Unauthorized' : AccountIdentifier,
+      'OutOfPower' : IDL.Null,
       'Other' : IDL.Text,
     }),
   });
@@ -55,6 +56,7 @@ export const idlFactory = ({ IDL }) => {
     'InvalidToken' : TokenIdentifier,
     'Rejected' : IDL.Null,
     'Unauthorized' : AccountIdentifier,
+    'OutOfPower' : IDL.Null,
     'Other' : IDL.Text,
   });
   const BurnResponse = IDL.Variant({
@@ -264,6 +266,7 @@ export const idlFactory = ({ IDL }) => {
       'InvalidToken' : TokenIdentifier,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
+      'OutOfPower' : IDL.Null,
       'Other' : IDL.Text,
     }),
   });
@@ -312,6 +315,7 @@ export const idlFactory = ({ IDL }) => {
       'NotTransferable' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
       'Unauthorized' : AccountIdentifier,
+      'OutOfPower' : IDL.Null,
       'TooLow' : IDL.Null,
       'Other' : IDL.Text,
     }),
@@ -362,6 +366,7 @@ export const idlFactory = ({ IDL }) => {
       'InvalidToken' : TokenIdentifier,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
+      'OutOfPower' : IDL.Null,
       'Other' : IDL.Text,
     }),
   });
@@ -389,6 +394,7 @@ export const idlFactory = ({ IDL }) => {
       'InvalidToken' : TokenIdentifier,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
+      'OutOfPower' : IDL.Null,
       'Other' : IDL.Text,
     }),
   });
@@ -419,6 +425,7 @@ export const idlFactory = ({ IDL }) => {
       'InvalidToken' : TokenIdentifier,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
+      'OutOfPower' : IDL.Null,
       'ExtensionError' : IDL.Text,
       'Other' : IDL.Text,
       'OnCooldown' : IDL.Null,
