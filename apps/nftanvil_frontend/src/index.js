@@ -11,6 +11,8 @@ import { theme } from "./theme.js";
 import { ColorModeScript } from "@chakra-ui/react";
 
 import { ConnectedRouter } from "connected-react-router";
+import { useSelector } from "react-redux";
+
 //import "./decorations/Christmass";
 
 setTimeout(() => {
@@ -22,13 +24,13 @@ setTimeout(() => {
     <>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
       <React.StrictMode>
-        <ChakraProvider theme={theme}>
-          <Provider store={store}>
+        <Provider store={store}>
+          <ChakraProvider theme={theme}>
             <ConnectedRouter history={history}>
               <App />
             </ConnectedRouter>
-          </Provider>
-        </ChakraProvider>
+          </ChakraProvider>
+        </Provider>
       </React.StrictMode>
     </>,
     document.getElementById("root")

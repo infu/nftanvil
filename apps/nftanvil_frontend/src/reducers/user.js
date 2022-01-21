@@ -53,6 +53,7 @@ export const userSlice = createSlice({
         pro: action.payload,
       };
     },
+
     authSet: (state, action) => {
       const { address, principal, anonymous, map, acccan } = action.payload;
       return {

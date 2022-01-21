@@ -18,9 +18,9 @@ export function decode(tx) {
 }
 
 export function toText(bytes) {
-  return bs.encode(new Uint8Array([...bytes]));
+  return "tx" + bs.encode(new Uint8Array([...bytes]));
 }
 
 export function fromText(t) {
-  return bs.decode(t);
+  return bs.decode(t.slice(2));
 }

@@ -91,7 +91,7 @@ function PageTabs(p) {
   return (
     <Box {...p}>
       <ButtonGroup variant="outline" spacing="3">
-        <Link disabled={!address} to={"/address/0/" + address}>
+        <Link disabled={!address} to={"/" + address.toLowerCase()}>
           <Button disabled={!address} variant="solid" colorScheme="gray">
             Inventory
           </Button>
@@ -561,7 +561,7 @@ function MobileMenu() {
   const pathname = useSelector((state) => state.router.location.pathname);
   const pro = useSelector((state) => state.user.pro);
 
-  const myroot = "/address/0/" + address;
+  const myroot = "/" + address;
 
   const { onCopy } = useClipboard(address);
   const { colorMode, toggleColorMode } = useColorMode();
@@ -600,7 +600,7 @@ function MobileMenu() {
           />
           <MenuList>
             {address ? (
-              <Link to={"/address/0/" + address}>
+              <Link to={"/" + address}>
                 <MenuItem>Inventory</MenuItem>
               </Link>
             ) : null}
@@ -721,11 +721,11 @@ function App() {
           <RouterSwitch>
             <Route path="/mint" component={Mint} />
             <Route path="/history" exact component={HistoryRedirect} />
-            <Route path="/tx/:tx" component={HistoryTx} />
+            <Route path="/:tx(tx.*)" component={HistoryTx} />
             <Route path="/history/:canister/:from/:to" component={History} />
-            <Route path="/nft/:id/:code" component={NFTPage} />
-            <Route path="/nft/:id" component={NFTPage} />
-            <Route path="/address/:pageIdx/:address" component={Inventory} />
+            <Route path="/:id(nft.*)/:code" component={NFTPage} />
+            <Route path="/:id(nft.*)" component={NFTPage} />
+            <Route path="/:address(.{64})" component={Inventory} />
             <Route path="/:code" component={NFTClaim} />
 
             <Route exact path="/">

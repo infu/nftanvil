@@ -15,7 +15,7 @@ export const TX = ({ children }) => {
   return (
     <Stx>
       <b>TX</b>
-      {children}
+      {children.slice(2)}
     </Stx>
   );
 };
@@ -121,7 +121,7 @@ export const TID = ({ children }) => {
   return (
     <Stid>
       <b>NFT</b>
-      {children}
+      {children.slice(3)}
     </Stid>
   );
 };

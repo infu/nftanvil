@@ -31,7 +31,7 @@ const InventoryBox = styled.div`
 
 export const Inventory = (p) => {
   const address = p.match.params.address;
-  const pageIdx = p.match.params.pageIdx;
+  const pageIdx = 0;
 
   const acc = useSelector((state) => state.user.map.account);
   const { width, height } = useWindowSize();

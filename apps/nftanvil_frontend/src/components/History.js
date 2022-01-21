@@ -127,7 +127,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
       <KeyVal
         k={"Transaction ID"}
         v={
-          <Link to={"/tx/" + transactionId}>
+          <Link to={"/" + transactionId}>
             <TX>{transactionId}</TX>
           </Link>
         }
@@ -143,7 +143,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
         if (val.length === 32) {
           val = AccountIdentifier.ArrayToText(val);
           val = (
-            <Link to={"/address/0/" + val}>
+            <Link to={"/" + val}>
               <ACC>{val}</ACC>
             </Link>
           );
@@ -152,7 +152,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
         if (key === "token" || key === "socket" || key === "plug") {
           val = tokenToText(val); //tokenFromBlob(val);
           val = (
-            <Link to={"/nft/" + val}>
+            <Link to={"/" + val}>
               <TID>{val}</TID>
             </Link>
           );

@@ -54,13 +54,14 @@ export const tokenToText = (tid) => {
     ...numberToBytesArray(tid, 4),
   ]);
 
-  return token_base.encode(p);
+  return ("NFT" + token_base.encode(p)).toLowerCase();
 };
 
 export const tokenFromText = (str) => {
-  let p = [...token_base.decode(str)];
+  str = str.toUpperCase();
+  if (str.slice(0, 3) !== "NFT") return null;
+  let p = [...token_base.decode(str.slice(3))];
   let t = bytesArrayToNumber(p.splice(-4));
-  if (tokenToText(t) !== str) throw new Error("Invalid token id");
   return t;
 };
 

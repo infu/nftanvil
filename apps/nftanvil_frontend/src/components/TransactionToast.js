@@ -9,9 +9,9 @@ export const TransactionToast = (props) => {
   return (
     <div
       onClick={() => {
-        if (props.tokenId) dispatch(push("/nft/" + props.tokenId));
+        if (props.tokenId) dispatch(push(props.tokenId));
         else if (props.transactionId)
-          dispatch(push("/tx/" + TransactionId.toText(props.transactionId)));
+          dispatch(push("/" + TransactionId.toText(props.transactionId)));
       }}
     >
       <div>{props.title}</div>

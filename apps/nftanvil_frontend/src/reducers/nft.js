@@ -591,7 +591,7 @@ export const nftEnterCode = (code) => async (dispatch, getState) => {
   let canister = PrincipalFromSlot(s.user.map.space, slot);
 
   let id = encodeTokenId(slot, tokenIndex);
-  dispatch(push("/nft/" + tokenToText(id) + "/" + code));
+  dispatch(push("/" + tokenToText(id) + "/" + code));
 };
 
 export const mint_quote = (vals) => async (dispatch, getState) => {

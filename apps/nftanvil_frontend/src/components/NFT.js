@@ -22,6 +22,8 @@ import {
   buy,
   purchase_intent,
 } from "../reducers/nft";
+import { setDominantColor } from "../reducers/user";
+
 import { Spinner } from "@chakra-ui/react";
 import { push } from "connected-react-router";
 import Confetti from "./Confetti";
@@ -123,7 +125,7 @@ const Thumb = styled.div`
     object-position: center center;
     height: 64px;
     width: 64px;
-    border-radius: 5px;
+    border-radius: 8px;
   }
 `;
 
@@ -884,7 +886,7 @@ export const NFT = ({ id }) => {
         setPopover(false);
       }}
     >
-      <Link to={"/nft/" + id}>
+      <Link to={"/" + id}>
         {meta?.thumb?.ipfs?.url ? (
           <img alt="" className="custom" src={meta.thumb.ipfs.url} />
         ) : meta?.thumb?.internal?.url ? (
@@ -1026,6 +1028,8 @@ export const NFTPage = (p) => {
 };
 
 export const NFTContent = (p) => {
+  const dispatch = useDispatch();
+
   if (p.meta?.content?.external) return null;
 
   const c =
@@ -1045,7 +1049,7 @@ export const NFTContent = (p) => {
   return (
     <ContentBox>
       {ctype === "image" && c.url ? (
-        <img src={c.url} alt="" width="100%" />
+        <img crossOrigin="true" src={c.url} alt="" width="100%" />
       ) : null}
       {ctype === "video" && c.url ? (
         <video controls loop muted autoPlay>
@@ -1328,14 +1332,14 @@ export const NFTProInfo = ({ id, meta }) => {
           </Text>
         ) : null}
         {meta.bearer ? (
-          <Link to={"/address/0/" + meta.bearer}>
+          <Link to={"/" + meta.bearer}>
             <Text fontSize="9px">
               Bearer: <ACC short={true}>{meta.bearer}</ACC>
             </Text>
           </Link>
         ) : null}
         {meta.author ? (
-          <Link to={"/address/0/" + meta.author}>
+          <Link to={"/" + meta.author}>
             <Text fontSize="9px" sx={{}}>
               Author: <ACC short={true}>{meta.author}</ACC>
             </Text>
@@ -1343,12 +1347,12 @@ export const NFTProInfo = ({ id, meta }) => {
         ) : null}
         {meta.authorShare ? (
           <Text fontSize="9px">
-            Author share: {(meta.authorShare / 100).toFixed(2)}%
+            Author's share: <b>{(meta.authorShare / 100).toFixed(2)}%</b>
           </Text>
         ) : null}
         {meta.created ? (
           <Text fontSize="9px">
-            Created: {moment(meta.created * 60 * 1000).format("LLLL")}
+            Minted: {moment(meta.created * 60 * 1000).format("LLLL")}
           </Text>
         ) : null}
         {meta.entropy ? (

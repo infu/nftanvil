@@ -869,7 +869,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                             Painless.Request(request, {
                                                 chunkFunc = getChunk;
                                                 cbFunc = _workaround.http_request_streaming_callback;
-                                                headers = [("Content-size", Nat32.toText(size)), ("Content-type", contentType), ("Cache-control", "public,max-age=31536000,immutable") ]
+                                                headers = [("Content-size", Nat32.toText(size)), ("Content-type", contentType), ("Cache-control", "public,max-age=31536000,immutable"), ("Access-Control-Allow-Origin","*") ]
                                                 });
                                         };
                                         case (#external(_)) {
