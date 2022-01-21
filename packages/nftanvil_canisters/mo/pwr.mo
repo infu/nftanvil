@@ -35,8 +35,9 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
   system func preupgrade() {
-    _tmpBalance := Iter.toArray(_balance.entries());
-    //_tmpBalance := [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000)];
+    //_tmpBalance := Iter.toArray(_balance.entries());
+    _tmpBalance := [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000)];
+    ignore 1
   };
 
   system func postupgrade() {
@@ -74,8 +75,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   public shared({caller}) func transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {
     let aid = Nft.User.toAccountIdentifier(request.from);
 
-
-    let caller_user:Nft.User = switch(Nft.APrincipal.isLegitimate(_conf.space, caller)) {
+    let isAnvil = Nft.APrincipal.isLegitimate(_conf.space, caller); // Checks if caller is from Anvil principal space
+    let caller_user:Nft.User = switch(isAnvil) {
       case (true) {
         #address(Nft.User.toAccountIdentifier(request.from))
       };
@@ -104,8 +105,14 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
             balanceAdd(to_aid, request.amount);
 
-            let transactionId = await Cluster.history(_conf).add(#pwr(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
-            #ok({transactionId});
+            if (isAnvil) {
+              //This avoids adding two transactions for one operation like minting
+              #ok({transactionId=Blob.fromArray([])});
+            } else {
+              let transactionId = await Cluster.history(_conf).add(#pwr(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
+              #ok({transactionId});
+            }
+            
 
           };
           case (_) return #err(#InsufficientBalance);

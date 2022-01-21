@@ -4,6 +4,8 @@ import {
   Wrap,
   useColorModeValue,
   Center,
+  Stack,
+  Text,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
@@ -15,6 +17,7 @@ import { useWindowSize } from "react-use";
 import { useSelector, useDispatch } from "react-redux";
 import { loadInventory } from "../reducers/inventory";
 import styled from "@emotion/styled";
+import { TX, ACC, TID, HASH, PWR, ICP } from "./Code";
 
 const InventoryBox = styled.div`
   background: url(${(props) => props.bg});
@@ -55,22 +58,28 @@ export const Inventory = (p) => {
   const rows = Math.ceil(120 / cols);
 
   return (
-    <InventoryBox
-      width={cols * 72}
-      height={rows * 72}
-      bg={useColorModeValue(itemgrid_light, itemgrid)}
-    >
-      {isLoading ? (
-        <Box h="72px">
-          <Center>
-            <Spinner size="lg" mt="11px" />
-          </Center>
-        </Box>
-      ) : (
-        <Wrap direction={"horizontal"} spacing="0">
-          {items && items.map((id) => <NFT id={id} key={id} />)}
-        </Wrap>
-      )}
-    </InventoryBox>
+    <Stack mt="8">
+      <Text fontSize="11px" textAlign="center">
+        <ACC short={true}>{address}</ACC>
+      </Text>
+
+      <InventoryBox
+        width={cols * 72}
+        height={rows * 72}
+        bg={useColorModeValue(itemgrid_light, itemgrid)}
+      >
+        {isLoading ? (
+          <Box h="72px">
+            <Center>
+              <Spinner size="lg" mt="11px" />
+            </Center>
+          </Box>
+        ) : (
+          <Wrap direction={"horizontal"} spacing="0">
+            {items && items.map((id) => <NFT id={id} key={id} />)}
+          </Wrap>
+        )}
+      </InventoryBox>
+    </Stack>
   );
 };

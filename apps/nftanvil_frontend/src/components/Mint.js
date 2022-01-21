@@ -125,32 +125,21 @@ export const PwrPrice = ({ record, valid }) => {
   );
 
   return (
-    <Center>
-      <Box
-        bg="teal.300"
-        color="teal.900"
-        p="1"
-        mt="0"
-        w={"50%"}
-        sx={{ borderRadius: "0px 0px 6px 6px" }}
-        textAlign={"center"}
-        fontSize="13px"
-      >
-        {!pwrPrice ? (
-          <Spinner
-            thickness="2px"
-            speed="0.85s"
-            emptyColor="teal.200"
-            color="teal.800"
-            size="xs"
-          />
-        ) : (
-          <>
-            costs <PWR>{pwrPrice}</PWR>
-          </>
-        )}
-      </Box>
-    </Center>
+    <Box p="1" ml="3" textAlign={"center"} fontSize="15px">
+      {!pwrPrice ? (
+        <Spinner
+          thickness="2px"
+          speed="0.85s"
+          emptyColor="teal.200"
+          color="teal.800"
+          size="xs"
+        />
+      ) : (
+        <>
+          for <PWR>{pwrPrice}</PWR>
+        </>
+      )}
+    </Box>
   );
 };
 
@@ -937,15 +926,15 @@ export const MintForm = () => {
                       rightIcon={<AnvilIcon />}
                     >
                       Mint
+                      {props.dirty && props.isValid ? (
+                        <PwrPrice
+                          record={record}
+                          valid={
+                            !props.isValidating && props.dirty && props.isValid
+                          }
+                        />
+                      ) : null}
                     </Button>
-                    {props.dirty && props.isValid ? (
-                      <PwrPrice
-                        record={record}
-                        valid={
-                          !props.isValidating && props.dirty && props.isValid
-                        }
-                      />
-                    ) : null}
                   </LoginRequired>
                   {!pro ? (
                     <Box fontSize="11px" align="center" mt="16px">

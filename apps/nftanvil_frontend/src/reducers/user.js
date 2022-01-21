@@ -133,6 +133,18 @@ export const auth =
       return [x[0].toString(), x[1].toString()];
     });
 
+    if (process.env.NODE_ENV !== "production") {
+      console.log(
+        "Proxy command:\n icx-proxy --address 127.0.0.1:8453 --dns-alias " +
+          map.nft_avail
+            .map(
+              (slot) =>
+                `${slot}.lvh.me:${PrincipalFromSlot(map.space, slot).toText()}`
+            )
+            .join(" ")
+      );
+    }
+
     let acccan = address
       ? PrincipalFromSlot(
           map.space,

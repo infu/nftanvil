@@ -115,8 +115,6 @@ export const encodeChunkId = (tokenIndex, chunkIndex, ctype) => {
   return (tokenIndex << 19) | ((chunkIndex & 255) << 2) | ctype; // 0 - content , 1 - thumb
 };
 
-let proxyInfo = false;
-
 export const ipfsTokenUrl = (cid) => {
   return "https://ipfs.io/ipfs/" + cid;
 };
@@ -132,16 +130,10 @@ export const tokenUrl = (space, tid, type) => {
       encodeChunkId(index, 0, type === "content" ? 0 : 1).toString(16)
     );
   } else {
-    if (!proxyInfo) {
-      proxyInfo = true;
-      console.log(
-        "Proxy command: icx-proxy --address 127.0.0.1:8453 --dns-alias 127.0.0.1:" +
-          canister
-      );
-    }
-
     return (
-      "http://127.0.0.1:8453/" +
+      "http://" +
+      slot +
+      ".lvh.me:8453/" +
       encodeChunkId(index, 0, type === "content" ? 0 : 1).toString(16)
     );
   }

@@ -5,8 +5,9 @@ const Stx = styled.span`
   font-family: Hexaframe;
   letter-spacing: 1px;
   text-transform: uppercase;
+  color: rgb(117, 130, 149);
   b {
-    color: rgb(170, 220, 0);
+    color: rgb(110, 200, 170);
   }
 `;
 
@@ -30,33 +31,53 @@ const Sacc = styled.span`
   }
 `;
 
+const hexColors = {
+  0: "#49fc32",
+  1: "#a7ef15",
+  2: "#e8dc16",
+  3: "#ffbb33",
+  4: "#ff906c",
+  5: "#ff87b3",
+  6: "#ff92ff",
+  7: "#ffa9ff",
+  8: "#c8c8ff",
+  9: "#00e4ff",
+  A: "#00f3ff",
+  B: "#29f7db",
+  C: "#c9e1bb",
+  D: "#ffc8d1",
+  E: "#e8cfff",
+  F: "#cdd9fd",
+};
+
 export const ACC = ({ children, short = false }) => {
-  if (!short) {
-    let a = children.slice(0, 4);
-    let b = children.slice(4, -4);
-    let c = children.slice(-4);
+  let a = children
+    .slice(0, 4)
+    .toUpperCase()
+    .split("")
+    .map((x, idx) => (
+      <span key={idx} style={{ color: hexColors[x] }}>
+        {x}
+      </span>
+    ));
+  let b = children.slice(4, -4);
+  let c = children
+    .slice(-4)
+    .toUpperCase()
+    .split("")
+    .map((x, idx) => (
+      <span key={idx} style={{ color: hexColors[x] }}>
+        {x}
+      </span>
+    ));
 
-    return (
-      <Sacc>
-        <b>{a}</b>
-        {b}
-        <b>{c}</b>
-      </Sacc>
-    );
-  } else {
-    let a = children.slice(0, 2);
-    let b = children.slice(2, 4);
-    let c = children.slice(-4, -2);
-    let d = children.slice(-2);
-
-    return (
-      <Sacc>
-        <b>{a}</b>
-        {b}....{c}
-        <b>{d}</b>
-      </Sacc>
-    );
-  }
+  return (
+    <Sacc>
+      <b>{a}</b>
+      {short ? "..." : b}
+      <b>{c}</b>
+    </Sacc>
+  );
 };
 
 const Spri = styled.span`
@@ -76,10 +97,10 @@ export const PRI = ({ children }) => {
     <Spri>
       {p.map((x, idx) => {
         return (
-          <>
+          <span key={idx}>
             {idx !== 0 ? "-" : null}
             <b>{x}</b>
-          </>
+          </span>
         );
       })}
     </Spri>
@@ -90,6 +111,7 @@ const Stid = styled.span`
   font-family: Hexaframe;
   letter-spacing: 1px;
   text-transform: uppercase;
+  color: rgb(117, 130, 149);
   b {
     color: rgb(250, 0, 120);
   }

@@ -10,19 +10,19 @@ export const TransactionToast = (props) => {
     <div
       onClick={() => {
         if (props.tokenId) dispatch(push("/nft/" + props.tokenId));
-        if (props.transactionId)
+        else if (props.transactionId)
           dispatch(push("/tx/" + TransactionId.toText(props.transactionId)));
       }}
     >
       <div>{props.title}</div>
       {props.tokenId ? (
         <div style={{ fontSize: "10px" }}>
-          TokenId: <TID>{props.tokenId}</TID>
+          <TID>{props.tokenId}</TID>
         </div>
       ) : null}
       {props.transactionId ? (
-        <div style={{ fontSize: "10px", color: "green" }}>
-          TransactionId: <TX>{TransactionId.toText(props.transactionId)}</TX>
+        <div style={{ fontSize: "10px" }}>
+          <TX>{TransactionId.toText(props.transactionId)}</TX>
         </div>
       ) : null}
     </div>

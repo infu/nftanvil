@@ -38,6 +38,7 @@ import {
   FormLabel,
   FormControl,
   Input,
+  Tooltip,
 } from "@chakra-ui/react";
 import {
   Modal,
@@ -80,6 +81,7 @@ import {
   TransactionFailed,
 } from "../components/TransactionToast";
 import { TX, ACC, TID, HASH, ICP, PWR } from "./Code";
+import { toHexString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -126,20 +128,22 @@ const Thumb = styled.div`
 `;
 
 export const NFTMenu = ({ id, meta, owner }) => {
+  const pro = useSelector((state) => state.user.pro);
+
   return (
     <Box p={3} maxWidth="375px" textAlign="justify">
       {owner ? (
         <Wrap spacing="3">
           <UseButton id={id} meta={meta} />
           <TransferButton id={id} meta={meta} />
-          <ApproveButton id={id} meta={meta} />
+          {pro ? <ApproveButton id={id} meta={meta} /> : null}
 
           <TransferLinkButton id={id} meta={meta} />
           <SetPriceButton id={id} meta={meta} />
 
-          <BurnButton id={id} meta={meta} />
-          <SocketButton id={id} meta={meta} />
-          <UnsocketButton id={id} meta={meta} />
+          {pro ? <BurnButton id={id} meta={meta} /> : null}
+          {pro ? <SocketButton id={id} meta={meta} /> : null}
+          {pro ? <UnsocketButton id={id} meta={meta} /> : null}
         </Wrap>
       ) : (
         <Wrap>
@@ -926,6 +930,8 @@ export const NFTPage = (p) => {
   const address = useSelector((state) => state.user.address);
 
   const meta = useSelector((state) => state.nft[id]);
+  const pro = useSelector((state) => state.user.pro);
+
   const [claimed, setClaimed] = useState(false);
   const [error, setError] = useState(false);
   const [claiming, setClaiming] = useState(false);
@@ -961,7 +967,7 @@ export const NFTPage = (p) => {
           <NFTThumb meta={meta} />
           <NFTInfo id={id} meta={meta} />
 
-          {/* <NFTProInfo id={id} meta={meta} /> */}
+          {pro ? <NFTProInfo id={id} meta={meta} /> : null}
         </Stack>
       </Center>
 
@@ -1132,114 +1138,116 @@ export const NFTInfo = ({ id, meta }) => {
   const qcolor = itemQuality[meta.quality].color;
   let nowMinutes = Math.floor(Date.now() / 1000 / 60);
 
-  //if (!meta.name) return null;
+  let things = [
+    meta.name ? (
+      <Text key={"name"} color={qcolor} fontSize="16px">
+        {meta.name.capitalize()}
+      </Text>
+    ) : null,
+    meta.tags && meta.tags.length ? (
+      <Wrap key={"tags"} spacing={1}>
+        {meta.tags.map((a, idx) => (
+          <Tag key={idx} size="sm">
+            {a}
+          </Tag>
+        ))}
+      </Wrap>
+    ) : null,
+    meta.domain ? <MetaDomain key={"domain"} meta={meta} /> : null,
+    "bindsForever" in meta.transfer ? (
+      <Text key={"bindsForever"} fontSize="14px">
+        Binds on transfer
+      </Text>
+    ) : null,
+    "bindsDuration" in meta.transfer ? (
+      <Text key={"bindsDuration"} fontSize="14px">
+        Binds on transfer for{" "}
+        {moment.duration(meta.transfer.bindsDuration, "minutes").humanize()}
+      </Text>
+    ) : null,
+    meta.boundUntil > nowMinutes ? (
+      <Text key="boundUntil" fontSize="14px" color={"green"} as="i">
+        {"bound for " +
+          moment.duration(meta.boundUntil - nowMinutes, "minutes").humanize()}
+      </Text>
+    ) : null,
+    meta?.use?.consumable?.desc ? (
+      <Text key="consumable" fontSize="14px" color={"green"} as="i">
+        Use: {meta.use.consumable.desc.capitalize()} (Consumed in the process)
+      </Text>
+    ) : null,
+    meta.cooldownUntil > nowMinutes ? (
+      <Text key="cooldownUntil" fontSize="14px" color={"green.300"}>
+        {moment
+          .duration(meta.cooldownUntil - nowMinutes, "minutes")
+          .humanize() + " cooldown left"}
+      </Text>
+    ) : null,
+    meta?.use?.cooldown?.desc ? (
+      <Text key="cooldownDesc" fontSize="14px" color={"green.300"}>
+        Use: {meta.use.cooldown.desc.capitalize()} (
+        {moment.duration(meta.use.cooldown.duration, "minutes").humanize()}{" "}
+        cooldown)
+      </Text>
+    ) : null,
+    meta?.secret ? (
+      <Text key="secret" fontSize="14px" color={"purple.300"}>
+        Secret
+      </Text>
+    ) : null,
+    meta.hold?.external?.desc ? (
+      <Text key="hold" fontSize="14px" color={"green.300"}>
+        Hold: {meta.hold.external.desc.capitalize()}
+      </Text>
+    ) : null,
+    meta.attributes && meta.attributes.length
+      ? meta.attributes.map((a, idx) => (
+          <Text key={"attr" + idx} fontSize="14px">
+            {a[1] >= 0 ? "+" : ""}
+            {a[1]} {a[0].capitalize()}
+          </Text>
+        ))
+      : null,
+    meta.lore ? (
+      <Text key="lore" fontSize="14px" pt="14px" color={"yellow"}>
+        "{meta.lore.capitalize()}"
+      </Text>
+    ) : null,
+    meta.ttl && meta.ttl > 0 ? (
+      <Text key="ttl" fontSize="14px" pt="14px" color={"red"}>
+        Expires in {moment.duration(meta.ttl, "minutes").humanize()}
+      </Text>
+    ) : null,
+    meta.sockets && meta.sockets.length ? (
+      <Wrap key="sockets" spacing={0}>
+        {meta.sockets.map((tid, idx) => (
+          <NFT id={tid} key={tid} />
+        ))}
+      </Wrap>
+    ) : null,
+    meta.price.amount && meta.price.amount !== "0" ? (
+      <Text key="icpPrice">
+        <ICP>{meta.price.amount}</ICP>
+      </Text>
+    ) : null,
+    id ? (
+      <Flex key="footer" pt="1" pr="1" sx={{ lineHeight: "8px;" }} pb="2px">
+        <NFTBattery meta={meta} />
+        <Spacer />
+
+        <Text fontSize="10px">
+          <TID>{id}</TID>
+        </Text>
+      </Flex>
+    ) : null,
+  ].filter(Boolean);
+
+  if (!things.length) return null;
   return (
     <Box bg={bg} borderRadius="md" w={350} p={2} sx={{ position: "relative" }}>
       {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
 
-      <Stack spacing={0}>
-        {meta.name ? (
-          <Text color={qcolor} fontSize="16px">
-            {meta.name.capitalize()}
-          </Text>
-        ) : null}
-        {meta.tags && meta.tags.length ? (
-          <Wrap spacing={1}>
-            {meta.tags.map((a, idx) => (
-              <Tag key={idx} size="sm">
-                {a}
-              </Tag>
-            ))}
-          </Wrap>
-        ) : null}
-        {meta.domain ? <MetaDomain meta={meta} /> : null}
-        {"bindsForever" in meta.transfer ? (
-          <Text fontSize="14px">Binds on transfer</Text>
-        ) : null}
-        {"bindsDuration" in meta.transfer ? (
-          <Text fontSize="14px">
-            Binds on transfer for{" "}
-            {moment.duration(meta.transfer.bindsDuration, "minutes").humanize()}
-          </Text>
-        ) : null}
-
-        {meta.boundUntil > nowMinutes ? (
-          <Text fontSize="14px" color={"green"} as="i">
-            {"bound for " +
-              moment
-                .duration(meta.boundUntil - nowMinutes, "minutes")
-                .humanize()}
-          </Text>
-        ) : null}
-
-        {meta?.use?.consumable?.desc ? (
-          <Text fontSize="14px" color={"green"} as="i">
-            Use: {meta.use.consumable.desc.capitalize()} (Consumed in the
-            process)
-          </Text>
-        ) : null}
-
-        {meta.cooldownUntil > nowMinutes ? (
-          <Text fontSize="14px" color={"green.300"}>
-            {moment
-              .duration(meta.cooldownUntil - nowMinutes, "minutes")
-              .humanize() + " cooldown left"}
-          </Text>
-        ) : null}
-
-        {meta?.use?.cooldown?.desc ? (
-          <Text fontSize="14px" color={"green.300"}>
-            Use: {meta.use.cooldown.desc.capitalize()} (
-            {moment.duration(meta.use.cooldown.duration, "minutes").humanize()}{" "}
-            cooldown)
-          </Text>
-        ) : null}
-        {meta.hold?.external?.desc ? (
-          <Text fontSize="14px" color={"green.300"}>
-            Hold: {meta.hold.external.desc.capitalize()}
-          </Text>
-        ) : null}
-        {meta.attributes && meta.attributes.length
-          ? meta.attributes.map((a, idx) => (
-              <Text key={idx} fontSize="14px">
-                {a[1] >= 0 ? "+" : ""}
-                {a[1]} {a[0].capitalize()}
-              </Text>
-            ))
-          : null}
-        {meta.lore ? (
-          <Text fontSize="14px" pt="14px" color={"yellow"}>
-            "{meta.lore.capitalize()}"
-          </Text>
-        ) : null}
-        {meta.ttl && meta.ttl > 0 ? (
-          <Text fontSize="14px" pt="14px" color={"red"}>
-            Expires in {moment.duration(meta.ttl, "minutes").humanize()}
-          </Text>
-        ) : null}
-        {meta.sockets && meta.sockets.length ? (
-          <Wrap spacing={0}>
-            {meta.sockets.map((tid, idx) => (
-              <NFT id={tid} key={tid} />
-            ))}
-          </Wrap>
-        ) : null}
-        {meta.price.amount && meta.price.amount !== "0" ? (
-          <Text>
-            <ICP>{meta.price.amount}</ICP>
-          </Text>
-        ) : null}
-        {id ? (
-          <Flex pt="1" pr="1" sx={{ lineHeight: "8px;" }} pb="2px">
-            <NFTBattery meta={meta} />
-            <Spacer />
-
-            <Text fontSize="10px">
-              <TID>{id}</TID>
-            </Text>
-          </Flex>
-        ) : null}
-      </Stack>
+      <Stack spacing={0}>{things}</Stack>
     </Box>
   );
 };
@@ -1259,18 +1267,35 @@ export const NFTBattery = ({ meta }) => {
   let ttl = meta.ttl > 0 ? meta.ttl : fully_charged_min;
   let msg_full = (ttl / 60 / 24 + 100) * avg_msg_cost_pwr;
   let perc = meta.pwr[0] / msg_full;
+  let avg_num_ops_left = Math.round(meta.pwr[0] / avg_msg_cost_pwr);
 
   let color = `rgb(${Math.floor(125 - 125 * perc)}, ${Math.floor(
     200 * perc
   )}, 255)`;
   let colorEmpty = `rgb(${Math.floor(255 - 255 * perc)}, 70, 70)`;
   return (
-    <span>
-      <NFTBatFull color={perc >= 0.15 ? color : colorEmpty} />
-      <NFTBatFull color={perc >= 0.5 ? color : colorEmpty} />
-      <NFTBatFull color={perc >= 0.75 ? color : colorEmpty} />
-      <NFTBatFull color={perc >= 0.9 ? color : colorEmpty} />
-    </span>
+    <Tooltip
+      hasArrow
+      placement="top-start"
+      label={
+        <Box>
+          <Text fontWeight="bold" fontSize="15px" mb="1" mt="1">
+            {avg_num_ops_left + " operations left"}
+          </Text>
+          <Text>
+            Indicator displaying PWR stored inside the NFT. Refills
+            automatically on marketplace sale.
+          </Text>
+        </Box>
+      }
+    >
+      <span>
+        <NFTBatFull color={perc >= 0.15 ? color : colorEmpty} />
+        <NFTBatFull color={perc >= 0.5 ? color : colorEmpty} />
+        <NFTBatFull color={perc >= 0.75 ? color : colorEmpty} />
+        <NFTBatFull color={perc >= 0.9 ? color : colorEmpty} />
+      </span>
+    </Tooltip>
   );
 };
 
@@ -1282,7 +1307,13 @@ export const NFTProInfo = ({ id, meta }) => {
 
   //if (!meta.name) return null;
   return (
-    <Box bg={bg} borderRadius="md" w={350} p={2}>
+    <Box
+      bg={bg}
+      borderRadius="md"
+      w={350}
+      p={2}
+      sx={{ wordBreak: "break-all", textTransform: "uppercase" }}
+    >
       {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
 
       <Stack spacing={0}>
@@ -1292,17 +1323,39 @@ export const NFTProInfo = ({ id, meta }) => {
           </Text>
         ) : null} */}
         {meta.pwr ? (
-          <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
-            Ops: {meta.pwr[0]} Storage: {meta.pwr[1]}
+          <Text fontSize="9px">
+            Ops: <PWR>{meta.pwr[0]}</PWR> Storage: <PWR>{meta.pwr[1]}</PWR>
           </Text>
         ) : null}
-        {/* {meta.bearer ? (
+        {meta.bearer ? (
           <Link to={"/address/0/" + meta.bearer}>
-            <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
-              Bearer: <ACC>{meta.bearer}</ACC>
+            <Text fontSize="9px">
+              Bearer: <ACC short={true}>{meta.bearer}</ACC>
             </Text>
           </Link>
-        ) : null} */}
+        ) : null}
+        {meta.author ? (
+          <Link to={"/address/0/" + meta.author}>
+            <Text fontSize="9px" sx={{}}>
+              Author: <ACC short={true}>{meta.author}</ACC>
+            </Text>
+          </Link>
+        ) : null}
+        {meta.authorShare ? (
+          <Text fontSize="9px">
+            Author share: {(meta.authorShare / 100).toFixed(2)}%
+          </Text>
+        ) : null}
+        {meta.created ? (
+          <Text fontSize="9px">
+            Created: {moment(meta.created * 60 * 1000).format("LLLL")}
+          </Text>
+        ) : null}
+        {meta.entropy ? (
+          <Text fontSize="9px">
+            Entropy: <HASH>{toHexString(meta.entropy)}</HASH>
+          </Text>
+        ) : null}
       </Stack>
     </Box>
   );

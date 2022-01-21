@@ -68,7 +68,11 @@ export const HistoryRedirect = () => {
     load();
   }, [dispatch]);
 
-  return <div>Loading...</div>;
+  return (
+    <Box mt={"15"}>
+      <Spinner />
+    </Box>
+  );
 };
 
 const KeyVal = ({ k, v }) => {

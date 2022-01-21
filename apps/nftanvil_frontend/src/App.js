@@ -8,7 +8,8 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
-import { login, logout, transfer_icp, pwr_buy } from "./reducers/user";
+
+import { login, proSet, logout, transfer_icp, pwr_buy } from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -30,6 +31,7 @@ import {
   useColorModeValue,
   Tooltip,
   CloseButton,
+  Switch,
 } from "@chakra-ui/react";
 import { useClipboard, useColorMode } from "@chakra-ui/react";
 import {
@@ -38,6 +40,7 @@ import {
   CopyIcon,
   HamburgerIcon,
   ArrowBackIcon,
+  ExternalLinkIcon,
 } from "@chakra-ui/icons";
 import { toast } from "react-toastify";
 
@@ -50,7 +53,7 @@ import {
 
 import Dfinity from "./assets/dfinity.svg";
 
-import { Switch, Route, Redirect } from "react-router";
+import { Switch as RouterSwitch, Route, Redirect } from "react-router";
 
 import { Link } from "react-router-dom";
 
@@ -83,6 +86,7 @@ const ICP_FEE = 10000n;
 
 function PageTabs(p) {
   const address = useSelector((state) => state.user.address);
+  const pro = useSelector((state) => state.user.pro);
 
   return (
     <Box {...p}>
@@ -99,11 +103,13 @@ function PageTabs(p) {
           </Button>
         </Link>
 
-        <Link to="/history">
-          <Button variant="solid" colorScheme="gray">
-            History
-          </Button>
-        </Link>
+        {pro ? (
+          <Link to="/history">
+            <Button variant="solid" colorScheme="gray">
+              History
+            </Button>
+          </Link>
+        ) : null}
       </ButtonGroup>
     </Box>
   );
@@ -430,25 +436,66 @@ function LoginBox() {
             </Popover>
           </>
         )}
-        {colorMode === "light" ? (
-          <IconButton
-            colorScheme="gray"
-            variant="solid"
-            icon={<SunIcon />}
-            onClick={toggleColorMode}
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label="Options"
+            icon={<HamburgerIcon />}
+            variant="outline"
           />
-        ) : (
-          <IconButton
-            colorScheme="gray"
-            variant="solid"
-            icon={<MoonIcon />}
-            onClick={toggleColorMode}
-          />
-        )}
+          <MenuList>
+            <a
+              href={"https://github.com/infu/nftanvil"}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MenuItem icon={<ExternalLinkIcon />}>Source code</MenuItem>
+            </a>
+
+            <a
+              href={"https://discord.gg/apPegYBhBC"}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MenuItem icon={<ExternalLinkIcon />}>Discord</MenuItem>
+            </a>
+
+            {colorMode === "light" ? (
+              <MenuItem icon={<SunIcon />} onClick={toggleColorMode}>
+                Light
+              </MenuItem>
+            ) : (
+              <MenuItem icon={<MoonIcon />} onClick={toggleColorMode}>
+                Dark
+              </MenuItem>
+            )}
+            <Box align="left" pl="3" pt="1" pb="1">
+              <ProToggle />
+            </Box>
+          </MenuList>
+        </Menu>
       </ButtonGroup>
     </Box>
   );
 }
+
+export const ProToggle = () => {
+  const dispatch = useDispatch();
+  const pro = useSelector((state) => state.user.pro);
+
+  return (
+    <FormControl w={"110px"} ml="2px" display="inline-flex" alignItems="center">
+      <FormLabel htmlFor="pro" mb="0">
+        <Text>Advanced</Text>
+      </FormLabel>
+      <Switch
+        id="pro"
+        isChecked={pro}
+        onChange={(e) => dispatch(proSet(e.target.checked))}
+      />
+    </FormControl>
+  );
+};
 
 // <Spinner
 // thickness="4px"
@@ -487,6 +534,7 @@ function DesktopMenu() {
             top: "17px",
             left: "50%",
             width: "280px",
+            textAlign: "center",
             marginLeft: "-140px",
           }}
         />
@@ -511,6 +559,7 @@ function MobileMenu() {
   );
   const anonymous = useSelector((state) => state.user.anonymous);
   const pathname = useSelector((state) => state.router.location.pathname);
+  const pro = useSelector((state) => state.user.pro);
 
   const myroot = "/address/0/" + address;
 
@@ -560,9 +609,11 @@ function MobileMenu() {
               <MenuItem>Mint</MenuItem>
             </Link>
 
-            <Link to="/history">
-              <MenuItem>History</MenuItem>
-            </Link>
+            {pro ? (
+              <Link to="/history">
+                <MenuItem>History</MenuItem>
+              </Link>
+            ) : null}
 
             {anonymous ? (
               <MenuItem onClick={() => dispatch(login())}>
@@ -587,10 +638,7 @@ function MobileMenu() {
                   }}
                   icon={<CopyIcon />}
                 >
-                  Your address{" "}
-                  {address.substring(0, 4).toLowerCase() +
-                    "..." +
-                    address.slice(-4).toLowerCase()}
+                  Your address <ACC short={true}>{address}</ACC>
                 </MenuItem>
 
                 <MenuItem
@@ -602,7 +650,21 @@ function MobileMenu() {
                 </MenuItem>
               </>
             )}
+            <a
+              href={"https://github.com/infu/nftanvil"}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MenuItem icon={<ExternalLinkIcon />}>Source code</MenuItem>
+            </a>
 
+            <a
+              href={"https://discord.gg/apPegYBhBC"}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MenuItem icon={<ExternalLinkIcon />}>Discord</MenuItem>
+            </a>
             {colorMode === "light" ? (
               <MenuItem icon={<SunIcon />} onClick={toggleColorMode}>
                 Light
@@ -612,6 +674,9 @@ function MobileMenu() {
                 Dark
               </MenuItem>
             )}
+            <Box align="left" pl="3" pt="1" pb="1">
+              <ProToggle />
+            </Box>
           </MenuList>
         </Menu>
       </Flex>
@@ -653,7 +718,7 @@ function App() {
         <MainMenu />
         <AlertTestNet />
         <Center>
-          <Switch>
+          <RouterSwitch>
             <Route path="/mint" component={Mint} />
             <Route path="/history" exact component={HistoryRedirect} />
             <Route path="/tx/:tx" component={HistoryTx} />
@@ -666,7 +731,7 @@ function App() {
             <Route exact path="/">
               <Redirect to="/mint" />
             </Route>
-          </Switch>
+          </RouterSwitch>
         </Center>
       </Box>
 
