@@ -229,8 +229,6 @@ export const History = (p) => {
     load();
   }, [dispatch, from, to, canister]);
 
-  console.log("focused", focused);
-
   useInterval(
     async () => {
       let { total, canister } = await dispatch(loadInfo());
