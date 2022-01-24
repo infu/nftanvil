@@ -309,6 +309,7 @@ export const idlFactory = ({ IDL }) => {
   const RechargeResponse = IDL.Variant({
     'ok' : IDL.Null,
     'err' : IDL.Variant({
+      'RechargeUnnecessary' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
     }),

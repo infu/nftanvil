@@ -159,7 +159,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         switch(await ledger.transfer(transfer)) {
             case (#Ok(blockIndex)) {
 
-                balanceAdd(toUserAID, 100000 * (amount.e8s - _oracle.icpFee)); // This 1000 is here for demo only
+                balanceAdd(toUserAID, 100000 * amount.e8s); // TODO: This 1000 is here for demo only
                 
                 let transactionId = await Cluster.history(_conf).add(#pwr(#mint({created=Time.now(); user=Nft.User.toAccountIdentifier(request.user); amount=amount.e8s})));
 

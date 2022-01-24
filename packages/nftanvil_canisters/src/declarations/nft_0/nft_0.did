@@ -228,10 +228,12 @@ type Request =
  };
 type RechargeResponse = 
  variant {
-   err: variant {
-          InsufficientBalance;
-          InvalidToken: TokenIdentifier;
-        };
+   err:
+    variant {
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      RechargeUnnecessary;
+    };
    ok;
  };
 type RechargeRequest = 

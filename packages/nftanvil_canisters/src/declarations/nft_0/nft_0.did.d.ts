@@ -257,7 +257,8 @@ export interface RechargeRequest {
 }
 export type RechargeResponse = { 'ok' : null } |
   {
-    'err' : { 'InsufficientBalance' : null } |
+    'err' : { 'RechargeUnnecessary' : null } |
+      { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier }
   };
 export interface Request {

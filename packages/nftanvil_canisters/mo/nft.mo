@@ -946,7 +946,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     private func charge_calc_missing(m:Nft.Metadata, v:Nft.Metavars) : (Nat64, Nat64,Nat64, Nat64) {
 
-        let {ttl; pwrOps; pwrStorage} = Nft.MetavarsFreeze(v);
+        let {pwrOps; pwrStorage} = Nft.MetavarsFreeze(v);
+
+        let ttl:?Nat32 = null; // we are recharging to full always;
 
         let {quality; content; thumb; custom} = m;
 
