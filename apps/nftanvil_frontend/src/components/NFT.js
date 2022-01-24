@@ -138,11 +138,10 @@ export const NFTMenu = ({ id, meta, owner }) => {
       {owner ? (
         <Wrap spacing="3">
           <UseButton id={id} meta={meta} />
-          <RechargeButton id={id} meta={meta} />
+          {pro ? <RechargeButton id={id} meta={meta} /> : null}
 
           <TransferButton id={id} meta={meta} />
           {pro ? <ApproveButton id={id} meta={meta} /> : null}
-
           <TransferLinkButton id={id} meta={meta} />
           <SetPriceButton id={id} meta={meta} />
 

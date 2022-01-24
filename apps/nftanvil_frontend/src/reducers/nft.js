@@ -139,7 +139,8 @@ export const nftMediaGet = async (
 ) => {
   let identity = authentication.client.getIdentity();
 
-  let { index, slot } = decodeTokenId(id);
+  let tid = tokenFromText(id);
+  let { index, slot } = decodeTokenId(tid);
   let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
@@ -197,7 +198,8 @@ export const buy =
 
     let identity = authentication.client.getIdentity();
 
-    let { slot } = decodeTokenId(id);
+    let tid = tokenFromText(id);
+    let { slot } = decodeTokenId(tid);
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
@@ -246,7 +248,9 @@ export const purchase_intent =
 
     let identity = authentication.client.getIdentity();
 
-    let { slot } = decodeTokenId(id);
+    let tid = tokenFromText(id);
+    let { slot } = decodeTokenId(tid);
+    //console.log("t", id, slot, tokenFromText(id));
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
@@ -288,7 +292,7 @@ export const set_price =
       subaccount,
     });
     if (!("ok" in t)) throw t.err;
-    dispatch(nftFetch(tid));
+    dispatch(nftFetch(id));
   };
 
 export const transfer =
