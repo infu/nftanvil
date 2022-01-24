@@ -153,7 +153,7 @@ export const PWR = ({ children }) => {
   let val = AccountIdentifier.e8sToPwr(children);
   let [a, b] = val.toString().split(".");
   return (
-    <Tooltip placement="top-start" label={children}>
+    <Tooltip placement="right" hasArrow label={children}>
       <Spwr>
         {a}.<span>{b}</span> <b>PWR</b>
       </Spwr>
@@ -188,7 +188,7 @@ export const ICP = ({ children }) => {
   let val = AccountIdentifier.e8sToIcp(children);
   let [a, b] = val.toString().split(".");
   return (
-    <Tooltip placement="top-start" label={children + " e8s"}>
+    <Tooltip hasArrow placement="right" label={children + " e8s"}>
       <Sicp>
         {a}.<span>{b}</span> <b>ICP</b>
       </Sicp>

@@ -227,7 +227,7 @@ export const buy =
     });
 
     dispatch(refresh_balances());
-
+    dispatch(nftFetch(id));
     console.log("CLAIM", claim);
     // let t = await nftcan.purchase_intent({
     //   user: { address: AccountIdentifier.TextToArray(address) },
@@ -287,8 +287,8 @@ export const set_price =
       price: price,
       subaccount,
     });
-
     if (!("ok" in t)) throw t.err;
+    dispatch(nftFetch(tid));
   };
 
 export const transfer =
@@ -355,6 +355,8 @@ export const transfer =
       });
     }
 
+    dispatch(nftFetch(id));
+
     return t;
   };
 
@@ -381,6 +383,8 @@ export const plug =
       memo: [],
     });
     if (!t.ok) throw t.err;
+    dispatch(nftFetch(plug_id));
+    dispatch(nftFetch(socket_id));
     return t.ok;
   };
 
@@ -407,6 +411,8 @@ export const unsocket =
       memo: [],
     });
     if (!t.ok) throw t.err;
+    dispatch(nftFetch(plug_id));
+    dispatch(nftFetch(socket_id));
     return t.ok;
   };
 
@@ -460,6 +466,7 @@ export const recharge =
       });
 
       dispatch(refresh_balances());
+      dispatch(nftFetch(id));
       return t.ok;
     } catch (e) {
       console.error("Recharge error", e);
@@ -505,7 +512,8 @@ export const burn =
     if (rez.err) throw rez.err;
 
     dispatch(refresh_balances());
-
+    let { transactionId } = rez.ok;
+    dispatch(push("/" + TransactionId.toText(transactionId)));
     return rez.ok;
   };
 
@@ -561,7 +569,7 @@ export const use =
 
     if (!r.ok) throw r.err;
     dispatch(refresh_balances());
-
+    dispatch(nftFetch(id));
     return r.ok;
   };
 
@@ -658,6 +666,8 @@ export const claim_link =
       key: Array.from(key),
       token: tid,
     });
+
+    dispatch(nftFetch(tid));
 
     return resp;
   };

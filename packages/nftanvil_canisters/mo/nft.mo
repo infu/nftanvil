@@ -421,7 +421,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                         // recharge
                                         vars.pwrStorage := topStorage;
                                         vars.pwrOps := topOps;
-
+                                        vars.ttl := null;
+                                        
                                         let notifyRequest = {
                                             created = Time.now();
                                             buyer = toUserAID;
@@ -980,6 +981,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     case (#ok()) {
                         v.pwrStorage := topStorage;
                         v.pwrOps := topOps;
+                        v.ttl := null;
                         #ok();
                     };
                     case (#err(e)) return #err(#InsufficientBalance);
