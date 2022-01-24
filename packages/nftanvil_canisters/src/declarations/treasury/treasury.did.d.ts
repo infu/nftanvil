@@ -8,6 +8,7 @@ export interface BalanceRequest {
   'subaccount' : [] | [SubAccount],
 }
 export type BalanceResponse = bigint;
+export type Balance__1 = bigint;
 export type BlockIndex = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
 export type CanisterSlot = number;
@@ -15,7 +16,7 @@ export type CanisterSlot__1 = number;
 export interface Class {
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
-  'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance]>>,
+  'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__1]>>,
   'notify_NFTPurchase' : (arg_0: NFTPurchase) => Promise<NFTPurchaseResponse>,
   'withdraw' : (arg_0: WithdrawRequest) => Promise<WithdrawResponse>,
 }
@@ -37,6 +38,7 @@ export interface NFTPurchase {
   'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
   'seller' : AccountIdentifier__1,
   'author' : { 'share' : Share, 'address' : AccountIdentifier__1 },
+  'recharge' : Balance,
   'purchaseAccount' : AccountIdentifier__1,
   'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
   'buyer' : AccountIdentifier__1,

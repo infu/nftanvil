@@ -87,6 +87,7 @@ type NFTPurchase =
                       share: Share;
                     };
    purchaseAccount: AccountIdentifier__1;
+   recharge: Balance__1;
    seller: AccountIdentifier__1;
    token: TokenIdentifier__1;
  };
@@ -164,6 +165,7 @@ type CanisterRange =
    CanisterSlot;
  };
 type BlockIndex = nat64;
+type Balance__1 = nat64;
 type Balance = nat64;
 type AnvEvent = variant {transfer: EventFungibleTransaction;};
 type AddResponse = blob;

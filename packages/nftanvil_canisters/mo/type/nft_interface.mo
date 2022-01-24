@@ -1084,6 +1084,7 @@ module {
         (), {
             #InvalidToken : TokenIdentifier;
             #InsufficientBalance;
+            #RechargeUnnecessary
         }
     >;
 

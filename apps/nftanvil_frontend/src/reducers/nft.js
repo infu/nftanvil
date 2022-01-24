@@ -347,7 +347,10 @@ export const transfer =
         closeOnClick: true,
 
         render: (
-          <TransactionFailed title="Transfer failed" message={e.message} />
+          <TransactionFailed
+            title="Transfer failed"
+            message={JSON.stringify(e)}
+          />
         ),
       });
     }
@@ -405,6 +408,74 @@ export const unsocket =
     });
     if (!t.ok) throw t.err;
     return t.ok;
+  };
+
+export const recharge =
+  ({ id }) =>
+  async (dispatch, getState) => {
+    let s = getState();
+
+    let identity = authentication.client.getIdentity();
+
+    let tid = tokenFromText(id);
+    let { slot } = decodeTokenId(tid);
+    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+
+    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+
+    let address = s.user.address;
+    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+
+    let toastId = toast("Recharging...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+    let t;
+    try {
+      let t = await nftcan.recharge({
+        user: { address: AccountIdentifier.TextToArray(address) },
+        token: tid,
+        subaccount,
+      });
+      if (!("ok" in t)) throw t.err;
+
+      let { transactionId } = { transactionId: 0 }; //t.ok;
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <TransactionToast
+            title="Recharge successfull"
+            transactionId={transactionId}
+          />
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+
+      dispatch(refresh_balances());
+      return t.ok;
+    } catch (e) {
+      console.error("Recharge error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <TransactionFailed
+            title="Recharge failed"
+            message={JSON.stringify(e)}
+          />
+        ),
+      });
+    }
   };
 
 export const burn =
@@ -697,7 +768,7 @@ export const mint = (vals) => async (dispatch, getState) => {
       throw Error("Insufficient Balance");
     }
     console.log("REZ", mint);
-    if (!("ok" in mint)) throw Error(JSON.stringify(mint.err));
+    if (!("ok" in mint)) throw mint.err;
 
     let { tokenIndex, transactionId } = mint.ok;
     let id = tokenToText(encodeTokenId(slot, tokenIndex));
@@ -748,7 +819,9 @@ export const mint = (vals) => async (dispatch, getState) => {
 
       closeOnClick: true,
 
-      render: <TransactionFailed title="Minting failed" message={e.message} />,
+      render: (
+        <TransactionFailed title="Minting failed" message={JSON.stringify(e)} />
+      ),
       // autoClose: 9000,
     });
 

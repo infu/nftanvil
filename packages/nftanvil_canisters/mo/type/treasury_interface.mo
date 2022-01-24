@@ -63,7 +63,7 @@ module {
             
             buyer : AccountIdentifier;
             seller : AccountIdentifier;
-
+            recharge : Balance;
             author : {
                 address : AccountIdentifier;
                 share : Share

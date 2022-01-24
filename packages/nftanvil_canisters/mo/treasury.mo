@@ -30,6 +30,8 @@ shared({caller = _installer}) actor class Class() = this {
   
   private stable var _fee:Nat64 = 10000;
 
+  private stable var _total_recharged:Balance= 0;
+
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
   system func preupgrade() {
@@ -67,7 +69,9 @@ shared({caller = _installer}) actor class Class() = this {
 
       // if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err("Unauthorized");
 
-      let total:Nat64 = request.amount.e8s;
+      let total:Nat64 = request.amount.e8s - request.recharge;
+      _total_recharged := _total_recharged + request.recharge;
+
       let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
       let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(request.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
      

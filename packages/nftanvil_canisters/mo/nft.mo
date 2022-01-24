@@ -304,6 +304,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         _oracle := oracle
     };
 
+
+
     // Get accountid and exact ICP amount
     public shared({caller}) func purchase_intent( request: Nft.PurchaseIntentRequest) : async Nft.PurchaseIntentResponse {
         let toUserAID = Nft.User.toAccountIdentifier(request.user);
@@ -327,7 +329,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     });
             };
             case(#err(e)) #err(#InvalidToken(request.token));
-            
         };
     };   
 
@@ -356,6 +357,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                         let purchaseOk = payment >= vars.price.amount;
 
                         let fullRefund : Nat64 = payment - _oracle.icpFee;
+
                         let noRefund : Nat64 = 0;
 
                         let refundAmount:Nat64 = switch(purchaseOk) {
@@ -395,8 +397,15 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                         switch (purchaseOk) {
                             case (true) {
+
+                                let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
+
                                 let amount = {e8s = payment - _oracle.icpFee};
+
+                                assert(amount.e8s > 0);
+
                                 // move
+
                                 let transfer : Ledger.TransferArgs = {
                                     memo = 0;
                                     amount;
@@ -409,13 +418,18 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                 switch(await Cluster.ledger(_conf).transfer(transfer)) {
                                     case (#Ok(ledgerBlock)) {
                                         
+                                        // recharge
+                                        vars.pwrStorage := topStorage;
+                                        vars.pwrOps := topOps;
+
                                         let notifyRequest = {
                                             created = Time.now();
                                             buyer = toUserAID;
                                             ledgerBlock;
-                                            amount; 
+                                            amount = {e8s = amount.e8s}; 
                                             seller;
                                             token = request.token;
+                                            recharge = topOps + topStorage;
                                             author = {address=meta.author; share=meta.authorShare};
                                             marketplace = vars.price.marketplace;
                                             affiliate = vars.price.affiliate;
@@ -500,7 +514,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             
                             if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
 
-                            vars.price := request.price;
+                            let (topStorage,topOps, diffStorage, diffOps) = charge_calc_missing(meta,vars);
+                            
+                            let {amount; marketplace; affiliate} = request.price;
+
+                            vars.price := {amount = amount + diffStorage + diffOps; marketplace; affiliate;};
 
                             #ok();
 
@@ -926,30 +944,37 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         }
     };
 
-    public shared({caller}) func recharge (request: Nft.RechargeRequest) : async Nft.RechargeResponse {
+    private func charge_calc_missing(m:Nft.Metadata, v:Nft.Metavars) : (Nat64, Nat64,Nat64, Nat64) {
+
+        let {ttl; pwrOps; pwrStorage} = Nft.MetavarsFreeze(v);
+
+        let {quality; content; thumb; custom} = m;
+
+        // Charge minting price
+        let topStorage : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.priceStorage({ttl;custom;content;thumb;quality}));
+        let topOps : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.priceOps({ttl}));
+
+        let diffStorage = topStorage - pwrStorage;
+        assert(diffStorage >= 0);
+        let diffOps = topOps - pwrOps;
+        assert(diffOps >= 0);
+        let total = diffStorage + diffOps;
+
+        return (topStorage, topOps, diffStorage, diffOps);
+    };
+
+    public shared({caller}) func recharge(request: Nft.RechargeRequest) : async Nft.RechargeResponse {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
         assert(caller_user == request.user);
 
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
-        
         switch(getMeta(tokenIndex)) {
                 case (#ok((m,v))) {
                     
-                let {ttl;pwrOps;pwrStorage} = Nft.MetavarsFreeze(v);
-                let {quality;content;thumb;custom;} = m;
-
-        
-                // Charge minting price
-                let topStorage : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.priceStorage({ttl;custom;content;thumb;quality}));
-                let topOps : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.priceOps({ttl}));
-
-                let diffStorage = topStorage - pwrStorage;
-                let diffOps = topOps - pwrOps;
-
-                let total = diffStorage + diffOps;
-
-                switch(await pwrExtract({from= Nft.User.toAccountIdentifier(request.user); amount= total; subaccount = request.subaccount})) {
+                let (topStorage,topOps,diffStorage, diffOps) = charge_calc_missing(m,v);
+                if (diffStorage + diffOps < 10000) return #err(#RechargeUnnecessary);
+                switch(await pwrExtract({from= Nft.User.toAccountIdentifier(request.user); amount= diffStorage+diffOps; subaccount = request.subaccount})) {
                     case (#ok()) {
                         v.pwrStorage := topStorage;
                         v.pwrOps := topOps;
@@ -957,21 +982,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     };
                     case (#err(e)) return #err(#InsufficientBalance);
                 };
-
-               
-
-
-
             };
             case (#err()) {
                 #err(#InvalidToken(request.token));
             }
-
         };
-
     };
 
-    private func pwrExtract ({from: AccountIdentifier; subaccount: ?Nft.SubAccount; amount: Balance}) : async Result.Result<(), Nft.TransferResponseError> {
+    private func pwrExtract({from: AccountIdentifier; subaccount: ?Nft.SubAccount; amount: Balance}) : async Result.Result<(), Nft.TransferResponseError> {
           switch(await Cluster.pwr(_conf).transfer({
             from = #address(from);
             to = #address(Cluster.nft_address(_conf, _slot));

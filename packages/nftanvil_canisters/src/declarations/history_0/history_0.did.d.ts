@@ -4,6 +4,7 @@ export type AccountIdentifier__1 = Array<number>;
 export type AddResponse = Array<number>;
 export type AnvEvent = { 'transfer' : EventFungibleTransaction };
 export type Balance = bigint;
+export type Balance__1 = bigint;
 export type BlockIndex = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
 export type CanisterSlot = number;
@@ -61,6 +62,7 @@ export interface NFTPurchase {
   'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
   'seller' : AccountIdentifier__1,
   'author' : { 'share' : Share, 'address' : AccountIdentifier__1 },
+  'recharge' : Balance__1,
   'purchaseAccount' : AccountIdentifier__1,
   'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
   'buyer' : AccountIdentifier__1,

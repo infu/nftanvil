@@ -301,6 +301,18 @@ export const idlFactory = ({ IDL }) => {
       'NotForSale' : IDL.Null,
     }),
   });
+  const RechargeRequest = IDL.Record({
+    'token' : TokenIdentifier,
+    'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
+  });
+  const RechargeResponse = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Variant({
+      'InsufficientBalance' : IDL.Null,
+      'InvalidToken' : TokenIdentifier,
+    }),
+  });
   const SetPriceRequest = IDL.Record({
     'token' : TokenIdentifier,
     'user' : User,
@@ -467,6 +479,7 @@ export const idlFactory = ({ IDL }) => {
         [PurchaseIntentResponse],
         [],
       ),
+    'recharge' : IDL.Func([RechargeRequest], [RechargeResponse], []),
     'set_price' : IDL.Func([SetPriceRequest], [SetPriceResponse], []),
     'socket' : IDL.Func([SocketRequest], [SocketResponse], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),

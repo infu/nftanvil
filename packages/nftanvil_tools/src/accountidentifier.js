@@ -24,7 +24,7 @@ export function icpToE8s(x) {
 
 export function e8sToPwr(x) {
   if (!x) return null;
-  return (Number((BigInt(x) * 10n) / 100000n) / 10).toFixed(2);
+  return (Number((BigInt(x) * 100n) / 100000n) / 100).toFixed(2);
 }
 
 export function pwrToE8s(x) {

@@ -226,6 +226,20 @@ type Request =
    method: text;
    url: text;
  };
+type RechargeResponse = 
+ variant {
+   err: variant {
+          InsufficientBalance;
+          InvalidToken: TokenIdentifier;
+        };
+   ok;
+ };
+type RechargeRequest = 
+ record {
+   subaccount: opt SubAccount;
+   token: TokenIdentifier;
+   user: User;
+ };
 type Quality = nat8;
 type PurchaseIntentResponse = 
  variant {
@@ -475,6 +489,7 @@ type Class =
    plug: (PlugRequest) -> (PlugResponse);
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
+   recharge: (RechargeRequest) -> (RechargeResponse);
    set_price: (SetPriceRequest) -> (SetPriceResponse);
    socket: (SocketRequest) -> (SocketResponse);
    stats: () -> (StatsResponse) query;

@@ -29,22 +29,20 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [];
   private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
-  
-
 
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
   system func preupgrade() {
     //_tmpBalance := Iter.toArray(_balance.entries());
     _tmpBalance := [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000)];
-    ignore 1
+    //ignore 2
   };
 
   system func postupgrade() {
     // TODO: Remove in production
     ignore 3;
     _tmpBalance := [];
-    
+    ignore 4;
   };
 
   public shared({caller}) func config_set(conf : Cluster.Config) : async () {

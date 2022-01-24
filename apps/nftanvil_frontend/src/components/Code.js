@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
-
+import { Tooltip } from "@chakra-ui/react";
 const Stx = styled.span`
   font-family: Hexaframe;
   letter-spacing: 1px;
@@ -153,9 +153,11 @@ export const PWR = ({ children }) => {
   let val = AccountIdentifier.e8sToPwr(children);
   let [a, b] = val.toString().split(".");
   return (
-    <Spwr>
-      {a}.<span>{b}</span> <b>PWR</b>
-    </Spwr>
+    <Tooltip placement="top-start" label={children}>
+      <Spwr>
+        {a}.<span>{b}</span> <b>PWR</b>
+      </Spwr>
+    </Tooltip>
   );
 };
 
@@ -186,9 +188,11 @@ export const ICP = ({ children }) => {
   let val = AccountIdentifier.e8sToIcp(children);
   let [a, b] = val.toString().split(".");
   return (
-    <Sicp>
-      {a}.<span>{b}</span> <b>ICP</b>
-    </Sicp>
+    <Tooltip placement="top-start" label={children + " e8s"}>
+      <Sicp>
+        {a}.<span>{b}</span> <b>ICP</b>
+      </Sicp>
+    </Tooltip>
   );
 };
 

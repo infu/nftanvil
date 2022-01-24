@@ -171,6 +171,7 @@ export const auth =
   };
 
 export const refresh_balances = () => async (dispatch, getState) => {
+  if (!authentication || !authentication.client) return;
   if (!(await authentication.client.isAuthenticated())) return;
   await dispatch(refresh_icp_balance());
   if (!(await authentication.client.isAuthenticated())) return;
@@ -249,7 +250,8 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
     })
     .catch((e) => {
       // We are most probably logged out. There is currently no better way to handle expired agentjs chain
-      dispatch(logout());
+      console.log(e);
+      //dispatch(logout());
     });
 };
 

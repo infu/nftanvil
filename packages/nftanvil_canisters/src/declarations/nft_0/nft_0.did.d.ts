@@ -67,6 +67,7 @@ export interface Class {
   'purchase_intent' : (arg_0: PurchaseIntentRequest) => Promise<
       PurchaseIntentResponse
     >,
+  'recharge' : (arg_0: RechargeRequest) => Promise<RechargeResponse>,
   'set_price' : (arg_0: SetPriceRequest) => Promise<SetPriceResponse>,
   'socket' : (arg_0: SocketRequest) => Promise<SocketResponse>,
   'stats' : () => Promise<StatsResponse>,
@@ -249,6 +250,16 @@ export type PurchaseIntentResponse = {
   } |
   { 'err' : { 'InvalidToken' : TokenIdentifier } | { 'NotForSale' : null } };
 export type Quality = number;
+export interface RechargeRequest {
+  'token' : TokenIdentifier,
+  'user' : User,
+  'subaccount' : [] | [SubAccount],
+}
+export type RechargeResponse = { 'ok' : null } |
+  {
+    'err' : { 'InsufficientBalance' : null } |
+      { 'InvalidToken' : TokenIdentifier }
+  };
 export interface Request {
   'url' : string,
   'method' : string,
