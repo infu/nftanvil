@@ -233,7 +233,6 @@ export const History = (p) => {
 
   useInterval(
     async () => {
-      console.log("TICK TOCK", focused);
       let { total, canister } = await dispatch(loadInfo());
       if (to !== total) {
         dispatch(push(`/history/${canister}/${total - SHOW}/${total}`));

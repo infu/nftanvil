@@ -274,7 +274,7 @@ export const claim_treasury_balance = () => async (dispatch, getState) => {
     subaccount,
   });
 
-  console.log("TREASURY balance response", icp);
+  //console.log("TREASURY balance response", icp);
 
   if (icp > 10000n) {
     let bal = await treasury.withdraw({
@@ -282,7 +282,7 @@ export const claim_treasury_balance = () => async (dispatch, getState) => {
       subaccount,
     });
 
-    console.log("TREASURY Withdraw response", bal);
+    //console.log("TREASURY Withdraw response", bal);
 
     if (bal.ok) {
       let toastId = toast(
