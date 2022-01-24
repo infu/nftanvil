@@ -5,7 +5,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import store, { history } from "./store";
 import { Provider } from "react-redux";
-import { auth } from "./reducers/user";
+import { auth, window_focus, window_blur } from "./reducers/user";
 import { ChakraProvider } from "@chakra-ui/react";
 import { theme } from "./theme.js";
 import { ColorModeScript } from "@chakra-ui/react";
@@ -36,6 +36,9 @@ setTimeout(() => {
     document.getElementById("root")
   );
 }, 200);
+
+window.addEventListener("focus", () => store.dispatch(window_focus()));
+window.addEventListener("blur", () => store.dispatch(window_blur()));
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

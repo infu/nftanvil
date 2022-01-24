@@ -36,6 +36,8 @@ import {
   TransactionFailed,
 } from "../components/TransactionToast";
 
+import { refresh_balances, refresh_pwr_balance } from "./user";
+
 export const nftSlice = createSlice({
   name: "nft",
   initialState: {},
@@ -223,6 +225,8 @@ export const buy =
       user: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
     });
+
+    dispatch(refresh_balances());
 
     console.log("CLAIM", claim);
     // let t = await nftcan.purchase_intent({
@@ -426,7 +430,11 @@ export const burn =
       memo: [],
       subaccount,
     });
+
     if (rez.err) throw rez.err;
+
+    dispatch(refresh_balances());
+
     return rez.ok;
   };
 
@@ -481,6 +489,8 @@ export const use =
     });
 
     if (!r.ok) throw r.err;
+    dispatch(refresh_balances());
+
     return r.ok;
   };
 
@@ -744,6 +754,8 @@ export const mint = (vals) => async (dispatch, getState) => {
 
     console.error(e);
   }
+
+  dispatch(refresh_balances());
 };
 
 export default nftSlice.reducer;

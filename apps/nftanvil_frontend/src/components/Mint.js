@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { mint, mint_quote } from "../reducers/nft";
-import { proSet, setNftStorageModal } from "../reducers/user";
+import { proModeSet, setNftStorageModal } from "../reducers/user";
 import { LoginRequired } from "./LoginRequired";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -102,7 +102,7 @@ export const ProToggle = () => {
       <Switch
         id="pro"
         isChecked={pro}
-        onChange={(e) => dispatch(proSet(e.target.checked))}
+        onChange={(e) => dispatch(proModeSet(e.target.checked))}
       />
     </FormControl>
   );

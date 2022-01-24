@@ -14,7 +14,6 @@ export const theme = extendTheme({
   },
   styles: {
     global: (props) => {
-      console.log("P", props);
       return {
         body: {
           fontFamily: "body",

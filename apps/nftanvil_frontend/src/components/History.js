@@ -207,6 +207,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
 export const History = (p) => {
   const total = useSelector((state) => state.history.total);
   const events = useSelector((state) => state.history.events);
+  const focused = useSelector((state) => state.user.focused);
 
   const canister = p.match.params.canister;
   let from = parseInt(p.match.params.from, 10);
@@ -228,14 +229,17 @@ export const History = (p) => {
     load();
   }, [dispatch, from, to, canister]);
 
+  console.log("focused", focused);
+
   useInterval(
     async () => {
+      console.log("TICK TOCK", focused);
       let { total, canister } = await dispatch(loadInfo());
       if (to !== total) {
         dispatch(push(`/history/${canister}/${total - SHOW}/${total}`));
       }
     },
-    isTailing ? TAIL_INTERVAL : null
+    focused && isTailing ? TAIL_INTERVAL : null
   );
 
   if (!events || !events.length) return null;

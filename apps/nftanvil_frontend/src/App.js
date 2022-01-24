@@ -9,7 +9,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
 
-import { login, proSet, logout, transfer_icp, pwr_buy } from "./reducers/user";
+import {
+  login,
+  proModeSet,
+  logout,
+  transfer_icp,
+  pwr_buy,
+} from "./reducers/user";
 import {
   ButtonGroup,
   Button,
@@ -85,13 +91,15 @@ import { TX, ACC, TID, HASH, ICP, PWR, PRI } from "./components/Code";
 const ICP_FEE = 10000n;
 
 function PageTabs(p) {
-  const address = useSelector((state) => state.user.address);
+  const address = useSelector((state) =>
+    state.user.address ? state.user.address.toLowerCase() : null
+  );
   const pro = useSelector((state) => state.user.pro);
 
   return (
     <Box {...p}>
       <ButtonGroup variant="outline" spacing="3">
-        <Link disabled={!address} to={"/" + address.toLowerCase()}>
+        <Link disabled={!address} to={"/" + address}>
           <Button disabled={!address} variant="solid" colorScheme="gray">
             Inventory
           </Button>
@@ -491,7 +499,7 @@ export const ProToggle = () => {
       <Switch
         id="pro"
         isChecked={pro}
-        onChange={(e) => dispatch(proSet(e.target.checked))}
+        onChange={(e) => dispatch(proModeSet(e.target.checked))}
       />
     </FormControl>
   );

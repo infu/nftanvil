@@ -29,7 +29,7 @@ export const userSlice = createSlice({
     subaccount: null,
     principal: null,
     anonymous: true,
-
+    focused: true,
     icp: "0",
     pwr: "0",
     map: {},
@@ -46,7 +46,9 @@ export const userSlice = createSlice({
     pwrSet: (state, action) => {
       return { ...state, pwr: action.payload };
     },
-
+    focusSet: (state, action) => {
+      return { ...state, focused: action.payload };
+    },
     proSet: (state, action) => {
       return {
         ...state,
@@ -87,7 +89,13 @@ export const {
   setNftStorageModal,
   setNftSotrageKey,
   pwrSet,
+  focusSet,
 } = userSlice.actions;
+
+export const proModeSet = (v) => (dispatch) => {
+  dispatch(proSet(v));
+  window.localStorage.setItem("pro", v);
+};
 
 export const login = () => (dispatch) => {
   dispatch(auth(false));
@@ -102,10 +110,12 @@ export const auth =
     if (!allowAnonymous && !(await authClient.isAuthenticated())) {
       await new Promise(async (resolve, reject) => {
         authClient.login({
+          //maxTimeToLive: 10000000000n,
           ...(process.env.REACT_APP_IDENTITY_PROVIDER
             ? { identityProvider: process.env.REACT_APP_IDENTITY_PROVIDER }
             : {}),
           onSuccess: async (e) => {
+            console.log(authClient);
             resolve();
           },
           onError: reject,
@@ -123,6 +133,9 @@ export const auth =
     dispatch(loadNftStorageKey());
 
     console.log("ROUTER", process.env.REACT_APP_ROUTER_CANISTER_ID);
+
+    let pro = window.localStorage.getItem("pro") == "true";
+    if (pro) dispatch(proSet(true));
 
     router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
       agentOptions: { identity },
@@ -154,12 +167,16 @@ export const auth =
       : null;
 
     dispatch(authSet({ address, principal, anonymous, map, acccan }));
-    if (!anonymous) {
-      dispatch(refresh_icp_balance());
-      dispatch(refresh_pwr_balance());
-      dispatch(claim_treasury_balance());
-    }
+    dispatch(refresh_balances());
   };
+
+export const refresh_balances = () => async (dispatch, getState) => {
+  if (!(await authentication.client.isAuthenticated())) return;
+  await dispatch(refresh_icp_balance());
+  if (!(await authentication.client.isAuthenticated())) return;
+  dispatch(refresh_pwr_balance());
+  dispatch(claim_treasury_balance());
+};
 
 export const loadNftStorageKey = () => async (dispatch, getState) => {
   let key = Cookies.get("nftstoragekey");
@@ -192,6 +209,7 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
   let s = getState();
 
   let address = s.user.address;
+  if (!address) return;
 
   let ledger = ledgerCanister({
     agentOptions: { identity },
@@ -216,6 +234,7 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
   let s = getState();
 
   let address = s.user.address;
+  if (!address) return;
 
   let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
     agentOptions: { identity },
@@ -227,6 +246,10 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
     })
     .then((bal) => {
       dispatch(pwrSet(bal.toString()));
+    })
+    .catch((e) => {
+      // We are most probably logged out. There is currently no better way to handle expired agentjs chain
+      dispatch(logout());
     });
 };
 
@@ -237,6 +260,7 @@ export const claim_treasury_balance = () => async (dispatch, getState) => {
 
   let address = AccountIdentifier.TextToArray(s.user.address);
   let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+  if (!address) return;
 
   let treasury = treasuryCanister(
     PrincipalFromSlot(s.user.map.space, s.user.map.treasury),
@@ -418,7 +442,6 @@ export const pwr_buy =
         user: { address: AccountIdentifier.TextToArray(address) },
         subaccount,
       });
-      console.log("CLAIM", claim);
 
       if (claim.err) throw claim.err;
 
@@ -450,6 +473,18 @@ export const pwr_buy =
         ),
       });
     }
+
+    dispatch(refresh_balances());
   };
+
+export const window_focus = () => async (dispatch, getState) => {
+  dispatch(focusSet(true));
+
+  dispatch(refresh_balances());
+};
+
+export const window_blur = () => async (dispatch, getState) => {
+  dispatch(focusSet(false));
+};
 
 export default userSlice.reducer;
