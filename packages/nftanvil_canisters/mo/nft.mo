@@ -926,6 +926,68 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         }
     };
 
+    public shared({caller}) func recharge (request: Nft.RechargeRequest) : async Nft.RechargeResponse {
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        assert(caller_user == request.user);
+
+        let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
+
+        
+        switch(getMeta(tokenIndex)) {
+                case (#ok((m,v))) {
+                    
+                let {ttl;pwrOps;pwrStorage} = Nft.MetavarsFreeze(v);
+                let {quality;content;thumb;custom;} = m;
+
+        
+                // Charge minting price
+                let topStorage : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.priceStorage({ttl;custom;content;thumb;quality}));
+                let topOps : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.priceOps({ttl}));
+
+                let diffStorage = topStorage - pwrStorage;
+                let diffOps = topOps - pwrOps;
+
+                let total = diffStorage + diffOps;
+
+                switch(await pwrExtract({from= Nft.User.toAccountIdentifier(request.user); amount= total; subaccount = request.subaccount})) {
+                    case (#ok()) {
+                        v.pwrStorage := topStorage;
+                        v.pwrOps := topOps;
+                        #ok();
+                    };
+                    case (#err(e)) return #err(#InsufficientBalance);
+                };
+
+               
+
+
+
+            };
+            case (#err()) {
+                #err(#InvalidToken(request.token));
+            }
+
+        };
+
+    };
+
+    private func pwrExtract ({from: AccountIdentifier; subaccount: ?Nft.SubAccount; amount: Balance}) : async Result.Result<(), Nft.TransferResponseError> {
+          switch(await Cluster.pwr(_conf).transfer({
+            from = #address(from);
+            to = #address(Cluster.nft_address(_conf, _slot));
+            amount;
+            memo = Blob.fromArray([]);
+            subaccount;
+            })) {
+                case (#ok({transactionId})) {
+                    #ok();
+                };
+                case (#err(e)) {
+                    return #err(e)
+                };
+            };
+    };
+
     private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
         let receiver = Nft.User.toAccountIdentifier(request.to);
@@ -965,20 +1027,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let mintPricePwr : Nat64 = mintPricePwrOps + mintPricePwrStorage;
 
 
-        switch(await Cluster.pwr(_conf).transfer({
-            from = #address(author);
-            to = #address(Cluster.nft_address(_conf, _slot));
-            amount = mintPricePwr;
-            memo = Blob.fromArray([]);
-            subaccount = request.subaccount;
-            })) {
-                case (#ok({transactionId})) {
-                    
-                };
-                case (#err(e)) {
-                    return #err(#Pwr(e))
-                };
-            };
+        switch(await pwrExtract({from= author; amount= mintPricePwr; subaccount = request.subaccount})) {
+            case (#ok()) {};
+            case (#err(e)) return #err(#Pwr(e));
+        };
 
         let tokenIndex = _nextTokenId;
         _nextTokenId := _nextTokenId + 1;

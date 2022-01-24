@@ -286,6 +286,10 @@ module {
         // (PWR) Mints a new NFT
         mint : shared (request :  MintRequest) -> async  MintResponse;
 
+        // recharge nft
+        recharge : shared (request :  RechargeRequest) -> async  RechargeResponse;
+
+        // get minting price
         mint_quote : shared (request : MetadataInput) -> async MintQuoteResponse;
 
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
@@ -756,6 +760,46 @@ module {
         public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
         public let FULLY_CHARGED_MINUTES : Nat64 = 8409600; //(16 * 365 * 24 * 60) 16 years
         public let FULLY_CHARGED_MESSAGES : Nat64 = 5840; // 1 message per day
+
+        public func priceStorage({
+            custom:?CustomData;
+            content:?Content;
+            thumb:Content;
+            quality:Quality;
+            ttl: ?Nat32;
+        }) : Nat64 {
+             let cost_per_min = Pricing.STORAGE_KB_PER_MIN * 50 // cost for nft metadata stored in the cluster
+            + OptPrice(custom, CustomData.price)
+            + OptPrice(content, Content.price)
+            + Content.price(thumb)
+            + Quality.price(quality);
+
+            switch(ttl) {
+                case (null) {
+                    cost_per_min * Pricing.FULLY_CHARGED_MINUTES
+                };
+                case (?t) {
+                    cost_per_min * Nat64.fromNat(Nat32.toNat(t)) 
+                }
+            }
+        };
+
+        public func priceOps({
+            ttl:?Nat32
+        }) : Nat64 {
+
+            switch(ttl) {
+                case (null) {
+                     Pricing.FULLY_CHARGED_MESSAGES * Pricing.AVG_MESSAGE_COST
+                };
+
+                case (?t) {
+                     Nat64.fromNat(Nat32.toNat(t)) * Pricing.AVG_MESSAGE_COST / 60 / 24 // 1 message a day
+                    + Pricing.AVG_MESSAGE_COST * 100 // minimum 100 messages
+                }
+            }
+        };
+
     };
 
     public type Quality = Nat8;
@@ -784,6 +828,7 @@ module {
                 };
     };
 
+ 
     public module MetadataInput = {
         public func validate(m : MetadataInput) : Bool {
             OptValid(m.name, ItemName.validate)
@@ -796,35 +841,13 @@ module {
             and OptValid(m.custom, CustomData.validate)
         };
         
-        public func priceStorage(m: MetadataInput) : Nat64 {
-            let cost_per_min = Pricing.STORAGE_KB_PER_MIN * 50 // cost for nft metadata stored in the cluster
-            + OptPrice(m.custom, CustomData.price)
-            + OptPrice(m.content, Content.price)
-            + Content.price(m.thumb)
-            + Quality.price(m.quality);
-
-            switch(m.ttl) {
-                case (null) {
-                    cost_per_min * Pricing.FULLY_CHARGED_MINUTES
-                };
-                case (?t) {
-                    cost_per_min * Nat64.fromNat(Nat32.toNat(t)) 
-                }
-            }
+      public func priceStorage({custom;content;thumb;quality;ttl}: MetadataInput) : Nat64 {
+          Pricing.priceStorage({custom;content;thumb;quality;ttl})
+           
         };
 
-        public func priceOps(m: MetadataInput) : Nat64 {
-
-            switch(m.ttl) {
-                case (null) {
-                     Pricing.FULLY_CHARGED_MESSAGES * Pricing.AVG_MESSAGE_COST
-                };
-
-                case (?t) {
-                     Nat64.fromNat(Nat32.toNat(t)) * Pricing.AVG_MESSAGE_COST / 60 / 24 // 1 message a day
-                    + Pricing.AVG_MESSAGE_COST * 100 // minimum 100 messages
-                }
-            }
+        public func priceOps({ttl}: MetadataInput) : Nat64 {
+          Pricing.priceOps({ttl})
         };
 
     };
@@ -1049,6 +1072,19 @@ module {
     public type MintBatchResponse = Result.Result<
         [TokenIndex],
         CommonError
+    >;
+
+    public type RechargeRequest = {
+        token : TokenIdentifier;
+        user : User;
+        subaccount: ?SubAccount;
+    };
+
+    public type RechargeResponse = Result.Result<
+        (), {
+            #InvalidToken : TokenIdentifier;
+            #InsufficientBalance;
+        }
     >;
 
     public type PWRConsumeResponse = Bool;
