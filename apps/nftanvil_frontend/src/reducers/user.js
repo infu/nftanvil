@@ -223,6 +223,10 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
     .then((icp) => {
       let e8s = icp.e8s;
       dispatch(icpSet(e8s.toString()));
+      if (e8s >= 30000n) {
+        // automatically wrap ICP
+        dispatch(pwr_buy({ amount: e8s - 10000n }));
+      }
     })
     .catch((e) => {
       if (process.env.NODE_ENV === "production") console.log(e); // Will always show bug in dev mode because there is ledger canister on the local replica
@@ -250,8 +254,7 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
     })
     .catch((e) => {
       // We are most probably logged out. There is currently no better way to handle expired agentjs chain
-      console.log(e);
-      //dispatch(logout());
+      if (e.toString().includes("delegation has expired")) dispatch(logout());
     });
 };
 

@@ -211,34 +211,82 @@ export const buy =
 
     let ledger = ledgerCanister({ agentOptions: { identity } });
 
-    let trez = await ledger.transfer({
-      memo: 0,
-      amount: { e8s: intent.price.amount },
-      fee: { e8s: 10000n },
-      from_subaccount: subaccount,
-      to: intent.paymentAddress,
-      created_at_time: [],
+    let toastId = toast("Purchasing...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      isLoading: true,
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
     });
 
-    console.log("TREZ", trez);
+    let ledger_result;
+    try {
+      ledger_result = await ledger.transfer({
+        memo: 0,
+        amount: { e8s: intent.price.amount },
+        fee: { e8s: 10000n },
+        from_subaccount: subaccount,
+        to: intent.paymentAddress,
+        created_at_time: [],
+      });
+      if (ledger_result.Err) throw ledger_result.Err;
 
-    let claim = await nftcan.purchase_claim({
-      token: tokenFromText(id),
-      user: { address: AccountIdentifier.TextToArray(address) },
-      subaccount,
-    });
+      toast.update(toastId, {
+        render: "ICP transfer complete. Claiming NFT...",
+      });
+    } catch (e) {
+      toast.update(toastId, {
+        render: (
+          <TransactionFailed
+            title="ICP transfer failed"
+            message={JSON.stringify(e)}
+          />
+        ),
+        isLoading: false,
+      });
+      return;
+    }
+
+    console.log("TREZ", ledger_result);
+
+    let claim;
+    try {
+      claim = await nftcan.purchase_claim({
+        token: tokenFromText(id),
+        user: { address: AccountIdentifier.TextToArray(address) },
+        subaccount,
+      });
+
+      if (claim.err) throw claim.err;
+      toast.update(toastId, {
+        render: (
+          <TransactionToast
+            title="Purchase complete"
+            transactionId={claim.ok.transactionId}
+          />
+        ),
+        isLoading: false,
+        type: toast.TYPE.SUCCESS,
+      });
+    } catch (e) {
+      toast.update(toastId, {
+        render: (
+          <TransactionFailed
+            title="Claiming failed"
+            message={JSON.stringify(e)}
+          />
+        ),
+        isLoading: false,
+        type: toast.TYPE.ERROR,
+      });
+    }
 
     dispatch(refresh_balances());
     dispatch(nftFetch(id));
     console.log("CLAIM", claim);
-    // let t = await nftcan.purchase_intent({
-    //   user: { address: AccountIdentifier.TextToArray(address) },
-    //   token: id,
-    // });
-
-    // if (!("ok" in t)) throw t;
-
-    // return t.ok;
   };
 
 export const purchase_intent =

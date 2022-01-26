@@ -308,10 +308,10 @@ module {
         claim_link  : shared (request: ClaimLinkRequest) -> async ClaimLinkResponse;
 
         // (no updates) Returns the AccountIdentifier we have to pay ICP to. 
-        purchase_intent : shared (request:  PurchaseIntentRequest) -> async PurchaseIntentResponse;
+        // purchase_intent : shared (request:  PurchaseIntentRequest) -> async PurchaseIntentResponse;
 
-        // (iPWR) When you buy NFT part of the deal is to refill its PWR to max. Checks if the payment is done
-        purchase_claim : shared (request: PurchaseClaimRequest) -> async PurchaseClaimResponse;
+        //  When you buy NFT part of the deal is to refill its PWR to max.
+        purchase : shared (request: PurchaseRequest) -> async PurchaseResponse;
 
         // (iPWR) Changes "Buynow" price of the NFT
         set_price : shared (request: SetPriceRequest) -> async SetPriceResponse;
@@ -826,6 +826,9 @@ module {
                 address : AccountIdentifier;
                 share : Share
                 };
+        // idx : Nat32;
+        // rechargeStorage : Nat32;
+        // rechargeOps : Nat32;
     };
 
  
@@ -970,11 +973,11 @@ module {
         (), UnplugError
     >;
 
-    public type PurchaseIntentRequest = {
+    public type PurchaseRequest = {
         token : TokenIdentifier;
         user : User;
         subaccount: ?SubAccount;
-
+        priceIdx : Nat32;
     };
 
     public type SetPriceRequest = {
@@ -1004,23 +1007,7 @@ module {
     >;
 
 
-    public type PurchaseIntentResponse = Result.Result<
-        {
-            paymentAddress: AccountIdentifier;
-            price: Price;
-        }, {
-            #InvalidToken :TokenIdentifier;
-            #NotForSale;
-        }
-    >;
-
-    public type PurchaseClaimRequest = {
-        token : TokenIdentifier;
-        user : User;
-        subaccount : ?SubAccount;
-    };
-
-    public type PurchaseClaimResponse = Result.Result<
+    public type PurchaseResponse = Result.Result<
         { transactionId: Blob }, {
             #Refunded;
             #ErrorWhileRefunding;
@@ -1030,6 +1017,8 @@ module {
             #TreasuryNotifyFailed;
         }
     >;
+
+  
 
     public type BearerResponse = Result.Result<
         AccountIdentifier, 

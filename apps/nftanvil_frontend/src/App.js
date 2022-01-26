@@ -202,7 +202,7 @@ function ICPBOX({ mobile }) {
 
   const transferOk = async () => {
     let to = AccountIdentifier.TextToArray(initialRef.current.value);
-    let amount = AccountIdentifier.icpToE8s(amountRef.current.value) + ICP_FEE;
+    let amount = AccountIdentifier.icpToE8s(amountRef.current.value); // + ICP_FEE;
 
     onClose();
 
@@ -270,7 +270,7 @@ function PWRBOX({ mobile }) {
 
   const transferOk = async () => {
     let amount =
-      AccountIdentifier.icpToE8s(amountRef.current.value) + ICP_FEE * 2n;
+      AccountIdentifier.icpToE8s(amountRef.current.value) + ICP_FEE * 1n;
 
     onClose();
 

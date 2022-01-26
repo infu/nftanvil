@@ -110,11 +110,26 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
               let transactionId = await Cluster.history(_conf).add(#pwr(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
               #ok({transactionId});
             }
-            
-
           };
           case (_) return #err(#InsufficientBalance);
       };
+  };
+
+
+  public shared({caller}) func nft_mint(can: Principal, request: Nft.MintRequest) : async () {
+
+  };
+
+  public shared({caller}) func nft_purchase(can: Principal, request: Nft.PurchaseRequest) : async () {
+
+  };
+  
+  public shared({caller}) func nft_recharge(can: Principal, request: Nft.RechargeRequest) : async () {
+
+  };
+
+  public shared({caller}) func withdraw() : async () {
+
   };
 
   public shared({caller}) func purchase_intent(request: Pwr.PurchaseIntentRequest) : async Pwr.PurchaseIntentResponse {
@@ -159,7 +174,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         switch(await ledger.transfer(transfer)) {
             case (#Ok(blockIndex)) {
 
-                balanceAdd(toUserAID, 100000 * amount.e8s); // TODO: This 1000 is here for demo only
+                balanceAdd(toUserAID, amount.e8s); // TODO: This 1000 is here for demo only
                 
                 let transactionId = await Cluster.history(_conf).add(#pwr(#mint({created=Time.now(); user=Nft.User.toAccountIdentifier(request.user); amount=amount.e8s})));
 
