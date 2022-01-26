@@ -977,6 +977,7 @@ module {
         token : TokenIdentifier;
         user : User;
         subaccount: ?SubAccount;
+        amount: Balance;
         priceIdx : Nat32;
     };
 
@@ -1016,6 +1017,7 @@ module {
             #InvalidToken :TokenIdentifier;
             #NotForSale;
             #TreasuryNotifyFailed;
+            #InsufficientBalance
         }
     >;
 
@@ -1068,6 +1070,7 @@ module {
         token : TokenIdentifier;
         user : User;
         subaccount: ?SubAccount;
+        amount: Balance;
     };
 
     public type RechargeResponse = Result.Result<

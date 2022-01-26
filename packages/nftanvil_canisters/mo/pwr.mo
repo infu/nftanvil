@@ -127,12 +127,15 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     };
     
     let nft = Cluster.nft(_conf, slot);
+
     // check caller 
     let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     if (caller_user != request.user) return #err(#Unauthorized);
     let aid = Nft.User.toAccountIdentifier(request.user);
 
-    let cost:Nat64 = 10000; // calculate it here
+    let opsCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request.metadata));
+    let storageCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request.metadata));
+    let cost:Nat64 = storageCost + opsCost; // calculate it here
 
     // take amount out
     switch(balanceRem(aid, cost + _oracle.pwrFee)) {
@@ -163,7 +166,26 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     };
     
     let nft = Cluster.nft(_conf, slot);
-    await nft.purchase(request)
+    let aid = Nft.User.toAccountIdentifier(request.user);
+    let cost:Nat64 = request.amount;
+
+    // take amount out
+    switch(balanceRem(aid, cost + _oracle.pwrFee)) {
+      case (#ok()) ();
+      case (#err(e)) return #err(e)
+    };
+
+   switch(await nft.purchase(request)) {
+      case (#ok(resp)) {
+
+        return #ok(resp);
+      };
+      case (#err(e)) {
+        balanceAdd(aid, cost); // return because of fail
+
+        return #err(e);
+      }
+    }
   };
   
   public shared({caller}) func nft_recharge(can: Principal, request: Nft.RechargeRequest) : async Nft.RechargeResponse {
@@ -175,8 +197,26 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     };
     
     let nft = Cluster.nft(_conf, slot);
-    
-    await nft.recharge(request)
+    let aid = Nft.User.toAccountIdentifier(request.user);
+    let cost:Nat64 = request.amount;
+
+    // take amount out
+    switch(balanceRem(aid, cost + _oracle.pwrFee)) {
+      case (#ok()) ();
+      case (#err(e)) return #err(e)
+    };
+
+    switch(await nft.recharge(request)) {
+      case (#ok(resp)) {
+
+        return #ok(resp);
+      };
+      case (#err(e)) {
+        balanceAdd(aid, cost); // return because of fail
+
+        return #err(e);
+      }
+    }
   };
 
   // take ICP out and send them to some address
