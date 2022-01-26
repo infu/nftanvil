@@ -11,6 +11,8 @@ import Nat64 "mo:base/Nat64";
 import Nat32 "mo:base/Nat32";
 import Time "mo:base/Time";
 import Iter "mo:base/Iter";
+import Result "mo:base/Result";
+
 import Array "mo:base/Array";
 import Array_ "./lib/Array";
 
@@ -116,18 +118,68 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   };
 
 
-  public shared({caller}) func nft_mint(can: Principal, request: Nft.MintRequest) : async () {
+  public shared({caller}) func nft_mint(can: Principal, request: Nft.MintRequest) : async Nft.MintResponse {
+    assert(Nft.APrincipal.isLegitimate(_conf.space, can));
+    
+    let slot = switch(Nft.APrincipal.toSlot(_conf.space, can)) {
+      case (?s) s;
+      case (null) return #err(#Rejected)
+    };
+    
+    let nft = Cluster.nft(_conf, slot);
+    // check caller 
+    let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+    if (caller_user != request.user) return #err(#Unauthorized);
+    let aid = Nft.User.toAccountIdentifier(request.user);
 
+    let cost:Nat64 = 10000; // calculate it here
+
+    // take amount out
+    switch(balanceRem(aid, cost + _oracle.pwrFee)) {
+      case (#ok()) ();
+      case (#err(e)) return #err(e)
+    };
+
+    switch(await nft.mint(request)) {
+      case (#ok(resp)) {
+
+        return #ok(resp);
+      };
+      case (#err(e)) {
+        balanceAdd(aid, cost); // return because of fail
+
+        return #err(e);
+      }
+    }
+    // if fail then return amount
   };
 
-  public shared({caller}) func nft_purchase(can: Principal, request: Nft.PurchaseRequest) : async () {
-
+  public shared({caller}) func nft_purchase(can: Principal, request: Nft.PurchaseRequest) : async Nft.PurchaseResponse {
+     assert(Nft.APrincipal.isLegitimate(_conf.space, can));
+    
+    let slot = switch(Nft.APrincipal.toSlot(_conf.space, can)) {
+      case (?s) s;
+      case (null) return #err(#Rejected);
+    };
+    
+    let nft = Cluster.nft(_conf, slot);
+    await nft.purchase(request)
   };
   
-  public shared({caller}) func nft_recharge(can: Principal, request: Nft.RechargeRequest) : async () {
-
+  public shared({caller}) func nft_recharge(can: Principal, request: Nft.RechargeRequest) : async Nft.RechargeResponse {
+    assert(Nft.APrincipal.isLegitimate(_conf.space, can));
+    
+    let slot = switch(Nft.APrincipal.toSlot(_conf.space, can)) {
+      case (?s) s;
+      case (null) return #err(#Rejected)
+    };
+    
+    let nft = Cluster.nft(_conf, slot);
+    
+    await nft.recharge(request)
   };
 
+  // take ICP out and send them to some address
   public shared({caller}) func withdraw() : async () {
 
   };
@@ -188,15 +240,42 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         
   };
 
-  private func balanceAdd(aid:AccountIdentifier, bal: Balance) : () {
-      if (bal == 0) return ();
+  private func balanceAdd(aid:AccountIdentifier, amount: Balance) : () {
+
+      if (amount == 0) return ();
+
       let current:Balance = switch(_balance.get(aid)) {
-        case (?a) a;
+        case (?bal) bal;
         case (_) 0;
       };
 
-      _balance.put(aid, current + bal);
+      _balance.put(aid, current + amount);
   };
 
+  private func balanceRem(aid:AccountIdentifier, amount: Balance) : Result.Result<(), {#InsufficientBalance}> {
+      
+      switch(_balance.get(aid)) {
+
+          case (?bal) {
+
+            if (bal < amount) return #err(#InsufficientBalance);
+
+            let new_balance = bal - amount;
+            
+            if (new_balance >= _oracle.pwrFee) {
+
+              _balance.put(aid, new_balance);
+
+            } else {
+              _balance.delete(aid); // Will free memory of empty accounts
+            };
+
+            #ok();
+
+          };
+          case (_) return #err(#InsufficientBalance);
+      };
+
+  };
 
 }

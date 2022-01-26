@@ -1010,6 +1010,7 @@ module {
     public type PurchaseResponse = Result.Result<
         { transactionId: Blob }, {
             #Refunded;
+            #Rejected;
             #ErrorWhileRefunding;
             #NotEnoughToRefund;
             #InvalidToken :TokenIdentifier;
@@ -1041,7 +1042,7 @@ module {
     };
 
     public type MintRequest = {
-        to         : User;
+        user         : User;
         subaccount : ?SubAccount;
         metadata : MetadataInput;
     };
@@ -1071,6 +1072,7 @@ module {
 
     public type RechargeResponse = Result.Result<
         (), {
+            #Rejected;
             #InvalidToken : TokenIdentifier;
             #InsufficientBalance;
             #RechargeUnnecessary

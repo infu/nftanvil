@@ -1027,7 +1027,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
-        let receiver = Nft.User.toAccountIdentifier(request.to);
 
         let m = request.metadata;
 
@@ -1122,8 +1121,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         _meta.put(tokenIndex, md);
         _metavars.put(tokenIndex, mvar);
 
-        SNFT_put(receiver, tokenIndex);
-        await ACC_put(receiver, tokenIndex);
+        SNFT_put(author, tokenIndex);
+        await ACC_put(author, tokenIndex);
 
         let transactionId = await Cluster.history(_conf).add(#nft(#mint({created=Time.now();token = tokenId(tokenIndex); pwr=mintPricePwr })));
 
@@ -1143,7 +1142,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let author:AccountIdentifier = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
 
-        if (Nft.User.validate(request.to) == false) return #err(#Invalid("Invalid To User"));
+        assert(author == Nft.User.toAccountIdentifier(request.user));
+
+        if (Nft.User.validate(request.user) == false) return #err(#Invalid("Invalid To User"));
 
         if (_available == false) { return #err(#OutOfMemory) };
 
