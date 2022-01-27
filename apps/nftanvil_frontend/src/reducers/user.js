@@ -31,10 +31,15 @@ export const userSlice = createSlice({
     anonymous: true,
     focused: true,
     icp: "0",
-    pwr: "0",
+    anv: "0",
     map: {},
     acccan: "",
-
+    oracle: {
+      icpCycles: "160000",
+      icpFee: "10000",
+      pwrFee: "10000",
+      anvFee: "10000",
+    },
     pro: false,
     modal_nftstorage: false,
     key_nftstorage: null,
@@ -42,9 +47,6 @@ export const userSlice = createSlice({
   reducers: {
     icpSet: (state, action) => {
       return { ...state, icp: action.payload };
-    },
-    pwrSet: (state, action) => {
-      return { ...state, pwr: action.payload };
     },
     focusSet: (state, action) => {
       return { ...state, focused: action.payload };
@@ -88,7 +90,6 @@ export const {
   icpSet,
   setNftStorageModal,
   setNftSotrageKey,
-  pwrSet,
   focusSet,
 } = userSlice.actions;
 
@@ -250,7 +251,7 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
       user: { address: AccountIdentifier.TextToArray(address) },
     })
     .then((bal) => {
-      dispatch(pwrSet(bal.toString()));
+      dispatch(icpSet(bal.toString()));
     })
     .catch((e) => {
       // We are most probably logged out. There is currently no better way to handle expired agentjs chain

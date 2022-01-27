@@ -981,26 +981,29 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         return (topStorage, topOps, diffStorage, diffOps);
     };
 
+
     public shared({caller}) func recharge(request: Nft.RechargeRequest) : async Nft.RechargeResponse {
-        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
-        assert(caller_user == request.user);
+        assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
         switch(getMeta(tokenIndex)) {
                 case (#ok((m,v))) {
                     
-                let (topStorage,topOps,diffStorage, diffOps) = charge_calc_missing(m,v);
+                let (topStorage,topOps, diffStorage, diffOps) = charge_calc_missing(m,v);
+
                 if (diffStorage + diffOps < 10000) return #err(#RechargeUnnecessary);
-                switch(await pwrExtract({from= Nft.User.toAccountIdentifier(request.user); amount= diffStorage+diffOps; subaccount = request.subaccount})) {
-                    case (#ok()) {
+
+                let required_amount = diffStorage + diffOps;
+
+                if (request.amount < required_amount) return #err(#InsufficientPayment);
+
                         v.pwrStorage := topStorage;
                         v.pwrOps := topOps;
                         v.ttl := null;
+
                         #ok();
-                    };
-                    case (#err(e)) return #err(#InsufficientBalance);
-                };
+              
             };
             case (#err()) {
                 #err(#InvalidToken(request.token));
@@ -1008,54 +1011,26 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         };
     };
 
-    private func pwrExtract({from: AccountIdentifier; subaccount: ?Nft.SubAccount; amount: Balance}) : async Result.Result<(), Nft.TransferResponseError> {
-          switch(await Cluster.pwr(_conf).transfer({
-            from = #address(from);
-            to = #address(Cluster.nft_address(_conf, _slot));
-            amount;
-            memo = Blob.fromArray([]);
-            subaccount;
-            })) {
-                case (#ok({transactionId})) {
-                    #ok();
-                };
-                case (#err(e)) {
-                    return #err(e)
-                };
-            };
-    };
+    // private func pwrExtract({from: AccountIdentifier; subaccount: ?Nft.SubAccount; amount: Balance}) : async Result.Result<(), Nft.TransferResponseError> {
+    //       switch(await Cluster.pwr(_conf).transfer({
+    //         from = #address(from);
+    //         to = #address(Cluster.nft_address(_conf, _slot));
+    //         amount;
+    //         memo = Blob.fromArray([]);
+    //         subaccount;
+    //         })) {
+    //             case (#ok({transactionId})) {
+    //                 #ok();
+    //             };
+    //             case (#err(e)) {
+    //                 return #err(e)
+    //             };
+    //         };
+    // };
 
     private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
-
         let m = request.metadata;
-
-        // let collectionIndex: ?Nft.CollectionIndex = switch(m.collectionId) {
-        //    case (?collectionId) {
-        //         switch(await Cluster.collection(_conf).mint_nextId(author, collectionId)) {
-        //             case (#ok(index)) ?index;
-        //             case (#err(e)) return #err(#ClassError(e))
-        //         };
-        //     };
-        //    case (_) null
-        // };
-
-        // INFO:
-        // 13 bits used for local token index (max 8191)
-        // 19 bits used for collectionId number (max 524287)
-        // 1000 tokens * 4mb each = 4gb (the canister limit); 
-        // Some tokens will be less space, others more, max is ~ 5.4mb
-        // Max tokens if canisters have only 1000tokens each = 524287 * 1000 = 524 mil
-
-        // let tokenIndex:TokenIndex = switch(m.collectionId) {
-        //     case (?collectionId) {
-        //         _nextTokenId | (collectionId<<13); 
-        //     };
-        //     case (_) {
-        //         _nextTokenId
-        //     }
-        // };
-        
 
         // Charge minting price
         let mintPricePwrStorage : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request.metadata));
@@ -1063,10 +1038,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let mintPricePwr : Nat64 = mintPricePwrOps + mintPricePwrStorage;
 
 
-        switch(await pwrExtract({from= author; amount= mintPricePwr; subaccount = request.subaccount})) {
-            case (#ok()) {};
-            case (#err(e)) return #err(#Pwr(e));
-        };
+        // switch(await pwrExtract({from= author; amount= mintPricePwr; subaccount = request.subaccount})) {
+        //     case (#ok()) {};
+        //     case (#err(e)) return #err(#Pwr(e));
+        // };
 
         let tokenIndex = _nextTokenId;
         _nextTokenId := _nextTokenId + 1;
@@ -1077,8 +1052,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         // Get class info, check if principal is allowed to mint
         
         let md : Metadata = {
-            // collectionId = m.collectionId;
-            // collectionIndex;
             domain = m.domain;
             name = m.name;
             lore = m.lore;
@@ -1139,10 +1112,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     public shared({caller}) func mint(request: Nft.MintRequest) : async Nft.MintResponse {
+        assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 
-        let author:AccountIdentifier = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
-
-        assert(author == Nft.User.toAccountIdentifier(request.user));
+        let author:AccountIdentifier = Nft.User.toAccountIdentifier(request.user);
 
         if (Nft.User.validate(request.user) == false) return #err(#Invalid("Invalid To User"));
 
@@ -1153,19 +1125,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             await Cluster.router(_conf).reportOutOfMemory();
             return #err(#OutOfMemory);
             };
-
-        // switch(request.metadata.collectionId) {
-        //         case (?collectionId) {
-
-        //             switch (await Cluster.collection(_conf).author_allow(author, collectionId)) {
-        //                 case (#ok()) {                                        
-        //                     ()
-        //                 };
-        //                 case (#err(e)) return #err(#ClassError("Unauthorized author"));
-        //             };
-        //         };
-        //         case (null) ();
-        //     };
 
         // validity checks
         if (request.metadata.secret == true) switch (request.metadata.content) {
@@ -1178,23 +1137,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (_) ();
         };
 
-        // switch(request.metadata.collectionId) {
-        //     case (?can) {
-        //         ()
-        //     };
-        //     case (null) {
-        //          switch(request.metadata.content) {
-        //             case(?#external(_)) return #err(#Invalid("collectionId required if external content is specified"));
-        //             case (_) ()
-        //          };
-        //          switch(request.metadata.thumb) {
-        //             case(#external(_)) return #err(#Invalid("collectionId required if external thumb is specified"));
-        //             case (_) ()
-        //          };
-        //     };
-        // };
-
-        
 
         if (Nft.MetadataInput.validate(request.metadata) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
 

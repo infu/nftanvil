@@ -61,12 +61,7 @@ export interface Class {
   'mint_quote' : (arg_0: MetadataInput) => Promise<MintQuoteResponse>,
   'oracle_set' : (arg_0: Oracle) => Promise<undefined>,
   'plug' : (arg_0: PlugRequest) => Promise<PlugResponse>,
-  'purchase_claim' : (arg_0: PurchaseClaimRequest) => Promise<
-      PurchaseClaimResponse
-    >,
-  'purchase_intent' : (arg_0: PurchaseIntentRequest) => Promise<
-      PurchaseIntentResponse
-    >,
+  'purchase' : (arg_0: PurchaseRequest) => Promise<PurchaseResponse>,
   'recharge' : (arg_0: RechargeRequest) => Promise<RechargeResponse>,
   'set_price' : (arg_0: SetPriceRequest) => Promise<SetPriceResponse>,
   'socket' : (arg_0: SocketRequest) => Promise<SocketResponse>,
@@ -180,8 +175,8 @@ export interface MintQuoteResponse {
   'transfer' : bigint,
 }
 export interface MintRequest {
-  'to' : User,
   'metadata' : MetadataInput,
+  'user' : User,
   'subaccount' : [] | [SubAccount],
 }
 export type MintResponse = {
@@ -224,42 +219,41 @@ export interface Price {
   'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
   'amount' : bigint,
 }
-export interface PurchaseClaimRequest {
+export interface PurchaseRequest {
   'token' : TokenIdentifier,
   'user' : User,
   'subaccount' : [] | [SubAccount],
+  'priceIdx' : number,
+  'amount' : Balance,
 }
-export type PurchaseClaimResponse = {
-    'ok' : { 'transactionId' : Array<number> }
-  } |
+export type PurchaseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'TreasuryNotifyFailed' : null } |
       { 'Refunded' : null } |
+      { 'InsufficientPayment' : null } |
       { 'ErrorWhileRefunding' : null } |
+      { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : null } |
       { 'NotForSale' : null } |
       { 'NotEnoughToRefund' : null }
   };
-export interface PurchaseIntentRequest {
-  'token' : TokenIdentifier,
-  'user' : User,
-  'subaccount' : [] | [SubAccount],
-}
-export type PurchaseIntentResponse = {
-    'ok' : { 'paymentAddress' : AccountIdentifier, 'price' : Price }
-  } |
-  { 'err' : { 'InvalidToken' : TokenIdentifier } | { 'NotForSale' : null } };
 export type Quality = number;
 export interface RechargeRequest {
   'token' : TokenIdentifier,
   'user' : User,
   'subaccount' : [] | [SubAccount],
+  'amount' : Balance,
 }
 export type RechargeResponse = { 'ok' : null } |
   {
-    'err' : { 'RechargeUnnecessary' : null } |
+    'err' : { 'InsufficientPayment' : null } |
+      { 'RechargeUnnecessary' : null } |
       { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier }
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : null }
   };
 export interface Request {
   'url' : string,

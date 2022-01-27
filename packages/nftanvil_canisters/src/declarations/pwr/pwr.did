@@ -39,8 +39,59 @@ type TransferError =
    TxDuplicate: record {duplicate_of: BlockIndex;};
    TxTooOld: record {allowed_window_nanos: nat64;};
  };
+type TokenIndex = nat32;
 type TokenIdentifier = nat32;
+type Tags = vec Tag;
+type Tag = text;
+type SubAccount__1 = blob;
 type SubAccount = blob;
+type Share = nat16;
+type RechargeResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      InsufficientPayment;
+      InvalidToken: TokenIdentifier;
+      RechargeUnnecessary;
+      Rejected;
+      Unauthorized;
+    };
+   ok;
+ };
+type RechargeRequest = 
+ record {
+   amount: Balance__1;
+   subaccount: opt SubAccount__1;
+   token: TokenIdentifier;
+   user: User__1;
+ };
+type Quality = nat8;
+type PurchaseResponse = 
+ variant {
+   err:
+    variant {
+      ErrorWhileRefunding;
+      InsufficientBalance;
+      InsufficientPayment;
+      InvalidToken: TokenIdentifier;
+      NotEnoughToRefund;
+      NotForSale;
+      Refunded;
+      Rejected;
+      TreasuryNotifyFailed;
+      Unauthorized;
+    };
+   ok: record {transactionId: blob;};
+ };
+type PurchaseRequest = 
+ record {
+   amount: Balance__1;
+   priceIdx: nat32;
+   subaccount: opt SubAccount__1;
+   token: TokenIdentifier;
+   user: User__1;
+ };
 type PurchaseIntentResponse = 
  variant {
    err: text;
@@ -64,6 +115,18 @@ type PurchaseClaimRequest =
    subaccount: opt SubAccount;
    user: User;
  };
+type Price = 
+ record {
+   affiliate: opt record {
+                    address: AccountIdentifier;
+                    share: Share;
+                  };
+   amount: nat64;
+   marketplace: opt record {
+                      address: AccountIdentifier;
+                      share: Share;
+                    };
+ };
 type Oracle = 
  record {
    anvFee: nat64;
@@ -71,8 +134,72 @@ type Oracle =
    icpFee: nat64;
    pwrFee: nat64;
  };
+type MintResponse = 
+ variant {
+   err:
+    variant {
+      ClassError: text;
+      InsufficientBalance;
+      Invalid: text;
+      OutOfMemory;
+      Pwr: TransferResponseError;
+      Rejected;
+      Unauthorized;
+    };
+   ok: record {
+         tokenIndex: TokenIndex;
+         transactionId: blob;
+       };
+ };
+type MintRequest = 
+ record {
+   metadata: MetadataInput;
+   subaccount: opt SubAccount__1;
+   user: User__1;
+ };
+type MetadataInput = 
+ record {
+   attributes: Attributes;
+   authorShare: Share;
+   content: opt Content;
+   custom: opt CustomData;
+   domain: opt DomainName;
+   lore: opt text;
+   name: opt text;
+   price: Price;
+   quality: Quality;
+   secret: bool;
+   tags: Tags;
+   thumb: Content;
+   transfer: ItemTransfer;
+   ttl: opt nat32;
+ };
 type Memo = blob;
+type ItemTransfer = 
+ variant {
+   bindsDuration: nat32;
+   bindsForever;
+   unrestricted;
+ };
+type IPFS_CID = text;
+type ICPath = text;
 type ICP = record {e8s: nat64;};
+type DomainName = text;
+type CustomData = blob;
+type ContentType = text;
+type Content = 
+ variant {
+   external: ICPath;
+   internal: record {
+               contentType: ContentType;
+               size: nat32;
+             };
+   ipfs: record {
+           cid: IPFS_CID;
+           contentType: ContentType;
+           size: nat32;
+         };
+ };
 type Config = 
  record {
    account: CanisterRange;
@@ -91,12 +218,16 @@ type Class =
    config_set: (Config) -> ();
    dumpBalances: () -> (vec record {
                               AccountIdentifier__2;
-                              Balance__1;
+                              Balance__2;
                             }) query;
+   nft_mint: (CanisterSlot, MintRequest) -> (MintResponse);
+   nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);
+   nft_recharge: (CanisterSlot, RechargeRequest) -> (RechargeResponse);
    oracle_set: (Oracle) -> ();
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
    transfer: (TransferRequest) -> (TransferResponse);
+   withdraw: () -> ();
  };
 type CanisterSlot__1 = nat16;
 type CanisterSlot = nat16;
@@ -106,10 +237,17 @@ type CanisterRange =
    CanisterSlot;
  };
 type BlockIndex = nat64;
+type Balance__2 = nat64;
 type Balance__1 = nat64;
 type BalanceResponse = nat64;
 type BalanceRequest = record {user: User__1;};
 type Balance = nat64;
+type Attributes = vec Attribute;
+type Attribute = 
+ record {
+   text;
+   nat16;
+ };
 type AccountIdentifier__2 = blob;
 type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;

@@ -231,50 +231,43 @@ type RechargeResponse =
    err:
     variant {
       InsufficientBalance;
+      InsufficientPayment;
       InvalidToken: TokenIdentifier;
       RechargeUnnecessary;
+      Rejected;
+      Unauthorized;
     };
    ok;
  };
 type RechargeRequest = 
  record {
+   amount: Balance;
    subaccount: opt SubAccount;
    token: TokenIdentifier;
    user: User;
  };
 type Quality = nat8;
-type PurchaseIntentResponse = 
- variant {
-   err: variant {
-          InvalidToken: TokenIdentifier;
-          NotForSale;
-        };
-   ok: record {
-         paymentAddress: AccountIdentifier;
-         price: Price;
-       };
- };
-type PurchaseIntentRequest = 
- record {
-   subaccount: opt SubAccount;
-   token: TokenIdentifier;
-   user: User;
- };
-type PurchaseClaimResponse = 
+type PurchaseResponse = 
  variant {
    err:
     variant {
       ErrorWhileRefunding;
+      InsufficientBalance;
+      InsufficientPayment;
       InvalidToken: TokenIdentifier;
       NotEnoughToRefund;
       NotForSale;
       Refunded;
+      Rejected;
       TreasuryNotifyFailed;
+      Unauthorized;
     };
    ok: record {transactionId: blob;};
  };
-type PurchaseClaimRequest = 
+type PurchaseRequest = 
  record {
+   amount: Balance;
+   priceIdx: nat32;
    subaccount: opt SubAccount;
    token: TokenIdentifier;
    user: User;
@@ -341,7 +334,7 @@ type MintRequest =
  record {
    metadata: MetadataInput;
    subaccount: opt SubAccount;
-   to: User;
+   user: User;
  };
 type MintQuoteResponse = 
  record {
@@ -489,8 +482,7 @@ type Class =
    mint_quote: (MetadataInput) -> (MintQuoteResponse);
    oracle_set: (Oracle) -> ();
    plug: (PlugRequest) -> (PlugResponse);
-   purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
-   purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
+   purchase: (PurchaseRequest) -> (PurchaseResponse);
    recharge: (RechargeRequest) -> (RechargeResponse);
    set_price: (SetPriceRequest) -> (SetPriceResponse);
    socket: (SocketRequest) -> (SocketResponse);

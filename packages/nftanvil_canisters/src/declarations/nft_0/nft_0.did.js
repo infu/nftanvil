@@ -211,8 +211,8 @@ export const idlFactory = ({ IDL }) => {
     'transfer' : ItemTransfer,
   });
   const MintRequest = IDL.Record({
-    'to' : User,
     'metadata' : MetadataInput,
+    'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
   });
   const MintResponse = IDL.Variant({
@@ -270,48 +270,43 @@ export const idlFactory = ({ IDL }) => {
       'Other' : IDL.Text,
     }),
   });
-  const PurchaseClaimRequest = IDL.Record({
+  const PurchaseRequest = IDL.Record({
     'token' : TokenIdentifier,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
+    'priceIdx' : IDL.Nat32,
+    'amount' : Balance,
   });
-  const PurchaseClaimResponse = IDL.Variant({
+  const PurchaseResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Variant({
       'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,
+      'InsufficientPayment' : IDL.Null,
       'ErrorWhileRefunding' : IDL.Null,
+      'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : IDL.Null,
       'NotForSale' : IDL.Null,
       'NotEnoughToRefund' : IDL.Null,
-    }),
-  });
-  const PurchaseIntentRequest = IDL.Record({
-    'token' : TokenIdentifier,
-    'user' : User,
-    'subaccount' : IDL.Opt(SubAccount),
-  });
-  const PurchaseIntentResponse = IDL.Variant({
-    'ok' : IDL.Record({
-      'paymentAddress' : AccountIdentifier,
-      'price' : Price,
-    }),
-    'err' : IDL.Variant({
-      'InvalidToken' : TokenIdentifier,
-      'NotForSale' : IDL.Null,
     }),
   });
   const RechargeRequest = IDL.Record({
     'token' : TokenIdentifier,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
+    'amount' : Balance,
   });
   const RechargeResponse = IDL.Variant({
     'ok' : IDL.Null,
     'err' : IDL.Variant({
+      'InsufficientPayment' : IDL.Null,
       'RechargeUnnecessary' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : IDL.Null,
     }),
   });
   const SetPriceRequest = IDL.Record({
@@ -470,16 +465,7 @@ export const idlFactory = ({ IDL }) => {
     'mint_quote' : IDL.Func([MetadataInput], [MintQuoteResponse], []),
     'oracle_set' : IDL.Func([Oracle], [], []),
     'plug' : IDL.Func([PlugRequest], [PlugResponse], []),
-    'purchase_claim' : IDL.Func(
-        [PurchaseClaimRequest],
-        [PurchaseClaimResponse],
-        [],
-      ),
-    'purchase_intent' : IDL.Func(
-        [PurchaseIntentRequest],
-        [PurchaseIntentResponse],
-        [],
-      ),
+    'purchase' : IDL.Func([PurchaseRequest], [PurchaseResponse], []),
     'recharge' : IDL.Func([RechargeRequest], [RechargeResponse], []),
     'set_price' : IDL.Func([SetPriceRequest], [SetPriceResponse], []),
     'socket' : IDL.Func([SocketRequest], [SocketResponse], []),

@@ -26,8 +26,13 @@ import { setNftStorageModal } from "./user";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
+import {
+  priceStorage,
+  priceOps,
+} from "@vvv-interactive/nftanvil-tools/cjs/pricing.js";
 
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
+import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
 
 import { NFTStorage } from "nft.storage/dist/bundle.esm.min.js";
 import { toast } from "react-toastify";
@@ -89,6 +94,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     quality: data.quality,
     lore: data.lore[0],
     name: data.name[0],
+    custom: data.custom.length,
     author: AccountIdentifier.ArrayToText(data.author),
     secret: data.secret,
     entropy: data.entropy,
@@ -469,7 +475,7 @@ export const unsocket =
   };
 
 export const recharge =
-  ({ id }) =>
+  ({ id, amount }) =>
   async (dispatch, getState) => {
     let s = getState();
 
@@ -477,9 +483,12 @@ export const recharge =
 
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    // let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    // let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
+      agentOptions: { identity },
+    });
 
     let address = s.user.address;
     let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
@@ -495,11 +504,13 @@ export const recharge =
     });
     let t;
     try {
-      let t = await nftcan.recharge({
+      let t = await pwr.nft_recharge(slot, {
         user: { address: AccountIdentifier.TextToArray(address) },
         token: tid,
         subaccount,
+        amount,
       });
+
       if (!("ok" in t)) throw t.err;
 
       let { transactionId } = { transactionId: 0 }; //t.ok;
@@ -737,22 +748,69 @@ export const nftEnterCode = (code) => async (dispatch, getState) => {
   dispatch(push("/" + tokenToText(id) + "/" + code));
 };
 
+export const recharge_quote =
+  ({ id }) =>
+  async (dispatch, getState) => {
+    let s = getState();
+    const icpCycles = BigInt(s.user.oracle.icpCycles);
+
+    let nft = s.nft[id];
+
+    const ops = priceOps({ ttl: null }) / icpCycles;
+
+    console.log("NFT", nft);
+
+    const transfer = BigInt(s.user.oracle.pwrFee);
+
+    const storage =
+      priceStorage({
+        custom: nft.custom || 0,
+        content: nft.content,
+        thumb: nft.thumb,
+        quality: nft.quality,
+        ttl: null,
+      }) / icpCycles;
+
+    let full = ops + transfer + storage;
+
+    let current = BigInt(nft.pwr[0]) + BigInt(nft.pwr[1]);
+
+    console.log({ full, current });
+    let diff = full - current;
+    if (diff < 0) diff = 0;
+    return diff;
+  };
+
 export const mint_quote = (vals) => async (dispatch, getState) => {
   let s = getState();
 
-  let identity = authentication.client.getIdentity();
+  // let identity = authentication.client.getIdentity();
 
-  let available = s.user.map.nft_avail;
-  let canisterId = PrincipalFromSlot(
-    s.user.map.space,
-    available[Math.floor(Math.random() * available.length)]
-  );
+  // let available = s.user.map.nft_avail;
+  // let canisterId = PrincipalFromSlot(
+  //   s.user.map.space,
+  //   available[Math.floor(Math.random() * available.length)]
+  // );
 
-  let nft = nftCanister(canisterId, { agentOptions: { identity } });
+  // let nft = nftCanister(canisterId, { agentOptions: { identity } });
 
-  let pwr = await nft.mint_quote(vals);
-  console.log("quote", vals, pwr);
-  return pwr;
+  // let pwr = await nft.mint_quote(vals);
+
+  //console.log("quote", vals);
+  const icpCycles = BigInt(s.user.oracle.icpCycles);
+  const transfer = BigInt(s.user.oracle.pwrFee);
+  const ops = priceOps({ ttl: vals.ttl[0] }) / icpCycles;
+
+  const storage =
+    priceStorage({
+      custom: vals.custom.length,
+      content: vals.content[0],
+      thumb: vals.thumb,
+      quality: vals.quality,
+      ttl: vals.ttl[0],
+    }) / icpCycles;
+
+  return { transfer, ops, storage };
 };
 
 export const mint = (vals) => async (dispatch, getState) => {
@@ -799,10 +857,16 @@ export const mint = (vals) => async (dispatch, getState) => {
 
   let available = s.user.map.nft_avail;
   let slot = available[Math.floor(Math.random() * available.length)];
+
   let canisterId = PrincipalFromSlot(s.user.map.space, slot);
 
   let identity = authentication.client.getIdentity();
+
   let nft = nftCanister(canisterId, { agentOptions: { identity } });
+
+  let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
+    agentOptions: { identity },
+  });
 
   let address = s.user.address;
   let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
@@ -819,9 +883,9 @@ export const mint = (vals) => async (dispatch, getState) => {
       ),
     });
 
-    console.log("mint vals", vals);
-    let mint = await nft.mint({
-      to: { address: AccountIdentifier.TextToArray(address) },
+    console.log("mint vals", slot, vals);
+    let mint = await pwr.nft_mint(slot, {
+      user: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
       metadata: vals,
     });

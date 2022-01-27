@@ -86,7 +86,7 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
-import { TX, ACC, TID, HASH, ICP, PWR, PRI } from "./components/Code";
+import { TX, ACC, TID, HASH, ICP, PWR, PRI, ANV } from "./components/Code";
 
 const ICP_FEE = 10000n;
 
@@ -260,77 +260,22 @@ function ICPBOX({ mobile }) {
   );
 }
 
-function PWRBOX({ mobile }) {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const dispatch = useDispatch();
-  const initialRef = React.useRef();
-  const amountRef = React.useRef();
+function ANVBOX({ mobile }) {
+  const anv = useSelector((state) => state.user.anv);
 
-  const pwr = useSelector((state) => state.user.pwr);
-
-  const transferOk = async () => {
-    let amount =
-      AccountIdentifier.icpToE8s(amountRef.current.value) + ICP_FEE * 1n;
-
-    onClose();
-
-    await dispatch(pwr_buy({ amount }));
-  };
   return (
     <>
       {mobile ? (
-        <MenuItem onClick={onOpen}>
-          <PWR>{pwr}</PWR>
+        <MenuItem>
+          <ANV>{anv}</ANV>
         </MenuItem>
       ) : (
-        <Tooltip hasArrow label="PWR tokens used for minting">
-          <Button onClick={onOpen}>
-            <PWR>{pwr}</PWR>
+        <Tooltip hasArrow label="ANV governance tokens">
+          <Button>
+            <ANV>{anv}</ANV>
           </Button>
         </Tooltip>
       )}
-      {/* <img
-                  src={blueflame}
-                  style={{ marginLeft: "4px", width: "13px", height: "13px" }}
-                  alt=""
-                /> */}
-      <Modal
-        initialFocusRef={initialRef}
-        onClose={onClose}
-        isOpen={isOpen}
-        isCentered
-        size={"xl"}
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            Buy <PWR />
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>
-                Amount of <ICP />
-              </FormLabel>
-              <Input ref={amountRef} placeholder="" type="number" />
-              <Text mt="2">
-                Fixed exchange rate <ICP>{100000000n}</ICP> equals{" "}
-                <PWR>{100000000n}</PWR>
-              </Text>
-              <Text mt="2" fontSize="13px">
-                <ICP>{ICP_FEE * 2n}</ICP> in transfer fees paid to IC
-              </Text>
-              <Warning title="Testnet!">All PWR purchased is temporary</Warning>
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button onClick={onClose}>Cancel</Button>
-            <Button ml={3} onClick={transferOk}>
-              Buy
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </>
   );
 }
@@ -373,7 +318,7 @@ function LoginBox() {
         ) : (
           <>
             <ICPBOX mobile={false} />
-            <PWRBOX mobile={false} />
+            <ANVBOX mobile={false} />
 
             <Popover trigger={"hover"}>
               <PopoverTrigger>
@@ -405,7 +350,7 @@ function LoginBox() {
                   <Text>
                     <ACC>{address}</ACC>
                   </Text>
-                  {pro ? (
+                  {/* {pro ? (
                     <>
                       <Text
                         casing="uppercase"
@@ -419,7 +364,7 @@ function LoginBox() {
                         <PRI>{principal}</PRI>
                       </Text>
                     </>
-                  ) : null}
+                  ) : null} */}
                 </PopoverBody>
                 <PopoverFooter
                   border="0"
@@ -635,7 +580,7 @@ function MobileMenu() {
             ) : (
               <>
                 <ICPBOX mobile={true} />
-                <PWRBOX mobile={true} />
+                <ANVBOX mobile={true} />
 
                 <MenuItem
                   onClick={() => {

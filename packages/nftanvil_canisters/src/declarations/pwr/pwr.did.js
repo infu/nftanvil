@@ -21,7 +21,132 @@ export const idlFactory = ({ IDL }) => {
     'treasury' : CanisterSlot__1,
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
+  const Balance__2 = IDL.Nat64;
+  const ContentType = IDL.Text;
+  const IPFS_CID = IDL.Text;
+  const ICPath = IDL.Text;
+  const Content = IDL.Variant({
+    'internal' : IDL.Record({
+      'contentType' : ContentType,
+      'size' : IDL.Nat32,
+    }),
+    'ipfs' : IDL.Record({
+      'cid' : IPFS_CID,
+      'contentType' : ContentType,
+      'size' : IDL.Nat32,
+    }),
+    'external' : ICPath,
+  });
+  const DomainName = IDL.Text;
+  const Share = IDL.Nat16;
+  const CustomData = IDL.Vec(IDL.Nat8);
+  const Quality = IDL.Nat8;
+  const Tag = IDL.Text;
+  const Tags = IDL.Vec(Tag);
+  const Attribute = IDL.Tuple(IDL.Text, IDL.Nat16);
+  const Attributes = IDL.Vec(Attribute);
+  const Price = IDL.Record({
+    'marketplace' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+    ),
+    'affiliate' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+    ),
+    'amount' : IDL.Nat64,
+  });
+  const ItemTransfer = IDL.Variant({
+    'unrestricted' : IDL.Null,
+    'bindsForever' : IDL.Null,
+    'bindsDuration' : IDL.Nat32,
+  });
+  const MetadataInput = IDL.Record({
+    'ttl' : IDL.Opt(IDL.Nat32),
+    'thumb' : Content,
+    'content' : IDL.Opt(Content),
+    'domain' : IDL.Opt(DomainName),
+    'authorShare' : Share,
+    'custom' : IDL.Opt(CustomData),
+    'quality' : Quality,
+    'lore' : IDL.Opt(IDL.Text),
+    'name' : IDL.Opt(IDL.Text),
+    'tags' : Tags,
+    'secret' : IDL.Bool,
+    'attributes' : Attributes,
+    'price' : Price,
+    'transfer' : ItemTransfer,
+  });
+  const SubAccount__1 = IDL.Vec(IDL.Nat8);
+  const MintRequest = IDL.Record({
+    'metadata' : MetadataInput,
+    'user' : User__1,
+    'subaccount' : IDL.Opt(SubAccount__1),
+  });
+  const TokenIndex = IDL.Nat32;
+  const TokenIdentifier = IDL.Nat32;
+  const TransferResponseError = IDL.Variant({
+    'InsufficientBalance' : IDL.Null,
+    'NotTransferable' : IDL.Null,
+    'InvalidToken' : TokenIdentifier,
+    'Rejected' : IDL.Null,
+    'Unauthorized' : AccountIdentifier,
+    'OutOfPower' : IDL.Null,
+    'Other' : IDL.Text,
+  });
+  const MintResponse = IDL.Variant({
+    'ok' : IDL.Record({
+      'tokenIndex' : TokenIndex,
+      'transactionId' : IDL.Vec(IDL.Nat8),
+    }),
+    'err' : IDL.Variant({
+      'Pwr' : TransferResponseError,
+      'Invalid' : IDL.Text,
+      'InsufficientBalance' : IDL.Null,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : IDL.Null,
+      'ClassError' : IDL.Text,
+      'OutOfMemory' : IDL.Null,
+    }),
+  });
   const Balance__1 = IDL.Nat64;
+  const PurchaseRequest = IDL.Record({
+    'token' : TokenIdentifier,
+    'user' : User__1,
+    'subaccount' : IDL.Opt(SubAccount__1),
+    'priceIdx' : IDL.Nat32,
+    'amount' : Balance__1,
+  });
+  const PurchaseResponse = IDL.Variant({
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'err' : IDL.Variant({
+      'TreasuryNotifyFailed' : IDL.Null,
+      'Refunded' : IDL.Null,
+      'InsufficientPayment' : IDL.Null,
+      'ErrorWhileRefunding' : IDL.Null,
+      'InsufficientBalance' : IDL.Null,
+      'InvalidToken' : TokenIdentifier,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : IDL.Null,
+      'NotForSale' : IDL.Null,
+      'NotEnoughToRefund' : IDL.Null,
+    }),
+  });
+  const RechargeRequest = IDL.Record({
+    'token' : TokenIdentifier,
+    'user' : User__1,
+    'subaccount' : IDL.Opt(SubAccount__1),
+    'amount' : Balance__1,
+  });
+  const RechargeResponse = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Variant({
+      'InsufficientPayment' : IDL.Null,
+      'RechargeUnnecessary' : IDL.Null,
+      'InsufficientBalance' : IDL.Null,
+      'InvalidToken' : TokenIdentifier,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : IDL.Null,
+    }),
+  });
   const Oracle = IDL.Record({
     'cycle_to_pwr' : IDL.Float64,
     'icpFee' : IDL.Nat64,
@@ -71,16 +196,6 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount),
     'amount' : Balance,
   });
-  const TokenIdentifier = IDL.Nat32;
-  const TransferResponseError = IDL.Variant({
-    'InsufficientBalance' : IDL.Null,
-    'NotTransferable' : IDL.Null,
-    'InvalidToken' : TokenIdentifier,
-    'Rejected' : IDL.Null,
-    'Unauthorized' : AccountIdentifier,
-    'OutOfPower' : IDL.Null,
-    'Other' : IDL.Text,
-  });
   const TransferResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : TransferResponseError,
@@ -90,8 +205,19 @@ export const idlFactory = ({ IDL }) => {
     'config_set' : IDL.Func([Config], [], []),
     'dumpBalances' : IDL.Func(
         [],
-        [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance__1))],
+        [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance__2))],
         ['query'],
+      ),
+    'nft_mint' : IDL.Func([CanisterSlot, MintRequest], [MintResponse], []),
+    'nft_purchase' : IDL.Func(
+        [CanisterSlot, PurchaseRequest],
+        [PurchaseResponse],
+        [],
+      ),
+    'nft_recharge' : IDL.Func(
+        [CanisterSlot, RechargeRequest],
+        [RechargeResponse],
+        [],
       ),
     'oracle_set' : IDL.Func([Oracle], [], []),
     'purchase_claim' : IDL.Func(
@@ -105,6 +231,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
+    'withdraw' : IDL.Func([], [], []),
   });
   return Class;
 };

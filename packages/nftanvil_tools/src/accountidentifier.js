@@ -21,13 +21,26 @@ export function icpToE8s(x) {
     return 0n;
   }
 }
-
+// PWR
 export function e8sToPwr(x) {
   if (!x) return null;
   return (Number((BigInt(x) * 100n) / 100000n) / 100).toFixed(2);
 }
 
 export function pwrToE8s(x) {
+  try {
+    return BigInt(Math.round(x * 100000));
+  } catch (e) {
+    return 0n;
+  }
+}
+// ANV
+export function eToAnv(x) {
+  if (!x) return null;
+  return (Number((BigInt(x) * 100n) / 100000n) / 100).toFixed(2);
+}
+
+export function anvToE(x) {
   try {
     return BigInt(Math.round(x * 100000));
   } catch (e) {

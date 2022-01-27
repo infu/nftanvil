@@ -126,6 +126,39 @@ export const TID = ({ children }) => {
   );
 };
 
+const Sanv = styled.span`
+  font-family: Hexaframe;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgb(220, 80, 255);
+  span {
+    color: rgb(160, 0, 255);
+    vertical-align: super;
+    font-size: 8px;
+    position: relative;
+    top: 0.1em;
+  }
+  b {
+    color: rgb(160, 40, 250);
+  }
+`;
+
+export const ANV = ({ children }) => {
+  if (!children)
+    return (
+      <Sanv>
+        <b>ANV</b>
+      </Sanv>
+    );
+  let val = AccountIdentifier.eToAnv(children);
+  let [a, b] = val.toString().split(".");
+  return (
+    <Sanv>
+      {a}.<span>{b}</span> <b>ANV</b>
+    </Sanv>
+  );
+};
+
 const Spwr = styled.span`
   font-family: Hexaframe;
   letter-spacing: 1px;
@@ -153,11 +186,9 @@ export const PWR = ({ children }) => {
   let val = AccountIdentifier.e8sToPwr(children);
   let [a, b] = val.toString().split(".");
   return (
-    <Tooltip placement="right" hasArrow label={children}>
-      <Spwr>
-        {a}.<span>{b}</span> <b>PWR</b>
-      </Spwr>
-    </Tooltip>
+    <Spwr>
+      {a}.<span>{b}</span> <b>PWR</b>
+    </Spwr>
   );
 };
 
@@ -188,11 +219,9 @@ export const ICP = ({ children }) => {
   let val = AccountIdentifier.e8sToIcp(children);
   let [a, b] = val.toString().split(".");
   return (
-    <Tooltip hasArrow placement="right" label={children + " e8s"}>
-      <Sicp>
-        {a}.<span>{b}</span> <b>ICP</b>
-      </Sicp>
-    </Tooltip>
+    <Sicp>
+      {a}.<span>{b}</span> <b>ICP</b>
+    </Sicp>
   );
 };
 

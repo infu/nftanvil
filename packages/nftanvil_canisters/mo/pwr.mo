@@ -29,22 +29,19 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   public type AccountIdentifier = Nft.AccountIdentifier;
   public type TokenIdentifier = Nft.TokenIdentifier;
 
-  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [];
+  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000)]; //[];
+  
   private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
 
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
   system func preupgrade() {
     _tmpBalance := Iter.toArray(_balance.entries());
-    //_tmpBalance := [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000)];
-    //ignore 2
+    
   };
 
   system func postupgrade() {
-    // TODO: Remove in production
-    
-    _tmpBalance := [];
-    
+     _tmpBalance := [];
   };
 
   public shared({caller}) func config_set(conf : Cluster.Config) : async () {
@@ -118,19 +115,15 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   };
 
 
-  public shared({caller}) func nft_mint(can: Principal, request: Nft.MintRequest) : async Nft.MintResponse {
-    assert(Nft.APrincipal.isLegitimate(_conf.space, can));
-    
-    let slot = switch(Nft.APrincipal.toSlot(_conf.space, can)) {
-      case (?s) s;
-      case (null) return #err(#Rejected)
-    };
+  public shared({caller}) func nft_mint(slot: Nft.CanisterSlot, request: Nft.MintRequest) : async Nft.MintResponse {
+    assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
     
     let nft = Cluster.nft(_conf, slot);
 
     // check caller 
     let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     if (caller_user != request.user) return #err(#Unauthorized);
+
     let aid = Nft.User.toAccountIdentifier(request.user);
 
     let opsCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request.metadata));
@@ -157,13 +150,13 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     // if fail then return amount
   };
 
-  public shared({caller}) func nft_purchase(can: Principal, request: Nft.PurchaseRequest) : async Nft.PurchaseResponse {
-     assert(Nft.APrincipal.isLegitimate(_conf.space, can));
+  public shared({caller}) func nft_purchase(slot: Nft.CanisterSlot, request: Nft.PurchaseRequest) : async Nft.PurchaseResponse {
+    assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
     
-    let slot = switch(Nft.APrincipal.toSlot(_conf.space, can)) {
-      case (?s) s;
-      case (null) return #err(#Rejected);
-    };
+    // check caller 
+    let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+    if (caller_user != request.user) return #err(#Unauthorized);
+
     
     let nft = Cluster.nft(_conf, slot);
     let aid = Nft.User.toAccountIdentifier(request.user);
@@ -188,13 +181,13 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     }
   };
   
-  public shared({caller}) func nft_recharge(can: Principal, request: Nft.RechargeRequest) : async Nft.RechargeResponse {
-    assert(Nft.APrincipal.isLegitimate(_conf.space, can));
+  public shared({caller}) func nft_recharge(slot: Nft.CanisterSlot, request: Nft.RechargeRequest) : async Nft.RechargeResponse {
+    assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
     
-    let slot = switch(Nft.APrincipal.toSlot(_conf.space, can)) {
-      case (?s) s;
-      case (null) return #err(#Rejected)
-    };
+    // check caller 
+    let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+    if (caller_user != request.user) return #err(#Unauthorized);
+
     
     let nft = Cluster.nft(_conf, slot);
     let aid = Nft.User.toAccountIdentifier(request.user);

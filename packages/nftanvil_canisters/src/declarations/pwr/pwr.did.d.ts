@@ -2,10 +2,13 @@ import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
 export type AccountIdentifier__1 = Array<number>;
 export type AccountIdentifier__2 = Array<number>;
+export type Attribute = [string, number];
+export type Attributes = Array<Attribute>;
 export type Balance = bigint;
 export interface BalanceRequest { 'user' : User__1 }
 export type BalanceResponse = bigint;
 export type Balance__1 = bigint;
+export type Balance__2 = bigint;
 export type BlockIndex = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
 export type CanisterSlot = number;
@@ -13,7 +16,16 @@ export type CanisterSlot__1 = number;
 export interface Class {
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
-  'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__1]>>,
+  'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__2]>>,
+  'nft_mint' : (arg_0: CanisterSlot, arg_1: MintRequest) => Promise<
+      MintResponse
+    >,
+  'nft_purchase' : (arg_0: CanisterSlot, arg_1: PurchaseRequest) => Promise<
+      PurchaseResponse
+    >,
+  'nft_recharge' : (arg_0: CanisterSlot, arg_1: RechargeRequest) => Promise<
+      RechargeResponse
+    >,
   'oracle_set' : (arg_0: Oracle) => Promise<undefined>,
   'purchase_claim' : (arg_0: PurchaseClaimRequest) => Promise<
       PurchaseClaimResponse
@@ -22,6 +34,7 @@ export interface Class {
       PurchaseIntentResponse
     >,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
+  'withdraw' : () => Promise<undefined>,
 }
 export interface Config {
   'anv' : CanisterSlot__1,
@@ -34,13 +47,66 @@ export interface Config {
   'router' : CanisterSlot__1,
   'treasury' : CanisterSlot__1,
 }
+export type Content = {
+    'internal' : { 'contentType' : ContentType, 'size' : number }
+  } |
+  {
+    'ipfs' : { 'cid' : IPFS_CID, 'contentType' : ContentType, 'size' : number }
+  } |
+  { 'external' : ICPath };
+export type ContentType = string;
+export type CustomData = Array<number>;
+export type DomainName = string;
 export interface ICP { 'e8s' : bigint }
+export type ICPath = string;
+export type IPFS_CID = string;
+export type ItemTransfer = { 'unrestricted' : null } |
+  { 'bindsForever' : null } |
+  { 'bindsDuration' : number };
 export type Memo = Array<number>;
+export interface MetadataInput {
+  'ttl' : [] | [number],
+  'thumb' : Content,
+  'content' : [] | [Content],
+  'domain' : [] | [DomainName],
+  'authorShare' : Share,
+  'custom' : [] | [CustomData],
+  'quality' : Quality,
+  'lore' : [] | [string],
+  'name' : [] | [string],
+  'tags' : Tags,
+  'secret' : boolean,
+  'attributes' : Attributes,
+  'price' : Price,
+  'transfer' : ItemTransfer,
+}
+export interface MintRequest {
+  'metadata' : MetadataInput,
+  'user' : User__1,
+  'subaccount' : [] | [SubAccount__1],
+}
+export type MintResponse = {
+    'ok' : { 'tokenIndex' : TokenIndex, 'transactionId' : Array<number> }
+  } |
+  {
+    'err' : { 'Pwr' : TransferResponseError } |
+      { 'Invalid' : string } |
+      { 'InsufficientBalance' : null } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : null } |
+      { 'ClassError' : string } |
+      { 'OutOfMemory' : null }
+  };
 export interface Oracle {
   'cycle_to_pwr' : number,
   'icpFee' : bigint,
   'anvFee' : bigint,
   'pwrFee' : bigint,
+}
+export interface Price {
+  'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'amount' : bigint,
 }
 export interface PurchaseClaimRequest {
   'user' : User,
@@ -56,8 +122,49 @@ export interface PurchaseIntentRequest {
 }
 export type PurchaseIntentResponse = { 'ok' : AccountIdentifier__1 } |
   { 'err' : string };
+export interface PurchaseRequest {
+  'token' : TokenIdentifier,
+  'user' : User__1,
+  'subaccount' : [] | [SubAccount__1],
+  'priceIdx' : number,
+  'amount' : Balance__1,
+}
+export type PurchaseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+  {
+    'err' : { 'TreasuryNotifyFailed' : null } |
+      { 'Refunded' : null } |
+      { 'InsufficientPayment' : null } |
+      { 'ErrorWhileRefunding' : null } |
+      { 'InsufficientBalance' : null } |
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : null } |
+      { 'NotForSale' : null } |
+      { 'NotEnoughToRefund' : null }
+  };
+export type Quality = number;
+export interface RechargeRequest {
+  'token' : TokenIdentifier,
+  'user' : User__1,
+  'subaccount' : [] | [SubAccount__1],
+  'amount' : Balance__1,
+}
+export type RechargeResponse = { 'ok' : null } |
+  {
+    'err' : { 'InsufficientPayment' : null } |
+      { 'RechargeUnnecessary' : null } |
+      { 'InsufficientBalance' : null } |
+      { 'InvalidToken' : TokenIdentifier } |
+      { 'Rejected' : null } |
+      { 'Unauthorized' : null }
+  };
+export type Share = number;
 export type SubAccount = Array<number>;
+export type SubAccount__1 = Array<number>;
+export type Tag = string;
+export type Tags = Array<Tag>;
 export type TokenIdentifier = number;
+export type TokenIndex = number;
 export type TransferError = {
     'TxTooOld' : { 'allowed_window_nanos' : bigint }
   } |

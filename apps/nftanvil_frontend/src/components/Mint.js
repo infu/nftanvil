@@ -117,6 +117,7 @@ export const PwrPrice = ({ record, valid }) => {
       if (!valid) return;
       setPwrPrice(0);
       dispatch(mint_quote(record2request(record))).then((re) => {
+        console.log("RE", re);
         setPwrPrice(re.transfer + re.ops + re.storage);
       });
     },
@@ -438,7 +439,7 @@ export const MintForm = () => {
                             }
                           >
                             <FormLabel htmlFor="domain">
-                              <FormTip text="Verify domain by placing /.well-known/nftanvil.json with {allowed:[allowed author principal ids]}">
+                              <FormTip text="Verify domain by placing /.well-known/nftanvil.json with {allowed:[allowed author account ids]}">
                                 Verified domain
                               </FormTip>
                             </FormLabel>

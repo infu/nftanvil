@@ -22,6 +22,7 @@ import {
   buy,
   purchase_intent,
   recharge,
+  recharge_quote,
 } from "../reducers/nft";
 import { setDominantColor } from "../reducers/user";
 
@@ -856,18 +857,31 @@ export const BurnButton = ({ id }) => {
 
 export const RechargeButton = ({ id }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [rechargeCost, setRechargeCost] = React.useState(0);
+
   const onClose = () => setIsOpen(false);
   const dispatch = useDispatch();
 
   const cancelRef = React.useRef();
 
+  useEffect(() => {
+    dispatch(recharge_quote({ id })).then((re) => {
+      setRechargeCost(re);
+    });
+  }, [id, dispatch]);
+
   const rechargeOk = async () => {
     onClose();
-    dispatch(recharge({ id }));
+    dispatch(recharge({ id, amount: rechargeCost }));
   };
+
+  if (!rechargeCost) return null;
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>Recharge</Button>
+      <Button onClick={() => setIsOpen(true)}>
+        <Text mr="2">Recharge for </Text>
+        <ICP>{rechargeCost}</ICP>
+      </Button>
 
       <AlertDialog
         isOpen={isOpen}
@@ -881,15 +895,15 @@ export const RechargeButton = ({ id }) => {
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              Are you sure? This will take <PWR /> from your balance and put it
-              in the NFT
+              Are you sure? This will take <ICP>{rechargeCost}</ICP> from your
+              balance and put it in the NFT
             </AlertDialogBody>
 
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={rechargeOk} ml={3}>
+              <Button colorScheme="blue" onClick={rechargeOk} ml={3}>
                 Recharge
               </Button>
             </AlertDialogFooter>

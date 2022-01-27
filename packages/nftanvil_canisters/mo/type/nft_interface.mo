@@ -49,6 +49,13 @@ module {
                 }
             };
 
+            public func isLegitimateSlot(space:[[Nat64]], idx: CanisterSlot) : Bool {
+                let start = space[0][0];
+                let end = space[0][1];
+                let range = Nat16.fromNat(Nat64.toNat(end - start));
+                idx >= 0 and (idx <= range);
+            };
+
             // After exhausting the first range, this function will be modified to support multiple ranges
             public func toSlot(space:[[Nat64]], p: Principal) : ?CanisterSlot {
                 let (idxarr, flags) = Array_.split<Nat8>(Blob.toArray(Principal.toBlob(p)), 8);
@@ -755,6 +762,7 @@ module {
     };
 
     public module Pricing = {
+        // WARNING: Has to mirror calculations in pricing.js
         public let QUALITY_PRICE : Nat64 = 10000; // max quality price per min
         public let STORAGE_KB_PER_MIN : Nat64 = 8; // prices are in cycles
         public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
@@ -1015,9 +1023,11 @@ module {
             #ErrorWhileRefunding;
             #NotEnoughToRefund;
             #InvalidToken :TokenIdentifier;
+            #Unauthorized;
             #NotForSale;
             #TreasuryNotifyFailed;
-            #InsufficientBalance
+            #InsufficientBalance;
+            #InsufficientPayment;
         }
     >;
 
@@ -1078,7 +1088,10 @@ module {
             #Rejected;
             #InvalidToken : TokenIdentifier;
             #InsufficientBalance;
-            #RechargeUnnecessary
+            #RechargeUnnecessary;
+            #Unauthorized;
+            #InsufficientPayment;
+
         }
     >;
 
