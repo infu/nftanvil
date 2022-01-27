@@ -1,5 +1,9 @@
+/* global BigInt */
 import styled from "@emotion/styled";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+
+import { useSelector } from "react-redux";
+
 import { Tooltip } from "@chakra-ui/react";
 const Stx = styled.span`
   font-family: Hexaframe;
@@ -210,6 +214,9 @@ const Sicp = styled.span`
 `;
 
 export const ICP = ({ children }) => {
+  const icpCycles = BigInt(useSelector((state) => state.user.oracle.icpCycles));
+  const xdr = Number((BigInt(children) * icpCycles) / 10000000000n) / 100;
+
   if (!children)
     return (
       <Sicp>
@@ -219,9 +226,11 @@ export const ICP = ({ children }) => {
   let val = AccountIdentifier.e8sToIcp(children);
   let [a, b] = val.toString().split(".");
   return (
-    <Sicp>
-      {a}.<span>{b}</span> <b>ICP</b>
-    </Sicp>
+    <Tooltip hasArrow placement="top-start" label={`${xdr.toFixed(2)} XDR`}>
+      <Sicp>
+        {a}.<span>{b}</span> <b>ICP</b>
+      </Sicp>
+    </Tooltip>
   );
 };
 

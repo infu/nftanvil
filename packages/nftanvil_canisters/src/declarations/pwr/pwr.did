@@ -51,7 +51,7 @@ type RechargeResponse =
    err:
     variant {
       InsufficientBalance;
-      InsufficientPayment;
+      InsufficientPayment: Balance__1;
       InvalidToken: TokenIdentifier;
       RechargeUnnecessary;
       Rejected;
@@ -73,7 +73,7 @@ type PurchaseResponse =
     variant {
       ErrorWhileRefunding;
       InsufficientBalance;
-      InsufficientPayment;
+      InsufficientPayment: Balance__1;
       InvalidToken: TokenIdentifier;
       NotEnoughToRefund;
       NotForSale;
@@ -127,10 +127,17 @@ type Price =
                       share: Share;
                     };
  };
+type Oracle__1 = 
+ record {
+   anvFee: nat64;
+   icpCycles: nat64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
 type Oracle = 
  record {
    anvFee: nat64;
-   cycle_to_pwr: float64;
+   icpCycles: nat64;
    icpFee: nat64;
    pwrFee: nat64;
  };
@@ -239,7 +246,11 @@ type CanisterRange =
 type BlockIndex = nat64;
 type Balance__2 = nat64;
 type Balance__1 = nat64;
-type BalanceResponse = nat64;
+type BalanceResponse = 
+ record {
+   balance: Balance;
+   oracle: Oracle__1;
+ };
 type BalanceRequest = record {user: User__1;};
 type Balance = nat64;
 type Attributes = vec Attribute;

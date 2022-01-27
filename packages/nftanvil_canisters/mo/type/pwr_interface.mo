@@ -37,7 +37,10 @@ module {
         user: Nft.User;
     };
 
-    public type BalanceResponse = Balance;
+    public type BalanceResponse = {
+        balance : Balance;
+        oracle : Nft.Oracle;
+        };
 
     public type PurchaseIntentRequest = {
         user : User;

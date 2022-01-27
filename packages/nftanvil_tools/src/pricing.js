@@ -7,14 +7,16 @@ const FULLY_CHARGED_MESSAGES = 5840n; // 1 message per day
 export const priceStorage = ({ custom, content, thumb, quality, ttl }) => {
   // WARNING: Has to mirror motoko calulcations in nft_interface
 
-  let cost_per_min = 0n;
-  cost_per_min += BigInt(Math.ceil(custom / 1024)) * STORAGE_KB_PER_MIN;
+  let cost_per_min = STORAGE_KB_PER_MIN * 50n;
+  cost_per_min += (BigInt(custom) * STORAGE_KB_PER_MIN) / 1024n;
+
   if (content?.internal)
     cost_per_min +=
-      BigInt(Math.ceil(content.internal.size / 1024)) * STORAGE_KB_PER_MIN;
+      (BigInt(content.internal.size) * STORAGE_KB_PER_MIN) / 1024n;
+
   if (thumb.internal)
-    cost_per_min +=
-      BigInt(Math.ceil(thumb.internal.size / 1024)) * STORAGE_KB_PER_MIN;
+    cost_per_min += (BigInt(thumb.internal.size) * STORAGE_KB_PER_MIN) / 1024n;
+
   cost_per_min += BigInt(Math.pow(quality, 2)) * QUALITY_PRICE;
 
   return cost_per_min * (ttl ? BigInt(ttl) : FULLY_CHARGED_MINUTES);

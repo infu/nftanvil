@@ -24,9 +24,9 @@ export const idlFactory = ({ IDL }) => {
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__1 = IDL.Nat64;
   const Oracle = IDL.Record({
-    'cycle_to_pwr' : IDL.Float64,
     'icpFee' : IDL.Nat64,
     'anvFee' : IDL.Nat64,
+    'icpCycles' : IDL.Nat64,
     'pwrFee' : IDL.Nat64,
   });
   const User = IDL.Variant({

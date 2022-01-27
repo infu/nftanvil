@@ -63,10 +63,11 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     
     let aid = Nft.User.toAccountIdentifier(request.user);
 
-    switch(_balance.get(aid)) {
+    let balance : Balance = switch(_balance.get(aid)) {
         case (?a) a;
         case (_) 0;
      };
+     return {balance; oracle = _oracle}
   };
 
   public shared({caller}) func transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {

@@ -855,7 +855,7 @@ export const BurnButton = ({ id }) => {
   );
 };
 
-export const RechargeButton = ({ id }) => {
+export const RechargeButton = ({ id, meta }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [rechargeCost, setRechargeCost] = React.useState(0);
 
@@ -868,7 +868,7 @@ export const RechargeButton = ({ id }) => {
     dispatch(recharge_quote({ id })).then((re) => {
       setRechargeCost(re);
     });
-  }, [id, dispatch]);
+  }, [id, meta, dispatch]);
 
   const rechargeOk = async () => {
     onClose();

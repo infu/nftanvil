@@ -987,19 +987,21 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
-        switch(getMeta(tokenIndex)) {
+        switch(getMeta(tokenIndex)) {   
                 case (#ok((m,v))) {
                     
-                let (topStorage,topOps, diffStorage, diffOps) = charge_calc_missing(m,v);
+                let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(m,v);
 
                 if (diffStorage + diffOps < 10000) return #err(#RechargeUnnecessary);
 
                 let required_amount = diffStorage + diffOps;
 
-                if (request.amount < required_amount) return #err(#InsufficientPayment);
+                let ops = topOps + request.amount - required_amount; // In case someone sends more, it goes to ops;
+
+                if (request.amount < required_amount) return #err(#InsufficientPayment(required_amount));
 
                         v.pwrStorage := topStorage;
-                        v.pwrOps := topOps;
+                        v.pwrOps := ops;
                         v.ttl := null;
 
                         #ok();
@@ -1103,13 +1105,13 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     };
 
-    public func mint_quote(request: Nft.MetadataInput) : async Nft.MintQuoteResponse {
-        {
-            transfer = _oracle.pwrFee;
-            ops = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request));
-            storage = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request));
-        }
-    };
+    // public func mint_quote(request: Nft.MetadataInput) : async Nft.MintQuoteResponse {
+    //     {
+    //         transfer = _oracle.pwrFee;
+    //         ops = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request));
+    //         storage = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request));
+    //     }
+    // };
 
     public shared({caller}) func mint(request: Nft.MintRequest) : async Nft.MintResponse {
         assert(Nft.APrincipal.isLegitimate(_conf.space, caller));

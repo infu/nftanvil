@@ -5,7 +5,17 @@ export const idlFactory = ({ IDL }) => {
     'address' : AccountIdentifier,
   });
   const BalanceRequest = IDL.Record({ 'user' : User__1 });
-  const BalanceResponse = IDL.Nat64;
+  const Balance = IDL.Nat64;
+  const Oracle__1 = IDL.Record({
+    'icpFee' : IDL.Nat64,
+    'anvFee' : IDL.Nat64,
+    'icpCycles' : IDL.Nat64,
+    'pwrFee' : IDL.Nat64,
+  });
+  const BalanceResponse = IDL.Record({
+    'balance' : Balance,
+    'oracle' : Oracle__1,
+  });
   const CanisterSlot__1 = IDL.Nat16;
   const CanisterSlot = IDL.Nat16;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
@@ -120,7 +130,7 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Variant({
       'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,
-      'InsufficientPayment' : IDL.Null,
+      'InsufficientPayment' : Balance__1,
       'ErrorWhileRefunding' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
@@ -139,7 +149,7 @@ export const idlFactory = ({ IDL }) => {
   const RechargeResponse = IDL.Variant({
     'ok' : IDL.Null,
     'err' : IDL.Variant({
-      'InsufficientPayment' : IDL.Null,
+      'InsufficientPayment' : Balance__1,
       'RechargeUnnecessary' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
@@ -148,9 +158,9 @@ export const idlFactory = ({ IDL }) => {
     }),
   });
   const Oracle = IDL.Record({
-    'cycle_to_pwr' : IDL.Float64,
     'icpFee' : IDL.Nat64,
     'anvFee' : IDL.Nat64,
+    'icpCycles' : IDL.Nat64,
     'pwrFee' : IDL.Nat64,
   });
   const User = IDL.Variant({
@@ -188,7 +198,6 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Text,
   });
   const Memo = IDL.Vec(IDL.Nat8);
-  const Balance = IDL.Nat64;
   const TransferRequest = IDL.Record({
     'to' : User,
     'from' : User,

@@ -32,9 +32,9 @@ export interface Config {
 }
 export type Memo = Array<number>;
 export interface Oracle {
-  'cycle_to_pwr' : number,
   'icpFee' : bigint,
   'anvFee' : bigint,
+  'icpCycles' : bigint,
   'pwrFee' : bigint,
 }
 export type SubAccount = Array<number>;

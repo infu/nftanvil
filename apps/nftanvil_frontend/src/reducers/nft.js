@@ -758,8 +758,6 @@ export const recharge_quote =
 
     const ops = priceOps({ ttl: null }) / icpCycles;
 
-    console.log("NFT", nft);
-
     const transfer = BigInt(s.user.oracle.pwrFee);
 
     const storage =
@@ -774,10 +772,11 @@ export const recharge_quote =
     let full = ops + transfer + storage;
 
     let current = BigInt(nft.pwr[0]) + BigInt(nft.pwr[1]);
+    let diff = full - current + BigInt(s.user.oracle.pwrFee);
+    if (diff < 30000n) diff = 0n;
 
-    console.log({ full, current });
-    let diff = full - current;
-    if (diff < 0) diff = 0;
+    console.log({ full, current, diff });
+
     return diff;
   };
 

@@ -297,7 +297,7 @@ module {
         recharge : shared (request :  RechargeRequest) -> async  RechargeResponse;
 
         // get minting price
-        mint_quote : shared (request : MetadataInput) -> async MintQuoteResponse;
+        // mint_quote : shared (request : MetadataInput) -> async MintQuoteResponse;
 
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
         allowance : query (request : Allowance.Request) -> async Allowance.Response;
@@ -385,6 +385,14 @@ module {
         Balance,
         CommonError
     >;
+
+    public type Oracle = {
+        icpCycles : Nat64;
+        icpFee : Nat64; // ICP transfer fee
+        pwrFee : Nat64; 
+        anvFee : Nat64; 
+    };
+
 
     public type BurnRequest = {
         user       : User;
@@ -1027,7 +1035,7 @@ module {
             #NotForSale;
             #TreasuryNotifyFailed;
             #InsufficientBalance;
-            #InsufficientPayment;
+            #InsufficientPayment : Balance;
         }
     >;
 
@@ -1090,7 +1098,7 @@ module {
             #InsufficientBalance;
             #RechargeUnnecessary;
             #Unauthorized;
-            #InsufficientPayment;
+            #InsufficientPayment : Balance;
 
         }
     >;

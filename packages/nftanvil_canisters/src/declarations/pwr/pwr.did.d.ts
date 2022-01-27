@@ -6,7 +6,7 @@ export type Attribute = [string, number];
 export type Attributes = Array<Attribute>;
 export type Balance = bigint;
 export interface BalanceRequest { 'user' : User__1 }
-export type BalanceResponse = bigint;
+export interface BalanceResponse { 'balance' : Balance, 'oracle' : Oracle__1 }
 export type Balance__1 = bigint;
 export type Balance__2 = bigint;
 export type BlockIndex = bigint;
@@ -98,9 +98,15 @@ export type MintResponse = {
       { 'OutOfMemory' : null }
   };
 export interface Oracle {
-  'cycle_to_pwr' : number,
   'icpFee' : bigint,
   'anvFee' : bigint,
+  'icpCycles' : bigint,
+  'pwrFee' : bigint,
+}
+export interface Oracle__1 {
+  'icpFee' : bigint,
+  'anvFee' : bigint,
+  'icpCycles' : bigint,
   'pwrFee' : bigint,
 }
 export interface Price {
@@ -133,7 +139,7 @@ export type PurchaseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'TreasuryNotifyFailed' : null } |
       { 'Refunded' : null } |
-      { 'InsufficientPayment' : null } |
+      { 'InsufficientPayment' : Balance__1 } |
       { 'ErrorWhileRefunding' : null } |
       { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |
@@ -151,7 +157,7 @@ export interface RechargeRequest {
 }
 export type RechargeResponse = { 'ok' : null } |
   {
-    'err' : { 'InsufficientPayment' : null } |
+    'err' : { 'InsufficientPayment' : Balance__1 } |
       { 'RechargeUnnecessary' : null } |
       { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |

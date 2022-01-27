@@ -32,7 +32,7 @@ type SubAccount = blob;
 type Oracle = 
  record {
    anvFee: nat64;
-   cycle_to_pwr: float64;
+   icpCycles: nat64;
    icpFee: nat64;
    pwrFee: nat64;
  };

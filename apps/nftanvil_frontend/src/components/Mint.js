@@ -115,9 +115,8 @@ export const PwrPrice = ({ record, valid }) => {
   useDebounce(
     () => {
       if (!valid) return;
-      setPwrPrice(0);
+      //setPwrPrice(0);
       dispatch(mint_quote(record2request(record))).then((re) => {
-        console.log("RE", re);
         setPwrPrice(re.transfer + re.ops + re.storage);
       });
     },
@@ -126,7 +125,7 @@ export const PwrPrice = ({ record, valid }) => {
   );
 
   return (
-    <Box p="1" ml="3" textAlign={"center"} fontSize="15px">
+    <Box p="1" ml="1" textAlign={"center"} fontSize="15px">
       {!pwrPrice ? (
         <Spinner
           thickness="2px"
@@ -137,7 +136,7 @@ export const PwrPrice = ({ record, valid }) => {
         />
       ) : (
         <>
-          for <PWR>{pwrPrice}</PWR>
+          for <ICP>{pwrPrice}</ICP>
         </>
       )}
     </Box>
@@ -919,12 +918,17 @@ export const MintForm = () => {
                     <Button
                       mt={4}
                       w={"100%"}
-                      colorScheme="teal"
+                      colorScheme="blue"
+                      variant="outline"
                       isLoading={props.isSubmitting}
                       type="submit"
                       size="lg"
-                      sx={{ fontFamily: "Greycliff", fontSize: "160%" }}
-                      rightIcon={<AnvilIcon />}
+                      sx={{
+                        fontFamily: "Greycliff",
+                        fontSize: "160%",
+                        borderWidth: "2px",
+                      }}
+                      //rightIcon={<AnvilIcon />}
                     >
                       Mint
                       {props.dirty && props.isValid ? (

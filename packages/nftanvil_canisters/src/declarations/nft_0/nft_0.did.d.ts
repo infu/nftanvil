@@ -58,7 +58,6 @@ export interface Class {
   'http_request_streaming_callback' : (arg_0: Token) => Promise<Callback>,
   'metadata' : (arg_0: TokenIdentifier) => Promise<MetadataResponse>,
   'mint' : (arg_0: MintRequest) => Promise<MintResponse>,
-  'mint_quote' : (arg_0: MetadataInput) => Promise<MintQuoteResponse>,
   'oracle_set' : (arg_0: Oracle) => Promise<undefined>,
   'plug' : (arg_0: PlugRequest) => Promise<PlugResponse>,
   'purchase' : (arg_0: PurchaseRequest) => Promise<PurchaseResponse>,
@@ -169,11 +168,6 @@ export interface MetavarsFrozen {
   'pwrStorage' : bigint,
   'price' : Price,
 }
-export interface MintQuoteResponse {
-  'ops' : bigint,
-  'storage' : bigint,
-  'transfer' : bigint,
-}
 export interface MintRequest {
   'metadata' : MetadataInput,
   'user' : User,
@@ -192,9 +186,9 @@ export type MintResponse = {
       { 'OutOfMemory' : null }
   };
 export interface Oracle {
-  'cycle_to_pwr' : number,
   'icpFee' : bigint,
   'anvFee' : bigint,
+  'icpCycles' : bigint,
   'pwrFee' : bigint,
 }
 export interface PlugRequest {
@@ -230,7 +224,7 @@ export type PurchaseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'TreasuryNotifyFailed' : null } |
       { 'Refunded' : null } |
-      { 'InsufficientPayment' : null } |
+      { 'InsufficientPayment' : Balance } |
       { 'ErrorWhileRefunding' : null } |
       { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |
@@ -248,7 +242,7 @@ export interface RechargeRequest {
 }
 export type RechargeResponse = { 'ok' : null } |
   {
-    'err' : { 'InsufficientPayment' : null } |
+    'err' : { 'InsufficientPayment' : Balance } |
       { 'RechargeUnnecessary' : null } |
       { 'InsufficientBalance' : null } |
       { 'InvalidToken' : TokenIdentifier } |

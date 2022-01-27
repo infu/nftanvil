@@ -16,7 +16,8 @@ import Nat16 "mo:base/Nat16";
 module {
     public type CanisterSlot = Nft.CanisterSlot;
     public type CanisterRange = Nft.CanisterRange;
-
+    public type Oracle = Nft.Oracle;
+    
     public type Config = {
         router: CanisterSlot;
         nft: CanisterRange;
@@ -45,24 +46,19 @@ module {
         };
     };
     
-    public type Oracle = {
-        cycle_to_pwr : Float;
-        icpFee : Nat64; // ICP transfer fee
-        pwrFee : Nat64; 
-        anvFee : Nat64; 
-    };
+
 
     public module Oracle = {
         public func default() : Oracle {
-            {                  
-                cycle_to_pwr = 0.000000000000037037;
+            {        
+                icpCycles = 160000; // e8s to cycles
                 icpFee = 10000; 
                 pwrFee = 10000;
                 anvFee = 10000;
             }
         };
         public func cycle_to_pwr(oracle:Oracle, cycles:Nat64) : Nat64 {
-            Int64.toNat64(Float.toInt64(Float.fromInt64(Int64.fromNat64(cycles)) * oracle.cycle_to_pwr))
+             cycles / oracle.icpCycles
         };
     };
 

@@ -21,6 +21,7 @@ import {
   TransactionToast,
   TransactionFailed,
 } from "../components/TransactionToast";
+import { mapValues } from "lodash";
 
 export const userSlice = createSlice({
   name: "user",
@@ -46,7 +47,11 @@ export const userSlice = createSlice({
   },
   reducers: {
     icpSet: (state, action) => {
-      return { ...state, icp: action.payload };
+      return {
+        ...state,
+        icp: action.payload.icp,
+        oracle: action.payload.oracle,
+      };
     },
     focusSet: (state, action) => {
       return { ...state, focused: action.payload };
@@ -223,7 +228,7 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
     })
     .then((icp) => {
       let e8s = icp.e8s;
-      dispatch(icpSet(e8s.toString()));
+      //dispatch(icpSet(e8s.toString()));
       if (e8s >= 30000n) {
         // automatically wrap ICP
         dispatch(pwr_buy({ amount: e8s - 10000n }));
@@ -250,8 +255,9 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
     .balance({
       user: { address: AccountIdentifier.TextToArray(address) },
     })
-    .then((bal) => {
-      dispatch(icpSet(bal.toString()));
+    .then(({ balance, oracle }) => {
+      oracle = mapValues(oracle, (v) => v.toString());
+      dispatch(icpSet({ icp: balance.toString(), oracle }));
     })
     .catch((e) => {
       // We are most probably logged out. There is currently no better way to handle expired agentjs chain

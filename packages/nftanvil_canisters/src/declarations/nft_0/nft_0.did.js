@@ -230,15 +230,10 @@ export const idlFactory = ({ IDL }) => {
       'OutOfMemory' : IDL.Null,
     }),
   });
-  const MintQuoteResponse = IDL.Record({
-    'ops' : IDL.Nat64,
-    'storage' : IDL.Nat64,
-    'transfer' : IDL.Nat64,
-  });
   const Oracle = IDL.Record({
-    'cycle_to_pwr' : IDL.Float64,
     'icpFee' : IDL.Nat64,
     'anvFee' : IDL.Nat64,
+    'icpCycles' : IDL.Nat64,
     'pwrFee' : IDL.Nat64,
   });
   const PlugRequest = IDL.Record({
@@ -282,7 +277,7 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Variant({
       'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,
-      'InsufficientPayment' : IDL.Null,
+      'InsufficientPayment' : Balance,
       'ErrorWhileRefunding' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
@@ -301,7 +296,7 @@ export const idlFactory = ({ IDL }) => {
   const RechargeResponse = IDL.Variant({
     'ok' : IDL.Null,
     'err' : IDL.Variant({
-      'InsufficientPayment' : IDL.Null,
+      'InsufficientPayment' : Balance,
       'RechargeUnnecessary' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : TokenIdentifier,
@@ -462,7 +457,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'metadata' : IDL.Func([TokenIdentifier], [MetadataResponse], ['query']),
     'mint' : IDL.Func([MintRequest], [MintResponse], []),
-    'mint_quote' : IDL.Func([MetadataInput], [MintQuoteResponse], []),
     'oracle_set' : IDL.Func([Oracle], [], []),
     'plug' : IDL.Func([PlugRequest], [PlugResponse], []),
     'purchase' : IDL.Func([PurchaseRequest], [PurchaseResponse], []),
