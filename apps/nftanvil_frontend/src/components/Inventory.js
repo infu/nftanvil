@@ -17,7 +17,7 @@ import { useWindowSize } from "react-use";
 import { useSelector, useDispatch } from "react-redux";
 import { loadInventory } from "../reducers/inventory";
 import styled from "@emotion/styled";
-import { TX, ACC, TID, HASH, PWR, ICP } from "./Code";
+import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
 
 const InventoryBox = styled.div`
   background: url(${(props) => props.bg});

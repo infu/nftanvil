@@ -44,7 +44,7 @@ import {
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 
-import { TX, ACC, TID, HASH, PWR, ICP } from "./Code";
+import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
 
 const SHOW = 10; // max records shown on screen
 const TAIL_INTERVAL = 1000; // every 1 sec
@@ -153,7 +153,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
           val = tokenToText(val); //tokenFromBlob(val);
           val = (
             <Link to={"/" + val}>
-              <TID>{val}</TID>
+              <NFTA>{val}</NFTA>
             </Link>
           );
         }

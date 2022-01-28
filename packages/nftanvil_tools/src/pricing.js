@@ -1,4 +1,4 @@
-const QUALITY_PRICE = 10000n; // max quality price per min
+const QUALITY_PRICE = 1000n; // max quality price per min
 const STORAGE_KB_PER_MIN = 8n; // prices are in cycles
 const AVG_MESSAGE_COST = 3000000n; // prices are in cycles
 const FULLY_CHARGED_MINUTES = 8409600n; //(16 * 365 * 24 * 60) 16 years
@@ -14,10 +14,10 @@ export const priceStorage = ({ custom, content, thumb, quality, ttl }) => {
     cost_per_min +=
       (BigInt(content.internal.size) * STORAGE_KB_PER_MIN) / 1024n;
 
-  if (thumb.internal)
+  if (thumb?.internal)
     cost_per_min += (BigInt(thumb.internal.size) * STORAGE_KB_PER_MIN) / 1024n;
 
-  cost_per_min += BigInt(Math.pow(quality, 2)) * QUALITY_PRICE;
+  cost_per_min += BigInt(Math.pow(quality, 3)) * QUALITY_PRICE;
 
   return cost_per_min * (ttl ? BigInt(ttl) : FULLY_CHARGED_MINUTES);
 };

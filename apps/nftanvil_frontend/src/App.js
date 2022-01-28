@@ -86,7 +86,7 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
-import { TX, ACC, TID, HASH, ICP, PWR, PRI, ANV } from "./components/Code";
+import { TX, ACC, NFTA, HASH, ICP, PWR, PRI, ANV } from "./components/Code";
 
 const ICP_FEE = 10000n;
 
@@ -349,6 +349,22 @@ function LoginBox() {
                   </Text>
                   <Text>
                     <ACC>{address}</ACC>
+                  </Text>
+                  <Text
+                    casing="uppercase"
+                    fontSize="xs"
+                    mt="10px"
+                    color="gray.500"
+                  >
+                    Supported non-fungible: <NFTA />
+                  </Text>
+                  <Text
+                    casing="uppercase"
+                    fontSize="xs"
+                    mt="10px"
+                    color="gray.500"
+                  >
+                    Supported fungible: <ICP /> <ANV />
                   </Text>
                   {/* {pro ? (
                     <>

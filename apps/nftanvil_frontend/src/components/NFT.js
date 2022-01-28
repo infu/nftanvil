@@ -84,7 +84,7 @@ import {
   TransactionToast,
   TransactionFailed,
 } from "../components/TransactionToast";
-import { TX, ACC, TID, HASH, ICP, PWR } from "./Code";
+import { TX, ACC, NFTA, HASH, ICP, PWR } from "./Code";
 import { toHexString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
 const ContentBox = styled.div`
@@ -1302,7 +1302,7 @@ export const NFTInfo = ({ id, meta }) => {
         <Spacer />
 
         <Text fontSize="10px">
-          <TID>{id}</TID>
+          <NFTA>{id}</NFTA>
         </Text>
       </Flex>
     ) : null,
@@ -1385,7 +1385,7 @@ export const NFTProInfo = ({ id, meta }) => {
       <Stack spacing={0}>
         {/* {id ? (
           <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
-            ID: <TID>{id}</TID>
+            ID: <NFTA>{id}</NFTA>
           </Text>
         ) : null} */}
         {meta.pwr ? (

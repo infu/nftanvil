@@ -1,7 +1,7 @@
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 import { useDispatch } from "react-redux";
 import { push } from "connected-react-router";
-import { TX, ACC, TID, HASH } from "./Code";
+import { TX, ACC, NFTA, HASH } from "./Code";
 
 export const TransactionToast = (props) => {
   const dispatch = useDispatch();
@@ -17,7 +17,7 @@ export const TransactionToast = (props) => {
       <div>{props.title}</div>
       {props.tokenId ? (
         <div style={{ fontSize: "10px" }}>
-          <TID>{props.tokenId}</TID>
+          <NFTA>{props.tokenId}</NFTA>
         </div>
       ) : null}
       {props.transactionId ? (

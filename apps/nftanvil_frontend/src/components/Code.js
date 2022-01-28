@@ -111,7 +111,7 @@ export const PRI = ({ children }) => {
   );
 };
 
-const Stid = styled.span`
+const Snfta = styled.span`
   font-family: Hexaframe;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -121,12 +121,18 @@ const Stid = styled.span`
   }
 `;
 
-export const TID = ({ children }) => {
+export const NFTA = ({ children }) => {
+  if (!children)
+    return (
+      <Snfta>
+        <b>NFTA</b>
+      </Snfta>
+    );
   return (
-    <Stid>
-      <b>NFT</b>
+    <Snfta>
+      <b>NFTA</b>
       {children.slice(3)}
-    </Stid>
+    </Snfta>
   );
 };
 
@@ -215,7 +221,6 @@ const Sicp = styled.span`
 
 export const ICP = ({ children }) => {
   const icpCycles = BigInt(useSelector((state) => state.user.oracle.icpCycles));
-  const xdr = Number((BigInt(children) * icpCycles) / 10000000000n) / 100;
 
   if (!children)
     return (
@@ -223,6 +228,9 @@ export const ICP = ({ children }) => {
         <b>ICP</b>
       </Sicp>
     );
+
+  const xdr = Number((BigInt(children) * icpCycles) / 10000000000n) / 100;
+
   let val = AccountIdentifier.e8sToIcp(children);
   let [a, b] = val.toString().split(".");
   return (

@@ -771,7 +771,7 @@ module {
 
     public module Pricing = {
         // WARNING: Has to mirror calculations in pricing.js
-        public let QUALITY_PRICE : Nat64 = 10000; // max quality price per min
+        public let QUALITY_PRICE : Nat64 = 1000; // max quality price per min
         public let STORAGE_KB_PER_MIN : Nat64 = 8; // prices are in cycles
         public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
         public let FULLY_CHARGED_MINUTES : Nat64 = 8409600; //(16 * 365 * 24 * 60) 16 years
@@ -826,7 +826,7 @@ module {
         };
 
         public func price(t: Quality) : Nat64 {
-            Nat64.fromNat(Nat.pow(Nat8.toNat(t), 2)) * Pricing.QUALITY_PRICE
+            Nat64.fromNat(Nat.pow(Nat8.toNat(t), 3)) * Pricing.QUALITY_PRICE
         };
     };
 

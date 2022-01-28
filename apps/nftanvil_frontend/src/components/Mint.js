@@ -1,17 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { mint, mint_quote } from "../reducers/nft";
+import { mint } from "../reducers/nft";
 import { proModeSet, setNftStorageModal } from "../reducers/user";
 import { LoginRequired } from "./LoginRequired";
 import { useSelector, useDispatch } from "react-redux";
 
-import {
-  Button,
-  Box,
-  IconButton,
-  Radio,
-  RadioGroup,
-  Tooltip,
-} from "@chakra-ui/react";
+import { Button, Box, IconButton, Tooltip } from "@chakra-ui/react";
 import { useWindowSize, useDebounce } from "react-use";
 
 import {
@@ -25,7 +18,6 @@ import {
   Textarea,
   Text,
   Grid,
-  useClipboard,
 } from "@chakra-ui/react";
 
 import {
@@ -81,7 +73,9 @@ import {
   validateDomain,
   validateTagName,
 } from "@vvv-interactive/nftanvil-tools/cjs/validate.js";
-import { TX, ACC, TID, HASH, PWR, ICP } from "./Code";
+
+import { PricingPresets, presets } from "./PricingPresets";
+import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { values } from "lodash";
@@ -108,41 +102,6 @@ export const ProToggle = () => {
   );
 };
 
-export const PwrPrice = ({ record, valid }) => {
-  const [pwrPrice, setPwrPrice] = useState(0);
-  const dispatch = useDispatch();
-
-  useDebounce(
-    () => {
-      if (!valid) return;
-      //setPwrPrice(0);
-      dispatch(mint_quote(record2request(record))).then((re) => {
-        setPwrPrice(re.transfer + re.ops + re.storage);
-      });
-    },
-    1000,
-    [record, valid, dispatch]
-  );
-
-  return (
-    <Box p="1" ml="1" textAlign={"center"} fontSize="15px">
-      {!pwrPrice ? (
-        <Spinner
-          thickness="2px"
-          speed="0.85s"
-          emptyColor="teal.200"
-          color="teal.800"
-          size="xs"
-        />
-      ) : (
-        <>
-          for <ICP>{pwrPrice}</ICP>
-        </>
-      )}
-    </Box>
-  );
-};
-
 const form2record = (v) => {
   let a = {
     domain: v.domain,
@@ -163,57 +122,32 @@ const form2record = (v) => {
     },
 
     quality: parseInt(v.quality, 10),
-    ttl: parseInt(v.ttl, 10),
+    ttl: presets[v.preset].ttl,
     attributes: v.attributes.map((x) => [
       x.name.toLowerCase(),
       parseInt(x.change, 10),
     ]),
     tags: v.tags.map((x) => x.toLowerCase()),
-    content:
-      v.content_storage === "internal" && v.content_internal?.url
-        ? {
-            internal: {
-              url: v.content_internal.url,
-              contentType: v.content_internal.type,
-              size: v.content_internal.size,
-            },
-          }
-        : v.content_storage === "ipfs" && v.content_ipfs?.url
-        ? {
-            ipfs: {
-              url: v.content_ipfs.url,
-              contentType: v.content_ipfs.type,
-              size: v.content_ipfs.size,
-            },
-          }
-        : v.content_storage === "external"
-        ? {
-            external: null,
-          }
-        : null,
+    content: v.content?.url
+      ? {
+          [presets[v.preset].storage]: {
+            url: v.content.url,
+            contentType: v.content.type,
+            size: v.content.size,
+          },
+        }
+      : null,
 
-    thumb:
-      v.thumb_storage === "internal" && v.thumb_internal?.url
-        ? {
-            internal: {
-              url: v.thumb_internal.url,
-              contentType: v.thumb_internal.type,
-              size: v.thumb_internal.size,
-            },
-          }
-        : v.thumb_storage === "ipfs" && v.thumb_ipfs?.url
-        ? {
-            ipfs: {
-              url: v.thumb_ipfs.url,
-              contentType: v.thumb_ipfs.type,
-              size: v.thumb_ipfs.size,
-            },
-          }
-        : v.thumb_storage === "external"
-        ? {
-            external: null,
-          }
-        : null,
+    thumb: v.thumb?.url
+      ? {
+          [presets[v.preset].storage]: {
+            url: v.thumb.url,
+            contentType: v.thumb.type,
+            size: v.thumb.size,
+          },
+        }
+      : null,
+
     secret: v.secret,
   };
   return a;
@@ -273,11 +207,10 @@ export const MintForm = () => {
         hold_desc: "",
         hold_id: "",
         transfer_bind_duration: 1440,
-        ttl: 0,
         maxChildren: 0,
         attributes: [],
-        content_storage: "internal",
-        thumb_storage: "internal",
+        preset: "ic-lite",
+
         secret: false,
         tags: [],
       }}
@@ -359,10 +292,7 @@ export const MintForm = () => {
                         if (info.type.indexOf("image/") !== -1) {
                           if (info.size > 1024 * 1024) {
                             let x = await resizeImage(info.url, 1280, 1280);
-                            props.setFieldValue(
-                              "content_" + props.values.content_storage,
-                              x
-                            );
+                            props.setFieldValue("content", x);
 
                             toast.info(
                               "Image was too big. Resizing automatically",
@@ -370,10 +300,7 @@ export const MintForm = () => {
                             );
                           }
                           let f = await resizeImage(info.url, 124, 124, true);
-                          props.setFieldValue(
-                            "thumb_" + props.values.thumb_storage,
-                            f
-                          );
+                          props.setFieldValue("thumb", f);
                         }
                       }}
                       accept="image/*,video/*"
@@ -416,10 +343,7 @@ export const MintForm = () => {
                         if (info.type.indexOf("image/") !== -1) {
                           if (info.size > 1024 * 128) {
                             let x = await resizeImage(info.url, 124, 124);
-                            props.setFieldValue(
-                              "thumb_" + props.values.thumb_storage,
-                              x
-                            );
+                            props.setFieldValue("thumb", x);
                             toast.info(
                               "Image was too big. Resizing automatically",
                               { position: "bottom-center" }
@@ -774,90 +698,92 @@ export const MintForm = () => {
                         Flow
                       </Text>
                     ) : null}
-                    <Box
-                      {...(props.values.transfer === "bindsDuration"
-                        ? {
-                            borderWidth: "1px",
-                            p: "3",
-                            borderRadius: "10",
-                            mt: "3",
-                          }
-                        : {})}
-                    >
-                      <Stack spacing="2">
-                        <Field name="transfer">
-                          {({ field, form }) => (
-                            <FormControl
-                              isInvalid={
-                                form.errors.transfer && form.touched.transfer
-                              }
-                            >
-                              <FormLabel htmlFor="transfer">
-                                <FormTip text="Note - the author can always transfer their tokens">
-                                  Transfer
-                                </FormTip>
-                              </FormLabel>
-
-                              <Select
-                                {...field}
-                                //placeholder="Select option"
-                                variant="filled"
-                              >
-                                {itemTransfer.map((x) => (
-                                  <option key={x.val} value={x.val}>
-                                    {x.label}
-                                  </option>
-                                ))}
-                              </Select>
-                              <FormErrorMessage>
-                                {form.errors.transfer}
-                              </FormErrorMessage>
-                            </FormControl>
-                          )}
-                        </Field>
-
-                        {props.values.transfer === "bindsDuration" ? (
-                          <Field
-                            name="transfer_bind_duration"
-                            validate={validateCooldown}
-                          >
+                    {pro ? (
+                      <Box
+                        {...(props.values.transfer === "bindsDuration"
+                          ? {
+                              borderWidth: "1px",
+                              p: "3",
+                              borderRadius: "10",
+                              mt: "3",
+                            }
+                          : {})}
+                      >
+                        <Stack spacing="2">
+                          <Field name="transfer">
                             {({ field, form }) => (
                               <FormControl
                                 isInvalid={
-                                  form.errors.transfer_bind_duration &&
-                                  form.touched.transfer_bind_duration
+                                  form.errors.transfer && form.touched.transfer
                                 }
                               >
-                                <FormLabel htmlFor="transfer_bind_duration">
-                                  Bound duration in minutes
+                                <FormLabel htmlFor="transfer">
+                                  <FormTip text="Note - the author can always transfer their tokens">
+                                    Transfer
+                                  </FormTip>
                                 </FormLabel>
 
-                                <NumberInput
+                                <Select
                                   {...field}
-                                  onChange={(num) => {
-                                    props.setFieldValue(
-                                      "transfer_bind_duration",
-                                      num
-                                    );
-                                  }}
+                                  //placeholder="Select option"
+                                  variant="filled"
                                 >
-                                  <NumberInputField />
-                                  <NumberInputStepper>
-                                    <NumberIncrementStepper />
-                                    <NumberDecrementStepper />
-                                  </NumberInputStepper>
-                                </NumberInput>
+                                  {itemTransfer.map((x) => (
+                                    <option key={x.val} value={x.val}>
+                                      {x.label}
+                                    </option>
+                                  ))}
+                                </Select>
                                 <FormErrorMessage>
-                                  {form.errors.transfer_bind_duration}
+                                  {form.errors.transfer}
                                 </FormErrorMessage>
                               </FormControl>
                             )}
                           </Field>
-                        ) : null}
-                      </Stack>
-                    </Box>
 
-                    {pro ? (
+                          {props.values.transfer === "bindsDuration" ? (
+                            <Field
+                              name="transfer_bind_duration"
+                              validate={validateCooldown}
+                            >
+                              {({ field, form }) => (
+                                <FormControl
+                                  isInvalid={
+                                    form.errors.transfer_bind_duration &&
+                                    form.touched.transfer_bind_duration
+                                  }
+                                >
+                                  <FormLabel htmlFor="transfer_bind_duration">
+                                    Bound duration in minutes
+                                  </FormLabel>
+
+                                  <NumberInput
+                                    {...field}
+                                    onChange={(num) => {
+                                      props.setFieldValue(
+                                        "transfer_bind_duration",
+                                        num
+                                      );
+                                    }}
+                                  >
+                                    <NumberInputField />
+                                    <NumberInputStepper>
+                                      <NumberIncrementStepper />
+                                      <NumberDecrementStepper />
+                                    </NumberInputStepper>
+                                  </NumberInput>
+                                  <FormErrorMessage>
+                                    {form.errors.transfer_bind_duration}
+                                  </FormErrorMessage>
+                                </FormControl>
+                              )}
+                            </Field>
+                          ) : null}
+                        </Stack>
+                      </Box>
+                    ) : null}
+
+                    {/* {pro ? (
                       <Field name="ttl">
                         {({ field, form }) => (
                           <FormControl
@@ -888,11 +814,50 @@ export const MintForm = () => {
                           </FormControl>
                         )}
                       </Field>
-                    ) : null}
+                    ) : null} */}
                   </Stack>
 
-                  {props.values.content_storage === "ipfs" ||
-                  props.values.thumb_storage === "ipfs" ? (
+                  {/* <Field name={"preset"}>
+                    {({ field, form }) => (
+                      <RadioGroup
+                        {...field}
+                        onChange={(x) => {
+                          form.setFieldValue("preset", x);
+                        }}
+                      >
+                        <Stack spacing={6} direction="row">
+                          <Radio size="sm" value={"ipfs"}>
+                            <FormTip text="Stored on IPFS">IPFS</FormTip>
+                          </Radio>
+
+                          <Radio size="sm" value={"ic-lite"}>
+                            <FormTip text="Stored on Internet Computer">
+                              IC
+                            </FormTip>
+                          </Radio>
+
+                          <Radio size="sm" value={"ic-premium"}>
+                            <FormTip text="Stored on Internet Computer">
+                              Premium
+                            </FormTip>
+                          </Radio>
+                        </Stack>
+                      </RadioGroup>
+                    )}
+                  </Field> */}
+
+                  <Field name={"preset"}>
+                    {({ field, form }) => (
+                      <PricingPresets
+                        record={record}
+                        valid={props.dirty && props.isValid}
+                        onChange={(v) => {
+                          form.setFieldValue("preset", v);
+                        }}
+                      />
+                    )}
+                  </Field>
+                  {props.values.preset === "ipfs" ? (
                     <Button
                       mt={4}
                       w={"100%"}
@@ -919,7 +884,6 @@ export const MintForm = () => {
                       mt={4}
                       w={"100%"}
                       colorScheme="blue"
-                      variant="outline"
                       isLoading={props.isSubmitting}
                       type="submit"
                       size="lg"
@@ -931,14 +895,6 @@ export const MintForm = () => {
                       //rightIcon={<AnvilIcon />}
                     >
                       Mint
-                      {props.dirty && props.isValid ? (
-                        <PwrPrice
-                          record={record}
-                          valid={
-                            !props.isValidating && props.dirty && props.isValid
-                          }
-                        />
-                      ) : null}
                     </Button>
                   </LoginRequired>
                   {!pro ? (
@@ -996,24 +952,11 @@ const File = ({
   buttonLabel,
   pro,
 }) => {
-  const keyStorage = name + "_storage";
-  const keyInternal = name + "_internal";
-  const keyIpfs = name + "_ipfs";
-  const keyExternal = name + "_external";
-  const showpro = form.values[keyStorage] === "external" || pro;
+  const keyInternal = name;
+
   return (
-    <Box
-      {...(showpro
-        ? {
-            borderWidth: "1px",
-            p: "3",
-            borderRadius: "10",
-            mt: "3",
-          }
-        : {})}
-    >
-      <Stack spacing="2">
-        {showpro ? <FormLabel htmlFor="ttl">{label}</FormLabel> : null}
+    <Box>
+      {/* {showpro ? <FormLabel htmlFor="ttl">{label}</FormLabel> : null}
         {showpro ? (
           <Field name={keyStorage}>
             {({ field, form }) => (
@@ -1031,37 +974,32 @@ const File = ({
                     <FormTip text="Stored on IPFS">IPFS</FormTip>
                   </Radio>
 
-                  {/* <Radio size="sm" value={"external"}>
-                    <FormTip text="Collection settings point to a renderer">
-                      External
-                    </FormTip>
-                  </Radio> */}
+           
                 </Stack>
               </RadioGroup>
             )}
           </Field>
-        ) : null}
+        ) : null} */}
 
-        {form.values[keyStorage] === "internal" ? (
-          <Field name={keyInternal} validate={validateInternal}>
-            {({ field, form }) => (
-              <FormControl isInvalid={form.errors[keyInternal]}>
-                <FileInput
-                  label={buttonLabel}
-                  button={{ w: "100%" }}
-                  {...field}
-                  accept={accept}
-                  onChange={(f) => {
-                    form.setFieldValue(keyInternal, f, true);
-                    if (onChange) onChange(f);
-                  }}
-                />
-                <FormErrorMessage>{form.errors[keyInternal]}</FormErrorMessage>
-              </FormControl>
-            )}
-          </Field>
-        ) : null}
+      <Field name={keyInternal} validate={validateInternal}>
+        {({ field, form }) => (
+          <FormControl isInvalid={form.errors[keyInternal]}>
+            <FileInput
+              label={buttonLabel}
+              button={{ w: "100%" }}
+              {...field}
+              accept={accept}
+              onChange={(f) => {
+                form.setFieldValue(keyInternal, f, true);
+                if (onChange) onChange(f);
+              }}
+            />
+            <FormErrorMessage>{form.errors[keyInternal]}</FormErrorMessage>
+          </FormControl>
+        )}
+      </Field>
 
+      {/* 
         {form.values[keyStorage] === "ipfs" ? (
           <Field name={keyIpfs} validate={validateInternal}>
             {({ field, form }) => (
@@ -1080,8 +1018,7 @@ const File = ({
               </FormControl>
             )}
           </Field>
-        ) : null}
-      </Stack>
+        ) : null} */}
     </Box>
   );
 };

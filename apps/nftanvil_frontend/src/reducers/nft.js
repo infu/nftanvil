@@ -783,30 +783,17 @@ export const recharge_quote =
 export const mint_quote = (vals) => async (dispatch, getState) => {
   let s = getState();
 
-  // let identity = authentication.client.getIdentity();
-
-  // let available = s.user.map.nft_avail;
-  // let canisterId = PrincipalFromSlot(
-  //   s.user.map.space,
-  //   available[Math.floor(Math.random() * available.length)]
-  // );
-
-  // let nft = nftCanister(canisterId, { agentOptions: { identity } });
-
-  // let pwr = await nft.mint_quote(vals);
-
-  //console.log("quote", vals);
   const icpCycles = BigInt(s.user.oracle.icpCycles);
   const transfer = BigInt(s.user.oracle.pwrFee);
-  const ops = priceOps({ ttl: vals.ttl[0] }) / icpCycles;
+  const ops = priceOps({ ttl: vals.ttl }) / icpCycles;
 
   const storage =
     priceStorage({
-      custom: vals.custom.length,
-      content: vals.content[0],
+      custom: 0, //NOTE: this frontend doesn't support custom data. If someone wants to add such, it should be done with scripts
+      content: vals.content,
       thumb: vals.thumb,
       quality: vals.quality,
-      ttl: vals.ttl[0],
+      ttl: vals.ttl,
     }) / icpCycles;
 
   return { transfer, ops, storage };
