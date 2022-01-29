@@ -1,8 +1,8 @@
-const QUALITY_PRICE = 1000n; // max quality price per min
-const STORAGE_KB_PER_MIN = 8n; // prices are in cycles
-const AVG_MESSAGE_COST = 3000000n; // prices are in cycles
-const FULLY_CHARGED_MINUTES = 8409600n; //(16 * 365 * 24 * 60) 16 years
-const FULLY_CHARGED_MESSAGES = 5840n; // 1 message per day
+export const QUALITY_PRICE = 1000n; // max quality price per min
+export const STORAGE_KB_PER_MIN = 8n; // prices are in cycles
+export const AVG_MESSAGE_COST = 3000000n; // prices are in cycles
+export const FULLY_CHARGED_MINUTES = 8409600n; //(16 * 365 * 24 * 60) 16 years
+export const FULLY_CHARGED_MESSAGES = 5840n; // 1 message per day
 
 export const priceStorage = ({ custom, content, thumb, quality, ttl }) => {
   // WARNING: Has to mirror motoko calulcations in nft_interface

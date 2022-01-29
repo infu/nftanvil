@@ -25,7 +25,7 @@ module {
         withdraw        : shared WithdrawRequest       -> async WithdrawResponse;
         
         // (internal) On sale, notify treasury so it can split incoming amount
-        notify_NFTPurchase  : shared NFTPurchase -> async NFTPurchaseResponse;
+       // notify_NFTPurchase  : shared NFTPurchase -> async NFTPurchaseResponse;
 
         // Check your balance
         balance         : BalanceRequest        -> async BalanceResponse;
@@ -54,64 +54,6 @@ module {
         #NotEnoughForTransfer;
     }>;
 
-    public type NFTPurchase = {
-            created : Time.Time;
-            ledgerBlock : Ledger.BlockIndex;
-            amount : Ledger.ICP;
+   
 
-            token: TokenIdentifier;
-            
-            buyer : AccountIdentifier;
-            seller : AccountIdentifier;
-            recharge : Balance;
-            author : {
-                address : AccountIdentifier;
-                share : Share
-                };
-
-            marketplace : ?{
-                address : AccountIdentifier;
-                share : Share
-                };
-
-            affiliate : ?{
-                address : AccountIdentifier;
-                share : Share
-                };
-
-            purchaseAccount : AccountIdentifier; 
-    };
-
-    public module NFTPurchase {
-        public func hash (e : NFTPurchase) : [Nat8] {
-            Array.flatten<Nat8>([
-                        [9:Nat8],
-                        Blob_.intToBytes(e.created),
-                        Blob_.nat64ToBytes(e.ledgerBlock),
-                        Blob_.nat64ToBytes(e.amount.e8s),
-                        Blob_.nat32ToBytes(e.token),
-                        Blob.toArray(e.buyer),
-                        Blob.toArray(e.seller),
-                        Blob.toArray(e.author.address),
-                        Blob_.nat16ToBytes(e.author.share),
-                        switch(e.marketplace) { 
-                            case (?a) Array.flatten<Nat8>([ 
-                                  Blob.toArray(a.address),
-                                  Blob_.nat16ToBytes(a.share)
-                            ]);
-                            case (null) []
-                        },
-                        switch(e.affiliate) { 
-                            case (?a) Array.flatten<Nat8>([ 
-                                  Blob.toArray(a.address),
-                                  Blob_.nat16ToBytes(a.share)
-                            ]);
-                            case (null) []
-                        },
-                        Blob.toArray(e.purchaseAccount)
-                    ])
-        };
-    };
-
-    public type NFTPurchaseResponse = Result.Result<(), Text>;
 }   

@@ -62,69 +62,69 @@ shared({caller = _installer}) actor class Class() = this {
   };
 
  
-  public shared({caller}) func notify_NFTPurchase(request: Treasury.NFTPurchase): async Treasury.NFTPurchaseResponse {
-      //make sure caller is nft canister
+  // public shared({caller}) func notify_NFTPurchase(request: Treasury.NFTPurchase): async Treasury.NFTPurchaseResponse {
+  //     //make sure caller is nft canister
       
-      if ( Nft.APrincipal.isLegitimate(_conf.space, caller) == false ) return #err("Unauthorized");
+  //     if ( Nft.APrincipal.isLegitimate(_conf.space, caller) == false ) return #err("Unauthorized");
 
-      // if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err("Unauthorized");
+  //     // if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err("Unauthorized");
 
-      let total:Nat64 = request.amount.e8s - request.recharge;
-      _total_recharged := _total_recharged + request.recharge;
+  //     let total:Nat64 = request.amount.e8s - request.recharge;
+  //     _total_recharged := _total_recharged + request.recharge;
 
-      let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
-      let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(request.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
+  //     let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
+  //     let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(request.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
      
-      let marketplace_cut:Nat64 = switch(request.marketplace) {
-        case (?marketplace) {
-          total * Nat64.fromNat(Nft.Share.limit(marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
-        };
-        case (null) {
-          0;
-        }
-      };
+  //     let marketplace_cut:Nat64 = switch(request.marketplace) {
+  //       case (?marketplace) {
+  //         total * Nat64.fromNat(Nft.Share.limit(marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
+  //       };
+  //       case (null) {
+  //         0;
+  //       }
+  //     };
 
-      let affiliate_cut:Nat64 = switch(request.affiliate) {
-        case (?affiliate) {
-          total * Nat64.fromNat(Nft.Share.limit(affiliate.share, Nft.Share.LimitAffiliate)) / Nat64.fromNat(Nft.Share.Max);
-        };
-        case (null) {
-          0;
-        }
-      };
+  //     let affiliate_cut:Nat64 = switch(request.affiliate) {
+  //       case (?affiliate) {
+  //         total * Nat64.fromNat(Nft.Share.limit(affiliate.share, Nft.Share.LimitAffiliate)) / Nat64.fromNat(Nft.Share.Max);
+  //       };
+  //       case (null) {
+  //         0;
+  //       }
+  //     };
 
-      let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut;
+  //     let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut;
 
-      if (total <= 0) return #err("Can't be 0");
-      if ((seller_cut + marketplace_cut + affiliate_cut + author_cut + anvil_cut) != total) return #err("It's a zero sum game");
+  //     if (total <= 0) return #err("Can't be 0");
+  //     if ((seller_cut + marketplace_cut + affiliate_cut + author_cut + anvil_cut) != total) return #err("It's a zero sum game");
 
-      let NFTAnvil_treasury_address = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(1) );
-      // give to NFTAnvil
-      balanceAdd(NFTAnvil_treasury_address, anvil_cut);
+  //     let NFTAnvil_treasury_address = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(1) );
+  //     // give to NFTAnvil
+  //     balanceAdd(NFTAnvil_treasury_address, anvil_cut);
 
-      // give to Minter
-      balanceAdd(request.author.address, author_cut);
+  //     // give to Minter
+  //     balanceAdd(request.author.address, author_cut);
 
-      // give to Marketplace
-      switch(request.marketplace) {
-        case (?marketplace) {
-          balanceAdd(marketplace.address, marketplace_cut);
-        };
-        case (null) ();
-      };
+  //     // give to Marketplace
+  //     switch(request.marketplace) {
+  //       case (?marketplace) {
+  //         balanceAdd(marketplace.address, marketplace_cut);
+  //       };
+  //       case (null) ();
+  //     };
 
-      // give to Affiliate
-      switch(request.affiliate) {
-        case (?affiliate) {
-          balanceAdd(affiliate.address, affiliate_cut);
-        };
-        case (null) ();
-      };
+  //     // give to Affiliate
+  //     switch(request.affiliate) {
+  //       case (?affiliate) {
+  //         balanceAdd(affiliate.address, affiliate_cut);
+  //       };
+  //       case (null) ();
+  //     };
 
-      // give to Seller
-      balanceAdd(request.seller, seller_cut);
-      #ok();
-  };
+  //     // give to Seller
+  //     balanceAdd(request.seller, seller_cut);
+  //     #ok();
+  // };
 
   private func balanceAdd(aid:AccountIdentifier, bal: Balance) : () {
       if (bal == 0) return ();
@@ -177,4 +177,5 @@ shared({caller = _installer}) actor class Class() = this {
 
 
   };
+  
 }

@@ -34,7 +34,7 @@ export interface Class {
       PurchaseIntentResponse
     >,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
-  'withdraw' : () => Promise<undefined>,
+  'withdraw' : (arg_0: WithdrawRequest) => Promise<WithdrawResponse>,
 }
 export interface Config {
   'anv' : CanisterSlot__1,
@@ -198,4 +198,12 @@ export type User = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
 export type User__1 = { 'principal' : Principal } |
   { 'address' : AccountIdentifier };
+export interface WithdrawRequest {
+  'to' : User,
+  'from' : User,
+  'subaccount' : [] | [SubAccount],
+  'amount' : Balance,
+}
+export type WithdrawResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+  { 'err' : TransferResponseError };
 export interface _SERVICE extends Class {}

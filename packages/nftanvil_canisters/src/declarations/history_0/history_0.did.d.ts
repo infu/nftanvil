@@ -127,8 +127,15 @@ export type NftEvent = {
     }
   } |
   { 'purchase' : NFTPurchase };
-export type PwrEvent = { 'mint' : EventFungibleMint } |
+export type PwrEvent = { 'withdraw' : PwrWithdraw } |
+  { 'mint' : EventFungibleMint } |
   { 'transfer' : EventFungibleTransaction };
+export interface PwrWithdraw {
+  'to' : AccountIdentifier,
+  'created' : Timestamp,
+  'from' : AccountIdentifier,
+  'amount' : Balance,
+}
 export type Share = number;
 export type Time = bigint;
 export type Timestamp = bigint;

@@ -89,6 +89,8 @@ module {
 
     public type PwrEvent = {
         #transfer : EventFungibleTransaction;
+        #withdraw : PwrWithdraw;
+
         #mint : EventFungibleMint;
 
     };
@@ -122,7 +124,7 @@ module {
             memo: Memo;
         };
 
-        #purchase : Treasury.NFTPurchase;
+        #purchase : NFTPurchase;
 
         #mint : {
             created: Timestamp;
@@ -199,6 +201,15 @@ module {
                         Blob.toArray(memo)
                     ])
                 };
+                case (#withdraw({from;to;amount;created})) {
+                    Array.flatten<Nat8>([
+                        [2:Nat8],
+                        Blob_.intToBytes(created),
+                        Blob.toArray(from),
+                        Blob.toArray(to),
+                        Blob_.nat64ToBytes(amount)
+                    ])
+                };
                 case (#mint({created;user;amount})) {
                     Array.flatten<Nat8>([
                         [3:Nat8],
@@ -271,7 +282,7 @@ module {
                 };
                 case (#purchase(a)) {
                     // 9
-                    Treasury.NFTPurchase.hash(a)
+                    NFTPurchase.hash(a)
                 };
                 case (#approve({created;spender;user;token})) {
                     Array.flatten<Nat8>([
@@ -288,6 +299,70 @@ module {
         };
 
     };
+
+
+    public type NFTPurchase = {
+                created : Time.Time;
+                amount : Nft.Balance;
+
+                token: TokenIdentifier;
+                
+                buyer : AccountIdentifier;
+                seller : AccountIdentifier;
+                recharge : Balance;
+                author : {
+                    address : AccountIdentifier;
+                    share : Nft.Share
+                    };
+
+                marketplace : ?{
+                    address : AccountIdentifier;
+                    share : Nft.Share
+                    };
+
+                affiliate : ?{
+                    address : AccountIdentifier;
+                    share : Nft.Share
+                    };
+
+        };
+
+        public module NFTPurchase {
+            public func hash (e : NFTPurchase) : [Nat8] {
+                Array.flatten<Nat8>([
+                            [9:Nat8],
+                            Blob_.intToBytes(e.created),
+                            Blob_.nat64ToBytes(e.amount),
+                            Blob_.nat32ToBytes(e.token),
+                            Blob.toArray(e.buyer),
+                            Blob.toArray(e.seller),
+                            Blob.toArray(e.author.address),
+                            Blob_.nat16ToBytes(e.author.share),
+                            switch(e.marketplace) { 
+                                case (?a) Array.flatten<Nat8>([ 
+                                    Blob.toArray(a.address),
+                                    Blob_.nat16ToBytes(a.share)
+                                ]);
+                                case (null) []
+                            },
+                            switch(e.affiliate) { 
+                                case (?a) Array.flatten<Nat8>([ 
+                                    Blob.toArray(a.address),
+                                    Blob_.nat16ToBytes(a.share)
+                                ]);
+                                case (null) []
+                            }
+                        ])
+            };
+        };
+
+    
+    public type PwrWithdraw =  {
+                    created: Timestamp;
+                    from: AccountIdentifier;
+                    to: AccountIdentifier;
+                    amount: Balance;
+                };
 
 
     public type TreasuryWithdraw =  {

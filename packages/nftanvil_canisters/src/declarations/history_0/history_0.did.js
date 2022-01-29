@@ -91,12 +91,19 @@ export const idlFactory = ({ IDL }) => {
     }),
     'purchase' : NFTPurchase,
   });
+  const PwrWithdraw = IDL.Record({
+    'to' : AccountIdentifier,
+    'created' : Timestamp,
+    'from' : AccountIdentifier,
+    'amount' : Balance,
+  });
   const EventFungibleMint = IDL.Record({
     'created' : Timestamp,
     'user' : AccountIdentifier,
     'amount' : Balance,
   });
   const PwrEvent = IDL.Variant({
+    'withdraw' : PwrWithdraw,
     'mint' : EventFungibleMint,
     'transfer' : EventFungibleTransaction,
   });

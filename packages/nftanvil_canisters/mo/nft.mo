@@ -309,30 +309,74 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     // Get accountid and exact ICP amount
     public shared({caller}) func purchase( request: Nft.PurchaseRequest) : async Nft.PurchaseResponse {
+        assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
+
         return #err(#NotForSale);
-        // let toUserAID = Nft.User.toAccountIdentifier(request.user);
-
-        // let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
-        // assert(caller_user == request.user);
-
-        // let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
-
-        // if (slot != _slot) return #err(#InvalidToken(request.token));
         
-        // switch(getMeta(tokenIndex)) {
-        //     case (#ok((meta,vars))) {
-        //         if (vars.price.amount == 0) return #err(#NotForSale);
+        let toUserAID = Nft.User.toAccountIdentifier(request.user);
+        
+        let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
+     
+        let payment = request.amount;
 
-        //         let (purchaseAccountId,_) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), tokenIndex, toUserAID);
-                
-        //         #ok({
-        //             paymentAddress = purchaseAccountId;
-        //             price = vars.price;
-        //             });
-        //     };
-        //     case(#err(e)) #err(#InvalidToken(request.token));
-        // };
-    };   
+        switch(getMeta(tokenIndex)) {
+            case (#ok((meta,vars))) {
+                switch(SNFT_tidxGet(tokenIndex)) {
+                    case(?seller) {
+
+                        if (vars.price.amount == 0) return #err(#NotForSale);
+
+                        if (payment < vars.price.amount) return #err(#InsufficientPayment(vars.price.amount));
+
+                        let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
+
+                        SNFT_move(seller, toUserAID, tokenIndex);
+
+                        vars.price := {
+                            amount=0;
+                            marketplace=null;
+                            affiliate=null;
+                        };
+
+                        // recharge
+                        vars.pwrStorage := topStorage;
+                        vars.pwrOps := topOps;
+                        vars.ttl := null;
+
+                        ignore try {
+                            await ACC_move(seller, toUserAID, tokenIndex);
+                            ()
+                        } catch (e) {
+                            ()
+                        };
+
+                        // move
+                        let notifyRequest = {
+                            created = Time.now();
+                            buyer = toUserAID;
+                            amount = payment; 
+                            seller;
+                            token = request.token;
+                            recharge = diffStorage + diffOps;
+                            author = {address=meta.author; share=meta.authorShare};
+                            marketplace = vars.price.marketplace;
+                            affiliate = vars.price.affiliate;
+                        };
+
+                        let transactionId = await Cluster.history(_conf).add(#nft(#purchase(notifyRequest)));
+
+                        #ok({transactionId});
+
+                    };
+                    case (_) {
+                        #err(#InvalidToken(request.token));
+                    };
+                };
+            };
+            case (#err(e)) #err(#InvalidToken(request.token))
+            };
+
+    };
 
     // Check accountid if its exact or more than asked. If something is wrong, refund. If more is sent, refund extra.
     // public shared({caller}) func purchase_claim(request: Nft.PurchaseClaimRequest) : async Nft.PurchaseClaimResponse {

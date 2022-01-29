@@ -190,11 +190,11 @@ const HistoryEvent = ({ ev, canister, idx }) => {
 
         if (key === "amount") {
           if (val.e8s) val = <ICP>{val.e8s}</ICP>;
-          else val = <PWR>{val}</PWR>;
+          else val = <ICP>{val}</ICP>;
         }
 
         if (key === "pwr") {
-          val = <PWR>{val}</PWR>;
+          val = <ICP>{val}</ICP>;
         }
 
         return <KeyVal key={idx} k={key} v={val} />;

@@ -37,7 +37,6 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   system func preupgrade() {
     _tmpBalance := Iter.toArray(_balance.entries());
-    
   };
 
   system func postupgrade() {
@@ -103,6 +102,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
             balanceAdd(to_aid, request.amount);
 
+
             if (isAnvil) {
               //This avoids adding two transactions for one operation like minting
               #ok({transactionId=Blob.fromArray([])});
@@ -110,6 +110,64 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
               let transactionId = await Cluster.history(_conf).add(#pwr(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
               #ok({transactionId});
             }
+          };
+          case (_) return #err(#InsufficientBalance);
+      };
+  };
+
+
+  public shared({caller}) func withdraw(request: Pwr.WithdrawRequest) : async Pwr.WithdrawResponse {
+    let aid = Nft.User.toAccountIdentifier(request.from);
+    let NFTAnvil_PWR_ICP_subaccount = ?Nft.SubAccount.fromNat(1);
+    //let NFTAnvil_PWR_ICP_address = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), NFTAnvil_PWR_ICP_subaccount);
+
+    let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+    
+    if (caller_user != request.from) return #err(#Unauthorized(aid));
+
+    switch(_balance.get(aid)) {
+          case (?bal) {
+
+            if (bal < (request.amount + _oracle.icpFee)) return #err(#InsufficientBalance);
+
+            let to_aid = Nft.User.toAccountIdentifier(request.to);
+
+            let new_balance = bal - request.amount - _oracle.icpFee;
+            if (new_balance > _oracle.icpFee) {
+              _balance.put(aid, new_balance);
+            } else {
+              _balance.delete(aid); // Will free memory of empty accounts
+            };
+
+            // IC ledger transfer
+            let transfer : Ledger.TransferArgs = {
+                  memo = 0;
+                  amount = {e8s = request.amount};
+                  fee = {e8s = _oracle.icpFee};
+                  from_subaccount = NFTAnvil_PWR_ICP_subaccount;
+                  to = to_aid;
+                  created_at_time = null;
+                  };
+
+              switch(await ledger.transfer(transfer)) {
+                  case (#Ok(blockIndex)) {
+                      // #ok(amount)
+
+                        let transactionId = await Cluster.history(_conf).add(#pwr(#withdraw({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from);to=Nft.User.toAccountIdentifier(request.to); amount=request.amount})));
+
+                        #ok({transactionId});
+
+                  };
+
+                  case (#Err(e)) {
+                       // Return balance to user
+                       balanceAdd(to_aid, request.amount); // TODO: Check what happens to the fee and return it to user if we aren't charged
+
+                       #err(#Rejected);
+                  }
+              };
+
+            
           };
           case (_) return #err(#InsufficientBalance);
       };
@@ -214,10 +272,6 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   };
 
   // take ICP out and send them to some address
-  public shared({caller}) func withdraw() : async () {
-
-  };
-
   public shared({caller}) func purchase_intent(request: Pwr.PurchaseIntentRequest) : async Pwr.PurchaseIntentResponse {
   
         let toUserAID = Nft.User.toAccountIdentifier(request.user);

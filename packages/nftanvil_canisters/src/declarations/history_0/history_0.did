@@ -10,10 +10,18 @@ type TokenIdentifier = nat32;
 type Timestamp = int;
 type Time = int;
 type Share = nat16;
+type PwrWithdraw = 
+ record {
+   amount: Balance;
+   created: Timestamp;
+   from: AccountIdentifier;
+   to: AccountIdentifier;
+ };
 type PwrEvent = 
  variant {
    mint: EventFungibleMint;
    transfer: EventFungibleTransaction;
+   withdraw: PwrWithdraw;
  };
 type NftEvent = 
  variant {

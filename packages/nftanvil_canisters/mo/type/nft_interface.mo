@@ -438,7 +438,6 @@ module {
     };
 
     public type TransferResponse = Result.Result<{transactionId: Blob}, TransferResponseError>;
-
     public type BurnResponse = TransferResponse;
 
     public type UseResponse = Result.Result<{

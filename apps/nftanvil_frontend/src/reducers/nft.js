@@ -775,7 +775,7 @@ export const recharge_quote =
     let diff = full - current + BigInt(s.user.oracle.pwrFee);
     if (diff < 30000n) diff = 0n;
 
-    console.log({ full, current, diff });
+    //console.log({ full, current, diff });
 
     return diff;
   };

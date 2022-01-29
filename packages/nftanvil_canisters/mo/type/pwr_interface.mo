@@ -22,6 +22,7 @@ module {
     public type Interface = actor {
         balance          : query BalanceRequest         -> async BalanceResponse;
         transfer         : shared TransferRequest       -> async TransferResponse;
+        withdraw         : shared WithdrawRequest       -> async WithdrawResponse;
         purchase_intent  : shared PurchaseIntentRequest -> async PurchaseIntentResponse;
         purchase_claim   : shared PurchaseClaimRequest  -> async PurchaseClaimResponse;
     };
@@ -40,7 +41,7 @@ module {
     public type BalanceResponse = {
         balance : Balance;
         oracle : Nft.Oracle;
-        };
+    };
 
     public type PurchaseIntentRequest = {
         user : User;
@@ -74,5 +75,17 @@ module {
 
 
     public type TransferResponse = Result.Result<{transactionId: Blob}, Nft.TransferResponseError>;
+
+
+    public type WithdrawRequest = {
+        from       : User;
+        to         : User;
+        amount     : Balance;
+        subaccount : ?SubAccount;
+    };
+
+
+    public type WithdrawResponse = Result.Result<{transactionId: Blob}, Nft.TransferResponseError>;
+
 
 }   

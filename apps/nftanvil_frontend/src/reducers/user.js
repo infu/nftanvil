@@ -329,7 +329,9 @@ export const transfer_icp =
     let address = s.user.address;
     let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
-    let ledger = ledgerCanister({ agentOptions: { identity } });
+    let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
+      agentOptions: { identity },
+    });
 
     let toastId = toast("Sending...", {
       type: toast.TYPE.INFO,
@@ -342,16 +344,14 @@ export const transfer_icp =
     });
     let trez;
     try {
-      trez = await ledger.transfer({
-        memo: 0,
-        amount: { e8s: amount },
-        fee: { e8s: 10000n },
-        from_subaccount: subaccount,
-        to: to,
-        created_at_time: [],
+      trez = await pwr.withdraw({
+        amount,
+        from: { address: AccountIdentifier.TextToArray(address) },
+        to: { address: AccountIdentifier.TextToArray(to) },
+        subaccount: subaccount,
       });
 
-      if ("Err" in trez) throw trez["Err"];
+      if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
 
       toast.update(toastId, {
         type: toast.TYPE.SUCCESS,
@@ -367,7 +367,7 @@ export const transfer_icp =
         pauseOnHover: true,
       });
 
-      dispatch(refresh_icp_balance());
+      dispatch(refresh_balances());
     } catch (e) {
       toast.update(toastId, {
         type: toast.TYPE.ERROR,
@@ -375,7 +375,10 @@ export const transfer_icp =
         closeOnClick: true,
 
         render: (
-          <TransactionFailed title="Transfer failed" message={e.message} />
+          <TransactionFailed
+            title="Transfer failed"
+            message={JSON.stringify(e.message)}
+          />
         ),
       });
     }
@@ -397,7 +400,7 @@ export const pwr_buy =
     let address = s.user.address;
     let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
 
-    let toastId = toast("Purchasing PWR...", {
+    let toastId = toast("Depositing ICP...", {
       type: toast.TYPE.INFO,
       position: "bottom-right",
       autoClose: false,
@@ -443,7 +446,7 @@ export const pwr_buy =
         isLoading: true,
         closeOnClick: true,
 
-        render: <TransactionFailed title="ICP transfer failed" />,
+        render: <TransactionFailed title="ICP deposit failed" />,
       });
 
       return;
@@ -464,7 +467,7 @@ export const pwr_buy =
         isLoading: false,
         render: (
           <TransactionToast
-            title="PWR purchase successfull"
+            title="ICP deposit successfull"
             transactionId={transactionId}
           />
         ),

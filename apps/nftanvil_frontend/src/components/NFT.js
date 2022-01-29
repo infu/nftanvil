@@ -87,6 +87,11 @@ import {
 import { TX, ACC, NFTA, HASH, ICP, PWR } from "./Code";
 import { toHexString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
+import {
+  AVG_MESSAGE_COST,
+  FULLY_CHARGED_MINUTES,
+} from "@vvv-interactive/nftanvil-tools/cjs/pricing.js";
+
 const ContentBox = styled.div`
   margin: 12px 0px;
 
@@ -1328,9 +1333,10 @@ const NFTBatFull = styled.span`
 `;
 
 export const NFTBattery = ({ meta }) => {
-  const fully_charged_min = 8409600;
-  const avg_msg_cost_pwr = 11.2; //TODO: calculate it from oracle data
-  let ttl = meta.ttl > 0 ? meta.ttl : fully_charged_min;
+  const icpCycles = Number(useSelector((state) => state.user.oracle.icpCycles));
+
+  const avg_msg_cost_pwr = Number(AVG_MESSAGE_COST) / icpCycles; //TODO: calculate it from oracle data
+  let ttl = meta.ttl > 0 ? meta.ttl : Number(FULLY_CHARGED_MINUTES);
   let msg_full = (ttl / 60 / 24 + 100) * avg_msg_cost_pwr;
   let perc = meta.pwr[0] / msg_full;
   let avg_num_ops_left = Math.round(meta.pwr[0] / avg_msg_cost_pwr);
@@ -1390,7 +1396,7 @@ export const NFTProInfo = ({ id, meta }) => {
         ) : null} */}
         {meta.pwr ? (
           <Text fontSize="9px">
-            Ops: <PWR>{meta.pwr[0]}</PWR> Storage: <PWR>{meta.pwr[1]}</PWR>
+            Ops: <ICP>{meta.pwr[0]}</ICP> Storage: <ICP>{meta.pwr[1]}</ICP>
           </Text>
         ) : null}
         {meta.bearer ? (

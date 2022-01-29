@@ -209,6 +209,16 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : TransferResponseError,
   });
+  const WithdrawRequest = IDL.Record({
+    'to' : User,
+    'from' : User,
+    'subaccount' : IDL.Opt(SubAccount),
+    'amount' : Balance,
+  });
+  const WithdrawResponse = IDL.Variant({
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'err' : TransferResponseError,
+  });
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
     'config_set' : IDL.Func([Config], [], []),
@@ -240,7 +250,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
-    'withdraw' : IDL.Func([], [], []),
+    'withdraw' : IDL.Func([WithdrawRequest], [WithdrawResponse], []),
   });
   return Class;
 };

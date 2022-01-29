@@ -111,13 +111,11 @@ function PageTabs(p) {
           </Button>
         </Link>
 
-        {pro ? (
-          <Link to="/history">
-            <Button variant="solid" colorScheme="gray">
-              History
-            </Button>
-          </Link>
-        ) : null}
+        <Link to="/history">
+          <Button variant="solid" colorScheme="gray">
+            History
+          </Button>
+        </Link>
       </ButtonGroup>
     </Box>
   );
@@ -201,7 +199,7 @@ function ICPBOX({ mobile }) {
   const icp = useSelector((state) => state.user.icp);
 
   const transferOk = async () => {
-    let to = AccountIdentifier.TextToArray(initialRef.current.value);
+    let to = initialRef.current.value;
     let amount = AccountIdentifier.icpToE8s(amountRef.current.value); // + ICP_FEE;
 
     onClose();
@@ -578,11 +576,9 @@ function MobileMenu() {
               <MenuItem>Mint</MenuItem>
             </Link>
 
-            {pro ? (
-              <Link to="/history">
-                <MenuItem>History</MenuItem>
-              </Link>
-            ) : null}
+            <Link to="/history">
+              <MenuItem>History</MenuItem>
+            </Link>
 
             {anonymous ? (
               <MenuItem onClick={() => dispatch(login())}>

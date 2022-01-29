@@ -1,3 +1,15 @@
+type WithdrawResponse = 
+ variant {
+   err: TransferResponseError;
+   ok: record {transactionId: blob;};
+ };
+type WithdrawRequest = 
+ record {
+   amount: Balance;
+   from: User;
+   subaccount: opt SubAccount;
+   to: User;
+ };
 type User__1 = 
  variant {
    address: AccountIdentifier;
@@ -234,7 +246,7 @@ type Class =
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
    transfer: (TransferRequest) -> (TransferResponse);
-   withdraw: () -> ();
+   withdraw: (WithdrawRequest) -> (WithdrawResponse);
  };
 type CanisterSlot__1 = nat16;
 type CanisterSlot = nat16;
