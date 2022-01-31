@@ -4,7 +4,7 @@ import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { ledger } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 import Cookies from "js-cookie";
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
-import { treasuryCanister } from "@vvv-interactive/nftanvil-canisters/cjs/treasury.js";
+//import { treasuryCanister } from "@vvv-interactive/nftanvil-canisters/cjs/treasury.js";
 import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
 
 import authentication from "../auth";
@@ -205,7 +205,7 @@ export const refresh_balances = () => async (dispatch, getState) => {
   await dispatch(refresh_icp_balance());
   if (!(await authentication.client.isAuthenticated())) return;
   dispatch(refresh_pwr_balance());
-  dispatch(claim_treasury_balance());
+  // dispatch(claim_treasury_balance());
 };
 
 export const loadNftStorageKey = () => async (dispatch, getState) => {
@@ -288,61 +288,61 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
     });
 };
 
-export const claim_treasury_balance = () => async (dispatch, getState) => {
-  let identity = authentication.client.getIdentity();
+// export const claim_treasury_balance = () => async (dispatch, getState) => {
+//   let identity = authentication.client.getIdentity();
 
-  let s = getState();
+//   let s = getState();
 
-  let address = AccountIdentifier.TextToArray(s.user.address);
-  let subaccount = [
-    AccountIdentifier.TextToArray(s.user.subaccount) || null,
-  ].filter(Boolean);
-  if (!address) return;
+//   let address = AccountIdentifier.TextToArray(s.user.address);
+//   let subaccount = [
+//     AccountIdentifier.TextToArray(s.user.subaccount) || null,
+//   ].filter(Boolean);
+//   if (!address) return;
 
-  let treasury = treasuryCanister(
-    PrincipalFromSlot(s.user.map.space, s.user.map.treasury),
-    {
-      agentOptions: { identity },
-    }
-  );
+//   let treasury = treasuryCanister(
+//     PrincipalFromSlot(s.user.map.space, s.user.map.treasury),
+//     {
+//       agentOptions: { identity },
+//     }
+//   );
 
-  let icp = await treasury.balance({
-    user: { address },
-    subaccount,
-  });
+//   let icp = await treasury.balance({
+//     user: { address },
+//     subaccount,
+//   });
 
-  //console.log("TREASURY balance response", icp);
+//   //console.log("TREASURY balance response", icp);
 
-  if (icp > 10000n) {
-    let bal = await treasury.withdraw({
-      user: { address },
-      subaccount,
-    });
+//   if (icp > 10000n) {
+//     let bal = await treasury.withdraw({
+//       user: { address },
+//       subaccount,
+//     });
 
-    //console.log("TREASURY Withdraw response", bal);
+//     //console.log("TREASURY Withdraw response", bal);
 
-    if (bal.ok) {
-      let toastId = toast(
-        <TransactionToast
-          title="Treasury balance widthdrawn"
-          transactionId={bal.ok.transactionId}
-        />,
-        {
-          isLoading: false,
-          type: toast.TYPE.SUCCESS,
-          position: "bottom-right",
-          autoClose: true,
-          hideProgressBar: false,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: false,
-        }
-      );
+//     if (bal.ok) {
+//       let toastId = toast(
+//         <TransactionToast
+//           title="Treasury balance widthdrawn"
+//           transactionId={bal.ok.transactionId}
+//         />,
+//         {
+//           isLoading: false,
+//           type: toast.TYPE.SUCCESS,
+//           position: "bottom-right",
+//           autoClose: true,
+//           hideProgressBar: false,
+//           closeOnClick: false,
+//           pauseOnHover: true,
+//           draggable: false,
+//         }
+//       );
 
-      dispatch(refresh_icp_balance());
-    }
-  }
-};
+//       dispatch(refresh_icp_balance());
+//     }
+//   }
+// };
 
 export const transfer_icp =
   ({ to, amount }) =>

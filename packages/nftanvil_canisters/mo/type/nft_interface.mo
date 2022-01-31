@@ -878,6 +878,7 @@ module {
         var pwrStorage : Nat64;
         var pwrOps : Nat64;
         var ttl : ?Nat32; // time to live
+        var history : [Blob];
     };
 
     public type MetavarsFrozen = {
@@ -888,6 +889,7 @@ module {
             pwrStorage: Nat64;
             pwrOps: Nat64;
             ttl: ?Nat32;
+            history : [Blob];
     };
 
     public func MetavarsFreeze(a:Metavars) : MetavarsFrozen {
@@ -899,6 +901,7 @@ module {
             pwrStorage = a.pwrStorage;
             pwrOps = a.pwrOps;
             ttl = a.ttl;
+            history = a.history;
         }
     };
 
@@ -1098,7 +1101,6 @@ module {
             #RechargeUnnecessary;
             #Unauthorized;
             #InsufficientPayment : Balance;
-
         }
     >;
 

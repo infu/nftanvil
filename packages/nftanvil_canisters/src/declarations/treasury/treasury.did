@@ -1,22 +1,3 @@
-type WithdrawResponse = 
- variant {
-   err: variant {
-          NotEnoughForTransfer;
-          TransferFailed;
-        };
-   ok: record {transactionId: blob;};
- };
-type WithdrawRequest = 
- record {
-   subaccount: opt SubAccount;
-   user: User;
- };
-type User = 
- variant {
-   address: AccountIdentifier;
-   "principal": principal;
- };
-type SubAccount = blob;
 type Config = 
  record {
    account: CanisterRange;
@@ -31,13 +12,7 @@ type Config =
  };
 type Class = 
  service {
-   balance: (BalanceRequest) -> (BalanceResponse) query;
    config_set: (Config) -> ();
-   dumpBalances: () -> (vec record {
-                              AccountIdentifier__1;
-                              Balance;
-                            }) query;
-   withdraw: (WithdrawRequest) -> (WithdrawResponse);
  };
 type CanisterSlot__1 = nat16;
 type CanisterSlot = nat16;
@@ -46,13 +21,4 @@ type CanisterRange =
    CanisterSlot;
    CanisterSlot;
  };
-type BalanceResponse = nat64;
-type BalanceRequest = 
- record {
-   subaccount: opt SubAccount;
-   user: User;
- };
-type Balance = nat64;
-type AccountIdentifier__1 = blob;
-type AccountIdentifier = blob;
 service : () -> Class

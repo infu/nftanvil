@@ -1,7 +1,7 @@
 import Nft "./type/nft_interface";
 import Blob_ "./lib/Blob";
 
-import HashMap "mo:base/HashMap";
+import AssocList "mo:base/AssocList";
 import Principal "mo:base/Principal";
 import SHA224 "./lib/SHA224";
 import Hex "mo:encoding/Hex";
@@ -15,13 +15,14 @@ import Array_ "./lib/Array";
 import Blob "mo:base/Blob";
 import Cluster  "./type/Cluster";
 import Debug "mo:base/Debug";
+import List "mo:base/List";
 
 import H "./type/history_interface";
 
 shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
-    private stable var _tmpEvents : [(H.EventIndex, H.Event)] = [];
-    private var _events : HashMap.HashMap<H.EventIndex,  H.Event> = HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash);
+    // private stable var _tmpEvents : [(H.EventIndex, H.Event)] = [];
+    private var _events : AssocList.AssocList<H.EventIndex, H.Event> = List.nil<(H.EventIndex, H.Event)>(); //= HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash)
 
     private stable var _nextEvent : Nat32 = 0;
     private stable var _prevHistoryCanister : ?Principal = null;
@@ -29,14 +30,14 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _slot : Nft.CanisterSlot = 0;
 
-    //Handle canister upgrades
-    system func preupgrade() {
-        _tmpEvents := Iter.toArray(_events.entries());
-    };
+    // //Handle canister upgrades
+    // system func preupgrade() {
+    //     _tmpEvents := Iter.toArray(_events.entries());
+    // };
 
-    system func postupgrade() {
-        _tmpEvents := [];
-    };
+    // system func postupgrade() {
+    //     _tmpEvents := [];
+    // };
 
     public shared({caller}) func add(eventinfo: H.EventInfo) : async H.AddResponse {
 
@@ -60,7 +61,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         let index = _nextEvent;
         
         let previousTransactionHash : [Nat8] = switch(index > 0) {
-            case (true) switch(_events.get(index - 1)) {
+            case (true) switch(AssocList.find(_events, index - 1, H.EventIndex.equal)) {
                 case (?x) Blob.toArray(x.hash);
                 case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
             };
@@ -78,7 +79,8 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
                     ])));
         };
 
-        _events.put(index, event);
+        let (newEvents, _) = AssocList.replace(_events, index, H.EventIndex.equal, ?event); //_events.put(index, event);
+        _events := newEvents;
         _nextEvent := _nextEvent + 1;
 
         let transactionId = H.TransactionId.encode(_slot, index);
@@ -94,7 +96,8 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     public query func list(request: H.ListRequest) : async H.ListResponse {
         Array_.amap<?H.Event>(Nat32.toNat(request.to - request.from), func (index: Nat) : ?H.Event { 
-            _events.get(request.from + Nat32.fromNat(index));
+            AssocList.find<H.EventIndex, H.Event>(_events, Nat32.fromNat(index), H.EventIndex.equal)
+            //_events.get(request.from + Nat32.fromNat(index));
         });
     };
 

@@ -265,6 +265,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                         resetTransferBindings(meta, vars);
                                         
                                         let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now();token = tokenId(tokenIndex); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
+                                        addTransaction(vars, transactionId);
 
                                         return #ok({transactionId});
                                 };
@@ -366,6 +367,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                         };
 
                         let transactionId = await Cluster.history(_conf).add(#nft(#purchase(purchase)));
+                        addTransaction(vars, transactionId);
 
                         #ok({transactionId; purchase});
 
@@ -626,6 +628,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             resetTransferBindings(meta, vars);
 
                             let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now(); token =tokenId(tokenIndex); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo= request.memo})));
+                            addTransaction(vars, transactionId);
 
                             return #ok({transactionId});
                     };
@@ -696,8 +699,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                 };
                                 
                                 let transactionId = await Cluster.history(_conf).add(#nft(#use({created=Time.now();token = tokenId(tokenIndex); user=Nft.User.toAccountIdentifier(request.user); use=request.use; memo= request.memo})));
+                                addTransaction(vars, transactionId);
 
-                                #ok({transactionId});
+                                #ok({transactionId});       
                            
                     };
                     case (#err()) {
@@ -1042,7 +1046,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                 let required_amount = diffStorage + diffOps;
 
-                let ops = topOps + request.amount - required_amount; // In case someone sends more, it goes to ops;
+                let ops =  switch(required_amount < request.amount) {
+                    case (true) {
+                        topOps + request.amount - required_amount; // In case someone sends more, it goes to ops;
+                    };
+                    case (false) {
+                        topOps
+                    }
+                };
 
                 if (request.amount < required_amount) return #err(#InsufficientPayment(required_amount));
 
@@ -1115,7 +1126,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             authorShare = m.authorShare;
             created = timestamp;
             updated = timestamp;
-            entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits
+            entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits;
         };
 
         let mvar : Metavars = {
@@ -1132,6 +1143,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
              var pwrStorage = mintPricePwrStorage;
              var pwrOps = mintPricePwrOps;
              var ttl = m.ttl;
+             var history = [];
         };
 
         assert(switch(_meta.get(tokenIndex)) { // make some memory integrity checks
@@ -1146,11 +1158,23 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         await ACC_put(author, tokenIndex);
 
         let transactionId = await Cluster.history(_conf).add(#nft(#mint({created=Time.now();token = tokenId(tokenIndex); pwr=mintPricePwr })));
+        addTransaction(mvar, transactionId);
 
         return #ok({tokenIndex; transactionId});
 
     };
 
+    private func addTransaction(vars: Metavars, transactionId: Blob) : () {
+        let tmp = vars.history;
+        let size = Array_.size(vars.history);
+        let newSize = switch(size >= 20) { case(true) 20; case(false) size+1; };
+
+        vars.history := Array.tabulate<Blob>(newSize, func(i:Nat) : Blob {
+            if (i == 0) return transactionId;
+            tmp[i-1];
+
+            });
+    };
     // public func mint_quote(request: Nft.MetadataInput) : async Nft.MintQuoteResponse {
     //     {
     //         transfer = _oracle.pwrFee;
@@ -1219,6 +1243,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                     await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
 
                                     let transactionId = await Cluster.history(_conf).add(#nft(#socket({created=Time.now();plug = request.plug; socket=request.socket; memo=request.memo})));
+                                    addTransaction(vars, transactionId);
 
                                     #ok({transactionId});
                                 };
@@ -1325,6 +1350,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                         });
 
                                         let transactionId =  await Cluster.history(_conf).add(#nft(#unsocket({created=Time.now();plug = request.plug; socket=request.socket; memo = request.memo})));
+                                        addTransaction(vars, transactionId);
 
                                         #ok({transactionId});
                                     };
@@ -1429,6 +1455,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     };
 
                 let transactionId = await Cluster.history(_conf).add(#nft(#approve({created=Time.now();token = request.token; user=Nft.User.toAccountIdentifier(caller_user); spender=request.spender})));
+                //addTransaction(vars, transactionId);
+
                 #ok({transactionId});
 
             };

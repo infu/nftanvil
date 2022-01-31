@@ -124,8 +124,27 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount__1),
     'amount' : Balance__1,
   });
+  const Time = IDL.Int;
+  const NFTPurchase = IDL.Record({
+    'created' : Time,
+    'token' : TokenIdentifier,
+    'marketplace' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+    ),
+    'seller' : AccountIdentifier,
+    'author' : IDL.Record({ 'share' : Share, 'address' : AccountIdentifier }),
+    'recharge' : Balance__1,
+    'affiliate' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+    ),
+    'buyer' : AccountIdentifier,
+    'amount' : Balance__1,
+  });
   const PurchaseResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({
+      'purchase' : NFTPurchase,
+      'transactionId' : IDL.Vec(IDL.Nat8),
+    }),
     'err' : IDL.Variant({
       'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,

@@ -97,6 +97,17 @@ export type MintResponse = {
       { 'ClassError' : string } |
       { 'OutOfMemory' : null }
   };
+export interface NFTPurchase {
+  'created' : Time,
+  'token' : TokenIdentifier,
+  'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'seller' : AccountIdentifier,
+  'author' : { 'share' : Share, 'address' : AccountIdentifier },
+  'recharge' : Balance__1,
+  'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'buyer' : AccountIdentifier,
+  'amount' : Balance__1,
+}
 export interface Oracle {
   'icpFee' : bigint,
   'anvFee' : bigint,
@@ -134,7 +145,9 @@ export interface PurchaseRequest {
   'subaccount' : [] | [SubAccount__1],
   'amount' : Balance__1,
 }
-export type PurchaseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type PurchaseResponse = {
+    'ok' : { 'purchase' : NFTPurchase, 'transactionId' : Array<number> }
+  } |
   {
     'err' : { 'TreasuryNotifyFailed' : null } |
       { 'Refunded' : null } |
@@ -168,6 +181,7 @@ export type SubAccount = Array<number>;
 export type SubAccount__1 = Array<number>;
 export type Tag = string;
 export type Tags = Array<Tag>;
+export type Time = bigint;
 export type TokenIdentifier = number;
 export type TokenIndex = number;
 export type TransferError = {

@@ -182,6 +182,7 @@ export const idlFactory = ({ IDL }) => {
     'cooldownUntil' : IDL.Opt(IDL.Nat32),
     'boundUntil' : IDL.Opt(IDL.Nat32),
     'sockets' : Sockets,
+    'history' : IDL.Vec(IDL.Vec(IDL.Nat8)),
     'pwrOps' : IDL.Nat64,
     'pwrStorage' : IDL.Nat64,
     'price' : Price,
@@ -271,8 +272,27 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount),
     'amount' : Balance,
   });
+  const Time = IDL.Int;
+  const NFTPurchase = IDL.Record({
+    'created' : Time,
+    'token' : TokenIdentifier,
+    'marketplace' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+    ),
+    'seller' : AccountIdentifier,
+    'author' : IDL.Record({ 'share' : Share, 'address' : AccountIdentifier }),
+    'recharge' : Balance,
+    'affiliate' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+    ),
+    'buyer' : AccountIdentifier,
+    'amount' : Balance,
+  });
   const PurchaseResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({
+      'purchase' : NFTPurchase,
+      'transactionId' : IDL.Vec(IDL.Nat8),
+    }),
     'err' : IDL.Variant({
       'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,

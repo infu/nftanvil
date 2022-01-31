@@ -111,6 +111,8 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     price: { ...vars.price, amount: vars.price.amount.toString() },
   };
 
+  console.log("NFT HISTORY", vars.history);
+
   meta.transferable =
     meta.transfer.unrestricted === null ||
     (meta.transfer.bindsDuration && meta.boundUntil < now);
@@ -314,6 +316,7 @@ export const set_price =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
+
     let subaccount = [
       AccountIdentifier.TextToArray(s.user.subaccount) || null,
     ].filter(Boolean);
@@ -343,6 +346,10 @@ export const transfer =
 
     let address = s.user.address;
 
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
+
     let toastId = toast("Sending...", {
       type: toast.TYPE.INFO,
       position: "bottom-right",
@@ -360,7 +367,7 @@ export const transfer =
         token: tid,
         amount: 1,
         memo: [],
-        subaccount: [],
+        subaccount,
       });
       if (!t.ok) throw t.err;
       let { transactionId } = t.ok;

@@ -22,37 +22,37 @@ import Ledger "./ledger_interface"
 module {
     public type Interface = actor {
         // Take all ICP you are owed
-        withdraw        : shared WithdrawRequest       -> async WithdrawResponse;
+        // withdraw        : shared WithdrawRequest       -> async WithdrawResponse;
         
         // (internal) On sale, notify treasury so it can split incoming amount
        // notify_NFTPurchase  : shared NFTPurchase -> async NFTPurchaseResponse;
 
         // Check your balance
-        balance         : BalanceRequest        -> async BalanceResponse;
+        // balance         : BalanceRequest        -> async BalanceResponse;
     };
 
-    public type AccountIdentifier = Nft.AccountIdentifier;
+    // public type AccountIdentifier = Nft.AccountIdentifier;
 
-    public type Share = Nft.Share;
-    public type Balance = Nft.Balance;
-    public type TokenIdentifier = Nft.TokenIdentifier;
+    // public type Share = Nft.Share;
+    // public type Balance = Nft.Balance;
+    // public type TokenIdentifier = Nft.TokenIdentifier;
 
-    public type BalanceRequest = {
-        user: Nft.User;
-        subaccount : ?Nft.SubAccount
-    };
+    // public type BalanceRequest = {
+    //     user: Nft.User;
+    //     subaccount : ?Nft.SubAccount
+    // };
 
-    public type BalanceResponse = Balance;
+    // public type BalanceResponse = Balance;
 
-    public type WithdrawRequest = {
-        user: Nft.User;
-        subaccount : ?Nft.SubAccount
-    };
+    // public type WithdrawRequest = {
+    //     user: Nft.User;
+    //     subaccount : ?Nft.SubAccount
+    // };
 
-    public type WithdrawResponse = Result.Result<{transactionId: Blob},{
-        #TransferFailed;
-        #NotEnoughForTransfer;
-    }>;
+    // public type WithdrawResponse = Result.Result<{transactionId: Blob},{
+    //     #TransferFailed;
+    //     #NotEnoughForTransfer;
+    // }>;
 
    
 

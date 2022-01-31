@@ -53,6 +53,7 @@ type TransferError =
  };
 type TokenIndex = nat32;
 type TokenIdentifier = nat32;
+type Time = int;
 type Tags = vec Tag;
 type Tag = text;
 type SubAccount__1 = blob;
@@ -94,7 +95,10 @@ type PurchaseResponse =
       TreasuryNotifyFailed;
       Unauthorized;
     };
-   ok: record {transactionId: blob;};
+   ok: record {
+         purchase: NFTPurchase;
+         transactionId: blob;
+       };
  };
 type PurchaseRequest = 
  record {
@@ -151,6 +155,27 @@ type Oracle =
    icpCycles: nat64;
    icpFee: nat64;
    pwrFee: nat64;
+ };
+type NFTPurchase = 
+ record {
+   affiliate: opt record {
+                    address: AccountIdentifier;
+                    share: Share;
+                  };
+   amount: Balance__1;
+   author: record {
+             address: AccountIdentifier;
+             share: Share;
+           };
+   buyer: AccountIdentifier;
+   created: Time;
+   marketplace: opt record {
+                      address: AccountIdentifier;
+                      share: Share;
+                    };
+   recharge: Balance__1;
+   seller: AccountIdentifier;
+   token: TokenIdentifier;
  };
 type MintResponse = 
  variant {

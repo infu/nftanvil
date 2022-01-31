@@ -164,6 +164,7 @@ export interface MetavarsFrozen {
   'cooldownUntil' : [] | [number],
   'boundUntil' : [] | [number],
   'sockets' : Sockets,
+  'history' : Array<Array<number>>,
   'pwrOps' : bigint,
   'pwrStorage' : bigint,
   'price' : Price,
@@ -185,6 +186,17 @@ export type MintResponse = {
       { 'ClassError' : string } |
       { 'OutOfMemory' : null }
   };
+export interface NFTPurchase {
+  'created' : Time,
+  'token' : TokenIdentifier,
+  'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'seller' : AccountIdentifier,
+  'author' : { 'share' : Share, 'address' : AccountIdentifier },
+  'recharge' : Balance,
+  'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'buyer' : AccountIdentifier,
+  'amount' : Balance,
+}
 export interface Oracle {
   'icpFee' : bigint,
   'anvFee' : bigint,
@@ -219,7 +231,9 @@ export interface PurchaseRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type PurchaseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type PurchaseResponse = {
+    'ok' : { 'purchase' : NFTPurchase, 'transactionId' : Array<number> }
+  } |
   {
     'err' : { 'TreasuryNotifyFailed' : null } |
       { 'Refunded' : null } |
@@ -322,6 +336,7 @@ export type SupplyResponse = { 'ok' : Balance } |
   { 'err' : CommonError };
 export type Tag = string;
 export type Tags = Array<Tag>;
+export type Time = bigint;
 export interface Token {
   'key' : string,
   'sha256' : [] | [Array<number>],

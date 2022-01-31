@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
+export type AccountIdentifier__1 = Array<number>;
 export type AddResponse = Array<number>;
 export type AnvEvent = { 'transfer' : EventFungibleTransaction };
 export type Balance = bigint;
@@ -55,13 +56,13 @@ export type ListResponse = Array<[] | [Event]>;
 export type Memo = Array<number>;
 export interface NFTPurchase {
   'created' : Time,
-  'token' : TokenIdentifier,
-  'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
-  'seller' : AccountIdentifier,
-  'author' : { 'share' : Share, 'address' : AccountIdentifier },
-  'recharge' : Balance,
-  'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
-  'buyer' : AccountIdentifier,
+  'token' : TokenIdentifier__1,
+  'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
+  'seller' : AccountIdentifier__1,
+  'author' : { 'share' : Share, 'address' : AccountIdentifier__1 },
+  'recharge' : Balance__1,
+  'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
+  'buyer' : AccountIdentifier__1,
   'amount' : Balance__1,
 }
 export type NftEvent = {
@@ -135,6 +136,7 @@ export type Share = number;
 export type Time = bigint;
 export type Timestamp = bigint;
 export type TokenIdentifier = number;
+export type TokenIdentifier__1 = number;
 export type TreasuryEvent = { 'withdraw' : TreasuryWithdraw };
 export interface TreasuryWithdraw {
   'created' : Timestamp,
