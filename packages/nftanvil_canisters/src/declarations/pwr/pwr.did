@@ -99,7 +99,6 @@ type PurchaseResponse =
 type PurchaseRequest = 
  record {
    amount: Balance__1;
-   priceIdx: nat32;
    subaccount: opt SubAccount__1;
    token: TokenIdentifier;
    user: User__1;

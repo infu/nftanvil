@@ -1,3 +1,5 @@
+/* global BigInt */
+
 import {
   Text,
   Stack,
@@ -19,8 +21,7 @@ import {
   unsocket,
   approve,
   set_price,
-  buy,
-  purchase_intent,
+  nft_purchase,
   recharge,
   recharge_quote,
 } from "../reducers/nft";
@@ -726,54 +727,49 @@ export const BuyButton = ({ id, meta }) => {
 
   const cancelRef = React.useRef();
 
-  const [purchaseIntent, setPurchaseIntent] = useState(null);
+  let amount = BigInt(meta.price.amount);
 
   const buyOk = () => {
     onClose();
-    dispatch(buy({ id, intent: purchaseIntent }));
+    dispatch(nft_purchase({ id, amount }));
   };
 
   return (
     <>
       <Button
         onClick={async () => {
-          let intent = await dispatch(purchase_intent({ id }));
-          setPurchaseIntent(intent);
           setIsOpen(true);
         }}
       >
         Buy
       </Button>
 
-      {purchaseIntent ? (
-        <AlertDialog
-          isOpen={isOpen}
-          leastDestructiveRef={cancelRef}
-          onClose={onClose}
-        >
-          <AlertDialogOverlay>
-            <AlertDialogContent>
-              <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Buy NFT
-              </AlertDialogHeader>
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Buy NFT
+            </AlertDialogHeader>
 
-              <AlertDialogBody>
-                Buy for{" "}
-                {AccountIdentifier.e8sToIcp(purchaseIntent.price.amount)} ICP ?
-              </AlertDialogBody>
+            <AlertDialogBody>
+              Buy for {AccountIdentifier.e8sToIcp(amount)} ICP ?
+            </AlertDialogBody>
 
-              <AlertDialogFooter>
-                <Button ref={cancelRef} onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button colorScheme="red" onClick={buyOk} ml={3}>
-                  Buy
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialogOverlay>
-        </AlertDialog>
-      ) : null}
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button colorScheme="red" onClick={buyOk} ml={3}>
+                Buy
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </>
   );
 };

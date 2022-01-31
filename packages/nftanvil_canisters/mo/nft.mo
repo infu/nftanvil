@@ -311,13 +311,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func purchase( request: Nft.PurchaseRequest) : async Nft.PurchaseResponse {
         assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 
-        return #err(#NotForSale);
         
         let toUserAID = Nft.User.toAccountIdentifier(request.user);
         
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
      
-        let payment = request.amount;
 
         switch(getMeta(tokenIndex)) {
             case (#ok((meta,vars))) {
@@ -325,10 +323,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     case(?seller) {
 
                         if (vars.price.amount == 0) return #err(#NotForSale);
-
-                        if (payment < vars.price.amount) return #err(#InsufficientPayment(vars.price.amount));
-
                         let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
+
+
+                        if (request.amount < vars.price.amount) return #err(#InsufficientPayment(vars.price.amount));
+
+                        let recharge_cost =  _oracle.pwrFee + diffStorage + diffOps;
+                        let payment = vars.price.amount - recharge_cost;
+                        if (payment == 0) return #err(#Rejected);
 
                         SNFT_move(seller, toUserAID, tokenIndex);
 
@@ -351,21 +353,21 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                         };
 
                         // move
-                        let notifyRequest = {
+                        let purchase = {
                             created = Time.now();
                             buyer = toUserAID;
                             amount = payment; 
                             seller;
                             token = request.token;
-                            recharge = diffStorage + diffOps;
+                            recharge = recharge_cost;
                             author = {address=meta.author; share=meta.authorShare};
                             marketplace = vars.price.marketplace;
                             affiliate = vars.price.affiliate;
                         };
 
-                        let transactionId = await Cluster.history(_conf).add(#nft(#purchase(notifyRequest)));
+                        let transactionId = await Cluster.history(_conf).add(#nft(#purchase(purchase)));
 
-                        #ok({transactionId});
+                        #ok({transactionId; purchase});
 
                     };
                     case (_) {
@@ -570,7 +572,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             let {amount; marketplace; affiliate} = request.price;
 
                             vars.price := {
-                                amount = amount + diffStorage + diffOps;
+                                amount = amount + diffStorage + diffOps + _oracle.pwrFee;
                                 marketplace;
                                 affiliate;
                                 // idx = _priceIndex;

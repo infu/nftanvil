@@ -169,7 +169,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
         if (key === "marketplace" || key === "affiliate" || key === "author") {
           if (!val || val.length === 0) return null;
           return (
-            <>
+            <div key={key}>
               <KeyVal
                 key={idx + "share"}
                 k={key + " share"}
@@ -180,7 +180,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
                 k={key + " address"}
                 v={<ACC>{AccountIdentifier.ArrayToText(val.address)}</ACC>}
               />
-            </>
+            </div>
           );
         }
 

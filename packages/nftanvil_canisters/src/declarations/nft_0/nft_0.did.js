@@ -269,7 +269,6 @@ export const idlFactory = ({ IDL }) => {
     'token' : TokenIdentifier,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
-    'priceIdx' : IDL.Nat32,
     'amount' : Balance,
   });
   const PurchaseResponse = IDL.Variant({

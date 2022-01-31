@@ -5,7 +5,6 @@ type TreasuryWithdraw =
    user: AccountIdentifier;
  };
 type TreasuryEvent = variant {withdraw: TreasuryWithdraw;};
-type TokenIdentifier__1 = nat32;
 type TokenIdentifier = nat32;
 type Timestamp = int;
 type Time = int;
@@ -79,25 +78,23 @@ type NftEvent =
 type NFTPurchase = 
  record {
    affiliate: opt record {
-                    address: AccountIdentifier__1;
+                    address: AccountIdentifier;
                     share: Share;
                   };
-   amount: ICP;
+   amount: Balance__1;
    author: record {
-             address: AccountIdentifier__1;
+             address: AccountIdentifier;
              share: Share;
            };
-   buyer: AccountIdentifier__1;
+   buyer: AccountIdentifier;
    created: Time;
-   ledgerBlock: BlockIndex;
    marketplace: opt record {
-                      address: AccountIdentifier__1;
+                      address: AccountIdentifier;
                       share: Share;
                     };
-   purchaseAccount: AccountIdentifier__1;
-   recharge: Balance__1;
-   seller: AccountIdentifier__1;
-   token: TokenIdentifier__1;
+   recharge: Balance;
+   seller: AccountIdentifier;
+   token: TokenIdentifier;
  };
 type Memo = blob;
 type ListResponse = vec opt Event;
@@ -117,7 +114,6 @@ type InfoResponse =
    previous: opt principal;
    total: EventIndex;
  };
-type ICP = record {e8s: nat64;};
 type EventInfo = 
  variant {
    anv: AnvEvent;
@@ -172,11 +168,9 @@ type CanisterRange =
    CanisterSlot;
    CanisterSlot;
  };
-type BlockIndex = nat64;
 type Balance__1 = nat64;
 type Balance = nat64;
 type AnvEvent = variant {transfer: EventFungibleTransaction;};
 type AddResponse = blob;
-type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;
 service : () -> Class

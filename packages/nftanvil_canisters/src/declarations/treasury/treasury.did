@@ -16,39 +16,7 @@ type User =
    address: AccountIdentifier;
    "principal": principal;
  };
-type TokenIdentifier = nat32;
-type Time = int;
 type SubAccount = blob;
-type Share = nat16;
-type NFTPurchaseResponse = 
- variant {
-   err: text;
-   ok;
- };
-type NFTPurchase = 
- record {
-   affiliate: opt record {
-                    address: AccountIdentifier__1;
-                    share: Share;
-                  };
-   amount: ICP;
-   author: record {
-             address: AccountIdentifier__1;
-             share: Share;
-           };
-   buyer: AccountIdentifier__1;
-   created: Time;
-   ledgerBlock: BlockIndex;
-   marketplace: opt record {
-                      address: AccountIdentifier__1;
-                      share: Share;
-                    };
-   purchaseAccount: AccountIdentifier__1;
-   recharge: Balance;
-   seller: AccountIdentifier__1;
-   token: TokenIdentifier;
- };
-type ICP = record {e8s: nat64;};
 type Config = 
  record {
    account: CanisterRange;
@@ -66,10 +34,9 @@ type Class =
    balance: (BalanceRequest) -> (BalanceResponse) query;
    config_set: (Config) -> ();
    dumpBalances: () -> (vec record {
-                              AccountIdentifier__2;
-                              Balance__1;
+                              AccountIdentifier__1;
+                              Balance;
                             }) query;
-   notify_NFTPurchase: (NFTPurchase) -> (NFTPurchaseResponse);
    withdraw: (WithdrawRequest) -> (WithdrawResponse);
  };
 type CanisterSlot__1 = nat16;
@@ -79,8 +46,6 @@ type CanisterRange =
    CanisterSlot;
    CanisterSlot;
  };
-type BlockIndex = nat64;
-type Balance__1 = nat64;
 type BalanceResponse = nat64;
 type BalanceRequest = 
  record {
@@ -88,7 +53,6 @@ type BalanceRequest =
    user: User;
  };
 type Balance = nat64;
-type AccountIdentifier__2 = blob;
 type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;
 service : () -> Class

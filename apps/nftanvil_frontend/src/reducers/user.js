@@ -9,7 +9,10 @@ import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
 
 import authentication from "../auth";
 
-import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+import {
+  principalToAccountIdentifier,
+  getSubAccountArray,
+} from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import { Principal } from "@dfinity/principal";
 
@@ -64,12 +67,14 @@ export const userSlice = createSlice({
     },
 
     authSet: (state, action) => {
-      const { address, principal, anonymous, map, acccan } = action.payload;
+      const { address, subaccount, principal, anonymous, map, acccan } =
+        action.payload;
       return {
         ...state,
         address,
         principal,
         anonymous,
+        subaccount,
         ...(map ? { map, acccan } : {}),
       };
     },
@@ -133,8 +138,22 @@ export const auth =
 
     let principal = identity.getPrincipal().toString();
     let anonymous = !(await authClient.isAuthenticated());
-    let address =
-      !anonymous && principalToAccountIdentifier(principal).toUpperCase();
+    let address, subaccount;
+    if (!anonymous) {
+      principalToAccountIdentifier(principal).toUpperCase();
+    }
+
+    for (let i = 0; i < 100000; i++) {
+      let c = principalToAccountIdentifier(principal, i);
+
+      if (c.substring(0, 3) === "a00") {
+        address = c;
+        subaccount = AccountIdentifier.ArrayToText(getSubAccountArray(i));
+        console.log(subaccount);
+
+        break;
+      }
+    }
 
     dispatch(loadNftStorageKey());
 
@@ -148,7 +167,9 @@ export const auth =
     });
 
     let map = await router.config_get();
+
     console.log("MAP", map);
+
     map.space = map.space.map((x) => {
       return [x[0].toString(), x[1].toString()];
     });
@@ -172,7 +193,9 @@ export const auth =
         ).toText()
       : null;
 
-    dispatch(authSet({ address, principal, anonymous, map, acccan }));
+    dispatch(
+      authSet({ address, subaccount, principal, anonymous, map, acccan })
+    );
     dispatch(refresh_balances());
   };
 
@@ -271,7 +294,9 @@ export const claim_treasury_balance = () => async (dispatch, getState) => {
   let s = getState();
 
   let address = AccountIdentifier.TextToArray(s.user.address);
-  let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+  let subaccount = [
+    AccountIdentifier.TextToArray(s.user.subaccount) || null,
+  ].filter(Boolean);
   if (!address) return;
 
   let treasury = treasuryCanister(
@@ -327,7 +352,9 @@ export const transfer_icp =
     let s = getState();
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
       agentOptions: { identity },
@@ -398,7 +425,9 @@ export const pwr_buy =
     });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let toastId = toast("Depositing ICP...", {
       type: toast.TYPE.INFO,

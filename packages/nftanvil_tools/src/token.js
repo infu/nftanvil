@@ -21,7 +21,7 @@ export const principalToAccountIdentifier = (p, s) => {
   return toHexString(array2);
 };
 
-const getSubAccountArray = (s) => {
+export const getSubAccountArray = (s) => {
   if (Array.isArray(s)) {
     return s.concat(Array(32 - s.length).fill(0));
   } else {

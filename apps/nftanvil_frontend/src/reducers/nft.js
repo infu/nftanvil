@@ -119,7 +119,9 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     meta.thumb.internal.url = tokenUrl(s.user.map.space, tid, "thumb");
   if (meta.thumb.ipfs) meta.thumb.ipfs.url = ipfsTokenUrl(meta.thumb.ipfs.cid);
 
-  let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+  let subaccount = [
+    AccountIdentifier.TextToArray(s.user.subaccount) || null,
+  ].filter(Boolean);
 
   if (meta.content?.internal) {
     if (meta.secret)
@@ -197,8 +199,8 @@ const fetchFile = async (
   });
 };
 
-export const buy =
-  ({ id, intent }) =>
+export const nft_purchase =
+  ({ id, amount }) =>
   async (dispatch, getState) => {
     let s = getState();
 
@@ -206,16 +208,20 @@ export const buy =
 
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    //let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    // let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
-    console.log("BUYING", id, intent);
+    console.log("BUYING", id, amount);
 
-    let ledger = ledgerCanister({ agentOptions: { identity } });
+    let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
+      agentOptions: { identity },
+    });
 
     let toastId = toast("Purchasing...", {
       type: toast.TYPE.INFO,
@@ -228,50 +234,22 @@ export const buy =
       draggable: false,
     });
 
-    let ledger_result;
+    let prez;
     try {
-      ledger_result = await ledger.transfer({
-        memo: 0,
-        amount: { e8s: intent.price.amount },
-        fee: { e8s: 10000n },
-        from_subaccount: subaccount,
-        to: intent.paymentAddress,
-        created_at_time: [],
-      });
-      if (ledger_result.Err) throw ledger_result.Err;
-
-      toast.update(toastId, {
-        render: "ICP transfer complete. Claiming NFT...",
-      });
-    } catch (e) {
-      toast.update(toastId, {
-        render: (
-          <TransactionFailed
-            title="ICP transfer failed"
-            message={JSON.stringify(e)}
-          />
-        ),
-        isLoading: false,
-      });
-      return;
-    }
-
-    console.log("TREZ", ledger_result);
-
-    let claim;
-    try {
-      claim = await nftcan.purchase_claim({
+      prez = await pwr.nft_purchase(slot, {
         token: tokenFromText(id),
         user: { address: AccountIdentifier.TextToArray(address) },
         subaccount,
+        amount,
       });
 
-      if (claim.err) throw claim.err;
+      if (prez.err) throw new Error(JSON.stringify(prez.err));
+
       toast.update(toastId, {
         render: (
           <TransactionToast
             title="Purchase complete"
-            transactionId={claim.ok.transactionId}
+            transactionId={prez.ok.transactionId}
           />
         ),
         isLoading: false,
@@ -280,10 +258,7 @@ export const buy =
     } catch (e) {
       toast.update(toastId, {
         render: (
-          <TransactionFailed
-            title="Claiming failed"
-            message={JSON.stringify(e)}
-          />
+          <TransactionFailed title="Purchase failed" message={e.message} />
         ),
         isLoading: false,
         type: toast.TYPE.ERROR,
@@ -292,7 +267,7 @@ export const buy =
 
     dispatch(refresh_balances());
     dispatch(nftFetch(id));
-    console.log("CLAIM", claim);
+    console.log("purchase result", prez);
   };
 
 export const purchase_intent =
@@ -310,7 +285,9 @@ export const purchase_intent =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let t = await nftcan.purchase_intent({
       user: { address: AccountIdentifier.TextToArray(address) },
@@ -337,7 +314,9 @@ export const set_price =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let t = await nftcan.set_price({
       user: { address: AccountIdentifier.TextToArray(address) },
@@ -431,7 +410,9 @@ export const plug =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let t = await nftcan.plug({
       user: { address: AccountIdentifier.TextToArray(address) },
@@ -459,7 +440,9 @@ export const unsocket =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let t = await nftcan.unsocket({
       user: { address: AccountIdentifier.TextToArray(address) },
@@ -491,7 +474,9 @@ export const recharge =
     });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let toastId = toast("Recharging...", {
       type: toast.TYPE.INFO,
@@ -562,7 +547,9 @@ export const burn =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let rez = await nftcan.burn({
       user: { address: AccountIdentifier.TextToArray(address) },
@@ -593,7 +580,9 @@ export const approve =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let rez = await nftcan.approve({
       token: tid,
@@ -619,7 +608,9 @@ export const use =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     console.log("use");
     let r = await nftcan.use({
@@ -650,7 +641,9 @@ export const transfer_link =
     let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
     let address = s.user.address;
-    let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
 
     let { key, hash } = generateKeyHashPair();
 
@@ -855,7 +848,9 @@ export const mint = (vals) => async (dispatch, getState) => {
   });
 
   let address = s.user.address;
-  let subaccount = AccountIdentifier.TextToArray(s.user.subaccount) || [];
+  let subaccount = [
+    AccountIdentifier.TextToArray(s.user.subaccount) || null,
+  ].filter(Boolean);
 
   if (!address) throw Error("Annonymous cant mint"); // Wont let annonymous mint
 

@@ -756,7 +756,7 @@ module {
         name: ?Text;
         lore: ?Text;
         quality: Quality;
-        secret: Bool;
+        secret: Bool; // maybe bitmap instead
         transfer: ItemTransfer;
         ttl: ?Nat32;
         content: ?Content;
@@ -993,7 +993,7 @@ module {
         user : User;
         subaccount: ?SubAccount;
         amount: Balance;
-        priceIdx : Nat32;
+        
     };
 
     public type SetPriceRequest = {
@@ -1024,7 +1024,7 @@ module {
 
 
     public type PurchaseResponse = Result.Result<
-        { transactionId: Blob }, {
+        { transactionId: Blob; purchase: NFTPurchase }, {
             #Refunded;
             #Rejected;
             #ErrorWhileRefunding;
@@ -1104,6 +1104,33 @@ module {
 
     public type PWRConsumeResponse = Bool;
 
+
+    public type NFTPurchase = {
+                created : Time.Time;
+                amount : Balance;
+
+                token: TokenIdentifier;
+                
+                buyer : AccountIdentifier;
+                seller : AccountIdentifier;
+                recharge : Balance;
+                author : {
+                    address : AccountIdentifier;
+                    share : Share
+                    };
+
+                marketplace : ?{
+                    address : AccountIdentifier;
+                    share : Share
+                    };
+
+                affiliate : ?{
+                    address : AccountIdentifier;
+                    share : Share
+                    };
+
+        };
+        
     public module Allowance = {
         public type Request = {
             owner   : User;
@@ -1138,6 +1165,7 @@ module {
 
 
 
+
     public type StatsResponse = {
         minted: Nat32;
         transfers: Nat32;
@@ -1150,5 +1178,7 @@ module {
         rts_reclaimed:Nat;
         rts_max_live_size:Nat;
     };
+
+
 
 };

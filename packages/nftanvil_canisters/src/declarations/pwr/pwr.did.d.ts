@@ -132,7 +132,6 @@ export interface PurchaseRequest {
   'token' : TokenIdentifier,
   'user' : User__1,
   'subaccount' : [] | [SubAccount__1],
-  'priceIdx' : number,
   'amount' : Balance__1,
 }
 export type PurchaseResponse = { 'ok' : { 'transactionId' : Array<number> } } |

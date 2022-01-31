@@ -300,32 +300,8 @@ module {
 
     };
 
+    public type NFTPurchase = Nft.NFTPurchase;
 
-    public type NFTPurchase = {
-                created : Time.Time;
-                amount : Nft.Balance;
-
-                token: TokenIdentifier;
-                
-                buyer : AccountIdentifier;
-                seller : AccountIdentifier;
-                recharge : Balance;
-                author : {
-                    address : AccountIdentifier;
-                    share : Nft.Share
-                    };
-
-                marketplace : ?{
-                    address : AccountIdentifier;
-                    share : Nft.Share
-                    };
-
-                affiliate : ?{
-                    address : AccountIdentifier;
-                    share : Nft.Share
-                    };
-
-        };
 
         public module NFTPurchase {
             public func hash (e : NFTPurchase) : [Nat8] {

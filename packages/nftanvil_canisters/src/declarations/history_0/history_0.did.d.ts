@@ -1,11 +1,9 @@
 import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
-export type AccountIdentifier__1 = Array<number>;
 export type AddResponse = Array<number>;
 export type AnvEvent = { 'transfer' : EventFungibleTransaction };
 export type Balance = bigint;
 export type Balance__1 = bigint;
-export type BlockIndex = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
 export type CanisterSlot = number;
 export type CanisterSlot__1 = number;
@@ -45,7 +43,6 @@ export type EventInfo = { 'anv' : AnvEvent } |
   { 'nft' : NftEvent } |
   { 'pwr' : PwrEvent } |
   { 'treasury' : TreasuryEvent };
-export interface ICP { 'e8s' : bigint }
 export interface InfoResponse {
   'total' : EventIndex,
   'previous' : [] | [Principal],
@@ -58,16 +55,14 @@ export type ListResponse = Array<[] | [Event]>;
 export type Memo = Array<number>;
 export interface NFTPurchase {
   'created' : Time,
-  'token' : TokenIdentifier__1,
-  'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
-  'seller' : AccountIdentifier__1,
-  'author' : { 'share' : Share, 'address' : AccountIdentifier__1 },
-  'recharge' : Balance__1,
-  'purchaseAccount' : AccountIdentifier__1,
-  'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier__1 }],
-  'buyer' : AccountIdentifier__1,
-  'amount' : ICP,
-  'ledgerBlock' : BlockIndex,
+  'token' : TokenIdentifier,
+  'marketplace' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'seller' : AccountIdentifier,
+  'author' : { 'share' : Share, 'address' : AccountIdentifier },
+  'recharge' : Balance,
+  'affiliate' : [] | [{ 'share' : Share, 'address' : AccountIdentifier }],
+  'buyer' : AccountIdentifier,
+  'amount' : Balance__1,
 }
 export type NftEvent = {
     'use' : {
@@ -140,7 +135,6 @@ export type Share = number;
 export type Time = bigint;
 export type Timestamp = bigint;
 export type TokenIdentifier = number;
-export type TokenIdentifier__1 = number;
 export type TreasuryEvent = { 'withdraw' : TreasuryWithdraw };
 export interface TreasuryWithdraw {
   'created' : Timestamp,

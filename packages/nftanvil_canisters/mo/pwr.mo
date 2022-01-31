@@ -29,7 +29,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   public type AccountIdentifier = Nft.AccountIdentifier;
   public type TokenIdentifier = Nft.TokenIdentifier;
 
-  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("f24380db6b95c504626c9e827c61e4ff46ce5e064f4e012585640868d831c61f"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000)]; //[];
+  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("a009701e300ce568cc51233e5bae489eef1e93e828b24df1203f758a49fe94bd"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000), (Nft.AccountIdentifier.fromText("a004de45899d9ed1066cf23425fdb6ba0e4b6d08a0990d70f01ab813d5f63676"),1000000000) ]; //[];
   
   private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
 
@@ -230,6 +230,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
    switch(await nft.purchase(request)) {
       case (#ok(resp)) {
 
+        distribute_purchase(resp.purchase);
+
         return #ok(resp);
       };
       case (#err(e)) {
@@ -240,6 +242,63 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     }
   };
   
+  private func distribute_purchase(purchase: Nft.NFTPurchase) : () {
+      let total:Nat64 = purchase.amount;
+
+      let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
+      let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(purchase.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
+     
+      let marketplace_cut:Nat64 = switch(purchase.marketplace) {
+        case (?marketplace) {
+          total * Nat64.fromNat(Nft.Share.limit(marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
+        };
+        case (null) {
+          0;
+        }
+      };
+
+      let affiliate_cut:Nat64 = switch(purchase.affiliate) {
+        case (?affiliate) {
+          total * Nat64.fromNat(Nft.Share.limit(affiliate.share, Nft.Share.LimitAffiliate)) / Nat64.fromNat(Nft.Share.Max);
+        };
+        case (null) {
+          0;
+        }
+      };
+
+      let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut - affiliate_cut;
+
+      assert(total > 0);
+      assert((seller_cut + marketplace_cut + affiliate_cut + author_cut + anvil_cut) == total);
+
+      let NFTAnvil_PWR_earnings_subaccount = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(10) );
+      
+      // give to NFTAnvil
+      balanceAdd(NFTAnvil_PWR_earnings_subaccount, anvil_cut);
+
+      // give to Minter
+      balanceAdd(purchase.author.address, author_cut);
+
+      // give to Marketplace
+      switch(purchase.marketplace) {
+        case (?marketplace) {
+          balanceAdd(marketplace.address, marketplace_cut);
+        };
+        case (null) ();
+      };
+
+      // give to Affiliate
+      switch(purchase.affiliate) {
+        case (?affiliate) {
+          balanceAdd(affiliate.address, affiliate_cut);
+        };
+        case (null) ();
+      };
+
+      // give to Seller
+      balanceAdd(purchase.seller, seller_cut);
+  };
+
   public shared({caller}) func nft_recharge(slot: Nft.CanisterSlot, request: Nft.RechargeRequest) : async Nft.RechargeResponse {
     assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
     
