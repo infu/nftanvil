@@ -26,7 +26,7 @@ import {
   recharge_quote,
 } from "../reducers/nft";
 import { setDominantColor } from "../reducers/user";
-
+import { NftHistory } from "./History";
 import { Spinner } from "@chakra-ui/react";
 import { push } from "connected-react-router";
 import Confetti from "./Confetti";
@@ -98,8 +98,10 @@ const ContentBox = styled.div`
 
   video,
   img {
-    max-width: 600px;
-    max-height: 500px;
+    max-width: 85vw;
+    max-height: 85vh;
+    margin-bottom: 5vh;
+    margin-top: 1vh;
     border-radius: 6px;
   }
 `;
@@ -232,6 +234,7 @@ function SetPriceButton({ id }) {
         isOpen={isOpen}
         isCentered
         size={"xl"}
+        preserveScrollBarGap={true}
       >
         <ModalOverlay />
         <ModalContent>
@@ -281,6 +284,7 @@ function TransferButton({ id, meta }) {
         isOpen={isOpen}
         isCentered
         size={"xl"}
+        preserveScrollBarGap={true}
       >
         <ModalOverlay />
         <ModalContent>
@@ -363,6 +367,7 @@ function ApproveButton({ id, meta }) {
         isOpen={isOpen}
         isCentered
         size={"xl"}
+        preserveScrollBarGap={true}
       >
         <ModalOverlay />
         <ModalContent>
@@ -447,6 +452,7 @@ function UnsocketButton({ id }) {
         isOpen={isOpen}
         isCentered
         size={"xl"}
+        preserveScrollBarGap={true}
       >
         <ModalOverlay />
         <ModalContent>
@@ -523,6 +529,7 @@ function SocketButton({ id }) {
         isOpen={isOpen}
         isCentered
         size={"xl"}
+        preserveScrollBarGap={true}
       >
         <ModalOverlay />
         <ModalContent>
@@ -612,6 +619,7 @@ export const UseButton = ({ id, meta }) => {
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
+        preserveScrollBarGap={true}
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -668,6 +676,7 @@ export const TransferLinkButton = ({ id, meta }) => {
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
+        preserveScrollBarGap={true}
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -748,6 +757,7 @@ export const BuyButton = ({ id, meta }) => {
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
+        preserveScrollBarGap={true}
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -829,6 +839,7 @@ export const BurnButton = ({ id }) => {
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
+        preserveScrollBarGap={true}
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -888,6 +899,7 @@ export const RechargeButton = ({ id, meta }) => {
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
+        preserveScrollBarGap={true}
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -1023,7 +1035,7 @@ export const NFTPage = (p) => {
 
   if (!meta) return null;
   return (
-    <Stack ml={"10px"} mr={"10px"} mt={"80px"}>
+    <Stack ml={"10px"} mr={"10px"} mt={"4vh"}>
       <Center>
         <NFTContent meta={meta} />
       </Center>
@@ -1086,6 +1098,7 @@ export const NFTPage = (p) => {
           ) : null}
         </>
       ) : null}
+      {meta.history ? <NftHistory transactions={meta.history} /> : null}
     </Stack>
   );
 };

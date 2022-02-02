@@ -1,6 +1,7 @@
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Nat "mo:base/Nat";
+import Buffer "mo:base/Buffer";
 
 
 
@@ -30,4 +31,17 @@ module {
         return found;
     };
 
+
+    public func bufferFromArray<A>(x: [A]) : Buffer.Buffer<A> {
+        let len = size(x);
+        let buff = Buffer.Buffer<A>(len);
+        
+        let it = x.vals();
+
+        for (el in it) {
+            buff.add(el);
+        };
+
+        return buff;
+    };
  }

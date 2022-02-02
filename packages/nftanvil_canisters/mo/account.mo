@@ -24,6 +24,7 @@ import HashSmash "./lib/HashSmash";
 import Prim "mo:prim"; 
 import Cluster  "./type/Cluster";
 import Account "./type/account_interface";
+import HashRecord "./lib/HashRecord";
 
 shared({ caller = _installer }) actor class Class() = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
@@ -32,15 +33,16 @@ shared({ caller = _installer }) actor class Class() = this {
     type AccountIdentifier = Nft.AccountIdentifier;
     type TokenIdentifier = Nft.TokenIdentifier;
     type TokenIndex = Nft.TokenIndex;
-    type TokenStore = HashMap.HashMap<TokenIdentifier, Bool>;
     type Slot = Nft.CanisterSlot;
 
-    private stable var _tmpAccount: [(AccountIdentifier, [TokenIdentifier])] = [];
-    private var _account: HashMap.HashMap<AccountIdentifier, TokenStore> =  HashSmash.init<AccountIdentifier,TokenIdentifier>(_tmpAccount, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Nft.TokenIdentifier.equal, Nft.TokenIdentifier.hash);
-  
+
+    private stable var _tmpAccount: [(AccountIdentifier, Account.AccountRecordSerialized)] = [];
+
+    private var _account: HashRecord.HashRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized> = HashRecord.HashRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Account.AccountRecordSerialize, Account.AccountRecordUnserialize);
+
     //Handle canister upgrades
     system func preupgrade() {
-        _tmpAccount := HashSmash.pre(_account);
+        _tmpAccount := Iter.toArray(_account.serialize());
     };
 
     system func postupgrade() {
@@ -58,7 +60,20 @@ shared({ caller = _installer }) actor class Class() = this {
         switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
             case (?slot) {
                let tid = Nft.TokenIdentifier.encode(slot, idx);
-               HashSmash.add<AccountIdentifier, TokenIdentifier>(_account, aid, tid, Nft.TokenIdentifier.equal, Nft.TokenIdentifier.hash );
+
+               let r = switch(_account.get(aid)) {
+                   case (?ac) ac;
+                   case (_) {
+                        let blank = Account.AccountRecordBlank();
+                        _account.put(aid, blank);  
+                        blank;
+                    }
+               };
+
+               r.tokens.add(tid);
+               
+               
+               //HashSmash.add<AccountIdentifier, TokenIdentifier>(_account, aid, tid, Nft.TokenIdentifier.equal, Nft.TokenIdentifier.hash);
             };
             case (_) { () }
         }
@@ -67,10 +82,18 @@ shared({ caller = _installer }) actor class Class() = this {
     public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
 
-        switch(Nft.APrincipal.toSlot(_conf.space, caller)) { 
+        switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
             case (?slot) { 
                let tid = Nft.TokenIdentifier.encode(slot, idx);
-               HashSmash.rem<AccountIdentifier,TokenIdentifier>(_account, aid, tid);
+
+               let r = switch(_account.get(aid)) {
+                   case (?ac) {
+                       ac.tokens.rem(tid); //HashSmash.rem<AccountIdentifier,TokenIdentifier>(_account, aid, tid);
+                   };
+                   case (_) { () }
+               };
+
+               
             };
             case (_) { () }
         }
@@ -80,21 +103,30 @@ shared({ caller = _installer }) actor class Class() = this {
         assert(Nft.User.validate(#address(aid)) == true); 
 
         let rez:[var TokenIdentifier] = Array.init<TokenIdentifier>(100,0);
-        let it = HashSmash.list<AccountIdentifier,TokenIdentifier>(_account, aid);
 
-        var index = 0;
-        let pstart = page*100;
-        let pend = (page+1)*100;
-        label l for (tid:TokenIdentifier in it) {
-            if (index >= pend) break l;
+          switch(_account.get(aid)) {
+                   case (?acc) {
+                      
+                    let it = acc.tokens.list(); //HashSmash.list<AccountIdentifier,TokenIdentifier>(_account, aid);
 
-            if ((index >= pstart)) {
-                  rez[index - pstart] :=  tid;
-            };
-            index := index + 1;
+                    var index = 0;
+                    let pstart = page*100;
+                    let pend = (page+1)*100;
+                    label l for (tid:TokenIdentifier in it) {
+                        if (index >= pend) break l;
+
+                        if ((index >= pstart)) {
+                            rez[index - pstart] :=  tid;
+                        };
+                        index := index + 1;
+                    };
+
+                    return Array.freeze(rez); 
+                    
+        };
+            case (_) { return [] }
         };
 
-        return Array.freeze(rez); 
     };
 
 

@@ -22,7 +22,12 @@ import moment from "moment";
 import { Link } from "react-router-dom";
 
 import { useSelector, useDispatch } from "react-redux";
-import { loadInfo, loadHistory, tailHistory } from "../reducers/history";
+import {
+  loadInfo,
+  loadHistory,
+  tailHistory,
+  loadNftHistory,
+} from "../reducers/history";
 import styled from "@emotion/styled";
 import { push } from "connected-react-router";
 
@@ -125,7 +130,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
   return (
     <Box bg={boxColor} borderRadius={"4"} border={1} p={3} mb={2}>
       <KeyVal
-        k={"Transaction ID"}
+        k={"Transaction"}
         v={
           <Link to={"/" + transactionId}>
             <TX>{transactionId}</TX>
@@ -298,7 +303,7 @@ export const HistoryTx = (p) => {
 
   const tx = p.match.params.tx;
 
-  const { slot, idx: from } = TransactionId.decode(tx);
+  const { slot, idx: from } = TransactionId.decode(TransactionId.fromText(tx));
   let canister = PrincipalFromSlot(space, slot).toText();
   //console.log({ canister, slot, from, space });
   // const from = parseInt(tx.substr(tx.lastIndexOf("-") + 1), 10);
@@ -336,5 +341,32 @@ export const HistoryTx = (p) => {
         />
       ))}
     </Box>
+  );
+};
+
+export const NftHistory = ({ transactions }) => {
+  const [events, setEvents] = useState([]);
+
+  const dispatch = useDispatch();
+
+  const load = async () => {
+    let evs = await dispatch(loadNftHistory({ transactions }));
+    setEvents(evs);
+  };
+
+  useEffect(() => {
+    load();
+  }, [dispatch, transactions]);
+
+  if (!events || !events.length) return null;
+
+  return (
+    <Center>
+      <Box mt={8} maxW={"770px"} w="100%">
+        {events.map(({ idx, canister, data }) => (
+          <HistoryEvent key={idx} idx={idx} canister={canister} ev={data} />
+        ))}
+      </Box>
+    </Center>
   );
 };

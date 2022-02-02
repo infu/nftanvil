@@ -79,6 +79,7 @@ export interface MetadataInput {
   'attributes' : Attributes,
   'price' : Price,
   'transfer' : ItemTransfer,
+  'rechargable' : boolean,
 }
 export interface MintRequest {
   'metadata' : MetadataInput,
@@ -154,7 +155,7 @@ export type PurchaseResponse = {
       { 'InsufficientPayment' : Balance__1 } |
       { 'ErrorWhileRefunding' : null } |
       { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : null } |
       { 'NotForSale' : null } |
@@ -172,7 +173,7 @@ export type RechargeResponse = { 'ok' : null } |
     'err' : { 'InsufficientPayment' : Balance__1 } |
       { 'RechargeUnnecessary' : null } |
       { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : null }
   };
@@ -202,7 +203,7 @@ export type TransferResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   { 'err' : TransferResponseError };
 export type TransferResponseError = { 'InsufficientBalance' : null } |
   { 'NotTransferable' : null } |
-  { 'InvalidToken' : TokenIdentifier } |
+  { 'InvalidToken' : null } |
   { 'Rejected' : null } |
   { 'Unauthorized' : AccountIdentifier } |
   { 'OutOfPower' : null } |

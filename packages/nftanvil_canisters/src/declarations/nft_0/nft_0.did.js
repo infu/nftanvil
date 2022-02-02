@@ -12,7 +12,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const Balance = IDL.Nat64;
   const CommonError = IDL.Variant({
-    'InvalidToken' : TokenIdentifier,
+    'InvalidToken' : IDL.Null,
     'Other' : IDL.Text,
   });
   const Response__1 = IDL.Variant({ 'ok' : Balance, 'err' : CommonError });
@@ -27,7 +27,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
       'OutOfPower' : IDL.Null,
       'Other' : IDL.Text,
@@ -53,7 +53,7 @@ export const idlFactory = ({ IDL }) => {
   const TransferResponseError = IDL.Variant({
     'InsufficientBalance' : IDL.Null,
     'NotTransferable' : IDL.Null,
-    'InvalidToken' : TokenIdentifier,
+    'InvalidToken' : IDL.Null,
     'Rejected' : IDL.Null,
     'Unauthorized' : AccountIdentifier,
     'OutOfPower' : IDL.Null,
@@ -166,6 +166,7 @@ export const idlFactory = ({ IDL }) => {
     'entropy' : IDL.Vec(IDL.Nat8),
     'attributes' : Attributes,
     'transfer' : ItemTransfer,
+    'rechargable' : IDL.Bool,
   });
   const Sockets = IDL.Vec(TokenIdentifier);
   const Price = IDL.Record({
@@ -185,6 +186,7 @@ export const idlFactory = ({ IDL }) => {
     'history' : IDL.Vec(IDL.Vec(IDL.Nat8)),
     'pwrOps' : IDL.Nat64,
     'pwrStorage' : IDL.Nat64,
+    'allowance' : IDL.Opt(IDL.Principal),
     'price' : Price,
   });
   const MetadataResponse = IDL.Variant({
@@ -210,6 +212,7 @@ export const idlFactory = ({ IDL }) => {
     'attributes' : Attributes,
     'price' : Price,
     'transfer' : ItemTransfer,
+    'rechargable' : IDL.Bool,
   });
   const MintRequest = IDL.Record({
     'metadata' : MetadataInput,
@@ -247,7 +250,7 @@ export const idlFactory = ({ IDL }) => {
   const SocketError = IDL.Variant({
     'InsufficientBalance' : IDL.Null,
     'NotLegitimateCaller' : IDL.Null,
-    'InvalidToken' : TokenIdentifier,
+    'InvalidToken' : IDL.Null,
     'Rejected' : IDL.Null,
     'Unauthorized' : AccountIdentifier,
     'ClassError' : IDL.Text,
@@ -259,7 +262,7 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
       'SocketError' : SocketError,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
       'OutOfPower' : IDL.Null,
@@ -299,7 +302,7 @@ export const idlFactory = ({ IDL }) => {
       'InsufficientPayment' : Balance,
       'ErrorWhileRefunding' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
       'Unauthorized' : IDL.Null,
       'NotForSale' : IDL.Null,
@@ -318,7 +321,7 @@ export const idlFactory = ({ IDL }) => {
       'InsufficientPayment' : Balance,
       'RechargeUnnecessary' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
       'Unauthorized' : IDL.Null,
     }),
@@ -335,7 +338,7 @@ export const idlFactory = ({ IDL }) => {
       'TooHigh' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'NotTransferable' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
       'OutOfPower' : IDL.Null,
       'TooLow' : IDL.Null,
@@ -385,7 +388,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Null,
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
       'OutOfPower' : IDL.Null,
@@ -402,7 +405,7 @@ export const idlFactory = ({ IDL }) => {
   const UnplugError = IDL.Variant({
     'InsufficientBalance' : IDL.Null,
     'NotLegitimateCaller' : IDL.Null,
-    'InvalidToken' : TokenIdentifier,
+    'InvalidToken' : IDL.Null,
     'Rejected' : IDL.Null,
     'Unauthorized' : AccountIdentifier,
     'Other' : IDL.Text,
@@ -413,7 +416,7 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Variant({
       'UnplugError' : UnplugError,
       'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
       'OutOfPower' : IDL.Null,
@@ -444,7 +447,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
       'OutOfPower' : IDL.Null,

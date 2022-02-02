@@ -170,6 +170,7 @@ const record2request = (v) => {
     thumb: v.thumb,
     secret: v.secret,
     custom: [],
+    rechargable: true,
   };
   return a;
 };

@@ -22,7 +22,7 @@ import H "./type/history_interface";
 shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     // private stable var _tmpEvents : [(H.EventIndex, H.Event)] = [];
-    private var _events : AssocList.AssocList<H.EventIndex, H.Event> = List.nil<(H.EventIndex, H.Event)>(); //= HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash)
+    private stable var _events : AssocList.AssocList<H.EventIndex, H.Event> = List.nil<(H.EventIndex, H.Event)>(); //= HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash)
 
     private stable var _nextEvent : Nat32 = 0;
     private stable var _prevHistoryCanister : ?Principal = null;
@@ -96,7 +96,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     public query func list(request: H.ListRequest) : async H.ListResponse {
         Array_.amap<?H.Event>(Nat32.toNat(request.to - request.from), func (index: Nat) : ?H.Event { 
-            AssocList.find<H.EventIndex, H.Event>(_events, Nat32.fromNat(index), H.EventIndex.equal)
+            AssocList.find<H.EventIndex, H.Event>(_events, request.from + Nat32.fromNat(index), H.EventIndex.equal)
             //_events.get(request.from + Nat32.fromNat(index));
         });
     };

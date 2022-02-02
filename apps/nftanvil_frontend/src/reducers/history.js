@@ -12,6 +12,8 @@ import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cj
 import { Principal } from "@dfinity/principal";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
+
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 
 import { toast } from "react-toastify";
@@ -89,6 +91,35 @@ export const loadHistory =
     });
 
     dispatch(setEvents(events));
+  };
+
+export const loadNftHistory =
+  ({ transactions }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+    let s = getState();
+
+    let r = await Promise.all(
+      transactions.map(async (tx_id) => {
+        let { slot, idx } = TransactionId.decode(tx_id);
+
+        let canister = PrincipalFromSlot(s.user.map.space, slot);
+
+        let history = historyCanister(canister, {
+          agentOptions: { identity },
+        });
+        let resp = await history.list({
+          from: idx,
+          to: idx + 1,
+        });
+        return {
+          idx,
+          canister: canister.toText(),
+          data: resp[0] ? resp[0][0] : null,
+        };
+      })
+    );
+    return r;
   };
 
 const mapValuesDeep = (obj, cb) => {

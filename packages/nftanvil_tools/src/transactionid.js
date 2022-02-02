@@ -9,11 +9,10 @@ export function encode(slot, idx) {
   return [...numberToBytesArray(slot, 2), ...numberToBytesArray(idx, 4)];
 }
 
-export function decode(tx) {
-  let p = fromText(tx);
+export function decode(p) {
+  //let p = fromText(tx);
   let idx = bytesArrayToNumber(p.slice(-4));
   let slot = bytesArrayToNumber(p.slice(0, -4));
-  // console.log("DECODE", idx, slot);
   return { slot, idx };
 }
 

@@ -18,13 +18,36 @@ export const theme = extendTheme({
         body: {
           fontFamily: "body",
           color: mode("gray.800", "whiteAlpha.900")(props),
-          bg: mode("gray.400", "gray.800")(props),
+          // bg: mode("gray.400", "gray.800")(props),
           lineHeight: "base",
+          // bg: "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(40, 23, 32, 1) 100%)",
+          bg: mode(
+            "linear-gradient(153deg, rgba(220,224,233,1) 0%, rgba(236,225,231,1) 100%)",
+            "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(40, 23, 32, 1) 100%)"
+          )(props),
+          backgroundAttachment: "fixed",
         },
+        html: {},
         "*::placeholder": {
           color: mode("gray.400", "whiteAlpha.400")(props),
+          scrollbarWidth: "thin",
+          scrollbarColor: " #564d56 #363636",
         },
-        "*, *::before, &::after": {
+
+        "html::-webkit-scrollbar": {
+          width: "16px",
+        },
+
+        "html::-webkit-scrollbar-track": {
+          background: "#363636",
+        },
+
+        "html::-webkit-scrollbar-thumb": {
+          backgroundColor: "#564d56",
+          borderRadius: "9px",
+          border: "4px solid #363636",
+        },
+        "html::before, html::after": {
           borderColor: mode("gray.200", "whiteAlpha.300")(props),
           wordWrap: "break-word",
         },

@@ -357,7 +357,7 @@ module {
     };
 
     public type CommonError = {
-        #InvalidToken : TokenIdentifier;
+        #InvalidToken;
         #Other        : Text;
     };
 
@@ -432,7 +432,7 @@ module {
         #InsufficientBalance;
         #Rejected;
         #NotTransferable;
-        #InvalidToken : TokenIdentifier;
+        #InvalidToken;
         #Other        : Text;
         #OutOfPower;
     };
@@ -446,7 +446,7 @@ module {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;
-        #InvalidToken : TokenIdentifier;
+        #InvalidToken;
         #OnCooldown;
         #ExtensionError: Text;
         #Other        : Text;
@@ -457,7 +457,7 @@ module {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;
-        #InvalidToken : TokenIdentifier;
+        #InvalidToken ;
         #Other        : Text;
         #OutOfPower;
     }>;
@@ -737,6 +737,7 @@ module {
         attributes: Attributes;
         tags:Tags;
         custom: ?CustomData;
+        rechargable: Bool;
         // Idea: Have maturity rating
     };
         
@@ -766,6 +767,7 @@ module {
         custom: ?CustomData;
         authorShare: Share;
         price: Price;
+        rechargable: Bool;
     };
 
     public module Pricing = {
@@ -879,6 +881,7 @@ module {
         var pwrOps : Nat64;
         var ttl : ?Nat32; // time to live
         var history : [Blob];
+        var allowance : ?Principal;
     };
 
     public type MetavarsFrozen = {
@@ -890,6 +893,7 @@ module {
             pwrOps: Nat64;
             ttl: ?Nat32;
             history : [Blob];
+            allowance: ?Principal;
     };
 
     public func MetavarsFreeze(a:Metavars) : MetavarsFrozen {
@@ -902,6 +906,7 @@ module {
             pwrOps = a.pwrOps;
             ttl = a.ttl;
             history = a.history;
+            allowance = a.allowance;
         }
     };
 
@@ -927,7 +932,7 @@ module {
         { transactionId: Blob}, {
         #Rejected;
         #InsufficientBalance;
-        #InvalidToken :TokenIdentifier;
+        #InvalidToken ;
         #Unauthorized :AccountIdentifier;
         #Other : Text;
         #SocketError: SocketError;
@@ -949,7 +954,7 @@ module {
         #NotLegitimateCaller;
         #ClassError : Text;
         #SocketsFull;
-        #InvalidToken :TokenIdentifier;
+        #InvalidToken ;
         #Unauthorized :AccountIdentifier;
         };
 
@@ -969,7 +974,7 @@ module {
         { transactionId: Blob }, {
         #Rejected;
         #InsufficientBalance;
-        #InvalidToken :TokenIdentifier;
+        #InvalidToken ;
         #Unauthorized :AccountIdentifier;
         #Other : Text;
         #UnplugError: UnplugError;
@@ -981,7 +986,7 @@ module {
     public type UnplugError = {
         #Rejected;
         #InsufficientBalance;
-        #InvalidToken :TokenIdentifier;
+        #InvalidToken ;
         #Unauthorized :AccountIdentifier;
         #Other : Text;
         #NotLegitimateCaller;
@@ -1014,7 +1019,7 @@ module {
 
     public type SetPriceResponse = Result.Result<
         (), {
-            #InvalidToken : TokenIdentifier;
+            #InvalidToken ;
             #TooHigh;
             #TooLow;
             #NotTransferable;
@@ -1032,7 +1037,7 @@ module {
             #Rejected;
             #ErrorWhileRefunding;
             #NotEnoughToRefund;
-            #InvalidToken :TokenIdentifier;
+            #InvalidToken;
             #Unauthorized;
             #NotForSale;
             #TreasuryNotifyFailed;
@@ -1096,7 +1101,7 @@ module {
     public type RechargeResponse = Result.Result<
         (), {
             #Rejected;
-            #InvalidToken : TokenIdentifier;
+            #InvalidToken ;
             #InsufficientBalance;
             #RechargeUnnecessary;
             #Unauthorized;
@@ -1156,7 +1161,7 @@ module {
             {transactionId: Blob},
             {
             #Other        : Text;
-            #InvalidToken : TokenIdentifier;
+            #InvalidToken;
             #Unauthorized : AccountIdentifier;
             #InsufficientBalance;
             #OutOfPower;

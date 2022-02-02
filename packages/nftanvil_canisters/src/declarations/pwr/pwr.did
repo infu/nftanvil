@@ -23,7 +23,7 @@ type User =
 type TransferResponseError = 
  variant {
    InsufficientBalance;
-   InvalidToken: TokenIdentifier;
+   InvalidToken;
    NotTransferable;
    Other: text;
    OutOfPower;
@@ -65,7 +65,7 @@ type RechargeResponse =
     variant {
       InsufficientBalance;
       InsufficientPayment: Balance__1;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       RechargeUnnecessary;
       Rejected;
       Unauthorized;
@@ -87,7 +87,7 @@ type PurchaseResponse =
       ErrorWhileRefunding;
       InsufficientBalance;
       InsufficientPayment: Balance__1;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       NotEnoughToRefund;
       NotForSale;
       Refunded;
@@ -211,6 +211,7 @@ type MetadataInput =
    name: opt text;
    price: Price;
    quality: Quality;
+   rechargable: bool;
    secret: bool;
    tags: Tags;
    thumb: Content;

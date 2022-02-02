@@ -58,7 +58,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     // Internal types
     public type BalanceIntError = {
-        #InvalidToken : TokenIdentifier;
+        #InvalidToken;
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;
@@ -72,18 +72,25 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private stable var _tmpBalance : [(TokenIndex, AccountIdentifier)] = [];
     private var _balance : HashMap.HashMap<TokenIndex, AccountIdentifier> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
-
     private stable var _tmpMeta : [(TokenIndex, Metadata)] = [];
     private var _meta : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tmpMeta.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
     private stable var _tmpMetavars : [(TokenIndex, Metavars)] = [];
     private var _metavars : HashMap.HashMap<TokenIndex, Metavars> = HashMap.fromIter(_tmpMetavars.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
-    private stable var _tmpAllowance : [(TokenIndex, Principal)] = [];
-    private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
- 
     private stable var _tmpToken2Link: [(TokenIndex, Blob)] = [];
     private var _token2link : HashMap.HashMap<TokenIndex, Blob> = HashMap.fromIter(_tmpToken2Link.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
+
+    // {
+    //     owner:
+    //     metadata:
+    //     metavars:
+    //     secretlink:
+    // }
+
+    // private stable var _tmpAllowance : [(TokenIndex, Principal)] = [];
+    // private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
+ 
 
     private stable var _tmpChunk : [(Nat32, Blob)] = [];
     private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
@@ -111,7 +118,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     system func preupgrade() {
         _tmpBalance := Iter.toArray(_balance.entries());
 
-        _tmpAllowance := Iter.toArray(_allowance.entries());
+        // _tmpAllowance := Iter.toArray(_allowance.entries());
         _tmpMeta := Iter.toArray(_meta.entries());
         _tmpMetavars := Iter.toArray(_metavars.entries());
 
@@ -125,7 +132,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     system func postupgrade() {
         _tmpBalance := [];
 
-        _tmpAllowance := [];
+        // _tmpAllowance := [];
         _tmpMeta := [];
         _tmpMetavars := [];
         _tmpChunk := [];
@@ -134,7 +141,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public query func balance(request : BalanceRequest) : async BalanceResponse {
          switch(balGet(request)) {
              case (#ok(holder,tokenIndex, bal, allowance)) #ok(bal);
-             case (#err(e)) #err(#InvalidToken(request.token));
+             case (#err(e)) #err(#InvalidToken);
          }
     };
     
@@ -156,7 +163,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                 return #ok({transactionId});
             }; 
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
             case (#err(e)) return #err(#Other("Something went wrong"));
@@ -228,13 +235,13 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             #ok();
                     };
                     case (#err()) {
-                         #err(#InvalidToken(request.token));
+                         #err(#InvalidToken);
                     }
                 }
 
                 
                  }; 
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
             case (#err(e)) return #err(#Other("Something went wrong"));
@@ -373,11 +380,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                     };
                     case (_) {
-                        #err(#InvalidToken(request.token));
+                        #err(#InvalidToken);
                     };
                 };
             };
-            case (#err(e)) #err(#InvalidToken(request.token))
+            case (#err(e)) #err(#InvalidToken)
             };
 
     };
@@ -541,11 +548,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         //             };
         //             case (_) {
-        //                 #err(#InvalidToken(request.token));
+        //                 #err(#InvalidToken);
         //             };
         //         };
         //     };
-        //     case (#err(e)) #err(#InvalidToken(request.token))
+        //     case (#err(e)) #err(#InvalidToken)
         //     }
 
   
@@ -564,12 +571,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
      
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
-
+                            if (meta.rechargable == false) return #err(#Other("Can't sell nfts which are not rechargable"));
                             if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#NotTransferable);
                             
                             if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
 
-                            let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta,vars);
+                            let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
                             
                             let {amount; marketplace; affiliate} = request.price;
 
@@ -577,9 +584,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                 amount = amount + diffStorage + diffOps + _oracle.pwrFee;
                                 marketplace;
                                 affiliate;
-                                // idx = _priceIndex;
-                                // rechargeStorage = Nat32.fromNat(Nat64.toNat(diffStorage));
-                                // rechargeOps = Nat32.fromNat(Nat64.toNat(diffOps));
                                 };
 
                             _priceIndex := _priceIndex + 1;
@@ -588,18 +592,19 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                            };
                     case (#err()) {
-                         #err(#InvalidToken(request.token));
+                         #err(#InvalidToken);
                     }
                 }
            
             }; 
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
             case (#err(e)) return #err(#Other("Something went wrong"));
             };
-
     };
+
+    
 
     public shared({caller}) func transfer(request : TransferRequest) : async TransferResponse {
 
@@ -633,11 +638,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             return #ok({transactionId});
                     };
                     case (#err()) {
-                         #err(#InvalidToken(request.token));
+                         #err(#InvalidToken);
                     }
                 }
             }; 
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
             case (#err(e)) return #err(#Other("Something went wrong"));
@@ -705,12 +710,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                            
                     };
                     case (#err()) {
-                         #err(#InvalidToken(request.token));
+                         #err(#InvalidToken);
                     }
                 }
            
             }; 
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
             case (#err(e)) return #err(#Other("Something went wrong"));
@@ -742,7 +747,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
 
         
-        if (slot != _slot) return #err(#InvalidToken(token));
+        if (slot != _slot) return #err(#InvalidToken);
 
         switch(SNFT_tidxGet(tokenIndex)) {
             case (?bearer) {
@@ -756,14 +761,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             });
                     };
                     case (#err()) {
-                        #err(#InvalidToken(token));
+                        #err(#InvalidToken);
                     }
 
                 };
 
             };
             case (_) {
-                #err(#InvalidToken(token));
+                #err(#InvalidToken);
             };
         }
 
@@ -774,14 +779,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(token);
 
-        if (slot != _slot) return #err(#InvalidToken(token));
+        if (slot != _slot) return #err(#InvalidToken);
 
         switch(SNFT_tidxGet(tokenIndex)) {
             case (?holder_stored) {
                 #ok(1);
             };
             case (_) {
-                #err(#InvalidToken(token));
+                #err(#InvalidToken);
             };
         }
        
@@ -1037,9 +1042,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
-        switch(getMeta(tokenIndex)) {   
+        switch(getMeta(tokenIndex)) {
                 case (#ok((m,v))) {
-                    
+                
+                if (m.rechargable == false) return #err(#Rejected);
+
                 let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(m,v);
 
                 if (diffStorage + diffOps < 10000) return #err(#RechargeUnnecessary);
@@ -1065,7 +1072,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
               
             };
             case (#err()) {
-                #err(#InvalidToken(request.token));
+                #err(#InvalidToken);
             }
         };
     };
@@ -1127,6 +1134,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             created = timestamp;
             updated = timestamp;
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits;
+            rechargable = m.rechargable;
         };
 
         let mvar : Metavars = {
@@ -1136,7 +1144,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     case (#bindsDuration(setupDuration)) {
                         ?(timeInMinutes() + setupDuration);
                     }
-                }; 
+                };
              var cooldownUntil = null; // in minutes
              var sockets = [];
              var price = m.price;
@@ -1144,7 +1152,18 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
              var pwrOps = mintPricePwrOps;
              var ttl = m.ttl;
              var history = [];
+             var allowance = null;
         };
+
+        let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(md, mvar);
+                            
+        let {amount; marketplace; affiliate} = m.price;
+
+        mvar.price := {
+            amount = amount + diffStorage + diffOps + _oracle.pwrFee;
+            marketplace;
+            affiliate;
+            };
 
         assert(switch(_meta.get(tokenIndex)) { // make some memory integrity checks
             case (?a) false;
@@ -1214,6 +1233,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         if (Nft.Share.validate(request.metadata.authorShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
+        if (request.metadata.rechargable == false and request.metadata.price.amount != 0) return #err(#Invalid("Meta invalid - Can't sell non rechargable NFTs"));
+
 
         await SNFT_mint(author, request);
 
@@ -1255,12 +1276,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                     };
                     case (#err()) {
-                         #err(#InvalidToken(request.plug));
+                         #err(#InvalidToken);
                     }
                 }
            
             };
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
             case (#err(e)) return #err(#Other("Something went wrong"));
@@ -1309,12 +1330,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                         
                     };
                     case (#err()) {
-                         #err(#InvalidToken(request.plug));
+                         #err(#InvalidToken);
                     }
                 }
            
             };
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
             case (#err(e)) return #err(#Other("Something went wrong"));
@@ -1361,12 +1382,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             
                         };
                         case (#err()) {
-                            #err(#InvalidToken(request.plug));
+                            #err(#InvalidToken);
                         }
                     }
             
                 };
-                case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+                case (#err(#InvalidToken)) return #err(#InvalidToken);
                 case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
                 case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
                 case (#err(e)) return #err(#Other("Something went wrong"));
@@ -1395,11 +1416,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             #ok();
                         };
                         case (#err()) {
-                            #err(#InvalidToken(request.plug));
+                            #err(#InvalidToken);
                         }
                     }
                 };
-                case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+                case (#err(#InvalidToken)) return #err(#InvalidToken);
                 case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
                 case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
                 case (#err(e)) return #err(#Other("Something went wrong"));
@@ -1410,14 +1431,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public query func bearer(token : Nft.TokenIdentifier) : async Nft.BearerResponse {
            let (slot, tokenIndex) = Nft.TokenIdentifier.decode(token);
            
-            if (slot != _slot) return #err(#InvalidToken(token));
+            if (slot != _slot) return #err(#InvalidToken);
             
             switch(SNFT_tidxGet(tokenIndex)) {
                 case (?holder_stored) {
                     #ok(holder_stored);
                 };
                 case (_) {
-                    #err(#InvalidToken(token));
+                    #err(#InvalidToken);
                 };
             }
     };
@@ -1429,7 +1450,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
                 return #ok(allowance);
             };
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(e)) return #err(#Other("Something went wrong"));
          } 
     };
@@ -1440,33 +1461,48 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
         
-        if (request.allowance != 1) return #err(#Other("NFT allowance has to be 1"));
+        // if (request.allowance != 1) return #err(#Other("NFT allowance has to be 1"));
 
         switch ( balRequireOwner(balRequireMinimum(balGet({token = request.token; user = caller_user}), 1), caller_user)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
                 
                 if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
 
-                // caller being same as spender will remove previously approved spender
-                if (Principal.equal(caller, request.spender)) {
-                    _allowance.delete(tokenIndex); // will save memory
-                    } else {
-                    _allowance.put(tokenIndex, request.spender);
+                switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+
+                        switch (request.allowance) {
+                            case (1) {
+                                vars.allowance := null;
+                            };
+                            case (0) {
+                                vars.allowance := ?request.spender;
+                            };
+                            case (_) {
+                                return #err(#Other("NFT allowance has to be 1 or 0"))
+                            }
+                        };
+
+                        let transactionId = await Cluster.history(_conf).add(#nft(#approve({created=Time.now();token = request.token; user=Nft.User.toAccountIdentifier(caller_user); spender=request.spender})));
+                        addTransaction(vars, transactionId);
+
+                        #ok({transactionId});
+                   
                     };
-
-                let transactionId = await Cluster.history(_conf).add(#nft(#approve({created=Time.now();token = request.token; user=Nft.User.toAccountIdentifier(caller_user); spender=request.spender})));
-                //addTransaction(vars, transactionId);
-
-                #ok({transactionId});
-
+                    case (#err()) {
+                         #err(#InvalidToken);
+                    }
+                }
             };
-            case (#err(#InvalidToken(e))) return #err(#InvalidToken(e));
+            case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
             case (#err(e)) return #err(#Other("Something went wrong"));
          }
     };
 
+
+     
 
     public func cyclesAccept() : async () {
         let available = Cycles.available();
@@ -1513,7 +1549,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         assert(stored_aid == aid);
 
         _balance.delete(tidx);
-        _allowance.delete(tidx);
         _token2link.delete(tidx);
 
         // await accountActor(aid).rem(aid, tidx);   
@@ -1563,7 +1598,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
        let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
-        if (slot != _slot) return #err(#InvalidToken(request.token));
+        if (slot != _slot) return #err(#InvalidToken);
         
         switch(SNFT_tidxGet(tokenIndex)) {
 
@@ -1576,7 +1611,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 }
             };
             case (_) {
-                #err(#InvalidToken(request.token));
+                #err(#InvalidToken);
             };
         }
 
@@ -1607,23 +1642,33 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         switch (bal) {
             case (#ok(holder, tokenIndex, bal, allowance)) {
 
-                switch( _allowance.get(tokenIndex) ) {
-                    case (?allowed_principal) {
-                        switch (Principal.equal(caller, allowed_principal)) {
-                            case true {
-                                if (bal < 1) return #err(#Other("Internal data corrupted"));
-                                #ok(holder, tokenIndex, bal, 1);
+            switch(getMeta(tokenIndex)) {
+                    case (#ok((meta,vars))) {
+                        switch( vars.allowance) {
+                            case (?allowed_principal) {
+                                switch (Principal.equal(caller, allowed_principal)) {
+                                    case true {
+                                        if (bal < 1) return #err(#Other("Internal data corrupted"));
+                                        #ok(holder, tokenIndex, bal, 1);
+                                    };
+                                    case false #ok(holder, tokenIndex, bal, 0);   
+                                };
                             };
-                            case false #ok(holder, tokenIndex, bal, 0);   
+                            case (_) #ok(holder, tokenIndex, bal, 0);
                         };
+                   
                     };
-                    case (_) #ok(holder, tokenIndex, bal, 0);
-                };
+                    case (#err()) {
+                        #err(#InvalidToken);
+                    }
+                }
+
              };
            case (#err(e)) #err(e);
         };
     };
 
+   
     private func balRequireOwnerOrAllowance(bal : BalanceInt, owner:User, caller:Principal) :  BalanceInt {
         switch (balGetAllowance(bal, caller)) {
             case (#ok(holder, tokenIndex, bal, allowance)) {
@@ -1631,16 +1676,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                  let okResult = #ok(holder, tokenIndex, bal, allowance);
 
                  if (Nft.User.equal(owner,holder) == true) return okResult;
-                 switch (_allowance.get(tokenIndex)) {
-                      case (?allowed_principal) {
-                          if (allowed_principal == caller) {
-                           return okResult;
-                           } else {
-                           return errResult; 
-                           }
-                      };
-                      case (_) errResult;
-                 };
+                 if (allowance != 1) return errResult;
+                 return okResult;
+
 
             };
             case (#err(e)) #err(e);

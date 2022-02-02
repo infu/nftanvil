@@ -9,7 +9,7 @@ type UseResponse =
     variant {
       ExtensionError: text;
       InsufficientBalance;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       OnCooldown;
       Other: text;
       OutOfPower;
@@ -42,7 +42,7 @@ type UnsocketResponse =
    err:
     variant {
       InsufficientBalance;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       Other: text;
       OutOfPower;
       Rejected;
@@ -67,7 +67,7 @@ type UnplugResponse =
 type UnplugError = 
  variant {
    InsufficientBalance;
-   InvalidToken: TokenIdentifier;
+   InvalidToken;
    NotLegitimateCaller;
    Other: text;
    Rejected;
@@ -76,7 +76,7 @@ type UnplugError =
 type TransferResponseError = 
  variant {
    InsufficientBalance;
-   InvalidToken: TokenIdentifier;
+   InvalidToken;
    NotTransferable;
    Other: text;
    OutOfPower;
@@ -102,7 +102,7 @@ type TransferLinkResponse =
    err:
     variant {
       InsufficientBalance;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       Other: text;
       OutOfPower;
       Rejected;
@@ -172,7 +172,7 @@ type SocketError =
  variant {
    ClassError: text;
    InsufficientBalance;
-   InvalidToken: TokenIdentifier;
+   InvalidToken;
    NotLegitimateCaller;
    Other: text;
    Rejected;
@@ -185,7 +185,7 @@ type SetPriceResponse =
    err:
     variant {
       InsufficientBalance;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       NotTransferable;
       Other: text;
       OutOfPower;
@@ -233,7 +233,7 @@ type RechargeResponse =
     variant {
       InsufficientBalance;
       InsufficientPayment: Balance;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       RechargeUnnecessary;
       Rejected;
       Unauthorized;
@@ -255,7 +255,7 @@ type PurchaseResponse =
       ErrorWhileRefunding;
       InsufficientBalance;
       InsufficientPayment: Balance;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       NotEnoughToRefund;
       NotForSale;
       Refunded;
@@ -292,7 +292,7 @@ type PlugResponse =
    err:
     variant {
       InsufficientBalance;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       Other: text;
       OutOfPower;
       Rejected;
@@ -362,6 +362,7 @@ type MintRequest =
  };
 type MetavarsFrozen = 
  record {
+   allowance: opt principal;
    boundUntil: opt nat32;
    cooldownUntil: opt nat32;
    history: vec blob;
@@ -392,6 +393,7 @@ type MetadataInput =
    name: opt text;
    price: Price;
    quality: Quality;
+   rechargable: bool;
    secret: bool;
    tags: Tags;
    thumb: Content;
@@ -411,6 +413,7 @@ type Metadata =
    lore: opt ItemLore;
    name: opt ItemName;
    quality: Quality;
+   rechargable: bool;
    secret: bool;
    tags: Tags;
    thumb: Content;
@@ -479,7 +482,7 @@ type Config =
  };
 type CommonError = 
  variant {
-   InvalidToken: TokenIdentifier;
+   InvalidToken;
    Other: text;
  };
 type Class = 
@@ -580,7 +583,7 @@ type ApproveResponse =
    err:
     variant {
       InsufficientBalance;
-      InvalidToken: TokenIdentifier;
+      InvalidToken;
       Other: text;
       OutOfPower;
       Unauthorized: AccountIdentifier;

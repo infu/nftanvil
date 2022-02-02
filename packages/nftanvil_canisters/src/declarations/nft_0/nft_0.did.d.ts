@@ -9,7 +9,7 @@ export interface ApproveRequest {
 export type ApproveResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'OutOfPower' : null } |
       { 'Other' : string }
@@ -75,7 +75,7 @@ export interface Class {
   'uploadChunk' : (arg_0: UploadChunkRequest) => Promise<undefined>,
   'use' : (arg_0: UseRequest) => Promise<UseResponse>,
 }
-export type CommonError = { 'InvalidToken' : TokenIdentifier } |
+export type CommonError = { 'InvalidToken' : null } |
   { 'Other' : string };
 export interface Config {
   'anv' : CanisterSlot__1,
@@ -134,6 +134,7 @@ export interface Metadata {
   'entropy' : Array<number>,
   'attributes' : Attributes,
   'transfer' : ItemTransfer,
+  'rechargable' : boolean,
 }
 export interface MetadataInput {
   'ttl' : [] | [number],
@@ -150,6 +151,7 @@ export interface MetadataInput {
   'attributes' : Attributes,
   'price' : Price,
   'transfer' : ItemTransfer,
+  'rechargable' : boolean,
 }
 export type MetadataResponse = {
     'ok' : {
@@ -167,6 +169,7 @@ export interface MetavarsFrozen {
   'history' : Array<Array<number>>,
   'pwrOps' : bigint,
   'pwrStorage' : bigint,
+  'allowance' : [] | [Principal],
   'price' : Price,
 }
 export interface MintRequest {
@@ -214,7 +217,7 @@ export type PlugResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'SocketError' : SocketError } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'OutOfPower' : null } |
@@ -240,7 +243,7 @@ export type PurchaseResponse = {
       { 'InsufficientPayment' : Balance } |
       { 'ErrorWhileRefunding' : null } |
       { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : null } |
       { 'NotForSale' : null } |
@@ -258,7 +261,7 @@ export type RechargeResponse = { 'ok' : null } |
     'err' : { 'InsufficientPayment' : Balance } |
       { 'RechargeUnnecessary' : null } |
       { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : null }
   };
@@ -292,7 +295,7 @@ export type SetPriceResponse = { 'ok' : null } |
     'err' : { 'TooHigh' : null } |
       { 'InsufficientBalance' : null } |
       { 'NotTransferable' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'OutOfPower' : null } |
       { 'TooLow' : null } |
@@ -301,7 +304,7 @@ export type SetPriceResponse = { 'ok' : null } |
 export type Share = number;
 export type SocketError = { 'InsufficientBalance' : null } |
   { 'NotLegitimateCaller' : null } |
-  { 'InvalidToken' : TokenIdentifier } |
+  { 'InvalidToken' : null } |
   { 'Rejected' : null } |
   { 'Unauthorized' : AccountIdentifier } |
   { 'ClassError' : string } |
@@ -355,7 +358,7 @@ export interface TransferLinkRequest {
 export type TransferLinkResponse = { 'ok' : null } |
   {
     'err' : { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'OutOfPower' : null } |
@@ -373,14 +376,14 @@ export type TransferResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   { 'err' : TransferResponseError };
 export type TransferResponseError = { 'InsufficientBalance' : null } |
   { 'NotTransferable' : null } |
-  { 'InvalidToken' : TokenIdentifier } |
+  { 'InvalidToken' : null } |
   { 'Rejected' : null } |
   { 'Unauthorized' : AccountIdentifier } |
   { 'OutOfPower' : null } |
   { 'Other' : string };
 export type UnplugError = { 'InsufficientBalance' : null } |
   { 'NotLegitimateCaller' : null } |
-  { 'InvalidToken' : TokenIdentifier } |
+  { 'InvalidToken' : null } |
   { 'Rejected' : null } |
   { 'Unauthorized' : AccountIdentifier } |
   { 'Other' : string };
@@ -397,7 +400,7 @@ export type UnsocketResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'UnplugError' : UnplugError } |
       { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'OutOfPower' : null } |
@@ -421,7 +424,7 @@ export interface UseRequest {
 export type UseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
   {
     'err' : { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
+      { 'InvalidToken' : null } |
       { 'Rejected' : null } |
       { 'Unauthorized' : AccountIdentifier } |
       { 'OutOfPower' : null } |

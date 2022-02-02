@@ -84,6 +84,7 @@ export const idlFactory = ({ IDL }) => {
     'attributes' : Attributes,
     'price' : Price,
     'transfer' : ItemTransfer,
+    'rechargable' : IDL.Bool,
   });
   const SubAccount__1 = IDL.Vec(IDL.Nat8);
   const MintRequest = IDL.Record({
@@ -92,11 +93,10 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount__1),
   });
   const TokenIndex = IDL.Nat32;
-  const TokenIdentifier = IDL.Nat32;
   const TransferResponseError = IDL.Variant({
     'InsufficientBalance' : IDL.Null,
     'NotTransferable' : IDL.Null,
-    'InvalidToken' : TokenIdentifier,
+    'InvalidToken' : IDL.Null,
     'Rejected' : IDL.Null,
     'Unauthorized' : AccountIdentifier,
     'OutOfPower' : IDL.Null,
@@ -117,6 +117,7 @@ export const idlFactory = ({ IDL }) => {
       'OutOfMemory' : IDL.Null,
     }),
   });
+  const TokenIdentifier = IDL.Nat32;
   const Balance__1 = IDL.Nat64;
   const PurchaseRequest = IDL.Record({
     'token' : TokenIdentifier,
@@ -151,7 +152,7 @@ export const idlFactory = ({ IDL }) => {
       'InsufficientPayment' : Balance__1,
       'ErrorWhileRefunding' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
       'Unauthorized' : IDL.Null,
       'NotForSale' : IDL.Null,
@@ -170,7 +171,7 @@ export const idlFactory = ({ IDL }) => {
       'InsufficientPayment' : Balance__1,
       'RechargeUnnecessary' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
+      'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
       'Unauthorized' : IDL.Null,
     }),
