@@ -44,4 +44,21 @@ module {
 
         return buff;
     };
+
+    public func concat<A>(xs : [A], ys : [A]) : [A] {
+        switch(xs.size(), ys.size()) {
+        case (0, 0) { []; };
+        case (0, _) { ys; };
+        case (_, 0) { xs; };
+        case (xsSize, ysSize) {
+            Array.tabulate<A>(xsSize + ysSize, func (i : Nat) : A {
+            if (i < xsSize) {
+                xs[i];
+            } else {
+                ys[i - xsSize];
+            };
+            });
+        };
+        };
+    };
  }

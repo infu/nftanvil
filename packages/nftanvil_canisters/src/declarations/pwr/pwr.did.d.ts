@@ -87,7 +87,7 @@ export interface MintRequest {
   'subaccount' : [] | [SubAccount__1],
 }
 export type MintResponse = {
-    'ok' : { 'tokenIndex' : TokenIndex, 'transactionId' : Array<number> }
+    'ok' : { 'tokenIndex' : TokenIndex, 'transactionId' : TransactionId }
   } |
   {
     'err' : { 'Pwr' : TransferResponseError } |
@@ -147,7 +147,7 @@ export interface PurchaseRequest {
   'amount' : Balance__1,
 }
 export type PurchaseResponse = {
-    'ok' : { 'purchase' : NFTPurchase, 'transactionId' : Array<number> }
+    'ok' : { 'purchase' : NFTPurchase, 'transactionId' : TransactionId }
   } |
   {
     'err' : { 'TreasuryNotifyFailed' : null } |
@@ -185,6 +185,7 @@ export type Tags = Array<Tag>;
 export type Time = bigint;
 export type TokenIdentifier = number;
 export type TokenIndex = number;
+export type TransactionId = Array<number>;
 export type TransferError = {
     'TxTooOld' : { 'allowed_window_nanos' : bigint }
   } |

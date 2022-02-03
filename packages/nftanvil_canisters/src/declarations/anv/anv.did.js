@@ -29,13 +29,17 @@ export const idlFactory = ({ IDL }) => {
     'icpCycles' : IDL.Nat64,
     'pwrFee' : IDL.Nat64,
   });
+  const Balance = IDL.Nat64;
+  const RewardRequest = IDL.Record({
+    'user' : AccountIdentifier,
+    'spent' : Balance,
+  });
   const User = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
   });
   const Memo = IDL.Vec(IDL.Nat8);
   const SubAccount = IDL.Vec(IDL.Nat8);
-  const Balance = IDL.Nat64;
   const TransferRequest = IDL.Record({
     'to' : User,
     'from' : User,
@@ -67,6 +71,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'oracle_set' : IDL.Func([Oracle], [], []),
+    'reward' : IDL.Func([RewardRequest], [], []),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
   });
   return Class;

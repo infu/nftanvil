@@ -18,6 +18,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { loadInventory } from "../reducers/inventory";
 import styled from "@emotion/styled";
 import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
+import { NftHistory } from "./History";
 
 const InventoryBox = styled.div`
   background: url(${(props) => props.bg});
@@ -54,6 +55,8 @@ export const Inventory = (p) => {
     (state) => state.inventory[address] && state.inventory[address][pageIdx]
   );
 
+  const meta = useSelector((state) => state.inventory[address + "meta"]);
+
   const cols = Math.min(Math.floor((width - 50) / 72), 10);
   const rows = Math.ceil(120 / cols);
 
@@ -63,23 +66,26 @@ export const Inventory = (p) => {
         <ACC short={true}>{address}</ACC>
       </Text>
 
-      <InventoryBox
-        width={cols * 72}
-        height={rows * 72}
-        bg={useColorModeValue(itemgrid_light, itemgrid)}
-      >
-        {isLoading ? (
-          <Box h="72px">
-            <Center>
-              <Spinner size="lg" mt="11px" />
-            </Center>
-          </Box>
-        ) : (
-          <Wrap direction={"horizontal"} spacing="0">
-            {items && items.map((id) => <NFT id={id} key={id} />)}
-          </Wrap>
-        )}
-      </InventoryBox>
+      <Center>
+        <InventoryBox
+          width={cols * 72}
+          height={rows * 72}
+          bg={useColorModeValue(itemgrid_light, itemgrid)}
+        >
+          {isLoading ? (
+            <Box h="72px">
+              <Center>
+                <Spinner size="lg" mt="11px" />
+              </Center>
+            </Box>
+          ) : (
+            <Wrap direction={"horizontal"} spacing="0">
+              {items && items.map((id) => <NFT id={id} key={id} />)}
+            </Wrap>
+          )}
+        </InventoryBox>
+      </Center>
+      {meta ? <NftHistory transactions={meta.transactions} /> : null}
     </Stack>
   );
 };

@@ -93,6 +93,7 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount__1),
   });
   const TokenIndex = IDL.Nat32;
+  const TransactionId = IDL.Vec(IDL.Nat8);
   const TransferResponseError = IDL.Variant({
     'InsufficientBalance' : IDL.Null,
     'NotTransferable' : IDL.Null,
@@ -105,7 +106,7 @@ export const idlFactory = ({ IDL }) => {
   const MintResponse = IDL.Variant({
     'ok' : IDL.Record({
       'tokenIndex' : TokenIndex,
-      'transactionId' : IDL.Vec(IDL.Nat8),
+      'transactionId' : TransactionId,
     }),
     'err' : IDL.Variant({
       'Pwr' : TransferResponseError,
@@ -144,7 +145,7 @@ export const idlFactory = ({ IDL }) => {
   const PurchaseResponse = IDL.Variant({
     'ok' : IDL.Record({
       'purchase' : NFTPurchase,
-      'transactionId' : IDL.Vec(IDL.Nat8),
+      'transactionId' : TransactionId,
     }),
     'err' : IDL.Variant({
       'TreasuryNotifyFailed' : IDL.Null,

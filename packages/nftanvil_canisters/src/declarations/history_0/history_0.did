@@ -1,10 +1,3 @@
-type TreasuryWithdraw = 
- record {
-   amount: Balance;
-   created: Timestamp;
-   user: AccountIdentifier;
- };
-type TreasuryEvent = variant {withdraw: TreasuryWithdraw;};
 type TokenIdentifier__1 = nat32;
 type TokenIdentifier = nat32;
 type Timestamp = int;
@@ -39,11 +32,13 @@ type NftEvent =
       token: TokenIdentifier;
       user: AccountIdentifier;
     };
-   mint: record {
-           created: Timestamp;
-           pwr: Balance;
-           token: TokenIdentifier;
-         };
+   mint:
+    record {
+      created: Timestamp;
+      pwr: Balance;
+      token: TokenIdentifier;
+      user: AccountIdentifier;
+    };
    purchase: NFTPurchase;
    socket:
     record {
@@ -51,6 +46,7 @@ type NftEvent =
       memo: Memo;
       plug: TokenIdentifier;
       socket: TokenIdentifier;
+      user: AccountIdentifier;
     };
    transfer:
     record {
@@ -66,6 +62,7 @@ type NftEvent =
       memo: Memo;
       plug: TokenIdentifier;
       socket: TokenIdentifier;
+      user: AccountIdentifier;
     };
    use:
     record {
@@ -120,7 +117,6 @@ type EventInfo =
    anv: AnvEvent;
    nft: NftEvent;
    pwr: PwrEvent;
-   treasury: TreasuryEvent;
  };
 type EventIndex = nat32;
 type EventFungibleTransaction = 

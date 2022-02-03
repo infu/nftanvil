@@ -149,7 +149,7 @@ const HistoryEvent = ({ ev, canister, idx }) => {
           val = AccountIdentifier.ArrayToText(val);
           val = (
             <Link to={"/" + val}>
-              <ACC>{val}</ACC>
+              <ACC short={true}>{val}</ACC>
             </Link>
           );
         }
@@ -183,7 +183,11 @@ const HistoryEvent = ({ ev, canister, idx }) => {
               <KeyVal
                 key={idx + "addr"}
                 k={key + " address"}
-                v={<ACC>{AccountIdentifier.ArrayToText(val.address)}</ACC>}
+                v={
+                  <ACC short={true}>
+                    {AccountIdentifier.ArrayToText(val.address)}
+                  </ACC>
+                }
               />
             </div>
           );
@@ -259,7 +263,7 @@ export const History = (p) => {
   }
 
   return (
-    <Box mt={8} maxW={"770px"} w="100%">
+    <Box mt={8} maxW={"590px"} w="100%">
       {/* <Box p={3}>
         <div>History canister: {canister} </div>
         <div>From {from} </div>
@@ -362,9 +366,9 @@ export const NftHistory = ({ transactions }) => {
 
   return (
     <Center>
-      <Box mt={8} maxW={"770px"} w="100%">
-        {events.map(({ idx, canister, data }) => (
-          <HistoryEvent key={idx} idx={idx} canister={canister} ev={data} />
+      <Box mt={8} maxW={"590px"} w="100%">
+        {events.map(({ idx, canister, data }, n) => (
+          <HistoryEvent key={n} idx={idx} canister={canister} ev={data} />
         ))}
       </Box>
     </Center>

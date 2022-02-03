@@ -1,14 +1,28 @@
 import type { Principal } from '@dfinity/principal';
 export type AccountIdentifier = Array<number>;
+export interface AccountMeta {
+  'info' : [] | [AddressInfo],
+  'transactions' : Array<TransactionId>,
+}
+export interface AddressInfo {
+  'background' : TokenIdentifier,
+  'name' : string,
+  'avatar' : TokenIdentifier,
+}
 export type CanisterRange = [CanisterSlot, CanisterSlot];
 export type CanisterSlot = number;
 export type CanisterSlot__1 = number;
 export interface Class {
   'add' : (arg_0: AccountIdentifier, arg_1: TokenIndex) => Promise<undefined>,
+  'add_transaction' : (
+      arg_0: AccountIdentifier,
+      arg_1: TransactionId,
+    ) => Promise<undefined>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
   'list' : (arg_0: AccountIdentifier, arg_1: bigint) => Promise<
-      Array<TokenIdentifier>
+      Array<TokenIdentifier__1>
     >,
+  'meta' : (arg_0: AccountIdentifier) => Promise<[] | [AccountMeta]>,
   'rem' : (arg_0: AccountIdentifier, arg_1: TokenIndex) => Promise<undefined>,
   'stats' : () => Promise<StatsResponse>,
 }
@@ -33,5 +47,7 @@ export interface StatsResponse {
   'rts_version' : string,
 }
 export type TokenIdentifier = number;
+export type TokenIdentifier__1 = number;
 export type TokenIndex = number;
+export type TransactionId = Array<number>;
 export interface _SERVICE extends Class {}

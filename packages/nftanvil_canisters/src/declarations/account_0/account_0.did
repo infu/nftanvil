@@ -1,4 +1,6 @@
+type TransactionId = blob;
 type TokenIndex = nat32;
+type TokenIdentifier__1 = nat32;
 type TokenIdentifier = nat32;
 type StatsResponse = 
  record {
@@ -25,8 +27,10 @@ type Config =
 type Class = 
  service {
    add: (AccountIdentifier, TokenIndex) -> ();
+   add_transaction: (AccountIdentifier, TransactionId) -> ();
    config_set: (Config) -> ();
-   list: (AccountIdentifier, nat) -> (vec TokenIdentifier) query;
+   list: (AccountIdentifier, nat) -> (vec TokenIdentifier__1) query;
+   meta: (AccountIdentifier) -> (opt AccountMeta) query;
    rem: (AccountIdentifier, TokenIndex) -> ();
    stats: () -> (StatsResponse) query;
  };
@@ -36,6 +40,17 @@ type CanisterRange =
  record {
    CanisterSlot;
    CanisterSlot;
+ };
+type AddressInfo = 
+ record {
+   avatar: TokenIdentifier;
+   background: TokenIdentifier;
+   name: text;
+ };
+type AccountMeta = 
+ record {
+   info: opt AddressInfo;
+   transactions: vec TransactionId;
  };
 type AccountIdentifier = blob;
 service : () -> Class

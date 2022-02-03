@@ -10,6 +10,8 @@ module {
      public type Interface = actor {
           add : shared (aid: Nft.AccountIdentifier, idx:Nft.TokenIndex) -> async ();
           rem : shared (aid: Nft.AccountIdentifier, idx:Nft.TokenIndex) -> async ();
+          add_transaction : shared (aid: Nft.AccountIdentifier, tx: Nft.TransactionId) -> async ();
+          meta : query (aid: Nft.AccountIdentifier) -> async ?AccountMeta;
           };
 
      public type TokenIdentifier = Nft.TokenIdentifier;
@@ -32,11 +34,16 @@ module {
           transactions: [Nft.TransactionId]
      };
 
+     public type AccountMeta = {
+          info : ?AddressInfo;
+          transactions: [Nft.TransactionId]
+     };
 
      public func AccountRecordSerialize(x : AccountRecord) : AccountRecordSerialized {
           {
                tokens = x.tokens.serialize();
-               info = x.info
+               info = x.info;
+               transactions = x.transactions;
           }
      };
 
@@ -44,6 +51,7 @@ module {
           {
                tokens = Inventory.Inventory(x.tokens);
                var info = x.info;
+               var transactions = x.transactions;
           }
      };
 
@@ -51,6 +59,7 @@ module {
           {
                tokens =  Inventory.Inventory([]);
                var info = null;
+               var transactions = [];
           }
      };
      

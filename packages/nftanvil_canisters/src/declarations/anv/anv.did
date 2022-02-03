@@ -29,6 +29,11 @@ type TransferRequest =
  };
 type TransactionAmount = nat64;
 type SubAccount = blob;
+type RewardRequest = 
+ record {
+   spent: Balance;
+   user: AccountIdentifier;
+ };
 type Oracle = 
  record {
    anvFee: nat64;
@@ -62,6 +67,7 @@ type Class =
                               Balance__1;
                             }) query;
    oracle_set: (Oracle) -> ();
+   reward: (RewardRequest) -> ();
    transfer: (TransferRequest) -> (TransferResponse);
  };
 type CanisterSlot__1 = nat16;

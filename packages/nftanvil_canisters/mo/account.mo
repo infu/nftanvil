@@ -92,11 +92,21 @@ shared({ caller = _installer }) actor class Class() = this {
                    };
                    case (_) { () }
                };
-
-               
             };
             case (_) { () }
         }
+    };
+
+    public query func meta(aid: AccountIdentifier) : async ?Account.AccountMeta {
+        switch(_account.get(aid)) {
+            case (?ac) {
+                ?{
+                    info = ac.info;
+                    transactions = ac.transactions;
+                }
+            };
+            case (_) { null }
+        };
     };
 
     public query func list(aid: AccountIdentifier, page:Nat) : async [TokenIdentifier] {
@@ -126,10 +136,39 @@ shared({ caller = _installer }) actor class Class() = this {
         };
             case (_) { return [] }
         };
-
     };
 
+    public shared({caller}) func add_transaction(aid: AccountIdentifier, tx: Nft.TransactionId) : async () {
+        assert(Nft.User.validate(#address(aid)) == true);
+            
+            switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
+                case (?slot) {
 
+                let r = switch(_account.get(aid)) {
+                    case (?ac) ac;
+                    case (_) {
+                            return ();
+                        }
+                };
+
+                addTransaction(r, tx);
+                
+                };
+                case (_) { () }
+            }
+    };
+
+    private func addTransaction(r: Account.AccountRecord, transactionId: Nft.TransactionId) : () {
+        let tmp = r.transactions;
+        let size = Array_.size(r.transactions);
+        let newSize = switch(size >= 20) { case(true) 20; case(false) size+1; };
+
+        r.transactions := Array.tabulate<Blob>(newSize, func(i:Nat) : Blob {
+            if (i == 0) return transactionId;
+            tmp[i-1];
+            });
+    };
+    
     public type StatsResponse = {
         cycles: Nat;
         rts_version:Text;

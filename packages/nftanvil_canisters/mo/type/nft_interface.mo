@@ -1,5 +1,7 @@
 import Array "mo:base/Array";
 import Array_ "mo:array/Array";
+import _Array "../lib/Array";
+
 import Base32 "mo:encoding/Base32";
 import Binary "mo:encoding/Binary";
 import Blob "mo:base/Blob";
@@ -36,7 +38,7 @@ module {
        
             public func fromSlot(space:[[Nat64]], slot: CanisterSlot) : Principal {
                 let start = space[0][0];
-                Principal.fromBlob(Blob.fromArray(Array.append<Nat8>(
+                Principal.fromBlob(Blob.fromArray(_Array.concat<Nat8>(
                     Blob_.nat64ToBytes(start + Nat64.fromNat(Nat16.toNat(slot))),
                     [1,1]
                 )));
@@ -89,7 +91,7 @@ module {
             };
 
             public func fromShort(accountId: AccountIdentifierShort) : AccountIdentifier {
-                Blob.fromArray(Array.append<Nat8>(
+                Blob.fromArray(_Array.concat<Nat8>(
                     Binary.BigEndian.fromNat32(CRC32.checksum(Blob.toArray(accountId))),
                     Blob.toArray(accountId),
                 ))
@@ -143,7 +145,7 @@ module {
                 
                 let inner = SHA224.sha224(Array.flatten<Nat8>([prefix, data, account]));
 
-                Blob.fromArray(Array.append<Nat8>(
+                Blob.fromArray(_Array.concat<Nat8>(
                     Binary.BigEndian.fromNat32(CRC32.checksum(inner)),
                     inner,
                 ));
@@ -151,7 +153,7 @@ module {
 
             public func purchaseAccountId(can:Principal, productId:Nat32, accountId: AccountIdentifier) : (AccountIdentifier, SubAccount) {
             
-                let subaccount = Blob.fromArray(Array.append<Nat8>(
+                let subaccount = Blob.fromArray(_Array.concat<Nat8>(
                     Blob_.nat32ToBytes(productId),
                     Blob.toArray(toShort(accountId))
                 )); 
@@ -163,7 +165,7 @@ module {
 
         public module SubAccount = {
             public func fromNat(idx: Nat) : SubAccount {
-                Blob.fromArray(Array.append<Nat8>(
+                Blob.fromArray(_Array.concat<Nat8>(
                     Array.freeze(Array.init<Nat8>(24, 0)),
                     Blob_.nat64ToBytes(Nat64.fromNat(idx))
                     ));
@@ -375,6 +377,7 @@ module {
         public func hash(a : TokenIndex) : Hash.Hash { a; };
     };
 
+    public type TransactionId = Blob;
 
     public type BalanceRequest = {
         user  : User; 
@@ -437,11 +440,11 @@ module {
         #OutOfPower;
     };
 
-    public type TransferResponse = Result.Result<{transactionId: Blob}, TransferResponseError>;
+    public type TransferResponse = Result.Result<{transactionId: TransactionId}, TransferResponseError>;
     public type BurnResponse = TransferResponse;
 
     public type UseResponse = Result.Result<{
-        transactionId: Blob
+        transactionId: TransactionId
     }, {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
@@ -469,7 +472,7 @@ module {
     };
 
     public type ClaimLinkResponse = Result.Result<{
-         transactionId: Blob
+         transactionId: TransactionId
     }, {
         #Rejected; // We wont supply possible attacker with verbose errors
         #Other: Text
@@ -929,7 +932,7 @@ module {
     };
 
     public type PlugResponse = Result.Result<
-        { transactionId: Blob}, {
+        { transactionId: TransactionId}, {
         #Rejected;
         #InsufficientBalance;
         #InvalidToken ;
@@ -971,7 +974,7 @@ module {
     };
 
     public type UnsocketResponse = Result.Result<
-        { transactionId: Blob }, {
+        { transactionId: TransactionId }, {
         #Rejected;
         #InsufficientBalance;
         #InvalidToken ;
@@ -1032,7 +1035,7 @@ module {
 
 
     public type PurchaseResponse = Result.Result<
-        { transactionId: Blob; purchase: NFTPurchase }, {
+        { transactionId: TransactionId; purchase: NFTPurchase }, {
             #Refunded;
             #Rejected;
             #ErrorWhileRefunding;
@@ -1075,7 +1078,7 @@ module {
     };
 
     public type MintResponse = Result.Result<
-        {tokenIndex: TokenIndex; transactionId: Blob}, {
+        {tokenIndex: TokenIndex; transactionId: TransactionId}, {
         #Rejected;
         #InsufficientBalance;
         #ClassError: Text;
@@ -1158,7 +1161,7 @@ module {
         };
 
         public type ApproveResponse = Result.Result<
-            {transactionId: Blob},
+            {transactionId: TransactionId},
             {
             #Other        : Text;
             #InvalidToken;

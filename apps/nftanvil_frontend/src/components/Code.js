@@ -254,8 +254,12 @@ const Shash = styled.span`
   }
 `;
 
-export const HASH = ({ children }) => {
-  let txt = children
+export const HASH = ({ children, short = false }) => {
+  let t = short
+    ? (children = children.slice(0, 4) + ".." + children.slice(-4))
+    : children;
+
+  let txt = t
     .split("")
     .map((x, idx) => (Math.floor(idx / 2) % 2 == 0 ? <b key={idx}>{x}</b> : x));
   return <Shash>{txt}</Shash>;

@@ -22,9 +22,12 @@ import H "./type/history_interface";
 shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     // private stable var _tmpEvents : [(H.EventIndex, H.Event)] = [];
-    private stable var _events : AssocList.AssocList<H.EventIndex, H.Event> = List.nil<(H.EventIndex, H.Event)>(); //= HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash)
+    private stable var _transactions : AssocList.AssocList<H.EventIndex, H.Event> = List.nil<(H.EventIndex, H.Event)>(); //= HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash)
 
-    private stable var _nextEvent : Nat32 = 0;
+    private stable var _nextTransaction : Nat32 = 0;
+    private stable var _lastDigestedAccount : Nat32 = 0;
+    private stable var _lastDigestedAnvil : Nat32 = 0;
+
     private stable var _prevHistoryCanister : ?Principal = null;
 
     private stable var _conf : Cluster.Config = Cluster.Config.default();
@@ -32,7 +35,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     // //Handle canister upgrades
     // system func preupgrade() {
-    //     _tmpEvents := Iter.toArray(_events.entries());
+    //     _tmpEvents := Iter.toArray(_transactions.entries());
     // };
 
     // system func postupgrade() {
@@ -58,10 +61,10 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         //     };
         // });
         
-        let index = _nextEvent;
+        let index = _nextTransaction;
         
         let previousTransactionHash : [Nat8] = switch(index > 0) {
-            case (true) switch(AssocList.find(_events, index - 1, H.EventIndex.equal)) {
+            case (true) switch(AssocList.find(_transactions, index - 1, H.EventIndex.equal)) {
                 case (?x) Blob.toArray(x.hash);
                 case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
             };
@@ -79,9 +82,9 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
                     ])));
         };
 
-        let (newEvents, _) = AssocList.replace(_events, index, H.EventIndex.equal, ?event); //_events.put(index, event);
-        _events := newEvents;
-        _nextEvent := _nextEvent + 1;
+        let (newEvents, _) = AssocList.replace(_transactions, index, H.EventIndex.equal, ?event); //_transactions.put(index, event);
+        _transactions := newEvents;
+        _nextTransaction := _nextTransaction + 1;
 
         let transactionId = H.TransactionId.encode(_slot, index);
         transactionId;
@@ -89,15 +92,15 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     public query func info() : async H.InfoResponse {
         {
-            total = _nextEvent;
+            total = _nextTransaction;
             previous = _prevHistoryCanister
         }
     };
 
     public query func list(request: H.ListRequest) : async H.ListResponse {
         Array_.amap<?H.Event>(Nat32.toNat(request.to - request.from), func (index: Nat) : ?H.Event { 
-            AssocList.find<H.EventIndex, H.Event>(_events, request.from + Nat32.fromNat(index), H.EventIndex.equal)
-            //_events.get(request.from + Nat32.fromNat(index));
+            AssocList.find<H.EventIndex, H.Event>(_transactions, request.from + Nat32.fromNat(index), H.EventIndex.equal)
+            //_transactions.get(request.from + Nat32.fromNat(index));
         });
     };
 
@@ -114,6 +117,116 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         });
         _conf := conf
         
+    };
+
+    system func heartbeat() : async () {
+       
+        Debug.print("heartbeat");
+
+        await digestTransactions();
+
+    };
+
+    private func digestTransactions() : async () {
+
+        if (_nextTransaction != _lastDigestedAccount) {
+
+            switch(AssocList.find(_transactions, _lastDigestedAccount, H.EventIndex.equal)) {
+                case (?t) {
+                    await digestAccountNotification(_lastDigestedAccount, t);
+                };
+                case (_) {
+                    ()
+                };
+            };
+
+            _lastDigestedAccount := _lastDigestedAccount + 1;
+            return;
+        };
+
+        if (_nextTransaction != _lastDigestedAnvil) {
+
+            switch(AssocList.find(_transactions, _lastDigestedAnvil, H.EventIndex.equal)) {
+                case (?t) {
+                    await digestAnvilNotification(_lastDigestedAnvil, t);
+                };
+                case (_) {
+                    ()
+                };
+            };
+
+            _lastDigestedAnvil := _lastDigestedAnvil + 1;
+            return;
+        }
+
+    };
+
+    private func digestAccountNotification(txIdx :H.EventIndex, transaction: H.Event) : async () {
+
+        let ids:[Nft.AccountIdentifier] = switch(transaction.info) {
+            case (#nft(#transfer({from;to}))) {
+                [from,to];
+            };
+            case (#nft(#burn({user}))) {
+                [user];
+            };
+            case (#nft(#use({user}))) {
+                [user];
+            };
+            case (#nft(#purchase({seller; buyer}))) {
+                [seller, buyer];
+            };
+            case (#nft(#mint({user}))) {
+                [user];
+            };
+            case (#nft(#approve({user}))) {
+                [user];
+            };
+            case (#nft(#socket({user}))) {
+                [user];
+            };
+            case (#nft(#unsocket({user}))) {
+                [user];
+            };
+            case (#pwr(#transfer({from; to}))) {
+                [from, to];
+            };                                    
+            case (#pwr(#withdraw({from; to}))) {
+                [from, to];
+            };     
+            case (#pwr(#mint({user}))) {
+                [user];
+            };
+            case (#anv(#transfer({from; to}))) {
+                [from,to];
+            };
+            case (_) {
+                []
+            };
+        };
+
+        let it = Iter.fromArray(ids);
+        for (aid in it) {
+            let tx = H.TransactionId.encode(_slot, txIdx);
+            await Cluster.accountFromAid(_conf, aid).add_transaction(aid, tx);
+        };
+       
+        ();
+
+    };
+
+
+    private func digestAnvilNotification(txIdx :H.EventIndex, transaction: H.Event) : async () {
+
+        switch(transaction.info) {
+            case (#nft(#mint({user; pwr}))) {
+               await Cluster.anv(_conf).reward({user; spent=pwr});
+            };
+            case (_) {
+               ();
+            };
+        };
+
     };
 
 }

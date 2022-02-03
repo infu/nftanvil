@@ -25,6 +25,9 @@ module {
 
         // (ANV)
         transfer         : shared TransferRequest       -> async TransferResponse;
+
+        reward           : shared RewardRequest       -> async ();
+
     };
 
     public type AccountIdentifier = Nft.AccountIdentifier;
@@ -38,6 +41,11 @@ module {
     };
 
     public type BalanceResponse = Balance;
+
+    public type RewardRequest = {
+        user      : Nft.AccountIdentifier;
+        spent     : Balance;
+    };
 
     public type TransferRequest = {
         from       : User;

@@ -16,10 +16,13 @@ export const inventorySlice = createSlice({
         return draft;
       });
     },
+    metaSet: (state, action) => {
+      return { ...state, [action.payload.aid + "meta"]: action.payload.meta };
+    },
   },
 });
 
-export const { pageSet } = inventorySlice.actions;
+export const { pageSet, metaSet } = inventorySlice.actions;
 
 export const loadInventory = (aid, pageIdx) => async (dispatch, getState) => {
   let identity = authentication.client
@@ -33,6 +36,11 @@ export const loadInventory = (aid, pageIdx) => async (dispatch, getState) => {
     AccountIdentifier.TextToSlot(aid, s.user.map.account)
   );
   let acc = accountCanister(can, { agentOptions: { identity } });
+
+  let meta = await acc.meta(AccountIdentifier.TextToArray(aid));
+  if (meta[0]) dispatch(metaSet({ aid, meta: meta[0] }));
+  console.log("ACC META", meta);
+
   pageIdx = parseInt(pageIdx, 10);
   let list = await acc.list(AccountIdentifier.TextToArray(aid), pageIdx);
   list = list.filter((x) => x !== 0).map((x) => tokenToText(x));

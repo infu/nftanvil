@@ -54,12 +54,14 @@ export const idlFactory = ({ IDL }) => {
       'socket' : TokenIdentifier,
       'memo' : Memo,
       'plug' : TokenIdentifier,
+      'user' : AccountIdentifier,
     }),
     'unsocket' : IDL.Record({
       'created' : Timestamp,
       'socket' : TokenIdentifier,
       'memo' : Memo,
       'plug' : TokenIdentifier,
+      'user' : AccountIdentifier,
     }),
     'burn' : IDL.Record({
       'created' : Timestamp,
@@ -71,6 +73,7 @@ export const idlFactory = ({ IDL }) => {
       'pwr' : Balance,
       'created' : Timestamp,
       'token' : TokenIdentifier,
+      'user' : AccountIdentifier,
     }),
     'approve' : IDL.Record({
       'created' : Timestamp,
@@ -103,17 +106,10 @@ export const idlFactory = ({ IDL }) => {
     'mint' : EventFungibleMint,
     'transfer' : EventFungibleTransaction,
   });
-  const TreasuryWithdraw = IDL.Record({
-    'created' : Timestamp,
-    'user' : AccountIdentifier,
-    'amount' : Balance,
-  });
-  const TreasuryEvent = IDL.Variant({ 'withdraw' : TreasuryWithdraw });
   const EventInfo = IDL.Variant({
     'anv' : AnvEvent,
     'nft' : NftEvent,
     'pwr' : PwrEvent,
-    'treasury' : TreasuryEvent,
   });
   const AddResponse = IDL.Vec(IDL.Nat8);
   const CanisterSlot__1 = IDL.Nat16;

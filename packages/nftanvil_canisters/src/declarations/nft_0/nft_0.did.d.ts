@@ -6,7 +6,7 @@ export interface ApproveRequest {
   'allowance' : Balance,
   'spender' : Principal,
 }
-export type ApproveResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type ApproveResponse = { 'ok' : { 'transactionId' : TransactionId } } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'InvalidToken' : null } |
@@ -29,7 +29,7 @@ export interface BurnRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type BurnResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type BurnResponse = { 'ok' : { 'transactionId' : TransactionId } } |
   { 'err' : TransferResponseError };
 export interface Callback { 'token' : [] | [Token], 'body' : Array<number> }
 export type CallbackFunc = () => Promise<undefined>;
@@ -41,7 +41,7 @@ export interface ClaimLinkRequest {
   'key' : Array<number>,
   'token' : TokenIdentifier,
 }
-export type ClaimLinkResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type ClaimLinkResponse = { 'ok' : { 'transactionId' : TransactionId } } |
   { 'err' : { 'Rejected' : null } | { 'Other' : string } };
 export interface Class {
   'allowance' : (arg_0: Request__1) => Promise<Response__1>,
@@ -178,7 +178,7 @@ export interface MintRequest {
   'subaccount' : [] | [SubAccount],
 }
 export type MintResponse = {
-    'ok' : { 'tokenIndex' : TokenIndex, 'transactionId' : Array<number> }
+    'ok' : { 'tokenIndex' : TokenIndex, 'transactionId' : TransactionId }
   } |
   {
     'err' : { 'Pwr' : TransferResponseError } |
@@ -213,7 +213,7 @@ export interface PlugRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type PlugResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type PlugResponse = { 'ok' : { 'transactionId' : TransactionId } } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'SocketError' : SocketError } |
@@ -235,7 +235,7 @@ export interface PurchaseRequest {
   'amount' : Balance,
 }
 export type PurchaseResponse = {
-    'ok' : { 'purchase' : NFTPurchase, 'transactionId' : Array<number> }
+    'ok' : { 'purchase' : NFTPurchase, 'transactionId' : TransactionId }
   } |
   {
     'err' : { 'TreasuryNotifyFailed' : null } |
@@ -348,6 +348,7 @@ export interface Token {
 }
 export type TokenIdentifier = number;
 export type TokenIndex = number;
+export type TransactionId = Array<number>;
 export interface TransferLinkRequest {
   'token' : TokenIdentifier,
   'from' : User,
@@ -372,7 +373,7 @@ export interface TransferRequest {
   'subaccount' : [] | [SubAccount],
   'amount' : Balance,
 }
-export type TransferResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type TransferResponse = { 'ok' : { 'transactionId' : TransactionId } } |
   { 'err' : TransferResponseError };
 export type TransferResponseError = { 'InsufficientBalance' : null } |
   { 'NotTransferable' : null } |
@@ -396,7 +397,7 @@ export interface UnsocketRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type UnsocketResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type UnsocketResponse = { 'ok' : { 'transactionId' : TransactionId } } |
   {
     'err' : { 'UnplugError' : UnplugError } |
       { 'InsufficientBalance' : null } |
@@ -421,7 +422,7 @@ export interface UseRequest {
   'user' : User,
   'subaccount' : [] | [SubAccount],
 }
-export type UseResponse = { 'ok' : { 'transactionId' : Array<number> } } |
+export type UseResponse = { 'ok' : { 'transactionId' : TransactionId } } |
   {
     'err' : { 'InsufficientBalance' : null } |
       { 'InvalidToken' : null } |

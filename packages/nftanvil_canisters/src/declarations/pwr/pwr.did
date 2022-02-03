@@ -51,6 +51,7 @@ type TransferError =
    TxDuplicate: record {duplicate_of: BlockIndex;};
    TxTooOld: record {allowed_window_nanos: nat64;};
  };
+type TransactionId = blob;
 type TokenIndex = nat32;
 type TokenIdentifier = nat32;
 type Time = int;
@@ -97,7 +98,7 @@ type PurchaseResponse =
     };
    ok: record {
          purchase: NFTPurchase;
-         transactionId: blob;
+         transactionId: TransactionId;
        };
  };
 type PurchaseRequest = 
@@ -191,7 +192,7 @@ type MintResponse =
     };
    ok: record {
          tokenIndex: TokenIndex;
-         transactionId: blob;
+         transactionId: TransactionId;
        };
  };
 type MintRequest = 

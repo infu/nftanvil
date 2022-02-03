@@ -29,7 +29,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   public type AccountIdentifier = Nft.AccountIdentifier;
   public type TokenIdentifier = Nft.TokenIdentifier;
 
-  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("a009701e300ce568cc51233e5bae489eef1e93e828b24df1203f758a49fe94bd"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000), (Nft.AccountIdentifier.fromText("a004de45899d9ed1066cf23425fdb6ba0e4b6d08a0990d70f01ab813d5f63676"),1000000000) ]; //[];
+  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("a00aae3cdca87a98ff57548da0e8995ccb664157ab81b00403d075aa5f2aaa22"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000), (Nft.AccountIdentifier.fromText("a00974c489e1a7e98fafe92cebd40ee99d5864faf53fc21e555860bc0b48d6c4"),1000000000) ]; //[];
   
   private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
 

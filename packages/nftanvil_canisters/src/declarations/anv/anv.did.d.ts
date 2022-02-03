@@ -17,6 +17,7 @@ export interface Class {
   'config_set' : (arg_0: Config) => Promise<undefined>,
   'dumpBalances' : () => Promise<Array<[AccountIdentifier__2, Balance__1]>>,
   'oracle_set' : (arg_0: Oracle) => Promise<undefined>,
+  'reward' : (arg_0: RewardRequest) => Promise<undefined>,
   'transfer' : (arg_0: TransferRequest) => Promise<TransferResponse>,
 }
 export interface Config {
@@ -37,6 +38,7 @@ export interface Oracle {
   'icpCycles' : bigint,
   'pwrFee' : bigint,
 }
+export interface RewardRequest { 'user' : AccountIdentifier, 'spent' : Balance }
 export type SubAccount = Array<number>;
 export type TransactionAmount = bigint;
 export interface TransferRequest {

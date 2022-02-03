@@ -23,8 +23,9 @@ export const idlFactory = ({ IDL }) => {
     'allowance' : Balance,
     'spender' : IDL.Principal,
   });
+  const TransactionId = IDL.Vec(IDL.Nat8);
   const ApproveResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : IDL.Null,
@@ -60,7 +61,7 @@ export const idlFactory = ({ IDL }) => {
     'Other' : IDL.Text,
   });
   const BurnResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : TransferResponseError,
   });
   const ClaimLinkRequest = IDL.Record({
@@ -69,7 +70,7 @@ export const idlFactory = ({ IDL }) => {
     'token' : TokenIdentifier,
   });
   const ClaimLinkResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'Other' : IDL.Text }),
   });
   const CanisterSlot__1 = IDL.Nat16;
@@ -222,7 +223,7 @@ export const idlFactory = ({ IDL }) => {
   const MintResponse = IDL.Variant({
     'ok' : IDL.Record({
       'tokenIndex' : TokenIndex,
-      'transactionId' : IDL.Vec(IDL.Nat8),
+      'transactionId' : TransactionId,
     }),
     'err' : IDL.Variant({
       'Pwr' : TransferResponseError,
@@ -258,7 +259,7 @@ export const idlFactory = ({ IDL }) => {
     'SocketsFull' : IDL.Null,
   });
   const PlugResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
       'SocketError' : SocketError,
@@ -294,7 +295,7 @@ export const idlFactory = ({ IDL }) => {
   const PurchaseResponse = IDL.Variant({
     'ok' : IDL.Record({
       'purchase' : NFTPurchase,
-      'transactionId' : IDL.Vec(IDL.Nat8),
+      'transactionId' : TransactionId,
     }),
     'err' : IDL.Variant({
       'TreasuryNotifyFailed' : IDL.Null,
@@ -374,7 +375,7 @@ export const idlFactory = ({ IDL }) => {
     'amount' : Balance,
   });
   const TransferResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : TransferResponseError,
   });
   const TransferLinkRequest = IDL.Record({
@@ -412,7 +413,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const UnplugResponse = IDL.Variant({ 'ok' : IDL.Null, 'err' : UnplugError });
   const UnsocketResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : IDL.Variant({
       'UnplugError' : UnplugError,
       'InsufficientBalance' : IDL.Null,
@@ -444,7 +445,7 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount),
   });
   const UseResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : IDL.Variant({
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : IDL.Null,

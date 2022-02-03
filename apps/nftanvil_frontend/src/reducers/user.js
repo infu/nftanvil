@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 //import { treasuryCanister } from "@vvv-interactive/nftanvil-canisters/cjs/treasury.js";
 import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
+import { anvCanister } from "@vvv-interactive/nftanvil-canisters/cjs/anv.js";
 
 import authentication from "../auth";
 
@@ -56,6 +57,12 @@ export const userSlice = createSlice({
         oracle: action.payload.oracle,
       };
     },
+    anvSet: (state, action) => {
+      return {
+        ...state,
+        anv: action.payload,
+      };
+    },
     focusSet: (state, action) => {
       return { ...state, focused: action.payload };
     },
@@ -98,6 +105,7 @@ export const {
   proSet,
   authSet,
   icpSet,
+  anvSet,
   setNftStorageModal,
   setNftSotrageKey,
   focusSet,
@@ -205,6 +213,8 @@ export const refresh_balances = () => async (dispatch, getState) => {
   await dispatch(refresh_icp_balance());
   if (!(await authentication.client.isAuthenticated())) return;
   dispatch(refresh_pwr_balance());
+  dispatch(refresh_anv_balance());
+
   // dispatch(claim_treasury_balance());
 };
 
@@ -285,6 +295,27 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
     .catch((e) => {
       // We are most probably logged out. There is currently no better way to handle expired agentjs chain
       if (e.toString().includes("delegation has expired")) dispatch(logout());
+    });
+};
+
+export const refresh_anv_balance = () => async (dispatch, getState) => {
+  let identity = authentication.client.getIdentity();
+
+  let s = getState();
+
+  let address = s.user.address;
+  if (!address) return;
+
+  let anv = anvCanister(PrincipalFromSlot(s.user.map.space, s.user.map.anv), {
+    agentOptions: { identity },
+  });
+
+  await anv
+    .balance({
+      user: { address: AccountIdentifier.TextToArray(address) },
+    })
+    .then((balance) => {
+      dispatch(anvSet(balance.toString()));
     });
 };
 

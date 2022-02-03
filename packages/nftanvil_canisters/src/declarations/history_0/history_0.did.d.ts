@@ -42,8 +42,7 @@ export interface EventFungibleTransaction {
 export type EventIndex = number;
 export type EventInfo = { 'anv' : AnvEvent } |
   { 'nft' : NftEvent } |
-  { 'pwr' : PwrEvent } |
-  { 'treasury' : TreasuryEvent };
+  { 'pwr' : PwrEvent };
 export interface InfoResponse {
   'total' : EventIndex,
   'previous' : [] | [Principal],
@@ -80,6 +79,7 @@ export type NftEvent = {
       'socket' : TokenIdentifier,
       'memo' : Memo,
       'plug' : TokenIdentifier,
+      'user' : AccountIdentifier,
     }
   } |
   {
@@ -88,6 +88,7 @@ export type NftEvent = {
       'socket' : TokenIdentifier,
       'memo' : Memo,
       'plug' : TokenIdentifier,
+      'user' : AccountIdentifier,
     }
   } |
   {
@@ -103,6 +104,7 @@ export type NftEvent = {
       'pwr' : Balance,
       'created' : Timestamp,
       'token' : TokenIdentifier,
+      'user' : AccountIdentifier,
     }
   } |
   {
@@ -137,10 +139,4 @@ export type Time = bigint;
 export type Timestamp = bigint;
 export type TokenIdentifier = number;
 export type TokenIdentifier__1 = number;
-export type TreasuryEvent = { 'withdraw' : TreasuryWithdraw };
-export interface TreasuryWithdraw {
-  'created' : Timestamp,
-  'user' : AccountIdentifier,
-  'amount' : Balance,
-}
 export interface _SERVICE extends Class {}

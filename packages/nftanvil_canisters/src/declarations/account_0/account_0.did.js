@@ -1,6 +1,7 @@
 export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const TokenIndex = IDL.Nat32;
+  const TransactionId = IDL.Vec(IDL.Nat8);
   const CanisterSlot__1 = IDL.Nat16;
   const CanisterSlot = IDL.Nat16;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
@@ -15,7 +16,17 @@ export const idlFactory = ({ IDL }) => {
     'router' : CanisterSlot__1,
     'treasury' : CanisterSlot__1,
   });
+  const TokenIdentifier__1 = IDL.Nat32;
   const TokenIdentifier = IDL.Nat32;
+  const AddressInfo = IDL.Record({
+    'background' : TokenIdentifier,
+    'name' : IDL.Text,
+    'avatar' : TokenIdentifier,
+  });
+  const AccountMeta = IDL.Record({
+    'info' : IDL.Opt(AddressInfo),
+    'transactions' : IDL.Vec(TransactionId),
+  });
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
     'cycles' : IDL.Nat,
@@ -27,12 +38,14 @@ export const idlFactory = ({ IDL }) => {
   });
   const Class = IDL.Service({
     'add' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
+    'add_transaction' : IDL.Func([AccountIdentifier, TransactionId], [], []),
     'config_set' : IDL.Func([Config], [], []),
     'list' : IDL.Func(
         [AccountIdentifier, IDL.Nat],
-        [IDL.Vec(TokenIdentifier)],
+        [IDL.Vec(TokenIdentifier__1)],
         ['query'],
       ),
+    'meta' : IDL.Func([AccountIdentifier], [IDL.Opt(AccountMeta)], ['query']),
     'rem' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
   });

@@ -56,6 +56,15 @@ shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
       };
     };
 
+    public shared({caller}) func reward(request: Anv.RewardRequest) : async () {
+      assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
+
+      let reward = request.spent * 20 / 100;
+
+      balanceAdd(request.user, reward);
+
+      ();
+    };
 
     public shared({caller}) func transfer(request: Anv.TransferRequest) : async Anv.TransferResponse {
       let aid = Nft.User.toAccountIdentifier(request.from);
@@ -71,6 +80,7 @@ shared({caller = _installer}) actor class Class() : async Anv.Interface = this {
               let to_aid = Nft.User.toAccountIdentifier(request.to);
 
               let new_balance = bal - request.amount - _oracle.anvFee;
+              
               if (new_balance > _oracle.anvFee) {
                 _balance.put(aid, new_balance);
               } else {
