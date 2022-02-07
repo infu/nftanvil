@@ -171,6 +171,7 @@ const record2request = (v) => {
     secret: v.secret,
     custom: [],
     rechargable: true,
+    customVars: [],
   };
   return a;
 };

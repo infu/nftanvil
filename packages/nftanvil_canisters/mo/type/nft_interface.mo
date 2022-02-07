@@ -34,7 +34,7 @@ module {
         public type CanisterSlot = Nat16;
         public type CanisterRange = (CanisterSlot, CanisterSlot);
 
-        public module APrincipal = { 
+        public module APrincipal = {
        
             public func fromSlot(space:[[Nat64]], slot: CanisterSlot) : Principal {
                 let start = space[0][0];
@@ -420,6 +420,7 @@ module {
         token      : TokenIdentifier;
         use        : ItemUse;
         memo       : Memo;
+        customVar  : ?CustomVar;
     };
     
     public type TransferLinkRequest = {
@@ -732,7 +733,6 @@ module {
         transfer: ItemTransfer;
         author: AccountIdentifier;
         authorShare: Share; // min 0 ; max 10000 - which is 100%
-        secret: Bool;
         content: ?Content;
         thumb: Content; // may overwrite class
         entropy: Blob;
@@ -740,10 +740,13 @@ module {
         attributes: Attributes;
         tags:Tags;
         custom: ?CustomData;
+        secret: Bool;
         rechargable: Bool;
+
         // Idea: Have maturity rating
     };
-        
+
+
     public type CustomData = Blob;
     public module CustomData = {
         public func validate(t : CustomData) : Bool {
@@ -753,6 +756,8 @@ module {
             (Nat64.fromNat(t.size()) / 1024) * Pricing.STORAGE_KB_PER_MIN 
         };
     };
+
+    public type CustomVar = Blob; // 32bytes / 256bit
 
     public type MetadataInput = {
         // collectionId: ?CollectionId;
@@ -768,6 +773,7 @@ module {
         attributes: Attributes;
         tags: Tags;
         custom: ?CustomData;
+        customVar: CustomVar;
         authorShare: Share;
         price: Price;
         rechargable: Bool;
@@ -885,6 +891,8 @@ module {
         var ttl : ?Nat32; // time to live
         var history : [Blob];
         var allowance : ?Principal;
+        var customVar : CustomVar; //256bit / 32bytes
+        var lastTransfer : Nat32; // in minutes 
     };
 
     public type MetavarsFrozen = {
