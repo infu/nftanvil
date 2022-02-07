@@ -14,8 +14,8 @@ type Class =
  service {
    config_set: (Config) -> ();
  };
-type CanisterSlot__1 = nat16;
-type CanisterSlot = nat16;
+type CanisterSlot__1 = nat64;
+type CanisterSlot = nat64;
 type CanisterRange = 
  record {
    CanisterSlot;

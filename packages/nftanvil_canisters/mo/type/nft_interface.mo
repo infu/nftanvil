@@ -31,7 +31,7 @@ module {
         public type AccountIdentifier = Blob; //32 bytes
         public type AccountIdentifierShort = Blob; //28bytes
 
-        public type CanisterSlot = Nat16;
+        public type CanisterSlot = Nat64;
         public type CanisterRange = (CanisterSlot, CanisterSlot);
 
         public module APrincipal = {
@@ -39,7 +39,7 @@ module {
             public func fromSlot(space:[[Nat64]], slot: CanisterSlot) : Principal {
                 let start = space[0][0];
                 Principal.fromBlob(Blob.fromArray(_Array.concat<Nat8>(
-                    Blob_.nat64ToBytes(start + Nat64.fromNat(Nat16.toNat(slot))),
+                    Blob_.nat64ToBytes(start + slot),
                     [1,1]
                 )));
             };
@@ -54,7 +54,7 @@ module {
             public func isLegitimateSlot(space:[[Nat64]], idx: CanisterSlot) : Bool {
                 let start = space[0][0];
                 let end = space[0][1];
-                let range = Nat16.fromNat(Nat64.toNat(end - start));
+                let range = end - start;
                 idx >= 0 and (idx <= range);
             };
 
@@ -66,7 +66,7 @@ module {
                 let start = space[0][0];
                 let end = space[0][1];
                 if (idx < start and idx > end) return null;
-                return ?Nat16.fromNat(Nat64.toNat(idx - start));
+                return ?(idx - start);
             }
         };
 
@@ -118,7 +118,7 @@ module {
 
                 let crc = Blob_.bytesToNat32(rawPrefix);
 
-                Nat16.fromNat(Nat32.toNat(crc  %  Nat32.fromNat(Nat16.toNat(max))));
+                Nat64.fromNat(Nat32.toNat(crc))  %  max
             };
 
             public func equal(a : AccountIdentifier, b : AccountIdentifier) : Bool {
@@ -182,13 +182,13 @@ module {
             };
         };
 
-        public type TokenIdentifier = Nat32;
+        public type TokenIdentifier = Nat64;
         // public type TokenIdentifierBlob = Blob;
 
         public module TokenIdentifier = {
         
             public func encode(slot : CanisterSlot, tokenIndex : TokenIndex) : TokenIdentifier {
-                Nat32.fromNat(Nat16.toNat(slot)) << 16 | tokenIndex
+                slot << 16 | Nat64.fromNat(Nat16.toNat(tokenIndex));
                 // let rawTokenId = Array.flatten<Nat8>([
                 //     Blob.toArray(Principal.toBlob(canisterId)),
                 //     Binary.BigEndian.fromNat32(tokenIndex),
@@ -198,8 +198,8 @@ module {
             };
 
             public func decode(tokenId : TokenIdentifier) : (CanisterSlot, TokenIndex) {
-                let slot:Nat16 = Nat16.fromNat(Nat32.toNat(tokenId >> 16));
-                let idx:Nat32 = (tokenId << 16) >> 16; 
+                let slot:Nat64 = tokenId >> 16;
+                let idx:Nat16 = Nat16.fromNat(Nat64.toNat(tokenId & 65535)); 
                 (slot, idx)
 
                 // let bs = Blob.toArray(Principal.toBlob(Principal.fromText(tokenId)));
@@ -213,11 +213,11 @@ module {
             };
 
             public func equal(a: TokenIdentifier, b:TokenIdentifier) : Bool {
-                 Nat32.equal(a, b);
+                 Nat64.equal(a, b);
             };
 
             public func hash(x: TokenIdentifier) : Hash.Hash {
-                 return x;
+                 return Nat32.fromNat(Nat64.toNat( (x << 32) >> 32 ));
             };
 
             // public func toBlob(tokenId : TokenIdentifier) : TokenIdentifierBlob {
@@ -369,12 +369,12 @@ module {
    
 
     // Represents an individual token's index within a given canister.
-    public type TokenIndex = Nat32;
+    public type TokenIndex = Nat16;
 
     public module TokenIndex = {
         public func equal(a : TokenIndex, b : TokenIndex) : Bool { a == b; };
 
-        public func hash(a : TokenIndex) : Hash.Hash { a; };
+        public func hash(a : TokenIndex) : Hash.Hash { Nat32.fromNat(Nat16.toNat(a)); };
     };
 
     public type TransactionId = Blob;
@@ -741,7 +741,7 @@ module {
         tags:Tags;
         custom: ?CustomData;
         secret: Bool;
-        rechargable: Bool;
+        rechargeable: Bool;
 
         // Idea: Have maturity rating
     };
@@ -773,10 +773,10 @@ module {
         attributes: Attributes;
         tags: Tags;
         custom: ?CustomData;
-        customVar: CustomVar;
+        customVar: ?CustomVar;
         authorShare: Share;
         price: Price;
-        rechargable: Bool;
+        rechargeable: Bool;
     };
 
     public module Pricing = {
@@ -857,6 +857,15 @@ module {
         // rechargeOps : Nat32;
     };
 
+    public module Price = {
+        public func NotForSale() : Price {
+            {
+                amount = 0;
+                marketplace = null;
+                affiliate = null;
+            }
+        }
+    };
  
     public module MetadataInput = {
         public func validate(m : MetadataInput) : Bool {
@@ -891,7 +900,7 @@ module {
         var ttl : ?Nat32; // time to live
         var history : [Blob];
         var allowance : ?Principal;
-        var customVar : CustomVar; //256bit / 32bytes
+        var customVar : ?CustomVar; //256bit / 32bytes
         var lastTransfer : Nat32; // in minutes 
     };
 
@@ -1185,7 +1194,7 @@ module {
 
 
     public type StatsResponse = {
-        minted: Nat32;
+        minted: Nat16;
         transfers: Nat32;
         burned: Nat32;
         cycles: Nat;

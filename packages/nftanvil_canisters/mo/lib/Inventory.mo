@@ -1,6 +1,8 @@
 import Iter "mo:base/Iter";
 import HashMap "mo:base/HashMap";
 import Nat32 "mo:base/Nat32";
+import Nat64 "mo:base/Nat64";
+
 import Hash "mo:base/Hash";
 import Buffer "mo:base/Buffer";
 import Array_ "./Array";
@@ -8,28 +10,29 @@ import Array_ "./Array";
 
 module {
 
+    public type TokenIdentifier = Nat64;
     public class Inventory(
-        initial : [Nat32]
+        initial : [Nat64]
     )
     {
 
-        var b : Buffer.Buffer<Nat32> = Array_.bufferFromArray(initial);
+        var b : Buffer.Buffer<TokenIdentifier> = Array_.bufferFromArray(initial);
 
-        public func serialize() : [Nat32] {
+        public func serialize() : [TokenIdentifier] {
           b.toArray()
         };
 
-        public func indexOf(v: Nat32) : ?Nat {
+        public func indexOf(v: TokenIdentifier) : ?Nat {
             let it = b.vals();
             var idx:Nat = 0;
             for (x in it) {
-                if (Nat32.equal(x,v)) return ?idx;
+                if (Nat64.equal(x,v)) return ?idx;
                 idx += 1;
             };
             return null;
         };
 
-        public func add(v :Nat32) : () {
+        public func add(v :TokenIdentifier) : () {
             switch(indexOf(v)) {
                 case (?idx) {
                     ()
@@ -47,7 +50,7 @@ module {
             }
         };
 
-        public func rem(v: Nat32) : () {
+        public func rem(v: TokenIdentifier) : () {
             switch(indexOf(v)) {
                 case (?idx) {
                     b.put(idx, 0);
@@ -58,8 +61,8 @@ module {
             }
         };
 
-        public func list() : Iter.Iter<Nat32> {
-            Iter.filter(b.vals(), func (v: Nat32) : Bool { v != 0 });
+        public func list() : Iter.Iter<TokenIdentifier> {
+            Iter.filter(b.vals(), func (v: TokenIdentifier) : Bool { v != 0 });
         };
 
     }

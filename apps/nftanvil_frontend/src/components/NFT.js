@@ -461,7 +461,7 @@ function UnsocketButton({ id }) {
           <ModalBody>
             <FormControl>
               <FormLabel>Target plug token identifier</FormLabel>
-              <Input ref={initialRef} placeholder="u2jxv-3qkor..." />
+              <Input ref={initialRef} placeholder="NFTA29SL..." />
             </FormControl>
           </ModalBody>
           <ModalFooter>
@@ -538,7 +538,7 @@ function SocketButton({ id }) {
           <ModalBody>
             <FormControl>
               <FormLabel>Target socket token identifier</FormLabel>
-              <Input ref={initialRef} placeholder="u2jxv-3qkor..." />
+              <Input ref={initialRef} placeholder="NFTA29SL..." />
               <Text p={1} mt={1}>
                 Both the plug and the socket need to be owned by the same
                 account

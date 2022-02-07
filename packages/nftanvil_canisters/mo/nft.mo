@@ -14,6 +14,7 @@ import Iter "mo:base/Iter";
 import Result "mo:base/Result";
 import Time "mo:base/Time";
 
+import Nat16 "mo:base/Nat16";
 import Nat32 "mo:base/Nat32";
 import Nat8 "mo:base/Nat8";
 import CRC32 "mo:hash/CRC32";
@@ -103,7 +104,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private stable var _statsTransfers : Nat32  = 0;
     private stable var _statsBurned : Nat32 = 0;
 
-    private stable var _nextTokenId : Nat32 = 1;
+    private stable var _nextTokenId : Nft.TokenIndex = 1;
     private stable var _priceIndex : Nat32 = 1;
 
     private stable var _available : Bool = true;
@@ -111,8 +112,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     var rand = PseudoRandom.PseudoRandom();
 
     private let thresholdMemory = 1147483648; //  ~1GB
-    private let thresholdNFTMask:Nat32 = 8191; // Dont touch. 13 bit Nat
-    private let thresholdNFTCount:Nat32 = 4001; // can go up to 8191
+    private let thresholdNFTMask:Nft.TokenIndex = 8191; // Dont touch. 13 bit Nat
+    private let thresholdNFTCount:Nft.TokenIndex = 4001; // can go up to 8191
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -277,7 +278,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                                         resetTransferBindings(meta, vars);
                                         vars.lastTransfer := timeInMinutes();
-                                        
+
                                         let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now();token = tokenId(tokenIndex); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
                                         addTransaction(vars, transactionId);
 
@@ -349,11 +350,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                         SNFT_move(seller, toUserAID, tokenIndex);
 
-                        vars.price := {
-                            amount=0;
-                            marketplace=null;
-                            affiliate=null;
-                        };
+                        vars.price := Nft.Price.NotForSale();
+
 
                         // recharge
                         vars.pwrStorage := topStorage;
@@ -411,7 +409,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
      
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars))) {
-                            if (meta.rechargable == false) return #err(#Other("Can't sell nfts which are not rechargable"));
+                            if (meta.rechargeable == false) return #err(#Other("Can't sell nfts which are not rechargeable"));
                             if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#NotTransferable);
                             
                             if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
@@ -548,7 +546,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                                 switch(request.customVar) {
                                     case (?v) {
-                                        vars.customVar := v;
+                                        vars.customVar := ?v;
                                     };
                                     case (null) ();
                                 };
@@ -680,13 +678,13 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         _chunk.put(chunkId, request.data);
     };
 
-    private func chunkIdEncode(tokenIndex:Nat32, chunkIndex:Nat32, ctype:Nat32) : Nat32 {
-        ((tokenIndex & thresholdNFTMask) << 19) | ((chunkIndex & 255) << 2) | (ctype);
+    private func chunkIdEncode(tokenIndex: Nft.TokenIndex, chunkIndex:Nat32, ctype:Nat32) : Nat32 {
+        ((Nat32.fromNat(Nat16.toNat(tokenIndex)) & Nat32.fromNat(Nat16.toNat(thresholdNFTMask))) << 19) | ((chunkIndex & 255) << 2) | (ctype);
     };
 
-    private func chunkIdDecode(x:Nat32) : (tokenIndex:Nat32, chunkIndex:Nat32, ctype:Nat32) {
+    private func chunkIdDecode(x:Nat32) : (tokenIndex:Nft.TokenIndex, chunkIndex:Nat32, ctype:Nat32) {
         (
-            ((x >> 19 ) & thresholdNFTMask), //| (Nat32.fromNat(_conf.slot)<<13) ,
+            Nat16.fromNat(Nat32.toNat(((x >> 19 ) & Nat32.fromNat(Nat16.toNat(thresholdNFTMask))))), //| (Nat32.fromNat(_conf.slot)<<13) ,
             (x >> 2) & 255,
             (x & 3)
         )
@@ -895,7 +893,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         switch(getMeta(tokenIndex)) {
                 case (#ok((m,v))) {
                 
-                if (m.rechargable == false) return #err(#Rejected);
+                if (m.rechargeable == false) return #err(#Rejected);
 
                 let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(m,v);
 
@@ -983,7 +981,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             authorShare = m.authorShare;
             created = timestamp;
             entropy = Blob.fromArray( Array_.amap(32, func(x:Nat) : Nat8 { Nat8.fromNat(Nat32.toNat(rand.get(8))) })); // 64 bits;
-            rechargable = m.rechargable;
+            rechargeable = m.rechargeable;
         };
 
         let mvar : Metavars = {
@@ -1085,7 +1083,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         if (Nft.Share.validate(request.metadata.authorShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
-        if (request.metadata.rechargable == false and request.metadata.price.amount != 0) return #err(#Invalid("Meta invalid - Can't sell non rechargable NFTs"));
+        if (request.metadata.rechargeable == false and request.metadata.price.amount != 0) return #err(#Invalid("Meta invalid - Can't sell non rechargeable NFTs"));
 
 
         await SNFT_mint(author, request);
@@ -1114,6 +1112,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                     let to = Nft.User.toAccountIdentifier( #principal(socketCanister) );
                                     SNFT_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
                                     await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
+
+                                    vars.lastTransfer := timeInMinutes();
+                                    vars.price := Nft.Price.NotForSale();
 
                                     let transactionId = await Cluster.history(_conf).add(#nft(#socket({user=Nft.User.toAccountIdentifier(request.user); created=Time.now();plug = request.plug; socket=request.socket; memo=request.memo})));
                                     addTransaction(vars, transactionId);
@@ -1214,6 +1215,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                 let (slot, _) = Nft.TokenIdentifier.decode(request.plug);
                           
                                 let plugActor = actor (Principal.toText(Nft.APrincipal.fromSlot(_conf.space, slot))) : Class;
+
                                 switch(await plugActor.unplug(request)) {
                                     case (#ok()) {
                                         
@@ -1255,7 +1257,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         // if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
 
-        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+        let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, null));
     
             switch (balRequireOwner(balRequireMinimum(balGet({token = request.plug; user = caller_user}),1),caller_user)) {
                 case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {

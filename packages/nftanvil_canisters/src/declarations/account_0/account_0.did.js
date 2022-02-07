@@ -1,9 +1,9 @@
 export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
-  const TokenIndex = IDL.Nat32;
+  const TokenIndex = IDL.Nat16;
   const TransactionId = IDL.Vec(IDL.Nat8);
-  const CanisterSlot__1 = IDL.Nat16;
-  const CanisterSlot = IDL.Nat16;
+  const CanisterSlot__1 = IDL.Nat64;
+  const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'anv' : CanisterSlot__1,
@@ -16,8 +16,8 @@ export const idlFactory = ({ IDL }) => {
     'router' : CanisterSlot__1,
     'treasury' : CanisterSlot__1,
   });
-  const TokenIdentifier__1 = IDL.Nat32;
-  const TokenIdentifier = IDL.Nat32;
+  const TokenIdentifier__1 = IDL.Nat64;
+  const TokenIdentifier = IDL.Nat64;
   const AddressInfo = IDL.Record({
     'background' : TokenIdentifier,
     'name' : IDL.Text,

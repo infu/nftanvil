@@ -10,8 +10,8 @@ export interface AddressInfo {
   'avatar' : TokenIdentifier,
 }
 export type CanisterRange = [CanisterSlot, CanisterSlot];
-export type CanisterSlot = number;
-export type CanisterSlot__1 = number;
+export type CanisterSlot = bigint;
+export type CanisterSlot__1 = bigint;
 export interface Class {
   'add' : (arg_0: AccountIdentifier, arg_1: TokenIndex) => Promise<undefined>,
   'add_transaction' : (
@@ -46,8 +46,8 @@ export interface StatsResponse {
   'rts_reclaimed' : bigint,
   'rts_version' : string,
 }
-export type TokenIdentifier = number;
-export type TokenIdentifier__1 = number;
+export type TokenIdentifier = bigint;
+export type TokenIdentifier__1 = bigint;
 export type TokenIndex = number;
 export type TransactionId = Array<number>;
 export interface _SERVICE extends Class {}

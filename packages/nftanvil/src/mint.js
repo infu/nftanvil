@@ -5,13 +5,17 @@ import {
   Principal,
   routerCanister,
   nftCanister,
+  pwrCanister,
   encodeTokenId,
+  getMap,
 } from "./internal.js";
 
 import {
   uploadFile,
   chunkBlob,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+
+import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 
 import pLimit from "p-limit";
 const limit = pLimit(
@@ -21,7 +25,7 @@ import { blobFrom } from "fetch-blob/from.js";
 import { NFTStorage } from "nft.storage";
 
 export const easyMint = async (arr) => {
-  await Promise.all(
+  return await Promise.all(
     arr.map((a) => {
       return limit(() => easyMintOne(a));
     })
@@ -69,7 +73,7 @@ export const uploadIPFS = async (token, up) => {
 //     });
 // };
 
-export const easyMintOne = async ({ to, metadata }) => {
+export const easyMintOne = async ({ user, subaccount, metadata }) => {
   let ipfs_pins = [];
   if (metadata?.content[0]?.ipfs?.path) {
     let blob = await blobFrom(metadata.content[0].ipfs.path);
@@ -97,10 +101,16 @@ export const easyMintOne = async ({ to, metadata }) => {
 
   let { router } = await routerCanister();
 
-  let available = await router.getAvailable();
-  let nftcan = Principal.fromText(
-    available[Math.floor(Math.random() * available.length)]
-  );
+  // let available = await router.getAvailable();
+
+  let map = await getMap();
+
+  let available = map.nft_avail;
+  let slot = available[Math.floor(Math.random() * available.length)];
+
+  let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr));
+
+  let nftcan = PrincipalFromSlot(map.space, slot);
 
   let nft = nftCanister(nftcan);
 
@@ -114,11 +124,10 @@ export const easyMintOne = async ({ to, metadata }) => {
       metadata.thumb.internal.path
     );
 
-  let s = await nft.mint({ to, metadata });
+  let s = await pwr.nft_mint(slot, { user, subaccount, metadata });
   if (s.ok) {
-    let tokenIndex = s.ok;
-    let tid = encodeTokenId(nftcan.toText(), tokenIndex);
-
+    let { tokenIndex, transactionId } = s.ok;
+    let tid = encodeTokenId(slot, tokenIndex);
     for (let { cid, secret } of ipfs_pins) {
       let { ok, err } = await pinIPFS(tid, cid, secret);
       if (err) throw Error("Couldn't pin to IPFS");

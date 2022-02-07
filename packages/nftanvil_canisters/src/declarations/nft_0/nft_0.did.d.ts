@@ -34,8 +34,8 @@ export type BurnResponse = { 'ok' : { 'transactionId' : TransactionId } } |
 export interface Callback { 'token' : [] | [Token], 'body' : Array<number> }
 export type CallbackFunc = () => Promise<undefined>;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
-export type CanisterSlot = number;
-export type CanisterSlot__1 = number;
+export type CanisterSlot = bigint;
+export type CanisterSlot__1 = bigint;
 export interface ClaimLinkRequest {
   'to' : User,
   'key' : Array<number>,
@@ -98,6 +98,7 @@ export type Content = {
 export type ContentType = string;
 export type Cooldown = number;
 export type CustomData = Array<number>;
+export type CustomVar = Array<number>;
 export type DomainName = string;
 export interface FetchChunkRequest {
   'tokenIndex' : TokenIndex,
@@ -134,7 +135,7 @@ export interface Metadata {
   'entropy' : Array<number>,
   'attributes' : Attributes,
   'transfer' : ItemTransfer,
-  'rechargable' : boolean,
+  'rechargeable' : boolean,
 }
 export interface MetadataInput {
   'ttl' : [] | [number],
@@ -151,7 +152,8 @@ export interface MetadataInput {
   'attributes' : Attributes,
   'price' : Price,
   'transfer' : ItemTransfer,
-  'rechargable' : boolean,
+  'rechargeable' : boolean,
+  'customVar' : [] | [CustomVar],
 }
 export type MetadataResponse = {
     'ok' : {
@@ -346,7 +348,7 @@ export interface Token {
   'index' : bigint,
   'content_encoding' : string,
 }
-export type TokenIdentifier = number;
+export type TokenIdentifier = bigint;
 export type TokenIndex = number;
 export type TransactionId = Array<number>;
 export interface TransferLinkRequest {
@@ -421,6 +423,7 @@ export interface UseRequest {
   'memo' : Memo,
   'user' : User,
   'subaccount' : [] | [SubAccount],
+  'customVar' : [] | [CustomVar],
 }
 export type UseResponse = { 'ok' : { 'transactionId' : TransactionId } } |
   {

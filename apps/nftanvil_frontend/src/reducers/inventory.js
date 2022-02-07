@@ -43,8 +43,7 @@ export const loadInventory = (aid, pageIdx) => async (dispatch, getState) => {
 
   pageIdx = parseInt(pageIdx, 10);
   let list = await acc.list(AccountIdentifier.TextToArray(aid), pageIdx);
-  list = list.filter((x) => x !== 0).map((x) => tokenToText(x));
-
+  list = list.filter((x) => x !== 0n).map((x) => tokenToText(x));
   dispatch(pageSet({ aid, pageIdx, list }));
 };
 

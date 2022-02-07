@@ -11,8 +11,8 @@ export type Balance__1 = bigint;
 export type Balance__2 = bigint;
 export type BlockIndex = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
-export type CanisterSlot = number;
-export type CanisterSlot__1 = number;
+export type CanisterSlot = bigint;
+export type CanisterSlot__1 = bigint;
 export interface Class {
   'balance' : (arg_0: BalanceRequest) => Promise<BalanceResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
@@ -56,6 +56,7 @@ export type Content = {
   { 'external' : ICPath };
 export type ContentType = string;
 export type CustomData = Array<number>;
+export type CustomVar = Array<number>;
 export type DomainName = string;
 export interface ICP { 'e8s' : bigint }
 export type ICPath = string;
@@ -79,7 +80,8 @@ export interface MetadataInput {
   'attributes' : Attributes,
   'price' : Price,
   'transfer' : ItemTransfer,
-  'rechargable' : boolean,
+  'rechargeable' : boolean,
+  'customVar' : [] | [CustomVar],
 }
 export interface MintRequest {
   'metadata' : MetadataInput,
@@ -183,7 +185,7 @@ export type SubAccount__1 = Array<number>;
 export type Tag = string;
 export type Tags = Array<Tag>;
 export type Time = bigint;
-export type TokenIdentifier = number;
+export type TokenIdentifier = bigint;
 export type TokenIndex = number;
 export type TransactionId = Array<number>;
 export type TransferError = {

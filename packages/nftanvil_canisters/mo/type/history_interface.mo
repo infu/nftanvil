@@ -50,7 +50,7 @@ module {
     public module TransactionId = { 
         public func encode(history_slot: Nft.CanisterSlot, idx: EventIndex) : TransactionId { 
                 let raw = Array.flatten<Nat8>([
-                    Blob_.nat16ToBytes(history_slot),
+                    Blob_.nat64ToBytes(history_slot),
                     Binary.BigEndian.fromNat32(idx),
                 ]);
                 
@@ -213,7 +213,7 @@ module {
                         Blob_.intToBytes(created),
                         Blob.toArray(from),
                         Blob.toArray(to),
-                        Blob_.nat32ToBytes(token),
+                        Blob_.nat64ToBytes(token),
                         Blob.toArray(memo)
                     ])
                 };
@@ -222,7 +222,7 @@ module {
                         [4:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
-                        Blob_.nat32ToBytes(token),
+                        Blob_.nat64ToBytes(token),
                         Blob.toArray(memo)
                     ])
                 };
@@ -231,7 +231,7 @@ module {
                         [5:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
-                        Blob_.nat32ToBytes(token),
+                        Blob_.nat64ToBytes(token),
                         Nft.ItemUse.hash(use),
                         Blob.toArray(memo)
                     ])
@@ -240,7 +240,7 @@ module {
                     Array.flatten<Nat8>([
                         [6:Nat8],
                         Blob_.intToBytes(created),
-                        Blob_.nat32ToBytes(token),
+                        Blob_.nat64ToBytes(token),
                         Blob_.nat64ToBytes(pwr),
                         Blob.toArray(user),
                     ])
@@ -249,8 +249,8 @@ module {
                     Array.flatten<Nat8>([
                         [7:Nat8],
                         Blob_.intToBytes(created),
-                        Blob_.nat32ToBytes(socket),
-                        Blob_.nat32ToBytes(plug),
+                        Blob_.nat64ToBytes(socket),
+                        Blob_.nat64ToBytes(plug),
                         Blob.toArray(memo),
                         Blob.toArray(user)
                     ])
@@ -259,8 +259,8 @@ module {
                     Array.flatten<Nat8>([
                         [8:Nat8],
                         Blob_.intToBytes(created),
-                        Blob_.nat32ToBytes(socket),
-                        Blob_.nat32ToBytes(plug),
+                        Blob_.nat64ToBytes(socket),
+                        Blob_.nat64ToBytes(plug),
                         Blob.toArray(memo),
                         Blob.toArray(user)
                     ])
@@ -275,7 +275,7 @@ module {
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
                         Blob.toArray(Principal.toBlob(spender)),
-                        Blob_.nat32ToBytes(token)
+                        Blob_.nat64ToBytes(token)
                     ])
                 };
             
@@ -294,7 +294,7 @@ module {
                             [9:Nat8],
                             Blob_.intToBytes(e.created),
                             Blob_.nat64ToBytes(e.amount),
-                            Blob_.nat32ToBytes(e.token),
+                            Blob_.nat64ToBytes(e.token),
                             Blob.toArray(e.buyer),
                             Blob.toArray(e.seller),
                             Blob.toArray(e.author.address),

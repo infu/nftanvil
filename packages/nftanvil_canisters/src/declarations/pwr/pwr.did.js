@@ -16,8 +16,8 @@ export const idlFactory = ({ IDL }) => {
     'balance' : Balance,
     'oracle' : Oracle__1,
   });
-  const CanisterSlot__1 = IDL.Nat16;
-  const CanisterSlot = IDL.Nat16;
+  const CanisterSlot__1 = IDL.Nat64;
+  const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'anv' : CanisterSlot__1,
@@ -69,6 +69,7 @@ export const idlFactory = ({ IDL }) => {
     'bindsForever' : IDL.Null,
     'bindsDuration' : IDL.Nat32,
   });
+  const CustomVar = IDL.Vec(IDL.Nat8);
   const MetadataInput = IDL.Record({
     'ttl' : IDL.Opt(IDL.Nat32),
     'thumb' : Content,
@@ -84,7 +85,8 @@ export const idlFactory = ({ IDL }) => {
     'attributes' : Attributes,
     'price' : Price,
     'transfer' : ItemTransfer,
-    'rechargable' : IDL.Bool,
+    'rechargeable' : IDL.Bool,
+    'customVar' : IDL.Opt(CustomVar),
   });
   const SubAccount__1 = IDL.Vec(IDL.Nat8);
   const MintRequest = IDL.Record({
@@ -92,7 +94,7 @@ export const idlFactory = ({ IDL }) => {
     'user' : User__1,
     'subaccount' : IDL.Opt(SubAccount__1),
   });
-  const TokenIndex = IDL.Nat32;
+  const TokenIndex = IDL.Nat16;
   const TransactionId = IDL.Vec(IDL.Nat8);
   const TransferResponseError = IDL.Variant({
     'InsufficientBalance' : IDL.Null,
@@ -118,7 +120,7 @@ export const idlFactory = ({ IDL }) => {
       'OutOfMemory' : IDL.Null,
     }),
   });
-  const TokenIdentifier = IDL.Nat32;
+  const TokenIdentifier = IDL.Nat64;
   const Balance__1 = IDL.Nat64;
   const PurchaseRequest = IDL.Record({
     'token' : TokenIdentifier,

@@ -20,6 +20,7 @@ type UseResponse =
  };
 type UseRequest = 
  record {
+   customVar: opt CustomVar;
    memo: Memo;
    subaccount: opt SubAccount;
    token: TokenIdentifier;
@@ -119,8 +120,8 @@ type TransferLinkRequest =
    token: TokenIdentifier;
  };
 type TransactionId = blob;
-type TokenIndex = nat32;
-type TokenIdentifier = nat32;
+type TokenIndex = nat16;
+type TokenIdentifier = nat64;
 type Token = 
  record {
    content_encoding: text;
@@ -147,7 +148,7 @@ type StatsResponse =
  record {
    burned: nat32;
    cycles: nat;
-   minted: nat32;
+   minted: nat16;
    rts_heap_size: nat;
    rts_max_live_size: nat;
    rts_memory_size: nat;
@@ -389,12 +390,13 @@ type MetadataInput =
    authorShare: Share;
    content: opt Content;
    custom: opt CustomData;
+   customVar: opt CustomVar;
    domain: opt DomainName;
    lore: opt text;
    name: opt text;
    price: Price;
    quality: Quality;
-   rechargable: bool;
+   rechargeable: bool;
    secret: bool;
    tags: Tags;
    thumb: Content;
@@ -414,7 +416,7 @@ type Metadata =
    lore: opt ItemLore;
    name: opt ItemName;
    quality: Quality;
-   rechargable: bool;
+   rechargeable: bool;
    secret: bool;
    tags: Tags;
    thumb: Content;
@@ -453,6 +455,7 @@ type FetchChunkRequest =
    tokenIndex: TokenIndex;
  };
 type DomainName = text;
+type CustomVar = blob;
 type CustomData = blob;
 type Cooldown = nat32;
 type ContentType = text;
@@ -531,8 +534,8 @@ type ClaimLinkRequest =
    to: User;
    token: TokenIdentifier;
  };
-type CanisterSlot__1 = nat16;
-type CanisterSlot = nat16;
+type CanisterSlot__1 = nat64;
+type CanisterSlot = nat64;
 type CanisterRange = 
  record {
    CanisterSlot;

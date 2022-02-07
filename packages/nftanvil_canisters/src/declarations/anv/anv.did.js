@@ -7,8 +7,8 @@ export const idlFactory = ({ IDL }) => {
   const TransactionAmount = IDL.Nat64;
   const BalanceRequest = IDL.Record({ 'user' : User__1 });
   const BalanceResponse = IDL.Nat64;
-  const CanisterSlot__1 = IDL.Nat16;
-  const CanisterSlot = IDL.Nat16;
+  const CanisterSlot__1 = IDL.Nat64;
+  const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'anv' : CanisterSlot__1,

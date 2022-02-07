@@ -688,8 +688,8 @@ function App() {
             <Route path="/history" exact component={HistoryRedirect} />
             <Route path="/:tx(tx.*)" component={HistoryTx} />
             <Route path="/history/:canister/:from/:to" component={History} />
-            <Route path="/:id(nft.*)/:code" component={NFTPage} />
-            <Route path="/:id(nft.*)" component={NFTPage} />
+            <Route path="/:id(nfta.*)/:code" component={NFTPage} />
+            <Route path="/:id(nfta.*)" component={NFTPage} />
             <Route path="/:address(.{64})" component={Inventory} />
             <Route path="/:code" component={NFTClaim} />
 

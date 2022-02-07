@@ -1,6 +1,6 @@
 export const idlFactory = ({ IDL }) => {
-  const CanisterSlot__1 = IDL.Nat16;
-  const CanisterSlot = IDL.Nat16;
+  const CanisterSlot__1 = IDL.Nat64;
+  const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'anv' : CanisterSlot__1,

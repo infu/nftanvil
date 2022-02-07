@@ -6,8 +6,8 @@ export type AnvEvent = { 'transfer' : EventFungibleTransaction };
 export type Balance = bigint;
 export type Balance__1 = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
-export type CanisterSlot = number;
-export type CanisterSlot__1 = number;
+export type CanisterSlot = bigint;
+export type CanisterSlot__1 = bigint;
 export interface Class {
   'add' : (arg_0: EventInfo) => Promise<AddResponse>,
   'config_set' : (arg_0: Config) => Promise<undefined>,
@@ -137,6 +137,6 @@ export interface PwrWithdraw {
 export type Share = number;
 export type Time = bigint;
 export type Timestamp = bigint;
-export type TokenIdentifier = number;
-export type TokenIdentifier__1 = number;
+export type TokenIdentifier = bigint;
+export type TokenIdentifier__1 = bigint;
 export interface _SERVICE extends Class {}

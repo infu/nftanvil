@@ -6,7 +6,7 @@ var bs = basex("812345679abcdefghijkmnopqrstuvwxyz");
 
 export function encode(slot, idx) {
   // console.log("ENCODE", slot, idx);
-  return [...numberToBytesArray(slot, 2), ...numberToBytesArray(idx, 4)];
+  return [...numberToBytesArray(slot, 8), ...numberToBytesArray(idx, 4)];
 }
 
 export function decode(p) {

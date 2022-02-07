@@ -65,6 +65,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
 
   let tid = tokenFromText(id);
   let { index, slot } = decodeTokenId(tid);
+
   let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
   let nftcan = nftCanister(canister, { agentOptions: { identity } });
 
@@ -237,7 +238,7 @@ export const nft_purchase =
 
     let prez;
     try {
-      prez = await pwr.nft_purchase(slot, {
+      prez = await pwr.nft_purchase(BigInt(slot), {
         token: tokenFromText(id),
         user: { address: AccountIdentifier.TextToArray(address) },
         subaccount,
@@ -627,6 +628,7 @@ export const use =
       memo,
       use,
       subaccount,
+      customVar: [],
     });
 
     if (!r.ok) throw r.err;
@@ -731,7 +733,7 @@ export const claim_link =
       token: tid,
     });
 
-    dispatch(nftFetch(tid));
+    dispatch(nftFetch(tokenToText(tid)));
 
     return resp;
   };
@@ -873,7 +875,7 @@ export const mint = (vals) => async (dispatch, getState) => {
     });
 
     console.log("mint vals", slot, vals);
-    let mint = await pwr.nft_mint(slot, {
+    let mint = await pwr.nft_mint(BigInt(slot), {
       user: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
       metadata: vals,

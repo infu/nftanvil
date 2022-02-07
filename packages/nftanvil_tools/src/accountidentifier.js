@@ -50,7 +50,8 @@ export function anvToE(x) {
 
 export function TextToSlot(aid, range) {
   return (
-    range[0] +
-    (bytesArrayToNumber(fromHexString(aid).slice(0, 4)) % (range[1] - range[0]))
+    Number(range[0]) +
+    (bytesArrayToNumber(fromHexString(aid).slice(0, 4)) %
+      Number(range[1] - range[0]))
   );
 }

@@ -17,9 +17,9 @@ export const idlFactory = ({ IDL }) => {
     'prove' : IDL.Null,
     'cooldown' : Cooldown,
   });
-  const TokenIdentifier = IDL.Nat32;
+  const TokenIdentifier = IDL.Nat64;
   const Time = IDL.Int;
-  const TokenIdentifier__1 = IDL.Nat32;
+  const TokenIdentifier__1 = IDL.Nat64;
   const Share = IDL.Nat16;
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
   const Balance__1 = IDL.Nat64;
@@ -112,8 +112,8 @@ export const idlFactory = ({ IDL }) => {
     'pwr' : PwrEvent,
   });
   const AddResponse = IDL.Vec(IDL.Nat8);
-  const CanisterSlot__1 = IDL.Nat16;
-  const CanisterSlot = IDL.Nat16;
+  const CanisterSlot__1 = IDL.Nat64;
+  const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'anv' : CanisterSlot__1,

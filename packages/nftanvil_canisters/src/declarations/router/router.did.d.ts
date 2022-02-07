@@ -1,7 +1,7 @@
 import type { Principal } from '@dfinity/principal';
 export type CanisterRange = [CanisterSlot, CanisterSlot];
-export type CanisterSlot = number;
-export type CanisterSlot__1 = number;
+export type CanisterSlot = bigint;
+export type CanisterSlot__1 = bigint;
 export interface Config {
   'anv' : CanisterSlot__1,
   'nft' : CanisterRange,

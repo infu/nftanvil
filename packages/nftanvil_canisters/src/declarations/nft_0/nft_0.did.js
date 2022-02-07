@@ -1,5 +1,5 @@
 export const idlFactory = ({ IDL }) => {
-  const TokenIdentifier = IDL.Nat32;
+  const TokenIdentifier = IDL.Nat64;
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const User = IDL.Variant({
     'principal' : IDL.Principal,
@@ -73,8 +73,8 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : IDL.Variant({ 'Rejected' : IDL.Null, 'Other' : IDL.Text }),
   });
-  const CanisterSlot__1 = IDL.Nat16;
-  const CanisterSlot = IDL.Nat16;
+  const CanisterSlot__1 = IDL.Nat64;
+  const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'anv' : CanisterSlot__1,
@@ -87,7 +87,7 @@ export const idlFactory = ({ IDL }) => {
     'router' : CanisterSlot__1,
     'treasury' : CanisterSlot__1,
   });
-  const TokenIndex = IDL.Nat32;
+  const TokenIndex = IDL.Nat16;
   const FetchChunkRequest = IDL.Record({
     'tokenIndex' : TokenIndex,
     'subaccount' : IDL.Opt(SubAccount),
@@ -167,7 +167,7 @@ export const idlFactory = ({ IDL }) => {
     'entropy' : IDL.Vec(IDL.Nat8),
     'attributes' : Attributes,
     'transfer' : ItemTransfer,
-    'rechargable' : IDL.Bool,
+    'rechargeable' : IDL.Bool,
   });
   const Sockets = IDL.Vec(TokenIdentifier);
   const Price = IDL.Record({
@@ -198,6 +198,7 @@ export const idlFactory = ({ IDL }) => {
     }),
     'err' : CommonError,
   });
+  const CustomVar = IDL.Vec(IDL.Nat8);
   const MetadataInput = IDL.Record({
     'ttl' : IDL.Opt(IDL.Nat32),
     'thumb' : Content,
@@ -213,7 +214,8 @@ export const idlFactory = ({ IDL }) => {
     'attributes' : Attributes,
     'price' : Price,
     'transfer' : ItemTransfer,
-    'rechargable' : IDL.Bool,
+    'rechargeable' : IDL.Bool,
+    'customVar' : IDL.Opt(CustomVar),
   });
   const MintRequest = IDL.Record({
     'metadata' : MetadataInput,
@@ -356,7 +358,7 @@ export const idlFactory = ({ IDL }) => {
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
     'transfers' : IDL.Nat32,
-    'minted' : IDL.Nat32,
+    'minted' : IDL.Nat16,
     'cycles' : IDL.Nat,
     'rts_memory_size' : IDL.Nat,
     'rts_total_allocation' : IDL.Nat,
@@ -443,6 +445,7 @@ export const idlFactory = ({ IDL }) => {
     'memo' : Memo,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
+    'customVar' : IDL.Opt(CustomVar),
   });
   const UseResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : TransactionId }),

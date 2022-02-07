@@ -131,7 +131,7 @@ export const NFTA = ({ children }) => {
   return (
     <Snfta>
       <b>NFTA</b>
-      {children.slice(3)}
+      {children.slice(4)}
     </Snfta>
   );
 };

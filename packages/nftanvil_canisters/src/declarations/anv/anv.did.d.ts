@@ -7,8 +7,8 @@ export interface BalanceRequest { 'user' : User__1 }
 export type BalanceResponse = bigint;
 export type Balance__1 = bigint;
 export type CanisterRange = [CanisterSlot, CanisterSlot];
-export type CanisterSlot = number;
-export type CanisterSlot__1 = number;
+export type CanisterSlot = bigint;
+export type CanisterSlot__1 = bigint;
 export interface Class {
   'adminAllocate' : (
       arg_0: { 'user' : User__1, 'amount' : TransactionAmount },

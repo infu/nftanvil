@@ -7,7 +7,7 @@ export const PrincipalFromIdx = (idx) => {
 
 export const PrincipalFromSlot = (space, idx) => {
   let start = Number(space[0][0]);
-  return PrincipalFromIdx(start + idx);
+  return PrincipalFromIdx(start + Number(idx));
 };
 
 export const PrincipalToIdx = (p) => {

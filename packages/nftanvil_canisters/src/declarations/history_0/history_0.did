@@ -1,5 +1,5 @@
-type TokenIdentifier__1 = nat32;
-type TokenIdentifier = nat32;
+type TokenIdentifier__1 = nat64;
+type TokenIdentifier = nat64;
 type Timestamp = int;
 type Time = int;
 type Share = nat16;
@@ -158,8 +158,8 @@ type Class =
    info: () -> (InfoResponse) query;
    list: (ListRequest) -> (ListResponse) query;
  };
-type CanisterSlot__1 = nat16;
-type CanisterSlot = nat16;
+type CanisterSlot__1 = nat64;
+type CanisterSlot = nat64;
 type CanisterRange = 
  record {
    CanisterSlot;

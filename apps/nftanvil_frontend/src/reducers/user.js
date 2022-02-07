@@ -15,6 +15,7 @@ import {
   getSubAccountArray,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
+import { BigIntToString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { Principal } from "@dfinity/principal";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
@@ -176,11 +177,12 @@ export const auth =
 
     let map = await router.config_get();
 
+    map = BigIntToString(map);
     console.log("MAP", map);
 
-    map.space = map.space.map((x) => {
-      return [x[0].toString(), x[1].toString()];
-    });
+    // map.space = map.space.map((x) => {
+    //   return [x[0].toString(), x[1].toString()];
+    // });
 
     if (process.env.NODE_ENV !== "production") {
       console.log(

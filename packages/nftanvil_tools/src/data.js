@@ -13,7 +13,22 @@ export const bytesArrayToNumber = (a) => {
   return n;
 };
 
+export const BigIntToString = (x) => {
+  if (typeof x === "bigint") return x.toString();
+  if (Array.isArray(x)) {
+    return x.map((y) => BigIntToString(y));
+  }
+  if (typeof x === "object")
+    return Object.fromEntries(
+      Object.keys(x).map((k) => {
+        return [k, BigIntToString(x[k])];
+      })
+    );
+  return x;
+};
+
 export const numberToBytesArray = (n, size) => {
+  n = Number(n);
   // size in bytes
   const a = Array(size).fill(0);
 

@@ -50,18 +50,25 @@ export const decodeTokenId = (t) => {
 
 export const tokenToText = (tid) => {
   let p = new Uint8Array([
-    ...numberToBytesArray(getCrc32(numberToBytesArray(tid, 4)) & 65535, 2),
-    ...numberToBytesArray(tid, 4),
+    ...numberToBytesArray(getCrc32(numberToBytesArray(tid, 8)) & 65535, 2),
+    ...numberToBytesArray(tid, 8),
   ]);
 
-  return ("NFT" + token_base.encode(p)).toLowerCase();
+  return ("NFTA" + token_base.encode(p)).toLowerCase();
 };
 
 export const tokenFromText = (str) => {
   str = str.toUpperCase();
-  if (str.slice(0, 3) !== "NFT") return null;
-  let p = [...token_base.decode(str.slice(3))];
-  let t = bytesArrayToNumber(p.splice(-4));
+  if (str.slice(0, 4) !== "NFTA") return null;
+  let p = [...token_base.decode(str.slice(4))];
+  let t = bytesArrayToNumber(p.splice(-8));
+  // console.log(
+  //   str,
+  //   t,
+  //   decodeTokenId(t),
+  //   encodeTokenId(5, 1),
+  //   tokenToText(encodeTokenId(5, 1))
+  // );
   return t;
 };
 

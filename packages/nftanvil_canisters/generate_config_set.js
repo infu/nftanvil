@@ -110,20 +110,20 @@ function oracle() {
 
 function config() {
   let r = `'(record {
-    nft= record { ${conf.nft[0] - range_start}:nat16; ${
+    nft= record { ${conf.nft[0] - range_start}:nat64; ${
     conf.nft[1] - range_start
-  }:nat16 };
+  }:nat64 };
     nft_avail = vec { ${conf["nft_avail"]
-      .map((x) => ` ${x - range_start}:nat16`)
+      .map((x) => ` ${x - range_start}:nat64`)
       .join("; ")} };
-    account= record { ${conf.account[0] - range_start}:nat16; ${
+    account= record { ${conf.account[0] - range_start}:nat64; ${
     conf.account[1] - range_start
-  }:nat16 };
-    pwr= ${conf["pwr"] - range_start}:nat16;
-    anv= ${conf["anv"] - range_start}:nat16;
-    history= ${conf["history"] - range_start}:nat16;
-    treasury= ${conf["treasury"] - range_start}:nat16;
-    router=  ${conf["router"] - range_start}:nat16;
+  }:nat64 };
+    pwr= ${conf["pwr"] - range_start}:nat64;
+    anv= ${conf["anv"] - range_start}:nat64;
+    history= ${conf["history"] - range_start}:nat64;
+    treasury= ${conf["treasury"] - range_start}:nat64;
+    router=  ${conf["router"] - range_start}:nat64;
     space= vec { vec {${conf.space[0][0]}:nat64; ${conf.space[0][1]}:nat64 }}
   })'`;
 

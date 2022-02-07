@@ -158,7 +158,6 @@ const record2request = (v) => {
     price: v.price,
     domain: v.domain ? [v.domain] : [],
     authorShare: Math.round(v.authorShare * 100),
-    collectionId: v.collectionId ? v.collectionId : [],
     name: [v.name].filter(Boolean),
     lore: [v.lore].filter(Boolean),
     transfer: v.transfer,
@@ -170,8 +169,8 @@ const record2request = (v) => {
     thumb: v.thumb,
     secret: v.secret,
     custom: [],
-    rechargable: true,
-    customVars: [],
+    rechargeable: true,
+    customVar: [],
   };
   return a;
 };

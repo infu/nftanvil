@@ -27,8 +27,8 @@ type Config =
    space: vec vec nat64;
    treasury: CanisterSlot__1;
  };
-type CanisterSlot__1 = nat16;
-type CanisterSlot = nat16;
+type CanisterSlot__1 = nat64;
+type CanisterSlot = nat64;
 type CanisterRange = 
  record {
    CanisterSlot;

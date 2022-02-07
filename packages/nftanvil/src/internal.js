@@ -5,6 +5,8 @@ import * as cRouter from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import * as cFrontend from "@vvv-interactive/nftanvil-canisters/cjs/frontend.js";
 import * as cNft from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 import * as cAccount from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
+import * as cPwr from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
+import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 
 import { encodeTokenId } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import fetch from "node-fetch";
@@ -16,7 +18,7 @@ dotenv.config(
 let identity = fileIdentity();
 
 import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
-
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 let host =
   process.env.NODE_ENV !== "production"
     ? "http://localhost:8000"
@@ -32,14 +34,36 @@ export const routerCanister = async () => {
   });
 
   let principal = await agent.getPrincipal();
+  map = await router.config_get();
 
   let address = principalToAccountIdentifier(principal.toText());
+  let balance = await claimBalance(address);
+  return { router, principal, address, balance, id, map };
+};
 
-  return { router, principal, address, id };
+let map = null;
+export const getMap = async () => {
+  return map;
+};
+
+export const claimBalance = async (address) => {
+  let map = await getMap();
+  let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr), {
+    agentOptions: { identity },
+  });
+
+  let balance = await pwr.balance({
+    user: { address: AccountIdentifier.TextToArray(address) },
+  });
+  return balance;
 };
 
 export const nftCanister = (id) => {
   return cNft.nftCanister(id, { agentOptions: { fetch, identity, host } });
+};
+
+export const pwrCanister = (id) => {
+  return cPwr.pwrCanister(id, { agentOptions: { fetch, identity, host } });
 };
 
 export const accountCanister = (id) => {
@@ -48,4 +72,4 @@ export const accountCanister = (id) => {
   });
 };
 
-export { fileIdentity, encodeTokenId, Principal };
+export { fileIdentity, encodeTokenId, Principal, AccountIdentifier };

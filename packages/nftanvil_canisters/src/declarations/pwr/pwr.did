@@ -52,8 +52,8 @@ type TransferError =
    TxTooOld: record {allowed_window_nanos: nat64;};
  };
 type TransactionId = blob;
-type TokenIndex = nat32;
-type TokenIdentifier = nat32;
+type TokenIndex = nat16;
+type TokenIdentifier = nat64;
 type Time = int;
 type Tags = vec Tag;
 type Tag = text;
@@ -207,12 +207,13 @@ type MetadataInput =
    authorShare: Share;
    content: opt Content;
    custom: opt CustomData;
+   customVar: opt CustomVar;
    domain: opt DomainName;
    lore: opt text;
    name: opt text;
    price: Price;
    quality: Quality;
-   rechargable: bool;
+   rechargeable: bool;
    secret: bool;
    tags: Tags;
    thumb: Content;
@@ -230,6 +231,7 @@ type IPFS_CID = text;
 type ICPath = text;
 type ICP = record {e8s: nat64;};
 type DomainName = text;
+type CustomVar = blob;
 type CustomData = blob;
 type ContentType = text;
 type Content = 
@@ -274,8 +276,8 @@ type Class =
    transfer: (TransferRequest) -> (TransferResponse);
    withdraw: (WithdrawRequest) -> (WithdrawResponse);
  };
-type CanisterSlot__1 = nat16;
-type CanisterSlot = nat16;
+type CanisterSlot__1 = nat64;
+type CanisterSlot = nat64;
 type CanisterRange = 
  record {
    CanisterSlot;
