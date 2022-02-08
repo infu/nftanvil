@@ -158,7 +158,7 @@ export const auth =
       if (c.substring(0, 3) === "a00") {
         address = c;
         subaccount = AccountIdentifier.ArrayToText(getSubAccountArray(i));
-        console.log(subaccount);
+        //console.log(subaccount);
 
         break;
       }
