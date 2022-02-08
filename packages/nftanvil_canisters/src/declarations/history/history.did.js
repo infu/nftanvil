@@ -1,30 +1,28 @@
 export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const Timestamp = IDL.Int;
-  const TokenIdentifier = IDL.Nat32;
   const Memo = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
   const EventFungibleTransaction = IDL.Record({
     'to' : AccountIdentifier,
     'created' : Timestamp,
-    'token' : TokenIdentifier,
     'from' : AccountIdentifier,
     'memo' : Memo,
     'amount' : Balance,
   });
-  const AnvEvent = IDL.Variant({ 'transaction' : EventFungibleTransaction });
+  const AnvEvent = IDL.Variant({ 'transfer' : EventFungibleTransaction });
   const Cooldown = IDL.Nat32;
   const ItemUse = IDL.Variant({
     'consume' : IDL.Null,
     'prove' : IDL.Null,
     'cooldown' : Cooldown,
   });
+  const TokenIdentifier = IDL.Nat64;
   const Time = IDL.Int;
-  const TokenIdentifier__1 = IDL.Nat32;
+  const TokenIdentifier__1 = IDL.Nat64;
   const Share = IDL.Nat16;
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
-  const ICP = IDL.Record({ 'e8s' : IDL.Nat64 });
-  const BlockIndex = IDL.Nat64;
+  const Balance__1 = IDL.Nat64;
   const NFTPurchase = IDL.Record({
     'created' : Time,
     'token' : TokenIdentifier__1,
@@ -36,13 +34,12 @@ export const idlFactory = ({ IDL }) => {
       'share' : Share,
       'address' : AccountIdentifier__1,
     }),
-    'purchaseAccount' : AccountIdentifier__1,
+    'recharge' : Balance__1,
     'affiliate' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier__1 })
     ),
     'buyer' : AccountIdentifier__1,
-    'amount' : ICP,
-    'ledgerBlock' : BlockIndex,
+    'amount' : Balance__1,
   });
   const NftEvent = IDL.Variant({
     'use' : IDL.Record({
@@ -57,12 +54,14 @@ export const idlFactory = ({ IDL }) => {
       'socket' : TokenIdentifier,
       'memo' : Memo,
       'plug' : TokenIdentifier,
+      'user' : AccountIdentifier,
     }),
     'unsocket' : IDL.Record({
       'created' : Timestamp,
       'socket' : TokenIdentifier,
       'memo' : Memo,
       'plug' : TokenIdentifier,
+      'user' : AccountIdentifier,
     }),
     'burn' : IDL.Record({
       'created' : Timestamp,
@@ -70,13 +69,11 @@ export const idlFactory = ({ IDL }) => {
       'memo' : Memo,
       'user' : AccountIdentifier,
     }),
-    'mint' : IDL.Record({ 'created' : Timestamp, 'token' : TokenIdentifier }),
-    'transaction' : IDL.Record({
-      'to' : AccountIdentifier,
+    'mint' : IDL.Record({
+      'pwr' : Balance,
       'created' : Timestamp,
       'token' : TokenIdentifier,
-      'from' : AccountIdentifier,
-      'memo' : Memo,
+      'user' : AccountIdentifier,
     }),
     'approve' : IDL.Record({
       'created' : Timestamp,
@@ -84,19 +81,39 @@ export const idlFactory = ({ IDL }) => {
       'user' : AccountIdentifier,
       'spender' : IDL.Principal,
     }),
+    'transfer' : IDL.Record({
+      'to' : AccountIdentifier,
+      'created' : Timestamp,
+      'token' : TokenIdentifier,
+      'from' : AccountIdentifier,
+      'memo' : Memo,
+    }),
     'purchase' : NFTPurchase,
   });
-  const PwrEvent = IDL.Variant({ 'transaction' : EventFungibleTransaction });
-  const TreasuryEvent = IDL.Record({});
+  const PwrWithdraw = IDL.Record({
+    'to' : AccountIdentifier,
+    'created' : Timestamp,
+    'from' : AccountIdentifier,
+    'amount' : Balance,
+  });
+  const EventFungibleMint = IDL.Record({
+    'created' : Timestamp,
+    'user' : AccountIdentifier,
+    'amount' : Balance,
+  });
+  const PwrEvent = IDL.Variant({
+    'withdraw' : PwrWithdraw,
+    'mint' : EventFungibleMint,
+    'transfer' : EventFungibleTransaction,
+  });
   const EventInfo = IDL.Variant({
     'anv' : AnvEvent,
     'nft' : NftEvent,
     'pwr' : PwrEvent,
-    'treasury' : TreasuryEvent,
   });
   const AddResponse = IDL.Vec(IDL.Nat8);
-  const CanisterSlot__1 = IDL.Nat16;
-  const CanisterSlot = IDL.Nat16;
+  const CanisterSlot__1 = IDL.Nat64;
+  const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'anv' : CanisterSlot__1,

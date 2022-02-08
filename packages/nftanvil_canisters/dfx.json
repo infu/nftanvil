@@ -1,15 +1,5 @@
 {
   "canisters": {
-    "nft_0": { "main": "mo/nft.mo", "type": "motoko" },
-    "nft_1": { "main": "mo/nft.mo", "type": "motoko" },
-    "nft_2": { "main": "mo/nft.mo", "type": "motoko" },
-    "account_0": { "main": "mo/account.mo", "type": "motoko" },
-    "account_1": { "main": "mo/account.mo", "type": "motoko" },
-    "account_2": { "main": "mo/account.mo", "type": "motoko" },
-    "history_0": { "main": "mo/history.mo", "type": "motoko" },
-    "pwr": { "main": "mo/pwr.mo", "type": "motoko" },
-    "anv": { "main": "mo/anv.mo", "type": "motoko" },
-    "treasury": { "main": "mo/treasury.mo", "type": "motoko" },
     "router": { "main": "mo/router.mo", "type": "motoko" }
   },
   "defaults": { "build": { "args": "", "packtool": "vessel sources" } },

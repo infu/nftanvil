@@ -67,7 +67,14 @@ module {
                 let end = space[0][1];
                 if (idx < start and idx > end) return null;
                 return ?(idx - start);
-            }
+            };
+
+            public func toIdx(p: Principal) : ?Nat64 {
+                let (idxarr, flags) = Array_.split<Nat8>(Blob.toArray(Principal.toBlob(p)), 8);
+                let idx = Blob_.bytesToNat64(idxarr);
+                if (flags[0] != 1 or flags[1] != 1) return null;
+                return ?idx;
+            };
         };
 
         public module AccountIdentifier = {

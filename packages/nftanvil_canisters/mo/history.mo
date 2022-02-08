@@ -121,7 +121,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     system func heartbeat() : async () {
        
-        Debug.print("heartbeat");
+        //Debug.print("heartbeat");
 
         await digestTransactions();
 

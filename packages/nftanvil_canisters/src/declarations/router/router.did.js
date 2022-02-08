@@ -25,8 +25,15 @@ export const idlFactory = ({ IDL }) => {
   const Router = IDL.Service({
     'config_get' : IDL.Func([], [Config], ['query']),
     'config_set' : IDL.Func([Config], [], []),
+    'create_local_canisters' : IDL.Func([], [], []),
+    'reinstall' : IDL.Func([], [], []),
     'reportOutOfMemory' : IDL.Func([], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
+    'wasm_set' : IDL.Func(
+        [IDL.Record({ 'name' : IDL.Text, 'wasm' : IDL.Vec(IDL.Nat8) })],
+        [],
+        [],
+      ),
   });
   return Router;
 };

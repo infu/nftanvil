@@ -243,6 +243,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
+    'config_get' : IDL.Func([], [Config], ['query']),
     'config_set' : IDL.Func([Config], [], []),
     'dumpBalances' : IDL.Func(
         [],

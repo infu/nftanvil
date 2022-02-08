@@ -21,3 +21,7 @@ export const PrincipalToSlot = (space, p) => {
   let start = Number(space[0][0]);
   return idx - start;
 };
+
+// let can = "pfrbz-maaaa-aaaai-qcmiq-cai";
+
+// console.log(can, PrincipalToIdx(Principal.fromText(can)));

@@ -857,6 +857,18 @@ export const mint = (vals) => async (dispatch, getState) => {
     agentOptions: { identity },
   });
 
+  console.log(
+    "PWR Canister",
+    PrincipalFromSlot(s.user.map.space, s.user.map.pwr).toText()
+  );
+
+  console.log(
+    "NFT Canister",
+    PrincipalFromSlot(s.user.map.space, slot).toText()
+  );
+
+  console.log(await pwr.config_get());
+
   let address = s.user.address;
   let subaccount = [
     AccountIdentifier.TextToArray(s.user.subaccount) || null,

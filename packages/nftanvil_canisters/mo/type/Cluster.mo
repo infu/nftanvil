@@ -46,7 +46,10 @@ module {
         };
     };
     
-
+    public type CommonActor =  actor {
+            config_set   : shared (conf : Config) -> async ();
+            oracle_set   : shared (oracle : Oracle) -> async ();
+        };
 
     public module Oracle = {
         public func default() : Oracle {

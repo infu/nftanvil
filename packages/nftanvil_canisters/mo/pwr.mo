@@ -29,7 +29,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   public type AccountIdentifier = Nft.AccountIdentifier;
   public type TokenIdentifier = Nft.TokenIdentifier;
 
-  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("a00aae3cdca87a98ff57548da0e8995ccb664157ab81b00403d075aa5f2aaa22"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000), (Nft.AccountIdentifier.fromText("a00974c489e1a7e98fafe92cebd40ee99d5864faf53fc21e555860bc0b48d6c4"),1000000000), (Nft.AccountIdentifier.fromText("7f966c0efdc84e116ae2638fed07b2bf999f3f57a7aacde579f641b177baa891"),1000000000) ]; //[];
+  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("a00cf6c2bdd8e0977b2cfc0715d88dbf1ffa56e92218ea8814c4506de1910810"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000), (Nft.AccountIdentifier.fromText("a00974c489e1a7e98fafe92cebd40ee99d5864faf53fc21e555860bc0b48d6c4"),1000000000), (Nft.AccountIdentifier.fromText("7f966c0efdc84e116ae2638fed07b2bf999f3f57a7aacde579f641b177baa891"),1000000000) ]; //[];
   
   private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
 
@@ -46,6 +46,10 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   public shared({caller}) func config_set(conf : Cluster.Config) : async () {
       assert(caller == _installer);
       _conf := conf
+  };
+
+  public query func config_get() : async Cluster.Config {
+      return _conf;
   };
 
   public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {

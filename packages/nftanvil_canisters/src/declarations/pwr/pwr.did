@@ -262,6 +262,7 @@ type Config =
 type Class = 
  service {
    balance: (BalanceRequest) -> (BalanceResponse) query;
+   config_get: () -> (Config) query;
    config_set: (Config) -> ();
    dumpBalances: () -> (vec record {
                               AccountIdentifier__2;

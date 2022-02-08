@@ -12,8 +12,14 @@ type Router =
  service {
    config_get: () -> (Config) query;
    config_set: (Config) -> ();
+   create_local_canisters: () -> ();
+   reinstall: () -> ();
    reportOutOfMemory: () -> ();
    stats: () -> (StatsResponse) query;
+   wasm_set: (record {
+                name: text;
+                wasm: vec nat8;
+              }) -> ();
  };
 type Config = 
  record {

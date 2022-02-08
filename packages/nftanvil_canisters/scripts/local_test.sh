@@ -2,7 +2,7 @@
 
 for file in test/*
 do
- `vessel bin`/moc --check `vessel sources` "$file" 2>> tmp.err.log >> tmp.output.log
+ `dfx cache show`/moc --check `vessel sources` "$file" 2>> tmp.err.log >> tmp.output.log
 done
 clear
 

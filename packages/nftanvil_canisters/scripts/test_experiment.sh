@@ -1,2 +1,2 @@
 #!/bin/sh
-`vessel bin`/moc -r `vessel sources` test/experiment.mo
+`dfx cache show`/moc -r `vessel sources` test/experiment.mo
