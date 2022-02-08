@@ -657,13 +657,13 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             ));
 
         let ctype: Nat32 = switch(request.position) {
-            case (#content) 0;
-            case (#thumb) 1;
+            case (#content) Nft.Chunks.TYPE_CONTENT;
+            case (#thumb) Nft.Chunks.TYPE_THUMB;
         };
         
         let maxChunks: Nat32 = switch(request.position) { // Don't go over the bitmask maximum which is 255
-            case (#content) 2; 
-            case (#thumb) 1;
+            case (#content) Nft.Chunks.MAX_CONTENT_CHUNKS; 
+            case (#thumb) Nft.Chunks.MAX_THUMB_CHUNKS;
         };
 
         switch(request.position) {
@@ -678,6 +678,30 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         _chunk.put(chunkId, request.data);
     };
 
+    private func deleteNftChunks(tokenIndex: Nft.TokenIndex) : () {
+      
+        // Delete all content chunks
+        var cnt:Nat32 = 0;
+        while (cnt < Nft.Chunks.MAX_CONTENT_CHUNKS) {
+         
+            _chunk.delete(chunkIdEncode(tokenIndex, cnt, Nft.Chunks.TYPE_CONTENT));
+
+            cnt += 1;
+    
+        };
+
+        // Delete all thumb chunks
+        var tnt:Nat32 = 0;
+        while (tnt < Nft.Chunks.MAX_THUMB_CHUNKS) {
+         
+            _chunk.delete(chunkIdEncode(tokenIndex, tnt, Nft.Chunks.TYPE_THUMB));
+
+            tnt += 1;
+        };
+        
+    };
+
+
     private func chunkIdEncode(tokenIndex: Nft.TokenIndex, chunkIndex:Nat32, ctype:Nat32) : Nat32 {
         ((Nat32.fromNat(Nat16.toNat(tokenIndex)) & Nat32.fromNat(Nat16.toNat(thresholdNFTMask))) << 19) | ((chunkIndex & 255) << 2) | (ctype);
     };
@@ -689,6 +713,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             (x & 3)
         )
     };
+
 
     public shared({caller}) func fetchChunk(request: Nft.FetchChunkRequest) : async ?Blob {
 
@@ -1411,7 +1436,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private func SNFT_burn(aid: AccountIdentifier, tidx: TokenIndex) :  () {
         SNFT_del(aid, tidx);
         _meta.delete(tidx);
-        //TODO: Delete chunks of data too !!!
+        deleteNftChunks(tidx);
         _statsBurned := _statsBurned + 1;
     };
 

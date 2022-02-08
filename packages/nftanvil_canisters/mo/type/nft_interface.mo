@@ -484,6 +484,12 @@ module {
 
 
     public type Chunks = [Nat32];
+    public module Chunks = {
+        public let MAX_CONTENT_CHUNKS:Nat32 = 2;
+        public let MAX_THUMB_CHUNKS:Nat32 = 1;
+        public let TYPE_CONTENT:Nat32 = 0; // dont change
+        public let TYPE_THUMB:Nat32 = 1; // dont change
+    };
 
     public type ContentType = Text;
     public module ContentType = {
