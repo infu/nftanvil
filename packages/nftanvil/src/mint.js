@@ -39,40 +39,6 @@ export const uploadIPFS = async (token, up) => {
   return cid;
 };
 
-// export const uploadIPFS = async (up) => {
-//   if (typeof up === "string" && up.indexOf("blob:") === 0)
-//     up = await fetch(up).then((r) => r.blob());
-
-//   return fetch("https://nftpkg.com/nft/upload", {
-//     method: "POST",
-//     mode: "cors",
-//     body: up,
-//   })
-//     .then((d) => {
-//       return d.json();
-//     })
-//     .then((x) => {
-//       console.log(x);
-//       return x;
-//     });
-// };
-
-// export const pinIPFS = async (tokenid, cid, secret) => {
-//   return fetch(
-//     "https://nftpkg.com/nft/pin/" + tokenid + "/" + cid + "/" + secret,
-//     {
-//       method: "POST",
-//       mode: "cors",
-//     }
-//   )
-//     .then((d) => {
-//       return d.json();
-//     })
-//     .then((x) => {
-//       return x;
-//     });
-// };
-
 export const easyMintOne = async ({ user, subaccount, metadata }) => {
   let ipfs_pins = [];
   if (metadata?.content[0]?.ipfs?.path) {
