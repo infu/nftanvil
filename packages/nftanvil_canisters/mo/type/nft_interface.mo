@@ -493,10 +493,15 @@ module {
 
     public type ContentType = Text;
     public module ContentType = {
+        public let Allowed:[ContentType] = ["application/octet-stream","image/jpeg","image/gif","image/png","video/ogg","video/mpeg","video/mp4","video/webm","image/webp","audio/mpeg","audio/aac","audio/ogg","audio/opus","audio/webm"]; // Warning: Allowing other types shoud go trough security check
         public func validate(t : ContentType) : Bool {
-            t.size() <= 32 //TODO: Make real domain name verification.
+            switch(Array.find(Allowed, func (a : ContentType) : Bool { a == t })) {
+                case (?x) true;
+                case (null) false;
+            }
         } 
     };
+
     public type IPFS_CID = Text;
     public module IPFS_CID = {
         public func validate(t : IPFS_CID) : Bool {
