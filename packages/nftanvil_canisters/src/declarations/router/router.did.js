@@ -13,6 +13,7 @@ export const idlFactory = ({ IDL }) => {
     'router' : CanisterSlot__1,
     'treasury' : CanisterSlot__1,
   });
+  const LogEvent = IDL.Record({ 'msg' : IDL.Text, 'time' : IDL.Nat32 });
   const StatsResponse = IDL.Record({
     'rts_max_live_size' : IDL.Nat,
     'cycles' : IDL.Nat,
@@ -26,9 +27,13 @@ export const idlFactory = ({ IDL }) => {
     'config_get' : IDL.Func([], [Config], ['query']),
     'config_set' : IDL.Func([Config], [], []),
     'create_local_canisters' : IDL.Func([], [], []),
+    'log_get' : IDL.Func([], [IDL.Vec(LogEvent)], ['query']),
+    'refuel' : IDL.Func([], [], []),
+    'refuel_unoptimised' : IDL.Func([], [], []),
     'reinstall' : IDL.Func([], [], []),
     'reportOutOfMemory' : IDL.Func([], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
+    'upgrade' : IDL.Func([], [], []),
     'wasm_set' : IDL.Func(
         [IDL.Record({ 'name' : IDL.Text, 'wasm' : IDL.Vec(IDL.Nat8) })],
         [],

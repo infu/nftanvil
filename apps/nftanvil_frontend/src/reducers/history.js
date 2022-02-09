@@ -132,4 +132,16 @@ const mapValuesDeep = (obj, cb) => {
   }
 };
 
+export const cluster_info = () => async (dispatch, getState) => {
+  let identity = authentication.client.getIdentity();
+
+  let s = getState();
+
+  let map = await router.config_get();
+
+  let log = await router.log_get();
+
+  return { map, log };
+};
+
 export default userSlice.reducer;

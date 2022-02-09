@@ -40,3 +40,11 @@ call as wallet router.wasm_set(
         wasm = file "../build/history.wasm";
     }
 );
+
+
+call as wallet router.wasm_set(
+    record {
+        name = "treasury";
+        wasm = file "../build/treasury.wasm";
+    }
+);

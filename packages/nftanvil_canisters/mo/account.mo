@@ -2,7 +2,6 @@ import Text "mo:base/Text";
 import Nft "./type/nft_interface";
 
 import HashMap "mo:base/HashMap";
-import List "mo:base/List";
 import Array "mo:base/Array";
 import Int "mo:base/Int";
 import Int32 "mo:base/Int32";

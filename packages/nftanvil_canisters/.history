@@ -1,0 +1,29 @@
+#V2
+call as wallet router.log_tail();\n
+EOF;\n
+call as wallet router.log_tail();\n
+call as wallet router.log_tail()\n
+import wallet = "yyvop-daaaa-aaaaa-aagma-cai" as "../src/declarations/cycles/cycles.did";\n
+import router = "y7ui3-oyaaa-aaaaa-aagmq-cai" as "../src/declarations/router/router.did";\n
+identity default "~/.config/dfx/identity/default/identity.pem";\n
+call as wallet router.log_tail()\n
+import wallet = "yyvop-daaaa-aaaaa-aagma-cai" as "../src/declarations/cycles/cycles.did";\n
+import router = "y7ui3-oyaaa-aaaaa-aagmq-cai" as "../src/declarations/router/router.did";\n
+identity default "~/.config/dfx/identity/default/identity.pem";\n
+call as wallet router.log_tail()\n
+import wallet = "yyvop-daaaa-aaaaa-aagma-cai" as "../src/declarations/cycles/cycles.did";\n
+import router = "y7ui3-oyaaa-aaaaa-aagmq-cai" as "../src/declarations/router/router.did";\n
+identity default "~/.config/dfx/identity/default/identity.pem";\n
+call as wallet router.log_tail();\n
+import wallet = "yyvop-daaaa-aaaaa-aagma-cai" as "../src/declarations/cycles/cycles.did";\n
+import router = "y7ui3-oyaaa-aaaaa-aagmq-cai" as "../src/declarations/router/router.did";\n
+identity default "~/.config/dfx/identity/default/identity.pem";\n
+call as wallet router.log_tail()\n
+import wallet = "yyvop-daaaa-aaaaa-aagma-cai" as "../src/declarations/cycles/cycles.did";\n
+import router = "y7ui3-oyaaa-aaaaa-aagmq-cai" as "../src/declarations/router/router.did";\n
+identity default "~/.config/dfx/identity/default/identity.pem";\n
+call as wallet router.log_tail()\n
+import wallet = "yyvop-daaaa-aaaaa-aagma-cai" as "../src/declarations/cycles/cycles.did"\n
+import router = "y7ui3-oyaaa-aaaaa-aagmq-cai" as "../src/declarations/router/router.did"\n
+identity default "~/.config/dfx/identity/default/identity.pem"\n
+call as wallet router.log_tail()\n

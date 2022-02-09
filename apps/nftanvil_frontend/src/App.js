@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
+import { DashboardPage } from "./components/Dashboard";
 
 import {
   login,
@@ -47,6 +48,7 @@ import {
   HamburgerIcon,
   ArrowBackIcon,
   ExternalLinkIcon,
+  InfoOutlineIcon,
 } from "@chakra-ui/icons";
 import { toast } from "react-toastify";
 
@@ -436,6 +438,10 @@ function LoginBox() {
                 Dark
               </MenuItem>
             )}
+
+            <Link to="/dashboard">
+              <MenuItem icon={<InfoOutlineIcon />}>Dashboard</MenuItem>
+            </Link>
             <Box align="left" pl="3" pt="1" pb="1">
               <ProToggle />
             </Box>
@@ -686,6 +692,7 @@ function App() {
           <RouterSwitch>
             <Route path="/mint" component={Mint} />
             <Route path="/history" exact component={HistoryRedirect} />
+            <Route path="/dashboard" component={DashboardPage} />
             <Route path="/:tx(tx.*)" component={HistoryTx} />
             <Route path="/history/:canister/:from/:to" component={History} />
             <Route path="/:id(nfta.*)/:code" component={NFTPage} />

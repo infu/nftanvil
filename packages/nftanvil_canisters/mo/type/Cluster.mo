@@ -12,12 +12,17 @@ import Ledger "./ledger_interface";
 import Float "mo:base/Float";
 import Int64 "mo:base/Int64";
 import Nat16 "mo:base/Nat16";
+import Nat32 "mo:base/Nat32";
 
 module {
     public type CanisterSlot = Nft.CanisterSlot;
     public type CanisterRange = Nft.CanisterRange;
     public type Oracle = Nft.Oracle;
-    
+
+    public let MGR_MIN_INACTIVE_CAN_CYCLES = 100_000_000_000;
+    public let MGR_MIN_ACTIVE_CAN_CYCLES = 300_000_000_000;
+    public let MGR_IGNORE_CYCLES = 1_000_000_000;
+
     public type Config = {
         router: CanisterSlot;
         nft: CanisterRange;
@@ -115,5 +120,9 @@ module {
         actor("ryjl3-tyaaa-aaaaa-aaaba-cai") : Ledger.Interface;
     };
       
+    public type LogEvent = {
+        time : Nat32;
+        msg : Text;
+    }
 
 }
