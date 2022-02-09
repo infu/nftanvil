@@ -226,7 +226,7 @@ function SetPriceButton({ id }) {
 
   return (
     <>
-      <Button onClick={onOpen}>Set Price</Button>
+      <Button onClick={onOpen}>Sell</Button>
 
       <Modal
         initialFocusRef={initialRef}
@@ -238,7 +238,7 @@ function SetPriceButton({ id }) {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Set Price</ModalHeader>
+          <ModalHeader>Set Sell Price</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -444,7 +444,7 @@ function UnsocketButton({ id }) {
   };
   return (
     <>
-      <Button onClick={onOpen}>Unplug from Socket</Button>
+      <Button onClick={onOpen}>Unplug</Button>
 
       <Modal
         initialFocusRef={initialRef}
@@ -521,7 +521,7 @@ function SocketButton({ id }) {
   };
   return (
     <>
-      <Button onClick={onOpen}>Plug In Socket</Button>
+      <Button onClick={onOpen}>Plug</Button>
 
       <Modal
         initialFocusRef={initialRef}
@@ -669,7 +669,7 @@ export const TransferLinkButton = ({ id, meta }) => {
   return (
     <>
       <Button onClick={() => setIsOpen(true)} isDisabled={!meta.transferable}>
-        Create Transfer Link
+        Gift
       </Button>
 
       <AlertDialog
@@ -683,12 +683,12 @@ export const TransferLinkButton = ({ id, meta }) => {
             {!link ? (
               <>
                 <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Transfer with link
+                  Create gift code
                 </AlertDialogHeader>
 
                 <AlertDialogBody>
-                  Are you sure? Anyone with the link will be able to claim the
-                  NFT.
+                  Are you sure? Anyone with the code/link will be able to take
+                  the NFT from you.
                 </AlertDialogBody>
 
                 <AlertDialogFooter>
@@ -1218,6 +1218,8 @@ export const NFTInfo = ({ id, meta }) => {
   const qcolor = itemQuality[meta.quality].color;
   let nowMinutes = Math.floor(Date.now() / 1000 / 60);
 
+  console.log(meta);
+
   let things = [
     meta.name ? (
       <Text key={"name"} color={qcolor} fontSize="16px">
@@ -1293,8 +1295,13 @@ export const NFTInfo = ({ id, meta }) => {
         "{meta.lore.capitalize()}"
       </Text>
     ) : null,
-    meta.ttl && meta.ttl > 0 ? (
-      <Text key="ttl" fontSize="14px" pt="14px" color={"red"}>
+    meta.rechargeable && meta.ttl && meta.ttl > 0 ? (
+      <Text key="ttl" fontSize="14px" pt="14px" color={"gray.400"}>
+        Recharge in {moment.duration(meta.ttl, "minutes").humanize()}
+      </Text>
+    ) : null,
+    !meta.rechargeable && meta.ttl && meta.ttl > 0 ? (
+      <Text key="ttl" fontSize="14px" pt="14px" color={"gray.400"}>
         Expires in {moment.duration(meta.ttl, "minutes").humanize()}
       </Text>
     ) : null,

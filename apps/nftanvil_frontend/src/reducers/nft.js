@@ -111,6 +111,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
     sockets: vars.sockets.map((x) => tokenToText(x)), //TokenIdentifier.ArrayToText(x)),
     price: { ...vars.price, amount: vars.price.amount.toString() },
     history: vars.history,
+    rechargeable: data.rechargeable,
   };
 
   meta.transferable =
