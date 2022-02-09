@@ -1,0 +1,20 @@
+import wallet = "${WALLET_ID}" as "../src/declarations/cycles/cycles.did";
+
+import router = "${ROUTER_ID}" as "../src/declarations/router/router.did";
+
+identity default "~/.config/dfx/identity/default/identity.pem";
+
+
+call as wallet router.config_set(
+    record {
+        nft = record {0:nat64; 5000:nat64};
+        nft_avail = vec {0:nat64; 1:nat64; 2:nat64};
+        account = record {5010:nat64; 5013:nat64};
+        router = 5001:nat64;
+        pwr = 5002:nat64;
+        anv = 5003:nat64;
+        treasury = 5004:nat64;
+        history = 5100:nat64;
+        space = vec { vec { 17830671:nat64; 17836454:nat64} };
+    }
+);

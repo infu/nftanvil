@@ -1,6 +1,10 @@
 {
   "canisters": {
-    "router": { "main": "mo/router.mo", "type": "motoko" }
+    "router": {
+      "type": "custom",
+      "candid": "src/declarations/router/router.did",
+      "wasm": "build/router.wasm"
+    }
   },
   "defaults": { "build": { "args": "", "packtool": "vessel sources" } },
   "dfx": "0.8.4",

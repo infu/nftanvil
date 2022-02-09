@@ -61,21 +61,7 @@ shared({caller = _installer}) actor class Router() = this {
         config : Cluster.Config;
     };
 
-    public shared({caller}) func reportOutOfMemory() : async () {
-        //TODO
-    };
-
-    public shared({caller}) func wasm_set({name: Text; wasm:[Nat8]}) : async () {
-        assert(caller == _installer);
-        switch(name) {
-            case ("nft") _wasm_nft := wasm;
-            case ("account") _wasm_account := wasm;
-            case ("pwr") _wasm_pwr := wasm;
-            case ("history") _wasm_history := wasm;
-            case ("anv") _wasm_anv := wasm;
-            case (_) { assert(false); (); }
-        }
-    };
+  
 
     system func heartbeat() : async () {
        
@@ -104,9 +90,8 @@ shared({caller = _installer}) actor class Router() = this {
 
     public shared({caller}) func reinstall() : async () {
      
-        // create all nft canisters
-        ignore Array_.amap<()>(Nat64.toNat(_conf.nft.1 - _conf.nft.0), func (index: Nat) : () { 
-            let slot = _conf.nft.0 + Nat64.fromNat(index);
+        // create all nft_avail canisters
+        ignore Array.map<Nft.CanisterSlot,()>( _conf.nft_avail, func (slot: Nft.CanisterSlot) : () { 
 
             job_add(#install_code({
                 slot;
@@ -154,7 +139,7 @@ shared({caller = _installer}) actor class Router() = this {
         job_add(#oracle_set({slot = _conf.history; oracle = _oracle}));
         job_add(#config_set({slot = _conf.history; config = _conf}));
 
-        // create account canisters
+        // create all account canisters
         ignore Array_.amap<()>(Nat64.toNat(_conf.account.1 - _conf.account.0), func (index: Nat) : () {
             let slot = _conf.account.0 + Nat64.fromNat(index);
             job_add(#install_code({
@@ -290,6 +275,22 @@ shared({caller = _installer}) actor class Router() = this {
 
             ();
 
+    };
+
+    public shared({caller}) func reportOutOfMemory() : async () {
+        //TODO
+    };
+
+    public shared({caller}) func wasm_set({name: Text; wasm:[Nat8]}) : async () {
+        assert(caller == _installer);
+        switch(name) {
+            case ("nft") _wasm_nft := wasm;
+            case ("account") _wasm_account := wasm;
+            case ("pwr") _wasm_pwr := wasm;
+            case ("history") _wasm_history := wasm;
+            case ("anv") _wasm_anv := wasm;
+            case (_) { assert(false); (); }
+        }
     };
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
