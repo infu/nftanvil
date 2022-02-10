@@ -46,6 +46,10 @@ export const getMap = async () => {
   return map;
 };
 
+export const refreshMap = async () => {
+  map = await router.config_get();
+};
+
 export const claimBalance = async (address) => {
   let map = await getMap();
   let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr), {

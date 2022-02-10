@@ -8,6 +8,7 @@ import {
   pwrCanister,
   encodeTokenId,
   getMap,
+  refreshMap,
 } from "./internal.js";
 
 import {
@@ -91,6 +92,10 @@ export const easyMintOne = async ({ user, subaccount, metadata }) => {
     );
 
   let s = await pwr.nft_mint(slot, { user, subaccount, metadata });
+  if (s?.err?.OutOfMemory === null) {
+    await refreshMap();
+    return easyMintOne({ user, subaccount, metadata });
+  }
   if (s.ok) {
     let { tokenIndex, transactionId } = s.ok;
     let tid = encodeTokenId(slot, tokenIndex);
