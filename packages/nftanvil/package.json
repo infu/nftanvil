@@ -1,6 +1,6 @@
 {
   "name": "@vvv-interactive/nftanvil",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "src/index.js",
   "type": "module",
   "license": "MIT",
@@ -12,6 +12,10 @@
     "get-random-values": "^1.2.2",
     "node-fetch": "^3.1.0",
     "p-limit": "3"
+  },
+  "scripts": {
+    "watch": "babel -d cjs src --copy-files --watch",
+    "build": "babel -d cjs src --copy-files"
   },
   "gitHead": "bcf17272c99292bef6eea23897f1a50614ce5f60"
 }
