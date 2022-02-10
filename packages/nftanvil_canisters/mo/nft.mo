@@ -113,7 +113,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     private let thresholdMemory = 1147483648; //  ~1GB
     private let thresholdNFTMask:Nft.TokenIndex = 8191; // Dont touch. 13 bit Nat
-    private let thresholdNFTCount:Nft.TokenIndex = 4001; // can go up to 8191
+    private let thresholdNFTCount:Nft.TokenIndex = 100;//4001; // can go up to 8191
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -1088,7 +1088,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         if ((thresholdNFTCount  <= _nextTokenId) or (thresholdMemory <= Prim.rts_memory_size() )) {
             _available := false;
-            await Cluster.router(_conf).reportOutOfMemory();
+            await Cluster.router(_conf).event_nft_full();
             return #err(#OutOfMemory);
             };
 

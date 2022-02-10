@@ -13,11 +13,12 @@ type Router =
    config_get: () -> (Config) query;
    config_set: (Config) -> ();
    create_local_canisters: () -> ();
+   event_history_full: () -> ();
+   event_nft_full: () -> ();
    log_get: () -> (vec LogEvent) query;
    refuel: () -> ();
    refuel_unoptimised: () -> ();
    reinstall: () -> ();
-   reportOutOfMemory: () -> ();
    stats: () -> (StatsResponse) query;
    upgrade: () -> ();
    wasm_set: (record {
@@ -35,10 +36,11 @@ type Config =
    account: CanisterRange;
    anv: CanisterSlot__1;
    history: CanisterSlot__1;
+   history_range: CanisterRange;
    nft: CanisterRange;
    nft_avail: vec CanisterSlot__1;
    pwr: CanisterSlot__1;
-   router: CanisterSlot__1;
+   router: principal;
    space: vec vec nat64;
    treasury: CanisterSlot__1;
  };

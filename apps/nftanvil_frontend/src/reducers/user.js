@@ -86,6 +86,12 @@ export const userSlice = createSlice({
         ...(map ? { map, acccan } : {}),
       };
     },
+    mapSet: (state, action) => {
+      return {
+        ...state,
+        map: action.payload,
+      };
+    },
     setNftStorageModal: (state, action) => {
       return {
         ...state,
@@ -110,6 +116,7 @@ export const {
   setNftStorageModal,
   setNftSotrageKey,
   focusSet,
+  mapSet,
 } = userSlice.actions;
 
 export const proModeSet = (v) => (dispatch) => {
@@ -178,7 +185,7 @@ export const auth =
     let map = await router.config_get();
 
     map = BigIntToString(map);
-    console.log("MAP", map);
+    console.log("ROUTER MAP", map);
 
     // map.space = map.space.map((x) => {
     //   return [x[0].toString(), x[1].toString()];
@@ -208,6 +215,13 @@ export const auth =
     );
     dispatch(refresh_balances());
   };
+
+export const refresh_config = () => async (dispatch, getState) => {
+  let map = await router.config_get();
+  map = BigIntToString(map);
+  console.log("ROUTER MAP", map);
+  dispatch(mapSet(map));
+};
 
 export const refresh_balances = () => async (dispatch, getState) => {
   if (!authentication || !authentication.client) return;

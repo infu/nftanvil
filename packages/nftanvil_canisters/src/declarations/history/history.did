@@ -144,10 +144,11 @@ type Config =
    account: CanisterRange;
    anv: CanisterSlot__1;
    history: CanisterSlot__1;
+   history_range: CanisterRange;
    nft: CanisterRange;
    nft_avail: vec CanisterSlot__1;
    pwr: CanisterSlot__1;
-   router: CanisterSlot__1;
+   router: principal;
    space: vec vec nat64;
    treasury: CanisterSlot__1;
  };

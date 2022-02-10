@@ -84,7 +84,8 @@ export const idlFactory = ({ IDL }) => {
     'nft_avail' : IDL.Vec(CanisterSlot__1),
     'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
     'account' : CanisterRange,
-    'router' : CanisterSlot__1,
+    'history_range' : CanisterRange,
+    'router' : IDL.Principal,
     'treasury' : CanisterSlot__1,
   });
   const TokenIndex = IDL.Nat16;

@@ -41,7 +41,7 @@ import {
   TransactionFailed,
 } from "../components/TransactionToast";
 
-import { refresh_balances, refresh_pwr_balance } from "./user";
+import { refresh_balances, refresh_pwr_balance, refresh_config } from "./user";
 
 export const nftSlice = createSlice({
   name: "nft",
@@ -868,8 +868,6 @@ export const mint = (vals) => async (dispatch, getState) => {
     PrincipalFromSlot(s.user.map.space, slot).toText()
   );
 
-  console.log(await pwr.config_get());
-
   let address = s.user.address;
   let subaccount = [
     AccountIdentifier.TextToArray(s.user.subaccount) || null,
@@ -888,19 +886,26 @@ export const mint = (vals) => async (dispatch, getState) => {
     });
 
     console.log("mint vals", slot, vals);
-    let mint = await pwr.nft_mint(BigInt(slot), {
+    let mrez = await pwr.nft_mint(BigInt(slot), {
       user: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
       metadata: vals,
     });
 
-    if (mint?.err?.InsufficientBalance === null) {
+    if (mrez?.err?.OutOfMemory === null) {
+      toast.dismiss(toastId);
+      await dispatch(refresh_config());
+      await dispatch(mint(vals));
+      return;
+    }
+
+    if (mrez?.err?.InsufficientBalance === null) {
       throw Error("Insufficient Balance");
     }
-    console.log("REZ", mint);
-    if (!("ok" in mint)) throw mint.err;
+    console.log("REZ", mrez);
+    if (!("ok" in mrez)) throw mrez.err;
 
-    let { tokenIndex, transactionId } = mint.ok;
+    let { tokenIndex, transactionId } = mrez.ok;
     let id = tokenToText(encodeTokenId(slot, tokenIndex));
 
     if (vals?.content[0]?.internal?.url) {

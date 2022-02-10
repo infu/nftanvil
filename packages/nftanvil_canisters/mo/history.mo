@@ -33,6 +33,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _slot : Nft.CanisterSlot = 0;
 
+    private let _transactions_soft_cap: Nat32 = 100;
     // //Handle canister upgrades
     // system func preupgrade() {
     //     _tmpEvents := Iter.toArray(_transactions.entries());
@@ -46,6 +47,9 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
         assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 
+        if (_transactions_soft_cap == _nextTransaction) {
+            await Cluster.router(_conf).event_history_full();
+        };
         // assert(switch (eventinfo) {
         //     case (#nft(e)) {
         //         Array_.exists(_conf.nft, caller, Principal.equal) == true
@@ -123,12 +127,6 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
        
         //Debug.print("heartbeat");
 
-        await digestTransactions();
-
-    };
-
-    private func digestTransactions() : async () {
-
         if (_nextTransaction != _lastDigestedAccount) {
 
             switch(AssocList.find(_transactions, _lastDigestedAccount, H.EventIndex.equal)) {
@@ -158,8 +156,9 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
             _lastDigestedAnvil := _lastDigestedAnvil + 1;
             return;
         }
-
     };
+
+  
 
     private func digestAccountNotification(txIdx :H.EventIndex, transaction: H.Event) : async () {
 

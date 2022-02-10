@@ -10,7 +10,8 @@ export const idlFactory = ({ IDL }) => {
     'nft_avail' : IDL.Vec(CanisterSlot__1),
     'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
     'account' : CanisterRange,
-    'router' : CanisterSlot__1,
+    'history_range' : CanisterRange,
+    'router' : IDL.Principal,
     'treasury' : CanisterSlot__1,
   });
   const LogEvent = IDL.Record({ 'msg' : IDL.Text, 'time' : IDL.Nat32 });
@@ -27,11 +28,12 @@ export const idlFactory = ({ IDL }) => {
     'config_get' : IDL.Func([], [Config], ['query']),
     'config_set' : IDL.Func([Config], [], []),
     'create_local_canisters' : IDL.Func([], [], []),
+    'event_history_full' : IDL.Func([], [], []),
+    'event_nft_full' : IDL.Func([], [], []),
     'log_get' : IDL.Func([], [IDL.Vec(LogEvent)], ['query']),
     'refuel' : IDL.Func([], [], []),
     'refuel_unoptimised' : IDL.Func([], [], []),
     'reinstall' : IDL.Func([], [], []),
-    'reportOutOfMemory' : IDL.Func([], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'upgrade' : IDL.Func([], [], []),
     'wasm_set' : IDL.Func(

@@ -1,6 +1,8 @@
 
 module {
         public type Interface = actor {
-                reportOutOfMemory : shared () -> async ();
+                event_nft_full : shared () -> async ();
+                event_history_full : shared () -> async ();
+
         }
 }

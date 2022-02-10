@@ -30,21 +30,22 @@ shared({caller = _installer}) actor class Router() = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
 
+    public type CanisterSlot = Nft.CanisterSlot;
 
-    private stable var _wasm_nft : [Nat8] = [];
-    private stable var _wasm_account : [Nat8] = [];
-    private stable var _wasm_pwr : [Nat8] = [];
-    private stable var _wasm_history : [Nat8] = [];
-    private stable var _wasm_anv : [Nat8] = [];
-    private stable var _wasm_treasury : [Nat8] = [];
+    private var _wasm_nft : [Nat8] = [];
+    private var _wasm_account : [Nat8] = [];
+    private var _wasm_pwr : [Nat8] = [];
+    private var _wasm_history : [Nat8] = [];
+    private var _wasm_anv : [Nat8] = [];
+    private var _wasm_treasury : [Nat8] = [];
 
-    private stable var _job_processing : Bool = false;
-
-    private stable var _jobs : List.List<Job> = List.nil<Job>();
+    private var _job_processing : Bool = false;
+ 
+    private var _jobs : List.List<Job> = List.nil<Job>();
     
-    private stable var _stats_refuel : Nat = 0;
-    private stable var _stats_jobs_success : Nat = 0;
-    private stable var _stats_jobs_fail : Nat = 0;
+    private var _stats_refuel : Nat = 0;
+    private var _stats_jobs_success : Nat = 0;
+    private var _stats_jobs_fail : Nat = 0;
 
     private var _log : List.List<Cluster.LogEvent> = List.nil<Cluster.LogEvent>(); 
     private var _log_size : Nat = 0;
@@ -54,29 +55,32 @@ shared({caller = _installer}) actor class Router() = this {
             #oracle_set : Job_Oracle_Set;
             #config_set : Job_Config_Set;
             #refuel : Job_Refuel;
-
+            #callback : Job_Callback;
     };
 
     public type Job_Install_Code = {
-        slot : Nft.CanisterSlot;
+        slot : CanisterSlot;
         wasm : {#nft; #account; #pwr; #history; #anv; #treasury};
         mode : {#reinstall; #upgrade; #install};
     };
 
     public type Job_Oracle_Set = {
-        slot : Nft.CanisterSlot;
+        slot : CanisterSlot;
         oracle : Cluster.Oracle;
     };
 
     public type Job_Config_Set = {
-        slot : Nft.CanisterSlot;
+        slot : CanisterSlot;
         config : Cluster.Config;
     };
 
   
     public type Job_Refuel = {
-        slot : Nft.CanisterSlot;
+        slot : CanisterSlot;
     };
+
+    public type Job_Callback =  () -> async ();
+
 
     system func heartbeat() : async () {
        
@@ -90,7 +94,6 @@ shared({caller = _installer}) actor class Router() = this {
                     _jobs := newList;
                     _job_processing := true;
 
-                    //log("job" #debug_show(job));
                     try {
                         await job_run(job);
                         _stats_jobs_success += 1;
@@ -120,43 +123,20 @@ shared({caller = _installer}) actor class Router() = this {
     };
 
     public shared({caller}) func refuel() : async () {
-
-        // TODO: Before refueling check
-        
         assert(caller == _installer);
 
-        // all nft canisters with installed code. There are a lot which don't have installed code and their cycles should stay 100_000_000_000
-        let nft_start = _conf.nft.0;
-        let nft_end = _conf.nft_avail[ Array_.size(_conf.nft_avail) - 1 ];
-
-        ignore Array_.amap<()>(Nat64.toNat(nft_end - nft_start) + 1, func (index: Nat) : () {
-
-            let slot = nft_start + Nat64.fromNat(index);
-            job_add(#refuel({slot}));
-            
+       
+        ignore Cluster.Slots.installed_all(_conf, func (slot: CanisterSlot) {
+            job_add(#refuel({slot}));   
         });
 
-        // all account canisters (they all have installed code)
-        ignore Array_.amap<()>(Nat64.toNat(_conf.account.1 - _conf.account.0), func (index: Nat) : () {
-            let slot = _conf.account.0 + Nat64.fromNat(index);
-            job_add(#refuel({slot}));
-        });
-
-
-        // single cans
-        job_add(#refuel({slot = _conf.pwr;}));
-        job_add(#refuel({slot = _conf.anv;}));
-        job_add(#refuel({slot = _conf.treasury;}));
-        job_add(#refuel({slot = _conf.history;})); // TODO: History should be range like nfts
 
     };
 
     public shared({caller}) func reinstall() : async () {
         assert(caller == _installer);
 
-        // create all nft_avail canisters
-        ignore Array.map<Nft.CanisterSlot,()>( _conf.nft_avail, func (slot: Nft.CanisterSlot) : () { 
-
+        ignore Cluster.Slots.installed_nft<()>(_conf, func (slot: CanisterSlot) {
             job_add(#install_code({
                 slot;
                 wasm = #nft;
@@ -193,15 +173,17 @@ shared({caller = _installer}) actor class Router() = this {
         job_add(#config_set({slot = _conf.anv; config = _conf}));
 
 
-        // create history canister
-        job_add(#install_code({
-            slot = _conf.history;
-            wasm = #history;
-            mode = #reinstall;
-        }));
+        ignore Cluster.Slots.installed_history<()>(_conf, func (slot: CanisterSlot) {
+             job_add(#install_code({
+                slot;
+                wasm = #history;
+                mode = #reinstall;
+            }));
 
-        job_add(#oracle_set({slot = _conf.history; oracle = _oracle}));
-        job_add(#config_set({slot = _conf.history; config = _conf}));
+            job_add(#oracle_set({slot; oracle = _oracle}));
+            job_add(#config_set({slot; config = _conf}));
+        });
+  
 
 
         // create treasury canister
@@ -216,8 +198,8 @@ shared({caller = _installer}) actor class Router() = this {
 
 
         // create all account canisters
-        ignore Array_.amap<()>(Nat64.toNat(_conf.account.1 - _conf.account.0), func (index: Nat) : () {
-            let slot = _conf.account.0 + Nat64.fromNat(index);
+        ignore Cluster.Slots.installed_account<()>(_conf, func (slot: CanisterSlot) {
+
             job_add(#install_code({
                 slot;
                 wasm = #account;
@@ -236,12 +218,8 @@ shared({caller = _installer}) actor class Router() = this {
         assert(caller == _installer);
 
         // all nft canisters with installed code. There are a lot which don't have installed code and their cycles should stay 100_000_000_000
-        let nft_start = _conf.nft.0;
-        let nft_end = _conf.nft_avail[ Array_.size(_conf.nft_avail) - 1 ];
+        ignore Cluster.Slots.installed_nft<()>(_conf, func (slot: CanisterSlot) {
 
-        ignore Array_.amap<()>(Nat64.toNat(nft_end - nft_start) + 1, func (index: Nat) : () {
-
-            let slot = nft_start + Nat64.fromNat(index);
             job_add(#install_code({
                 slot;
                 wasm = #nft;
@@ -274,15 +252,18 @@ shared({caller = _installer}) actor class Router() = this {
         job_add(#config_set({slot = _conf.anv; config = _conf}));
 
 
-        // create history canister
-        job_add(#install_code({
-            slot = _conf.history;
-            wasm = #history;
-            mode = #upgrade;
-        }));
+        ignore Cluster.Slots.installed_history<()>(_conf, func (slot: CanisterSlot) {
+            job_add(#install_code({
+                slot;
+                wasm = #history;
+                mode = #upgrade;
+            }));
 
-        job_add(#oracle_set({slot = _conf.history; oracle = _oracle}));
-        job_add(#config_set({slot = _conf.history; config = _conf}));
+            job_add(#oracle_set({slot; oracle = _oracle}));
+            job_add(#config_set({slot; config = _conf}));
+
+        });
+        
 
 
        // create treasury canister
@@ -297,8 +278,7 @@ shared({caller = _installer}) actor class Router() = this {
 
 
         // upgrade all account canisters
-        ignore Array_.amap<()>(Nat64.toNat(_conf.account.1 - _conf.account.0), func (index: Nat) : () {
-            let slot = _conf.account.0 + Nat64.fromNat(index);
+        ignore Cluster.Slots.installed_account<()>(_conf, func (slot: CanisterSlot) {
             job_add(#install_code({
                 slot;
                 wasm = #account;
@@ -321,6 +301,8 @@ shared({caller = _installer}) actor class Router() = this {
             case (#oracle_set(x)) await job_oracle_set(x);
             case (#config_set(x)) await job_conf_set(x);
             case (#refuel(x)) await job_refuel(x);
+            case (#callback(x)) await job_callback(x);
+
 
         };
     };
@@ -341,9 +323,12 @@ shared({caller = _installer}) actor class Router() = this {
     };    
 
 
-
+    private func job_callback(callback: Job_Callback) : async () {
+        log("callback");
+        await callback();
+    };
+    
     private func job_refuel({slot}: Job_Refuel) : async () {
-        log("refuel " # debug_show({slot}));
 
         let canister_id = Nft.APrincipal.fromSlot(_conf.space, slot);
 
@@ -359,7 +344,7 @@ shared({caller = _installer}) actor class Router() = this {
                       Cycles.add( amount );
                       await IC.deposit_cycles({canister_id});
                       _stats_refuel += amount;
-                      log("refueled with " #debug_show(amount));
+                      log("refuel " # debug_show({slot}) # " added " #debug_show(amount));
                 };
             };
             case (null) {
@@ -368,14 +353,15 @@ shared({caller = _installer}) actor class Router() = this {
                       Cycles.add( amount );
                       await IC.deposit_cycles({canister_id});
                       _stats_refuel += amount;
-                      log("refueled with " #debug_show(amount));
+                      log("refuel " # debug_show({slot}) # "added  " #debug_show(amount));
                 };
             };
         };
 
-
-
     };    
+
+
+
 
     private func job_conf_set({slot; config}: Job_Config_Set) : async () {
         log("conf_set " # debug_show({slot; config}));
@@ -467,14 +453,16 @@ shared({caller = _installer}) actor class Router() = this {
                         case (?range_end) {
 
                             _conf := {
+                                    router = Principal.fromActor(this);
+
                                     nft = (0,5);
                                     nft_avail = [0,1,2];
                                     account = (11,12);
-                                    router = 14;
                                     pwr = 15;
                                     anv = 16;
                                     treasury = 17;
                                     history = 6;
+                                    history_range = (6,10);
                                     space = [[range_start, range_end]]
                                 };
 
@@ -496,8 +484,70 @@ shared({caller = _installer}) actor class Router() = this {
 
     };
 
-    public shared({caller}) func reportOutOfMemory() : async () {
-        //TODO
+    public shared({caller}) func event_history_full() : async () {
+        switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
+            case (?slot) {
+                assert(slot == _conf.history);
+                log("event_history_full " # debug_show({slot}) );
+    
+                job_add(#callback( func () : async () {
+                    
+
+                    let new_history_slot = _conf.history + 1;
+
+                    await job_install_code({slot = new_history_slot; wasm = #history; mode= #install});
+                    //await job_oracle_set({slot = new_history_slot; oracle = _oracle});
+                    await job_conf_set({slot = new_history_slot; config = _conf});
+
+                    let {nft; nft_avail; account; router; pwr; anv; treasury; history; history_range; space} = _conf;
+                    _conf := {nft; nft_avail; account; router; pwr; anv; treasury; history=new_history_slot; history_range; space};
+                    
+                    job_add(#callback( func () : async () {
+                        ignore Cluster.Slots.installed_all(_conf, func (slot: CanisterSlot) {
+                            job_add(#config_set({slot; config=_conf}));   
+                        });
+                    }));
+                    
+                 }));
+
+               
+            };
+            case (null) {
+                ();
+            }
+        }
+    };
+
+    public shared({caller}) func event_nft_full() : async () {
+        switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
+            case (?slot) {
+                log("event_nft_full " # debug_show({slot}) );
+    
+                job_add(#callback( func () : async () {
+                    
+
+                    let nft_end = _conf.nft_avail[ Array_.size(_conf.nft_avail) - 1 ];
+                    let new_nft = nft_end + 1;
+                    let new_nft_avail =  Array.append(Array.filter(_conf.nft_avail, func (x: CanisterSlot) : Bool {
+                            x != slot
+                        }),[new_nft]);
+
+                    
+                    await job_install_code({slot = new_nft; wasm = #nft; mode= #install});
+                    await job_oracle_set({slot = new_nft; oracle = _oracle});
+                    await job_conf_set({slot = new_nft; config = _conf});
+                    
+                    let {nft; nft_avail; account; router; pwr; anv; treasury; history; history_range; space} = _conf;
+                    _conf := {nft; nft_avail = new_nft_avail; account; router; pwr; anv; treasury; history; history_range; space};
+                 }));
+
+               
+               
+            };
+            case (null) {
+                ();
+            }
+        }
     };
 
     public shared({caller}) func wasm_set({name: Text; wasm:[Nat8]}) : async () {
