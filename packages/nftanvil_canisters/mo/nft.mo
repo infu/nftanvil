@@ -109,11 +109,13 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     private stable var _available : Bool = true;
 
+    private stable var _cycles_recieved : Nat = Cycles.balance();
+
     var rand = PseudoRandom.PseudoRandom();
 
     private let thresholdMemory = 1147483648; //  ~1GB
     private let thresholdNFTMask:Nft.TokenIndex = 8191; // Dont touch. 13 bit Nat
-    private let thresholdNFTCount:Nft.TokenIndex = 100;//4001; // can go up to 8191
+    private let thresholdNFTCount:Nft.TokenIndex = 4001;//4001; // can go up to 8191
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -1383,23 +1385,26 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
      
 
-    public func cyclesAccept() : async () {
+    public func wallet_receive() : async () {
         let available = Cycles.available();
         let accepted = Cycles.accept(available);
         assert (accepted == available);
+        _cycles_recieved += accepted;
     };
 
-    public query func cyclesBalance() : async Nat {
-        return Cycles.balance();
-    };
-    
 
-    public query func stats () : async Nft.StatsResponse {
+
+    public query func stats () : async (Cluster.StatsResponse and { 
+        minted: Nat16;
+        transfers: Nat32;
+        burned: Nat32;
+    }) {
         {
-            minted =  _nextTokenId;
+            minted = _nextTokenId;
             burned = _statsBurned;
             transfers = _statsTransfers;
             cycles = Cycles.balance();
+            cycles_recieved = _cycles_recieved;
             rts_version = Prim.rts_version();
             rts_memory_size = Prim.rts_memory_size();
             rts_heap_size = Prim.rts_heap_size();

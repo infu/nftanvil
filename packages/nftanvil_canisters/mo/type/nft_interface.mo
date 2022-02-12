@@ -353,8 +353,7 @@ module {
         // (iPWR, internal) Can be called only by another NFT canister trying to unplug NFT
         unplug      : shared (request: UnsocketRequest) -> async UnplugResponse;
 
-        // Returns canister stats
-        stats   : query () -> async StatsResponse;
+
     };
 
     public func OptValid<A>(v:?A, f: (A) -> Bool) : Bool {
@@ -1211,18 +1210,7 @@ module {
 
 
 
-    public type StatsResponse = {
-        minted: Nat16;
-        transfers: Nat32;
-        burned: Nat32;
-        cycles: Nat;
-        rts_version:Text;
-        rts_memory_size:Nat;
-        rts_heap_size:Nat;
-        rts_total_allocation:Nat;
-        rts_reclaimed:Nat;
-        rts_max_live_size:Nat;
-    };
+
 
 
 

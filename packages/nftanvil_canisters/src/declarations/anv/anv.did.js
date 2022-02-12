@@ -35,6 +35,16 @@ export const idlFactory = ({ IDL }) => {
     'user' : AccountIdentifier,
     'spent' : Balance,
   });
+  const StatsResponse = IDL.Record({
+    'cycles_recieved' : IDL.Nat,
+    'rts_max_live_size' : IDL.Nat,
+    'cycles' : IDL.Nat,
+    'rts_memory_size' : IDL.Nat,
+    'rts_total_allocation' : IDL.Nat,
+    'rts_heap_size' : IDL.Nat,
+    'rts_reclaimed' : IDL.Nat,
+    'rts_version' : IDL.Text,
+  });
   const User = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
@@ -73,7 +83,9 @@ export const idlFactory = ({ IDL }) => {
       ),
     'oracle_set' : IDL.Func([Oracle], [], []),
     'reward' : IDL.Func([RewardRequest], [], []),
+    'stats' : IDL.Func([], [StatsResponse], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
+    'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;
 };

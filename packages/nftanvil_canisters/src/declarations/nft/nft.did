@@ -144,19 +144,6 @@ type StreamingStrategy = variant {
                               callback: CallbackFunc;
                               token: Token;
                             };};
-type StatsResponse = 
- record {
-   burned: nat32;
-   cycles: nat;
-   minted: nat16;
-   rts_heap_size: nat;
-   rts_max_live_size: nat;
-   rts_memory_size: nat;
-   rts_reclaimed: nat;
-   rts_total_allocation: nat;
-   rts_version: text;
-   transfers: nat32;
- };
 type Sockets = vec TokenIdentifier;
 type SocketResponse = 
  variant {
@@ -499,8 +486,6 @@ type Class =
    burn: (BurnRequest) -> (BurnResponse);
    claim_link: (ClaimLinkRequest) -> (ClaimLinkResponse);
    config_set: (Config) -> ();
-   cyclesAccept: () -> ();
-   cyclesBalance: () -> (nat) query;
    fetchChunk: (FetchChunkRequest) -> (opt blob);
    http_request: (Request) -> (Response) query;
    http_request_streaming_callback: (Token) -> (Callback) query;
@@ -512,7 +497,20 @@ type Class =
    recharge: (RechargeRequest) -> (RechargeResponse);
    set_price: (SetPriceRequest) -> (SetPriceResponse);
    socket: (SocketRequest) -> (SocketResponse);
-   stats: () -> (StatsResponse) query;
+   stats: () ->
+    (record {
+       burned: nat32;
+       cycles: nat;
+       cycles_recieved: nat;
+       minted: nat16;
+       rts_heap_size: nat;
+       rts_max_live_size: nat;
+       rts_memory_size: nat;
+       rts_reclaimed: nat;
+       rts_total_allocation: nat;
+       rts_version: text;
+       transfers: nat32;
+     }) query;
    supply: (TokenIdentifier) -> (SupplyResponse) query;
    transfer: (TransferRequest) -> (TransferResponse);
    transfer_link: (TransferLinkRequest) -> (TransferLinkResponse);
@@ -520,6 +518,7 @@ type Class =
    unsocket: (UnsocketRequest) -> (UnsocketResponse);
    uploadChunk: (UploadChunkRequest) -> ();
    use: (UseRequest) -> (UseResponse);
+   wallet_receive: () -> ();
  };
 type ClaimLinkResponse = 
  variant {

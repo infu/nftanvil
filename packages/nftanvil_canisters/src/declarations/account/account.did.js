@@ -29,6 +29,7 @@ export const idlFactory = ({ IDL }) => {
     'transactions' : IDL.Vec(TransactionId),
   });
   const StatsResponse = IDL.Record({
+    'cycles_recieved' : IDL.Nat,
     'rts_max_live_size' : IDL.Nat,
     'cycles' : IDL.Nat,
     'rts_memory_size' : IDL.Nat,
@@ -49,6 +50,7 @@ export const idlFactory = ({ IDL }) => {
     'meta' : IDL.Func([AccountIdentifier], [IDL.Opt(AccountMeta)], ['query']),
     'rem' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
+    'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;
 };

@@ -18,18 +18,21 @@ import Array_ "./lib/Array";
 
 import Blob "mo:base/Blob";
 import Cluster  "./type/Cluster";
+import Cycles "mo:base/ExperimentalCycles";
+import Prim "mo:prim"; 
 
 
 shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   private stable var _conf : Cluster.Config = Cluster.Config.default();
   private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
+    private stable var _cycles_recieved : Nat = Cycles.balance();
 
   public type Balance = Nft.Balance;
   public type AccountIdentifier = Nft.AccountIdentifier;
   public type TokenIdentifier = Nft.TokenIdentifier;
 
-  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("a00cf6c2bdd8e0977b2cfc0715d88dbf1ffa56e92218ea8814c4506de1910810"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000), (Nft.AccountIdentifier.fromText("a00974c489e1a7e98fafe92cebd40ee99d5864faf53fc21e555860bc0b48d6c4"),1000000000), (Nft.AccountIdentifier.fromText("7f966c0efdc84e116ae2638fed07b2bf999f3f57a7aacde579f641b177baa891"),1000000000) ]; //[];
+  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("a00b7d95d24e463793ebf91e459b48c27cb9b208e2e9ff2f2ec8b60d17ffa411"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000), (Nft.AccountIdentifier.fromText("a00974c489e1a7e98fafe92cebd40ee99d5864faf53fc21e555860bc0b48d6c4"),1000000000), (Nft.AccountIdentifier.fromText("7f966c0efdc84e116ae2638fed07b2bf999f3f57a7aacde579f641b177baa891"),1000000000) ]; //[];
   
   private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
 
@@ -42,6 +45,15 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   system func postupgrade() {
      _tmpBalance := [];
   };
+
+
+  public func wallet_receive() : async () {
+      let available = Cycles.available();
+      let accepted = Cycles.accept(available);
+      assert (accepted == available);
+      _cycles_recieved += accepted;
+  };
+
 
   public shared({caller}) func config_set(conf : Cluster.Config) : async () {
       assert(caller == _installer);
@@ -428,5 +440,19 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       };
 
   };
+
+  public query func stats () : async (Cluster.StatsResponse and { 
+    }) {
+        {
+            cycles = Cycles.balance();
+            cycles_recieved = _cycles_recieved;
+            rts_version = Prim.rts_version();
+            rts_memory_size = Prim.rts_memory_size();
+            rts_heap_size = Prim.rts_heap_size();
+            rts_total_allocation = Prim.rts_total_allocation();
+            rts_reclaimed = Prim.rts_reclaimed();
+            rts_max_live_size = Prim.rts_max_live_size();
+        }
+    };
 
 }

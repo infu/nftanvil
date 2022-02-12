@@ -1,3 +1,14 @@
+type StatsResponse = 
+ record {
+   cycles: nat;
+   cycles_recieved: nat;
+   rts_heap_size: nat;
+   rts_max_live_size: nat;
+   rts_memory_size: nat;
+   rts_reclaimed: nat;
+   rts_total_allocation: nat;
+   rts_version: text;
+ };
 type Config = 
  record {
    account: CanisterRange;
@@ -14,6 +25,8 @@ type Config =
 type Class = 
  service {
    config_set: (Config) -> ();
+   stats: () -> (StatsResponse) query;
+   wallet_receive: () -> ();
  };
 type CanisterSlot__1 = nat64;
 type CanisterSlot = nat64;

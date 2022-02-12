@@ -14,7 +14,10 @@ import {
   Stack,
   Grid,
   GridItem,
+  Heading,
 } from "@chakra-ui/react";
+import { Progress } from "@chakra-ui/react";
+
 import { useEffect, useState } from "react";
 import { Principal } from "@dfinity/principal";
 import { useWindowSize, useInterval } from "react-use";
@@ -32,6 +35,9 @@ import {
   tailHistory,
   loadNftHistory,
 } from "../reducers/history";
+
+import { nft_stats, history_stats } from "../reducers/dashboard";
+
 import styled from "@emotion/styled";
 import { push } from "connected-react-router";
 
@@ -60,13 +66,82 @@ import { map } from "lodash";
 
 function MeterNumber({ label, val, metric }) {
   return (
-    <Box p="5" bg="gray.900" align="center" borderRadius="4">
+    <Box p="5" bg="gray.800" align="center" borderRadius="4">
       <Text fontSize="12px">{label}</Text>
       <Text fontSize="25px">{val}</Text>
       <Text fontSize="10px" color="gray.500">
         {metric}
       </Text>
     </Box>
+  );
+}
+
+export const tc = (c) => (Number(c / 100000000000n) / 10).toFixed(2);
+
+export function NftStats({ slot }) {
+  const dispatch = useDispatch();
+
+  const [stats, setStats] = useState(null);
+
+  const load = async () => {
+    setStats(await dispatch(nft_stats({ slot })));
+  };
+
+  useEffect(() => {
+    load();
+  }, [slot]);
+
+  if (!stats) return null;
+
+  console.log("STATS", stats);
+
+  const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
+  const max_mb = 1024; //1gb
+  //- {stats.canister}
+  return (
+    <>
+      <GridItem>{slot}</GridItem>
+      <GridItem>{stats.minted}</GridItem>
+      <GridItem>{stats.burned}</GridItem>
+      <GridItem>{stats.transfers}</GridItem>
+      <GridItem>{tc(stats.cycles)} TC</GridItem>
+      <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
+
+      <GridItem>
+        {mem_mb}MB {(100 * (mem_mb / max_mb)).toFixed(0)}%
+      </GridItem>
+    </>
+  );
+}
+
+export function HistoryStats({ slot }) {
+  const dispatch = useDispatch();
+
+  const [stats, setStats] = useState(null);
+
+  const load = async () => {
+    setStats(await dispatch(history_stats({ slot })));
+  };
+
+  useEffect(() => {
+    load();
+  }, [slot]);
+
+  if (!stats) return null;
+
+  const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
+  const max_mb = 1024; //1gb
+  return (
+    <>
+      <GridItem>{slot}</GridItem>
+      <GridItem>{stats.transactions}</GridItem>
+      <GridItem>{tc(stats.cycles)} TC</GridItem>
+      <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
+
+      <GridItem>
+        {mem_mb}MB {(100 * (mem_mb / max_mb)).toFixed(0)}%
+      </GridItem>
+    </>
   );
 }
 
@@ -87,7 +162,7 @@ export function DashboardPage() {
     async () => {
       await load();
     },
-    focused ? 2000 : null
+    focused ? 10000 : null
   );
 
   useEffect(() => {
@@ -104,14 +179,32 @@ export function DashboardPage() {
     ) + 1;
   let total_account = Number(info.map.account[1] - info.map.account[0]) + 1;
 
-  let total_other = 5;
+  let total_other = 4;
 
-  let total_available = total_range - total_nft - total_account - total_other;
+  let total_history = Number(info.map.history - info.map.history_range[0]) + 1;
+
+  let nft_available = Number(info.map.nft[1] - info.map.nft[0]) + 1 - total_nft;
+  let history_available =
+    Number(info.map.history_range[1] - info.map.history_range[0]) +
+    1 -
+    total_history;
 
   return (
     <Center>
-      <Stack mt="50px">
-        <Box>
+      <Stack mt="50px" spacing="3" maxW={"590px"}>
+        <Box
+          mt={8}
+          w="100%"
+          bg={"gray.900"}
+          color={"gray.300"}
+          p={5}
+          fontSize="13px"
+          borderRadius="4"
+        >
+          <Heading mb={3} size="md">
+            Metrics
+          </Heading>
+
           <Wrap>
             <MeterNumber label="total" val={total_range} metric="canisters" />
             <MeterNumber
@@ -122,14 +215,98 @@ export function DashboardPage() {
             <MeterNumber label="nft" val={total_nft} metric="canisters" />
             <MeterNumber label="other" val={total_other} metric="canisters" />
             <MeterNumber
-              label="available"
-              val={total_available}
+              label="history"
+              val={total_history}
+              metric="canisters"
+            />
+
+            <MeterNumber
+              label="nft available"
+              val={nft_available}
+              metric="canisters"
+            />
+
+            <MeterNumber
+              label="history available"
+              val={history_available}
               metric="canisters"
             />
 
             <Box> {}</Box>
           </Wrap>
         </Box>
+
+        <Box
+          w="100%"
+          bg={"gray.900"}
+          color={"gray.300"}
+          p={5}
+          fontSize="13px"
+          borderRadius="4"
+        >
+          <Heading size="md">Nft</Heading>
+          <Grid mt={3} templateColumns="repeat(7, 1fr)" gap={3}>
+            <GridItem>Canister</GridItem>
+            <GridItem>Minted</GridItem>
+            <GridItem>Burned</GridItem>
+            <GridItem>Transferred</GridItem>
+            <GridItem>Balance</GridItem>
+            <GridItem>Spent</GridItem>
+
+            <GridItem>Memory</GridItem>
+
+            {Array(total_nft)
+              .fill(0)
+              .map((_, idx) => {
+                return (
+                  <NftStats key={idx} slot={Number(info.map.nft[0]) + idx} />
+                );
+              })}
+          </Grid>
+        </Box>
+
+        <Box
+          w="100%"
+          bg={"gray.900"}
+          color={"gray.300"}
+          p={5}
+          fontSize="13px"
+          borderRadius="4"
+        >
+          <Heading size="md">History</Heading>
+          <Grid mt="3" templateColumns="repeat(5, 1fr)" gap={3}>
+            <GridItem>Canister</GridItem>
+            <GridItem>Transactions</GridItem>
+            <GridItem>Balance</GridItem>
+            <GridItem>Spent</GridItem>
+            <GridItem>Memory</GridItem>
+
+            {Array(total_history)
+              .fill(0)
+              .map((_, idx) => {
+                return (
+                  <HistoryStats
+                    key={idx}
+                    slot={Number(info.map.history_range[0]) + idx}
+                  />
+                );
+              })}
+          </Grid>
+        </Box>
+
+        {/* <CanisterInfo
+            type="pwr"
+            id={PrincipalFromSlot(info.map.space, info.map.pwr).toText()}
+          />
+          <CanisterInfo
+            type="anv"
+            id={PrincipalFromSlot(info.map.space, info.map.anv).toText()}
+          />
+          <CanisterInfo
+            type="treasury"
+            id={PrincipalFromSlot(info.map.space, info.map.treasury).toText()}
+          /> */}
+
         {/* <Grid templateColumns="repeat(75, 1fr)" gap={"1px"}>
           {Array(Number(info.map.space[0][1] - info.map.space[0][0]))
             .fill(0)
@@ -141,8 +318,6 @@ export function DashboardPage() {
             })}
         </Grid> */}
         <Box
-          mt={8}
-          maxW={"590px"}
           w="100%"
           bg={"gray.900"}
           color={"gray.300"}
@@ -150,6 +325,9 @@ export function DashboardPage() {
           fontSize="13px"
           borderRadius="4"
         >
+          <Heading mb={3} size="md">
+            Log
+          </Heading>
           {info.log.map((x, idx) => {
             return (
               <Stack key={idx} direction="row" spacing="3" mb="2">

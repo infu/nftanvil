@@ -14,7 +14,21 @@ export const idlFactory = ({ IDL }) => {
     'router' : IDL.Principal,
     'treasury' : CanisterSlot__1,
   });
-  const Class = IDL.Service({ 'config_set' : IDL.Func([Config], [], []) });
+  const StatsResponse = IDL.Record({
+    'cycles_recieved' : IDL.Nat,
+    'rts_max_live_size' : IDL.Nat,
+    'cycles' : IDL.Nat,
+    'rts_memory_size' : IDL.Nat,
+    'rts_total_allocation' : IDL.Nat,
+    'rts_heap_size' : IDL.Nat,
+    'rts_reclaimed' : IDL.Nat,
+    'rts_version' : IDL.Text,
+  });
+  const Class = IDL.Service({
+    'config_set' : IDL.Func([Config], [], []),
+    'stats' : IDL.Func([], [StatsResponse], ['query']),
+    'wallet_receive' : IDL.Func([], [], []),
+  });
   return Class;
 };
 export const init = ({ IDL }) => { return []; };

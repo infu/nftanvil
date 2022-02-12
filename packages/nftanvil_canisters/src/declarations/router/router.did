@@ -1,6 +1,7 @@
 type StatsResponse = 
  record {
    cycles: nat;
+   cycles_recieved: nat;
    rts_heap_size: nat;
    rts_max_live_size: nat;
    rts_memory_size: nat;
@@ -21,6 +22,7 @@ type Router =
    reinstall: () -> ();
    stats: () -> (StatsResponse) query;
    upgrade: () -> ();
+   wallet_receive: () -> ();
    wasm_set: (record {
                 name: text;
                 wasm: vec nat8;

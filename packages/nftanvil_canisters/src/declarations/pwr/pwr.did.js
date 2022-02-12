@@ -220,6 +220,16 @@ export const idlFactory = ({ IDL }) => {
     'ok' : AccountIdentifier__1,
     'err' : IDL.Text,
   });
+  const StatsResponse = IDL.Record({
+    'cycles_recieved' : IDL.Nat,
+    'rts_max_live_size' : IDL.Nat,
+    'cycles' : IDL.Nat,
+    'rts_memory_size' : IDL.Nat,
+    'rts_total_allocation' : IDL.Nat,
+    'rts_heap_size' : IDL.Nat,
+    'rts_reclaimed' : IDL.Nat,
+    'rts_version' : IDL.Text,
+  });
   const Memo = IDL.Vec(IDL.Nat8);
   const TransferRequest = IDL.Record({
     'to' : User,
@@ -273,7 +283,9 @@ export const idlFactory = ({ IDL }) => {
         [PurchaseIntentResponse],
         [],
       ),
+    'stats' : IDL.Func([], [StatsResponse], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
+    'wallet_receive' : IDL.Func([], [], []),
     'withdraw' : IDL.Func([WithdrawRequest], [WithdrawResponse], []),
   });
   return Class;

@@ -29,6 +29,17 @@ type TransferRequest =
  };
 type TransactionAmount = nat64;
 type SubAccount = blob;
+type StatsResponse = 
+ record {
+   cycles: nat;
+   cycles_recieved: nat;
+   rts_heap_size: nat;
+   rts_max_live_size: nat;
+   rts_memory_size: nat;
+   rts_reclaimed: nat;
+   rts_total_allocation: nat;
+   rts_version: text;
+ };
 type RewardRequest = 
  record {
    spent: Balance;
@@ -69,7 +80,9 @@ type Class =
                             }) query;
    oracle_set: (Oracle) -> ();
    reward: (RewardRequest) -> ();
+   stats: () -> (StatsResponse) query;
    transfer: (TransferRequest) -> (TransferResponse);
+   wallet_receive: () -> ();
  };
 type CanisterSlot__1 = nat64;
 type CanisterSlot = nat64;

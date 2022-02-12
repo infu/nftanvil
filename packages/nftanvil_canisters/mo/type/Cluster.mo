@@ -58,6 +58,7 @@ module {
     public type CommonActor =  actor {
             config_set   : shared (conf : Config) -> async ();
             oracle_set   : shared (oracle : Oracle) -> async ();
+            wallet_receive : shared () -> async ();
         };
 
     public module Oracle = {
@@ -127,6 +128,17 @@ module {
     public type LogEvent = {
         time : Nat32;
         msg : Text;
+    };
+
+    public type StatsResponse = {
+        cycles: Nat;
+        cycles_recieved: Nat;
+        rts_version:Text;
+        rts_memory_size:Nat;
+        rts_heap_size:Nat;
+        rts_total_allocation:Nat;
+        rts_reclaimed:Nat;
+        rts_max_live_size:Nat;
     };
 
     public module Slots = {

@@ -356,18 +356,6 @@ export const idlFactory = ({ IDL }) => {
     'subaccount' : IDL.Opt(SubAccount),
   });
   const SocketResponse = IDL.Variant({ 'ok' : IDL.Null, 'err' : SocketError });
-  const StatsResponse = IDL.Record({
-    'rts_max_live_size' : IDL.Nat,
-    'transfers' : IDL.Nat32,
-    'minted' : IDL.Nat16,
-    'cycles' : IDL.Nat,
-    'rts_memory_size' : IDL.Nat,
-    'rts_total_allocation' : IDL.Nat,
-    'burned' : IDL.Nat32,
-    'rts_heap_size' : IDL.Nat,
-    'rts_reclaimed' : IDL.Nat,
-    'rts_version' : IDL.Text,
-  });
   const SupplyResponse = IDL.Variant({ 'ok' : Balance, 'err' : CommonError });
   const TransferRequest = IDL.Record({
     'to' : User,
@@ -469,8 +457,6 @@ export const idlFactory = ({ IDL }) => {
     'burn' : IDL.Func([BurnRequest], [BurnResponse], []),
     'claim_link' : IDL.Func([ClaimLinkRequest], [ClaimLinkResponse], []),
     'config_set' : IDL.Func([Config], [], []),
-    'cyclesAccept' : IDL.Func([], [], []),
-    'cyclesBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'fetchChunk' : IDL.Func(
         [FetchChunkRequest],
         [IDL.Opt(IDL.Vec(IDL.Nat8))],
@@ -490,7 +476,25 @@ export const idlFactory = ({ IDL }) => {
     'recharge' : IDL.Func([RechargeRequest], [RechargeResponse], []),
     'set_price' : IDL.Func([SetPriceRequest], [SetPriceResponse], []),
     'socket' : IDL.Func([SocketRequest], [SocketResponse], []),
-    'stats' : IDL.Func([], [StatsResponse], ['query']),
+    'stats' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'cycles_recieved' : IDL.Nat,
+            'rts_max_live_size' : IDL.Nat,
+            'transfers' : IDL.Nat32,
+            'minted' : IDL.Nat16,
+            'cycles' : IDL.Nat,
+            'rts_memory_size' : IDL.Nat,
+            'rts_total_allocation' : IDL.Nat,
+            'burned' : IDL.Nat32,
+            'rts_heap_size' : IDL.Nat,
+            'rts_reclaimed' : IDL.Nat,
+            'rts_version' : IDL.Text,
+          }),
+        ],
+        ['query'],
+      ),
     'supply' : IDL.Func([TokenIdentifier], [SupplyResponse], ['query']),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
     'transfer_link' : IDL.Func(
@@ -502,6 +506,7 @@ export const idlFactory = ({ IDL }) => {
     'unsocket' : IDL.Func([UnsocketRequest], [UnsocketResponse], []),
     'uploadChunk' : IDL.Func([UploadChunkRequest], [], []),
     'use' : IDL.Func([UseRequest], [UseResponse], []),
+    'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;
 };

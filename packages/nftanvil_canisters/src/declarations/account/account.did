@@ -5,6 +5,7 @@ type TokenIdentifier = nat64;
 type StatsResponse = 
  record {
    cycles: nat;
+   cycles_recieved: nat;
    rts_heap_size: nat;
    rts_max_live_size: nat;
    rts_memory_size: nat;
@@ -34,6 +35,7 @@ type Class =
    meta: (AccountIdentifier) -> (opt AccountMeta) query;
    rem: (AccountIdentifier, TokenIndex) -> ();
    stats: () -> (StatsResponse) query;
+   wallet_receive: () -> ();
  };
 type CanisterSlot__1 = nat64;
 type CanisterSlot = nat64;

@@ -38,7 +38,7 @@ const to32bits = (num) => {
   return Array.from(new Uint8Array(b));
 };
 export const encodeTokenId = (slot, index) => {
-  let t = (slot << 16) | index;
+  let t = (Number(slot) << 16) | Number(index);
   return t;
 };
 

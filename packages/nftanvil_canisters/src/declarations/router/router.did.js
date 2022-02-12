@@ -16,6 +16,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const LogEvent = IDL.Record({ 'msg' : IDL.Text, 'time' : IDL.Nat32 });
   const StatsResponse = IDL.Record({
+    'cycles_recieved' : IDL.Nat,
     'rts_max_live_size' : IDL.Nat,
     'cycles' : IDL.Nat,
     'rts_memory_size' : IDL.Nat,
@@ -36,6 +37,7 @@ export const idlFactory = ({ IDL }) => {
     'reinstall' : IDL.Func([], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'upgrade' : IDL.Func([], [], []),
+    'wallet_receive' : IDL.Func([], [], []),
     'wasm_set' : IDL.Func(
         [IDL.Record({ 'name' : IDL.Text, 'wasm' : IDL.Vec(IDL.Nat8) })],
         [],

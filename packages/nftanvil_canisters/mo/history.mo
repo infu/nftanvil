@@ -11,11 +11,14 @@ import Time "mo:base/Time";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 import Array_ "./lib/Array";
+import Error "mo:base/Error";
+import Prim "mo:prim"; 
 
 import Blob "mo:base/Blob";
 import Cluster  "./type/Cluster";
 import Debug "mo:base/Debug";
 import List "mo:base/List";
+import Cycles "mo:base/ExperimentalCycles";
 
 import H "./type/history_interface";
 
@@ -33,23 +36,24 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _slot : Nft.CanisterSlot = 0;
 
-    private let _transactions_soft_cap: Nat32 = 100;
-    // //Handle canister upgrades
-    // system func preupgrade() {
-    //     _tmpEvents := Iter.toArray(_transactions.entries());
-    // };
 
-    // system func postupgrade() {
-    //     _tmpEvents := [];
-    // };
+    private let _transactions_soft_cap: Nat32 = 10000;
+
+    private stable var _cycles_recieved : Nat = Cycles.balance();
+
+
+    public func wallet_receive() : async () {
+        let available = Cycles.available();
+        let accepted = Cycles.accept(available);
+        assert (accepted == available);
+        _cycles_recieved += accepted;
+    };
 
     public shared({caller}) func add(eventinfo: H.EventInfo) : async H.AddResponse {
 
         assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 
-        if (_transactions_soft_cap == _nextTransaction) {
-            await Cluster.router(_conf).event_history_full();
-        };
+
         // assert(switch (eventinfo) {
         //     case (#nft(e)) {
         //         Array_.exists(_conf.nft, caller, Principal.equal) == true
@@ -64,7 +68,14 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         //         Principal.equal(_conf.treasury, caller) == true
         //     };
         // });
-        
+        _nextTransaction := _nextTransaction + 1;
+
+        if (_transactions_soft_cap == _nextTransaction) {
+            try await Cluster.router(_conf).event_history_full() catch (e) { 
+                        Debug.print("notification error " #debug_show(Error.message(e)));
+            }
+        };
+
         let index = _nextTransaction;
         
         let previousTransactionHash : [Nat8] = switch(index > 0) {
@@ -88,8 +99,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
         let (newEvents, _) = AssocList.replace(_transactions, index, H.EventIndex.equal, ?event); //_transactions.put(index, event);
         _transactions := newEvents;
-        _nextTransaction := _nextTransaction + 1;
-
+        
         let transactionId = H.TransactionId.encode(_slot, index);
         transactionId;
     };
@@ -226,6 +236,24 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
             };
         };
 
+    };
+
+
+    public query func stats () : async (Cluster.StatsResponse and { 
+        transactions: Nat32;
+    }) {
+        {
+            transactions = _nextTransaction-1;
+          
+            cycles = Cycles.balance();
+            cycles_recieved = _cycles_recieved;
+            rts_version = Prim.rts_version();
+            rts_memory_size = Prim.rts_memory_size();
+            rts_heap_size = Prim.rts_heap_size();
+            rts_total_allocation = Prim.rts_total_allocation();
+            rts_reclaimed = Prim.rts_reclaimed();
+            rts_max_live_size = Prim.rts_max_live_size();
+        }
     };
 
 }

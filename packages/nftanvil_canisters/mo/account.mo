@@ -27,6 +27,8 @@ import HashRecord "./lib/HashRecord";
 
 shared({ caller = _installer }) actor class Class() = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
+    private stable var _cycles_recieved : Nat = Cycles.balance();
+
 
      // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -47,6 +49,15 @@ shared({ caller = _installer }) actor class Class() = this {
     system func postupgrade() {
         _tmpAccount := [];
     };
+
+
+    public func wallet_receive() : async () {
+        let available = Cycles.available();
+        let accepted = Cycles.accept(available);
+        assert (accepted == available);
+        _cycles_recieved += accepted;
+    };
+
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);
@@ -168,19 +179,12 @@ shared({ caller = _installer }) actor class Class() = this {
             });
     };
     
-    public type StatsResponse = {
-        cycles: Nat;
-        rts_version:Text;
-        rts_memory_size:Nat;
-        rts_heap_size:Nat;
-        rts_total_allocation:Nat;
-        rts_reclaimed:Nat;
-        rts_max_live_size:Nat;
-    };
 
-    public query func stats() : async StatsResponse {
+
+    public query func stats() : async Cluster.StatsResponse {
         {
             cycles = Cycles.balance();
+            cycles_recieved = _cycles_recieved;
             rts_version = Prim.rts_version();
             rts_memory_size = Prim.rts_memory_size();
             rts_heap_size = Prim.rts_heap_size();

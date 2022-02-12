@@ -92,13 +92,18 @@ export const easyMintOne = async ({ user, subaccount, metadata }) => {
     );
 
   let s = await pwr.nft_mint(slot, { user, subaccount, metadata });
-  if (s?.err?.OutOfMemory === null) {
+  if (s.err && s.err.OutOfMemory === null) {
+    console.log("canister full, retrying");
     await refreshMap();
     return easyMintOne({ user, subaccount, metadata });
   }
   if (s.ok) {
     let { tokenIndex, transactionId } = s.ok;
+
     let tid = encodeTokenId(slot, tokenIndex);
+
+    console.log("minted", tokenIndex, tid);
+
     for (let { cid, secret } of ipfs_pins) {
       let { ok, err } = await pinIPFS(tid, cid, secret);
       if (err) throw Error("Couldn't pin to IPFS");

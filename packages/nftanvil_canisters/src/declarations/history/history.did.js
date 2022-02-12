@@ -140,6 +140,24 @@ export const idlFactory = ({ IDL }) => {
     'config_set' : IDL.Func([Config], [], []),
     'info' : IDL.Func([], [InfoResponse], ['query']),
     'list' : IDL.Func([ListRequest], [ListResponse], ['query']),
+    'stats' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'cycles_recieved' : IDL.Nat,
+            'rts_max_live_size' : IDL.Nat,
+            'cycles' : IDL.Nat,
+            'rts_memory_size' : IDL.Nat,
+            'rts_total_allocation' : IDL.Nat,
+            'transactions' : IDL.Nat32,
+            'rts_heap_size' : IDL.Nat,
+            'rts_reclaimed' : IDL.Nat,
+            'rts_version' : IDL.Text,
+          }),
+        ],
+        ['query'],
+      ),
+    'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;
 };

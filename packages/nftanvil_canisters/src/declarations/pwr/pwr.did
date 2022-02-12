@@ -59,6 +59,17 @@ type Tags = vec Tag;
 type Tag = text;
 type SubAccount__1 = blob;
 type SubAccount = blob;
+type StatsResponse = 
+ record {
+   cycles: nat;
+   cycles_recieved: nat;
+   rts_heap_size: nat;
+   rts_max_live_size: nat;
+   rts_memory_size: nat;
+   rts_reclaimed: nat;
+   rts_total_allocation: nat;
+   rts_version: text;
+ };
 type Share = nat16;
 type RechargeResponse = 
  variant {
@@ -275,7 +286,9 @@ type Class =
    oracle_set: (Oracle) -> ();
    purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
+   stats: () -> (StatsResponse) query;
    transfer: (TransferRequest) -> (TransferResponse);
+   wallet_receive: () -> ();
    withdraw: (WithdrawRequest) -> (WithdrawResponse);
  };
 type CanisterSlot__1 = nat64;

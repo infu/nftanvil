@@ -34,7 +34,7 @@ export const routerCanister = async () => {
   });
 
   let principal = await agent.getPrincipal();
-  map = await router.config_get();
+  if (!map) map = await router.config_get();
 
   let address = principalToAccountIdentifier(principal.toText());
   let balance = await claimBalance(address);
@@ -47,6 +47,7 @@ export const getMap = async () => {
 };
 
 export const refreshMap = async () => {
+  let { router } = await routerCanister();
   map = await router.config_get();
 };
 

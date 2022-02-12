@@ -29,6 +29,7 @@ shared({caller = _installer}) actor class Router() = this {
     let IC = actor "aaaaa-aa" : AAA.Interface;
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
+    private stable var _cycles_recieved : Nat = Cycles.balance();
 
     public type CanisterSlot = Nft.CanisterSlot;
 
@@ -112,6 +113,14 @@ shared({caller = _installer}) actor class Router() = this {
         };
 
     };
+
+    public func wallet_receive() : async () {
+        let available = Cycles.available();
+        let accepted = Cycles.accept(available);
+        assert (accepted == available);
+        _cycles_recieved += accepted;
+    };
+
 
     public shared({caller}) func refuel_unoptimised() : async () {
         assert(caller == _installer);
@@ -324,7 +333,7 @@ shared({caller = _installer}) actor class Router() = this {
 
 
     private func job_callback(callback: Job_Callback) : async () {
-        log("callback");
+        log("custom callback");
         await callback();
     };
     
@@ -341,19 +350,30 @@ shared({caller = _installer}) actor class Router() = this {
             case (?installed) {
                  if (stats.cycles < (Cluster.MGR_MIN_ACTIVE_CAN_CYCLES - Cluster.MGR_IGNORE_CYCLES)) {
                       let amount = Cluster.MGR_MIN_ACTIVE_CAN_CYCLES - stats.cycles;
+                      //await IC.deposit_cycles({canister_id});
+
+                      let can = actor(Principal.toText(canister_id)) : Cluster.CommonActor;
                       Cycles.add( amount );
-                      await IC.deposit_cycles({canister_id});
-                      _stats_refuel += amount;
-                      log("refuel " # debug_show({slot}) # " added " #debug_show(amount));
+                      await can.wallet_receive();
+                      let added = amount - Cycles.refunded();
+
+                      _stats_refuel += added;
+
+                      log("refuel " # debug_show({slot}) # " added " #debug_show(added));
                 };
             };
             case (null) {
                 if (stats.cycles < (Cluster.MGR_MIN_INACTIVE_CAN_CYCLES - Cluster.MGR_IGNORE_CYCLES)) {
                       let amount = Cluster.MGR_MIN_INACTIVE_CAN_CYCLES - stats.cycles;
+                      
+                      let can = actor(Principal.toText(canister_id)) : Cluster.CommonActor;
                       Cycles.add( amount );
-                      await IC.deposit_cycles({canister_id});
-                      _stats_refuel += amount;
-                      log("refuel " # debug_show({slot}) # "added  " #debug_show(amount));
+                      await can.wallet_receive();
+                      let added = amount - Cycles.refunded();
+
+                      _stats_refuel += added;
+
+                      log("refuel " # debug_show({slot}) # "added  " #debug_show(added));
                 };
             };
         };
@@ -423,13 +443,13 @@ shared({caller = _installer}) actor class Router() = this {
     };
 
 
-    // This func is only for local development
+    // This func is only for local development because sequential ids aren't guaranteed on IC network yet.
     public shared ({caller}) func create_local_canisters() : async () {
             assert(caller == _installer);
             Cycles.add(200_000_000_000);
 
             var cnt = 0;
-            let max = 20;
+            let max = 50;
             var start : ?Nat64 = null;
             var end : ?Nat64 = null;
 
@@ -455,14 +475,14 @@ shared({caller = _installer}) actor class Router() = this {
                             _conf := {
                                     router = Principal.fromActor(this);
 
-                                    nft = (0,5);
+                                    nft = (0,20);
                                     nft_avail = [0,1,2];
-                                    account = (11,12);
-                                    pwr = 15;
-                                    anv = 16;
-                                    treasury = 17;
-                                    history = 6;
-                                    history_range = (6,10);
+                                    account = (21,22);
+                                    pwr = 25;
+                                    anv = 26;
+                                    treasury = 27;
+                                    history = 30;
+                                    history_range = (30,50);
                                     space = [[range_start, range_end]]
                                 };
 
@@ -492,7 +512,6 @@ shared({caller = _installer}) actor class Router() = this {
     
                 job_add(#callback( func () : async () {
                     
-
                     let new_history_slot = _conf.history + 1;
 
                     await job_install_code({slot = new_history_slot; wasm = #history; mode= #install});
@@ -502,11 +521,11 @@ shared({caller = _installer}) actor class Router() = this {
                     let {nft; nft_avail; account; router; pwr; anv; treasury; history; history_range; space} = _conf;
                     _conf := {nft; nft_avail; account; router; pwr; anv; treasury; history=new_history_slot; history_range; space};
                     
-                    job_add(#callback( func () : async () {
+                    //job_add(#callback( func () : async () {
                         ignore Cluster.Slots.installed_all(_conf, func (slot: CanisterSlot) {
                             job_add(#config_set({slot; config=_conf}));   
                         });
-                    }));
+                    //}));
                     
                  }));
 
@@ -573,20 +592,12 @@ shared({caller = _installer}) actor class Router() = this {
         return _conf;
     };
 
-    public type StatsResponse = {
-        cycles: Nat;
-        rts_version:Text;
-        rts_memory_size:Nat;
-        rts_heap_size:Nat;
-        rts_total_allocation:Nat;
-        rts_reclaimed:Nat;
-        rts_max_live_size:Nat;
-    };
+ 
 
-
-    public query func stats() : async StatsResponse {
+    public query func stats() : async Cluster.StatsResponse {
         {
             cycles = Cycles.balance();
+            cycles_recieved = _cycles_recieved;
             rts_version = Prim.rts_version();
             rts_memory_size = Prim.rts_memory_size();
             rts_heap_size = Prim.rts_heap_size();

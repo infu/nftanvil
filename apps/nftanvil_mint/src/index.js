@@ -49,7 +49,7 @@ const main = async () => {
     let resp = await easyMint(mint_array);
     console.log("resp", resp);
   } catch (e) {
-    console.log(e);
+    console.log("error during minting", e);
   }
 };
 
