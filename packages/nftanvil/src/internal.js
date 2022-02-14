@@ -7,6 +7,7 @@ import * as cNft from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 import * as cAccount from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
 import * as cPwr from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
+export { PrincipalFromSlot };
 
 import { encodeTokenId } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import fetch from "node-fetch";

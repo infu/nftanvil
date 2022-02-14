@@ -44,9 +44,9 @@ shared({caller = _installer}) actor class Router() = this {
  
     private var _jobs : List.List<Job> = List.nil<Job>();
     
-    private var _stats_refuel : Nat = 0;
-    private var _stats_jobs_success : Nat = 0;
-    private var _stats_jobs_fail : Nat = 0;
+    private var _refuel : Nat = 0;
+    private var _jobs_success : Nat = 0;
+    private var _jobs_fail : Nat = 0;
 
     private var _log : List.List<Cluster.LogEvent> = List.nil<Cluster.LogEvent>(); 
     private var _log_size : Nat = 0;
@@ -97,10 +97,10 @@ shared({caller = _installer}) actor class Router() = this {
 
                     try {
                         await job_run(job);
-                        _stats_jobs_success += 1;
+                        _jobs_success += 1;
                     } catch (e) { 
                         log("job error " #debug_show(Error.message(e)));
-                        _stats_jobs_fail += 1;
+                        _jobs_fail += 1;
                     };
                     
                     _job_processing := false;
@@ -357,7 +357,7 @@ shared({caller = _installer}) actor class Router() = this {
                       await can.wallet_receive();
                       let added = amount - Cycles.refunded();
 
-                      _stats_refuel += added;
+                      _refuel += added;
 
                       log("refuel " # debug_show({slot}) # " added " #debug_show(added));
                 };
@@ -371,7 +371,7 @@ shared({caller = _installer}) actor class Router() = this {
                       await can.wallet_receive();
                       let added = amount - Cycles.refunded();
 
-                      _stats_refuel += added;
+                      _refuel += added;
 
                       log("refuel " # debug_show({slot}) # "added  " #debug_show(added));
                 };
@@ -594,8 +594,15 @@ shared({caller = _installer}) actor class Router() = this {
 
  
 
-    public query func stats() : async Cluster.StatsResponse {
+    public query func stats() : async (Cluster.StatsResponse and {
+        refuel : Nat;
+        jobs_success : Nat;
+        jobs_fail : Nat;
+    }) {
         {
+            refuel = _refuel;
+            jobs_success = _jobs_success;
+            jobs_fail = _jobs_fail;
             cycles = Cycles.balance();
             cycles_recieved = _cycles_recieved;
             rts_version = Prim.rts_version();

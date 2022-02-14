@@ -25,7 +25,8 @@ import H "./type/history_interface";
 shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     // private stable var _tmpEvents : [(H.EventIndex, H.Event)] = [];
-    private stable var _transactions : AssocList.AssocList<H.EventIndex, H.Event> = List.nil<(H.EventIndex, H.Event)>(); //= HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash)
+    // private stable var _transactions : AssocList.AssocList<H.EventIndex, H.Event> = List.nil<(H.EventIndex, H.Event)>(); //= HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash)
+    private stable var _transactions : [var ?H.Event] = Array.init<?H.Event>(55000, null);
 
     private stable var _nextTransaction : Nat32 = 0;
     private stable var _lastDigestedAccount : Nat32 = 0;
@@ -37,7 +38,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     private stable var _slot : Nft.CanisterSlot = 0;
 
 
-    private let _transactions_soft_cap: Nat32 = 10000;
+    private let _transactions_soft_cap: Nat32 = 50000;
 
     private stable var _cycles_recieved : Nat = Cycles.balance();
 
@@ -79,9 +80,9 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         let index = _nextTransaction;
         
         let previousTransactionHash : [Nat8] = switch(index > 0) {
-            case (true) switch(AssocList.find(_transactions, index - 1, H.EventIndex.equal)) {
+            case (true) switch(_transactions[Nat32.toNat(index - 1)]) {
                 case (?x) Blob.toArray(x.hash);
-                case (_) [] // Perhaps put hash of last transaction from previous canister (if any)
+                case (null) [] // Perhaps put hash of last transaction from previous canister (if any)
             };
             case (false) [];
             };
@@ -97,8 +98,9 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
                     ])));
         };
 
-        let (newEvents, _) = AssocList.replace(_transactions, index, H.EventIndex.equal, ?event); //_transactions.put(index, event);
-        _transactions := newEvents;
+        _transactions[Nat32.toNat(index)] := ?event;
+        // let (newEvents, _) = AssocList.replace(_transactions, index, H.EventIndex.equal, ?event); //_transactions.put(index, event);
+        // _transactions := newEvents;
         
         let transactionId = H.TransactionId.encode(_slot, index);
         transactionId;
@@ -113,7 +115,8 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     public query func list(request: H.ListRequest) : async H.ListResponse {
         Array_.amap<?H.Event>(Nat32.toNat(request.to - request.from), func (index: Nat) : ?H.Event { 
-            AssocList.find<H.EventIndex, H.Event>(_transactions, request.from + Nat32.fromNat(index), H.EventIndex.equal)
+            _transactions[Nat32.toNat(request.from + Nat32.fromNat(index))];
+            // AssocList.find<H.EventIndex, H.Event>(_transactions, request.from + Nat32.fromNat(index), H.EventIndex.equal)
             //_transactions.get(request.from + Nat32.fromNat(index));
         });
     };
@@ -139,7 +142,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
         if (_nextTransaction != _lastDigestedAccount) {
 
-            switch(AssocList.find(_transactions, _lastDigestedAccount, H.EventIndex.equal)) {
+            switch(_transactions[Nat32.toNat(_lastDigestedAccount)]) {
                 case (?t) {
                     await digestAccountNotification(_lastDigestedAccount, t);
                 };
@@ -154,7 +157,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
         if (_nextTransaction != _lastDigestedAnvil) {
 
-            switch(AssocList.find(_transactions, _lastDigestedAnvil, H.EventIndex.equal)) {
+            switch(_transactions[Nat32.toNat(_lastDigestedAnvil)]) {
                 case (?t) {
                     await digestAnvilNotification(_lastDigestedAnvil, t);
                 };
@@ -243,7 +246,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         transactions: Nat32;
     }) {
         {
-            transactions = _nextTransaction-1;
+            transactions = _nextTransaction;
           
             cycles = Cycles.balance();
             cycles_recieved = _cycles_recieved;

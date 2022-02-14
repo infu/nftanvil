@@ -1,14 +1,3 @@
-type StatsResponse = 
- record {
-   cycles: nat;
-   cycles_recieved: nat;
-   rts_heap_size: nat;
-   rts_max_live_size: nat;
-   rts_memory_size: nat;
-   rts_reclaimed: nat;
-   rts_total_allocation: nat;
-   rts_version: text;
- };
 type Router = 
  service {
    config_get: () -> (Config) query;
@@ -20,7 +9,20 @@ type Router =
    refuel: () -> ();
    refuel_unoptimised: () -> ();
    reinstall: () -> ();
-   stats: () -> (StatsResponse) query;
+   stats: () ->
+    (record {
+       cycles: nat;
+       cycles_recieved: nat;
+       jobs_fail: nat;
+       jobs_success: nat;
+       refuel: nat;
+       rts_heap_size: nat;
+       rts_max_live_size: nat;
+       rts_memory_size: nat;
+       rts_reclaimed: nat;
+       rts_total_allocation: nat;
+       rts_version: text;
+     }) query;
    upgrade: () -> ();
    wallet_receive: () -> ();
    wasm_set: (record {

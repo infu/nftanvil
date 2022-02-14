@@ -114,8 +114,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     var rand = PseudoRandom.PseudoRandom();
 
     private let thresholdMemory = 1147483648; //  ~1GB
-    private let thresholdNFTMask:Nft.TokenIndex = 8191; // Dont touch. 13 bit Nat
-    private let thresholdNFTCount:Nft.TokenIndex = 4001;//4001; // can go up to 8191
+    // private let thresholdNFTMask:Nft.TokenIndex = 8191; // Dont touch. 13 bit Nat
+    private let thresholdNFTCount:Nft.TokenIndex = 65534;//4001; // can go up to 8191
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -705,12 +705,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
 
     private func chunkIdEncode(tokenIndex: Nft.TokenIndex, chunkIndex:Nat32, ctype:Nat32) : Nat32 {
-        ((Nat32.fromNat(Nat16.toNat(tokenIndex)) & Nat32.fromNat(Nat16.toNat(thresholdNFTMask))) << 19) | ((chunkIndex & 255) << 2) | (ctype);
+        (Nat32.fromNat(Nat16.toNat(tokenIndex)) << 16) | ((chunkIndex & 255) << 2) | (ctype);
     };
 
     private func chunkIdDecode(x:Nat32) : (tokenIndex:Nft.TokenIndex, chunkIndex:Nat32, ctype:Nat32) {
         (
-            Nat16.fromNat(Nat32.toNat(((x >> 19 ) & Nat32.fromNat(Nat16.toNat(thresholdNFTMask))))), //| (Nat32.fromNat(_conf.slot)<<13) ,
+            Nat16.fromNat(Nat32.toNat(x >> 16 )),
             (x >> 2) & 255,
             (x & 3)
         )

@@ -220,16 +220,6 @@ export const idlFactory = ({ IDL }) => {
     'ok' : AccountIdentifier__1,
     'err' : IDL.Text,
   });
-  const StatsResponse = IDL.Record({
-    'cycles_recieved' : IDL.Nat,
-    'rts_max_live_size' : IDL.Nat,
-    'cycles' : IDL.Nat,
-    'rts_memory_size' : IDL.Nat,
-    'rts_total_allocation' : IDL.Nat,
-    'rts_heap_size' : IDL.Nat,
-    'rts_reclaimed' : IDL.Nat,
-    'rts_version' : IDL.Text,
-  });
   const Memo = IDL.Vec(IDL.Nat8);
   const TransferRequest = IDL.Record({
     'to' : User,
@@ -261,6 +251,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance__2))],
         ['query'],
       ),
+    'faucet' : IDL.Func(
+        [IDL.Record({ 'aid' : AccountIdentifier__2, 'amount' : Balance__2 })],
+        [],
+        [],
+      ),
     'nft_mint' : IDL.Func([CanisterSlot, MintRequest], [MintResponse], []),
     'nft_purchase' : IDL.Func(
         [CanisterSlot, PurchaseRequest],
@@ -283,7 +278,33 @@ export const idlFactory = ({ IDL }) => {
         [PurchaseIntentResponse],
         [],
       ),
-    'stats' : IDL.Func([], [StatsResponse], ['query']),
+    'stats' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'cycles_recieved' : IDL.Nat,
+            'rts_max_live_size' : IDL.Nat,
+            'mint_accumulated' : IDL.Nat64,
+            'cycles' : IDL.Nat,
+            'rts_memory_size' : IDL.Nat,
+            'rts_total_allocation' : IDL.Nat,
+            'icp_withdrawn' : IDL.Nat64,
+            'fees_charged' : IDL.Nat64,
+            'distributed_anvil' : IDL.Nat64,
+            'distributed_seller' : IDL.Nat64,
+            'recharge_accumulated' : IDL.Nat64,
+            'icp_deposited' : IDL.Nat64,
+            'distributed_author' : IDL.Nat64,
+            'distributed_marketplace' : IDL.Nat64,
+            'purchases_accumulated' : IDL.Nat64,
+            'rts_heap_size' : IDL.Nat,
+            'distributed_affiliate' : IDL.Nat64,
+            'rts_reclaimed' : IDL.Nat,
+            'rts_version' : IDL.Text,
+          }),
+        ],
+        ['query'],
+      ),
     'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
     'wallet_receive' : IDL.Func([], [], []),
     'withdraw' : IDL.Func([WithdrawRequest], [WithdrawResponse], []),

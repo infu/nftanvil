@@ -2,7 +2,9 @@ import {
   easyMint,
   routerCanister,
   pwrCanister,
+  getMap,
   AccountIdentifier,
+  PrincipalFromSlot,
 } from "@vvv-interactive/nftanvil";
 
 const main = async () => {
@@ -10,10 +12,17 @@ const main = async () => {
   console.log("Script address ", address);
   console.log("Balance", balance);
 
+  let map = await getMap();
+  let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr));
+  await pwr.faucet({
+    aid: AccountIdentifier.TextToArray(address),
+    amount: 1000000000,
+  });
+
   // Currently agent-js candid implementation doesn't supply the user with very informative errors,
   // so a creating correct metadata record will be hard. Add one change at a time and test.
 
-  let mint_array = Array(10000)
+  let mint_array = Array(20000)
     .fill(0)
     .map((_, idx) => {
       return {

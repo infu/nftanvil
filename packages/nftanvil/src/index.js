@@ -9,6 +9,8 @@ import {
   encodeTokenId,
   Principal,
   AccountIdentifier,
+  getMap,
+  PrincipalFromSlot,
 } from "./internal.js";
 
 export {
@@ -21,4 +23,6 @@ export {
   Principal,
   easyMint,
   AccountIdentifier,
+  getMap,
+  PrincipalFromSlot,
 };

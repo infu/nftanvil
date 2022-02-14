@@ -36,7 +36,13 @@ import {
   loadNftHistory,
 } from "../reducers/history";
 
-import { nft_stats, history_stats } from "../reducers/dashboard";
+import {
+  nft_stats,
+  history_stats,
+  pwr_stats,
+  account_stats,
+  router_stats,
+} from "../reducers/dashboard";
 
 import styled from "@emotion/styled";
 import { push } from "connected-react-router";
@@ -68,15 +74,55 @@ function MeterNumber({ label, val, metric }) {
   return (
     <Box p="5" bg="gray.800" align="center" borderRadius="4">
       <Text fontSize="12px">{label}</Text>
-      <Text fontSize="25px">{val}</Text>
-      <Text fontSize="10px" color="gray.500">
-        {metric}
-      </Text>
+      {metric === "icp" ? (
+        <Text>
+          <ICP>{val}</ICP>
+        </Text>
+      ) : (
+        <>
+          <Text fontSize="25px">{val}</Text>
+          <Text fontSize="10px" color="gray.500">
+            {metric}
+          </Text>
+        </>
+      )}
     </Box>
   );
 }
 
 export const tc = (c) => (Number(c / 100000000000n) / 10).toFixed(2);
+
+export function AccountStats({ slot }) {
+  const dispatch = useDispatch();
+
+  const [stats, setStats] = useState(null);
+
+  const load = async () => {
+    setStats(await dispatch(account_stats({ slot })));
+  };
+
+  useEffect(() => {
+    load();
+  }, [slot]);
+
+  if (!stats) return null;
+
+  //const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
+  const heap_mb = Number(stats.rts_heap_size / 1024n / 1024n);
+  const mem_mb = Number(stats.rts_memory_size / 1024n / 1024n);
+
+  return (
+    <>
+      <GridItem>{slot}</GridItem>
+
+      <GridItem>{tc(stats.cycles)} TC</GridItem>
+      <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
+
+      <GridItem>{heap_mb}MB</GridItem>
+      <GridItem>{mem_mb}MB</GridItem>
+    </>
+  );
+}
 
 export function NftStats({ slot }) {
   const dispatch = useDispatch();
@@ -93,10 +139,10 @@ export function NftStats({ slot }) {
 
   if (!stats) return null;
 
-  console.log("STATS", stats);
+  //const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
+  const heap_mb = Number(stats.rts_heap_size / 1024n / 1024n);
+  const mem_mb = Number(stats.rts_memory_size / 1024n / 1024n);
 
-  const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
-  const max_mb = 1024; //1gb
   //- {stats.canister}
   return (
     <>
@@ -107,9 +153,8 @@ export function NftStats({ slot }) {
       <GridItem>{tc(stats.cycles)} TC</GridItem>
       <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
 
-      <GridItem>
-        {mem_mb}MB {(100 * (mem_mb / max_mb)).toFixed(0)}%
-      </GridItem>
+      <GridItem>{heap_mb}MB</GridItem>
+      <GridItem>{mem_mb}MB</GridItem>
     </>
   );
 }
@@ -129,8 +174,9 @@ export function HistoryStats({ slot }) {
 
   if (!stats) return null;
 
-  const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
-  const max_mb = 1024; //1gb
+  const heap_mb = Number(stats.rts_heap_size / 1024n / 1024n);
+  const mem_mb = Number(stats.rts_memory_size / 1024n / 1024n);
+
   return (
     <>
       <GridItem>{slot}</GridItem>
@@ -138,10 +184,141 @@ export function HistoryStats({ slot }) {
       <GridItem>{tc(stats.cycles)} TC</GridItem>
       <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
 
-      <GridItem>
-        {mem_mb}MB {(100 * (mem_mb / max_mb)).toFixed(0)}%
-      </GridItem>
+      <GridItem>{heap_mb}MB</GridItem>
+      <GridItem>{mem_mb}MB</GridItem>
     </>
+  );
+}
+
+export function RouterStats() {
+  const [info, setInfo] = useState(null);
+
+  const dispatch = useDispatch();
+
+  const load = async () => {
+    setInfo(await dispatch(router_stats()));
+  };
+
+  useEffect(() => {
+    load();
+  }, [dispatch]);
+  if (!info) return null;
+
+  return (
+    <Center>
+      <Box
+        w="100%"
+        bg={"gray.900"}
+        color={"gray.300"}
+        p={5}
+        fontSize="13px"
+        borderRadius="4"
+      >
+        <Heading mb={3} size="md">
+          Orchestration
+        </Heading>
+
+        <Wrap>
+          <MeterNumber label="refuel" val={info.refuel} metric="cycles" />
+          <MeterNumber
+            label="jobs succeeded"
+            val={info.jobs_success}
+            metric="jobs"
+          />
+          <MeterNumber label="jobs failed" val={info.jobs_fail} metric="jobs" />
+        </Wrap>
+      </Box>
+    </Center>
+  );
+}
+
+export function PwrStats() {
+  const [info, setInfo] = useState(null);
+
+  const dispatch = useDispatch();
+
+  const load = async () => {
+    setInfo(await dispatch(pwr_stats()));
+  };
+
+  useEffect(() => {
+    load();
+  }, [dispatch]);
+  if (!info) return null;
+
+  return (
+    <Center>
+      <Box
+        w="100%"
+        bg={"gray.900"}
+        color={"gray.300"}
+        p={5}
+        fontSize="13px"
+        borderRadius="4"
+      >
+        <Heading mb={3} size="md">
+          Financial
+        </Heading>
+
+        <Wrap>
+          <MeterNumber
+            label="recharges accumulated"
+            val={info.recharge_accumulated}
+            metric="icp"
+          />
+          <MeterNumber
+            label="mint accumulated"
+            val={info.mint_accumulated}
+            metric="icp"
+          />
+          <MeterNumber
+            label="purchases accumulated"
+            val={info.purchases_accumulated}
+            metric="icp"
+          />
+          <MeterNumber
+            label="fees charged"
+            val={info.fees_charged}
+            metric="icp"
+          />
+          <MeterNumber
+            label="deposited"
+            val={info.icp_deposited}
+            metric="icp"
+          />
+          <MeterNumber
+            label="withdrawn"
+            val={info.icp_withdrawn}
+            metric="icp"
+          />
+          <MeterNumber
+            label="distributed seller"
+            val={info.distributed_seller}
+            metric="icp"
+          />
+          <MeterNumber
+            label="distributed affiliate"
+            val={info.distributed_affiliate}
+            metric="icp"
+          />
+          <MeterNumber
+            label="distributed marketplace"
+            val={info.distributed_marketplace}
+            metric="icp"
+          />
+          <MeterNumber
+            label="distributed author"
+            val={info.distributed_author}
+            metric="icp"
+          />
+          <MeterNumber
+            label="distributed anvil"
+            val={info.distributed_anvil}
+            metric="icp"
+          />
+        </Wrap>
+      </Box>
+    </Center>
   );
 }
 
@@ -154,6 +331,7 @@ export function DashboardPage() {
 
   const load = async () => {
     let rez = await dispatch(cluster_info());
+
     rez.log.reverse();
     setInfo(rez);
   };
@@ -192,6 +370,8 @@ export function DashboardPage() {
   return (
     <Center>
       <Stack mt="50px" spacing="3" maxW={"590px"}>
+        <PwrStats />
+        <RouterStats />
         <Box
           mt={8}
           w="100%"
@@ -202,7 +382,7 @@ export function DashboardPage() {
           borderRadius="4"
         >
           <Heading mb={3} size="md">
-            Metrics
+            Cluster
           </Heading>
 
           <Wrap>
@@ -245,14 +425,14 @@ export function DashboardPage() {
           borderRadius="4"
         >
           <Heading size="md">Nft</Heading>
-          <Grid mt={3} templateColumns="repeat(7, 1fr)" gap={3}>
+          <Grid mt={3} templateColumns="repeat(8, 1fr)" gap={3}>
             <GridItem>Canister</GridItem>
             <GridItem>Minted</GridItem>
             <GridItem>Burned</GridItem>
             <GridItem>Transferred</GridItem>
             <GridItem>Balance</GridItem>
             <GridItem>Spent</GridItem>
-
+            <GridItem>Heap</GridItem>
             <GridItem>Memory</GridItem>
 
             {Array(total_nft)
@@ -273,12 +453,43 @@ export function DashboardPage() {
           fontSize="13px"
           borderRadius="4"
         >
+          <Heading size="md">Account</Heading>
+          <Grid mt={3} templateColumns="repeat(5, 1fr)" gap={3}>
+            <GridItem>Canister</GridItem>
+
+            <GridItem>Balance</GridItem>
+            <GridItem>Spent</GridItem>
+            <GridItem>Heap</GridItem>
+            <GridItem>Memory</GridItem>
+
+            {Array(total_account)
+              .fill(0)
+              .map((_, idx) => {
+                return (
+                  <AccountStats
+                    key={idx}
+                    slot={Number(info.map.account[0]) + idx}
+                  />
+                );
+              })}
+          </Grid>
+        </Box>
+
+        <Box
+          w="100%"
+          bg={"gray.900"}
+          color={"gray.300"}
+          p={5}
+          fontSize="13px"
+          borderRadius="4"
+        >
           <Heading size="md">History</Heading>
-          <Grid mt="3" templateColumns="repeat(5, 1fr)" gap={3}>
+          <Grid mt="3" templateColumns="repeat(6, 1fr)" gap={3}>
             <GridItem>Canister</GridItem>
             <GridItem>Transactions</GridItem>
             <GridItem>Balance</GridItem>
             <GridItem>Spent</GridItem>
+            <GridItem>Heap</GridItem>
             <GridItem>Memory</GridItem>
 
             {Array(total_history)

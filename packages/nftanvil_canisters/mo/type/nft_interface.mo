@@ -352,16 +352,14 @@ module {
 
         // (iPWR, internal) Can be called only by another NFT canister trying to unplug NFT
         unplug      : shared (request: UnsocketRequest) -> async UnplugResponse;
-
-
-    };
-
-    public func OptValid<A>(v:?A, f: (A) -> Bool) : Bool {
-        switch(v) { case (?z) f(z); case(null) true }
     };
 
     public func OptPrice<A>(v:?A, f: (A) -> Nat64) : Nat64 {
         switch(v) { case (?z) f(z); case(null) 0 }
+    };
+
+    public func OptValid<A>(v:?A, f: (A) -> Bool) : Bool {
+        switch(v) { case (?z) f(z); case(null) true }
     };
 
     public type CommonError = {

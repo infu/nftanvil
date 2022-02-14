@@ -26,13 +26,26 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   private stable var _conf : Cluster.Config = Cluster.Config.default();
   private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
-    private stable var _cycles_recieved : Nat = Cycles.balance();
+  private stable var _cycles_recieved : Nat = Cycles.balance();
+
+  private stable var _recharge_accumulated : Nat64 = 0;
+  private stable var _mint_accumulated : Nat64 = 0;
+  private stable var _purchases_accumulated : Nat64 = 0;
+  private stable var _fees_charged : Nat64 = 0;
+
+  private stable var _icp_deposited : Nat64 = 0;
+  private stable var _icp_withdrawn : Nat64 = 0;
+  private stable var _distributed_seller : Nat64 = 0;
+  private stable var _distributed_affiliate : Nat64 = 0;
+  private stable var _distributed_marketplace : Nat64 = 0;
+  private stable var _distributed_author : Nat64 = 0;
+  private stable var _distributed_anvil : Nat64 = 0;
 
   public type Balance = Nft.Balance;
   public type AccountIdentifier = Nft.AccountIdentifier;
   public type TokenIdentifier = Nft.TokenIdentifier;
 
-  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [(Nft.AccountIdentifier.fromText("a00b7d95d24e463793ebf91e459b48c27cb9b208e2e9ff2f2ec8b60d17ffa411"), 100000000), (Nft.AccountIdentifier.fromText("9753428aee3376d3738ef8e94767608f37c8ae675c38acb80884f09efaa99b32"),100000000), (Nft.AccountIdentifier.fromText("a00974c489e1a7e98fafe92cebd40ee99d5864faf53fc21e555860bc0b48d6c4"),1000000000), (Nft.AccountIdentifier.fromText("7f966c0efdc84e116ae2638fed07b2bf999f3f57a7aacde579f641b177baa891"),1000000000) ]; //[];
+  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [];
   
   private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
 
@@ -85,6 +98,10 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
      return {balance; oracle = _oracle}
   };
 
+  public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
+    balanceAdd(aid, amount);
+  };
+
   public shared({caller}) func transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {
     let aid = Nft.User.toAccountIdentifier(request.from);
 
@@ -115,7 +132,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
             } else {
               _balance.delete(aid); // Will free memory of empty accounts
             };
-
+            _fees_charged += _oracle.pwrFee;
+             
             balanceAdd(to_aid, request.amount);
 
 
@@ -169,6 +187,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
                   case (#Ok(blockIndex)) {
                       // #ok(amount)
 
+                        _icp_withdrawn += request.amount + _oracle.icpFee; 
                         let transactionId = await Cluster.history(_conf).add(#pwr(#withdraw({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from);to=Nft.User.toAccountIdentifier(request.to); amount=request.amount})));
 
                         #ok({transactionId});
@@ -205,6 +224,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     let storageCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request.metadata));
     let cost:Nat64 = storageCost + opsCost; // calculate it here
 
+    _fees_charged += _oracle.pwrFee;
+
     // take amount out
     switch(balanceRem(aid, cost + _oracle.pwrFee)) {
       case (#ok()) ();
@@ -213,6 +234,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
     switch(await nft.mint(request)) {
       case (#ok(resp)) {
+
+        _mint_accumulated += cost;
 
         return #ok(resp);
       };
@@ -243,9 +266,12 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       case (#err(e)) return #err(e)
     };
 
+    _fees_charged += _oracle.pwrFee;
+
    switch(await nft.purchase(request)) {
       case (#ok(resp)) {
 
+        _purchases_accumulated += cost;
         distribute_purchase(resp.purchase);
 
         return #ok(resp);
@@ -289,13 +315,19 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
       let NFTAnvil_PWR_earnings_subaccount = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(10) );
       
+      
       // give to NFTAnvil
+      _distributed_anvil += anvil_cut;
       balanceAdd(NFTAnvil_PWR_earnings_subaccount, anvil_cut);
 
       // give to Minter
+      _distributed_author += author_cut;
       balanceAdd(purchase.author.address, author_cut);
 
+
       // give to Marketplace
+      _distributed_marketplace += marketplace_cut;
+
       switch(purchase.marketplace) {
         case (?marketplace) {
           balanceAdd(marketplace.address, marketplace_cut);
@@ -304,6 +336,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       };
 
       // give to Affiliate
+      _distributed_affiliate += affiliate_cut;
       switch(purchase.affiliate) {
         case (?affiliate) {
           balanceAdd(affiliate.address, affiliate_cut);
@@ -311,7 +344,10 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         case (null) ();
       };
 
+
       // give to Seller
+      _distributed_seller += seller_cut;
+
       balanceAdd(purchase.seller, seller_cut);
   };
 
@@ -333,9 +369,12 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       case (#err(e)) return #err(e)
     };
 
+    _fees_charged += _oracle.pwrFee;
+
     switch(await nft.recharge(request)) {
       case (#ok(resp)) {
 
+        _recharge_accumulated += cost;
         return #ok(resp);
       };
       case (#err(e)) {
@@ -388,6 +427,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
         switch(await ledger.transfer(transfer)) {
             case (#Ok(blockIndex)) {
+
+                _icp_deposited += amount.e8s;
 
                 balanceAdd(toUserAID, amount.e8s); // TODO: This 1000 is here for demo only
                 
@@ -442,8 +483,30 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   };
 
   public query func stats () : async (Cluster.StatsResponse and { 
+        recharge_accumulated : Nat64;
+        mint_accumulated : Nat64;
+        purchases_accumulated : Nat64;
+        fees_charged : Nat64;
+        icp_deposited : Nat64;
+        icp_withdrawn : Nat64;
+        distributed_seller : Nat64;
+        distributed_affiliate : Nat64;
+        distributed_marketplace : Nat64;
+        distributed_author : Nat64;
+        distributed_anvil : Nat64;
     }) {
         {
+            recharge_accumulated = _recharge_accumulated;
+            mint_accumulated = _mint_accumulated;
+            purchases_accumulated = _purchases_accumulated;
+            fees_charged = _fees_charged;
+            icp_deposited = _icp_deposited;
+            icp_withdrawn = _icp_withdrawn;
+            distributed_seller = _distributed_seller;
+            distributed_affiliate = _distributed_affiliate;
+            distributed_marketplace = _distributed_marketplace;
+            distributed_author = _distributed_author;
+            distributed_anvil = _distributed_anvil;
             cycles = Cycles.balance();
             cycles_recieved = _cycles_recieved;
             rts_version = Prim.rts_version();

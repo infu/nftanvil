@@ -184,7 +184,9 @@ export const auth =
 
     let map = await router.config_get();
 
+    map.router = map.router.toString();
     map = BigIntToString(map);
+
     console.log("ROUTER MAP", map);
 
     // map.space = map.space.map((x) => {
