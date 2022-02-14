@@ -250,7 +250,6 @@ type Content =
 type Config = 
  record {
    account: CanisterRange;
-   anv: CanisterSlot__1;
    history: CanisterSlot__1;
    history_range: CanisterRange;
    nft: CanisterRange;
@@ -258,17 +257,11 @@ type Config =
    pwr: CanisterSlot__1;
    router: principal;
    space: vec vec nat64;
-   treasury: CanisterSlot__1;
  };
 type Class = 
  service {
    balance: (BalanceRequest) -> (BalanceResponse) query;
-   config_get: () -> (Config) query;
    config_set: (Config) -> ();
-   dumpBalances: () -> (vec record {
-                              AccountIdentifier__2;
-                              Balance__2;
-                            }) query;
    faucet: (record {
               aid: AccountIdentifier__2;
               amount: Balance__2;
@@ -277,8 +270,10 @@ type Class =
    nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);
    nft_recharge: (CanisterSlot, RechargeRequest) -> (RechargeResponse);
    oracle_set: (Oracle) -> ();
-   purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
-   purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
+   pwr_purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
+   pwr_purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
+   pwr_transfer: (TransferRequest) -> (TransferResponse);
+   pwr_withdraw: (WithdrawRequest) -> (WithdrawResponse);
    stats: () ->
     (record {
        cycles: nat;
@@ -301,9 +296,7 @@ type Class =
        rts_total_allocation: nat;
        rts_version: text;
      }) query;
-   transfer: (TransferRequest) -> (TransferResponse);
    wallet_receive: () -> ();
-   withdraw: (WithdrawRequest) -> (WithdrawResponse);
  };
 type CanisterSlot__1 = nat64;
 type CanisterSlot = nat64;
@@ -317,8 +310,9 @@ type Balance__2 = nat64;
 type Balance__1 = nat64;
 type BalanceResponse = 
  record {
-   balance: Balance;
+   anv: Balance;
    oracle: Oracle__1;
+   pwr: Balance;
  };
 type BalanceRequest = record {user: User__1;};
 type Balance = nat64;

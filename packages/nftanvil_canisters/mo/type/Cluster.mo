@@ -3,9 +3,7 @@ import Iter "mo:base/Iter";
 import Router "./router_interface";
 import Nft "./nft_interface";
 import Pwr "./pwr_interface";
-import Treasury "./treasury_interface";
 import History "./history_interface";
-import Anv "./anv_interface";
 import Account "./account_interface";
 import Ledger "./ledger_interface";
 import Float "mo:base/Float";
@@ -31,8 +29,8 @@ module {
         nft_avail: [CanisterSlot];
         account: CanisterRange;
         pwr: CanisterSlot;
-        anv: CanisterSlot;
-        treasury: CanisterSlot;
+        //anv: CanisterSlot;
+        //treasury: CanisterSlot;
         history: CanisterSlot;
         history_range: CanisterRange;
         space:[[Nat64]];
@@ -46,8 +44,8 @@ module {
                 nft_avail = [];
                 account = (5010,5013);
                 pwr = 5002;
-                anv = 5003;
-                treasury = 5004;
+               // anv = 5003;
+               // treasury = 5004;
                 history = 5100;
                 history_range = (5100,5500);
                 space = [[17830671, 17836454]]
@@ -83,21 +81,15 @@ module {
     //     actor(Principal.toText(conf.collection)) : Collection.Interface;
     // };
    
-    public func treasury(conf : Config) : Treasury.Interface {
-        actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.treasury))) : Treasury.Interface;
-    };
 
-    public func treasury_address(conf : Config) : Nft.AccountIdentifier {
-        Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, conf.treasury), null);
-    };
+    // public func treasury_address(conf : Config) : Nft.AccountIdentifier {
+    //     Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, conf.treasury), null);
+    // };
 
     public func nft_address(conf : Config, slot : CanisterSlot) : Nft.AccountIdentifier {
         Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, slot), null);
     };
 
-    public func anv(conf : Config) : Anv.Interface {
-        actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.anv))) : Anv.Interface;
-    };
    
     public func pwr(conf : Config) : Pwr.Interface {
         actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.pwr))) : Pwr.Interface;
@@ -119,6 +111,12 @@ module {
         let (start, end) = conf.account;
         let max = end - start;
         actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, start + Nft.AccountIdentifier.slot(aid, max)))) : Account.Interface;
+    };
+
+    public func aid2slot(conf: Config, aid : Nft.AccountIdentifier) : CanisterSlot {
+        let (start, end) = conf.account;
+        let max = end - start;
+        start + Nft.AccountIdentifier.slot(aid, max);
     };
 
     public func ledger(conf: Config): Ledger.Interface {
@@ -187,8 +185,7 @@ module {
 
             // single cans
             fn(conf.pwr);
-            fn(conf.anv);
-            fn(conf.treasury);
+
 
         };
 

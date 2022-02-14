@@ -13,14 +13,14 @@ export const idlFactory = ({ IDL }) => {
     'pwrFee' : IDL.Nat64,
   });
   const BalanceResponse = IDL.Record({
-    'balance' : Balance,
+    'anv' : Balance,
+    'pwr' : Balance,
     'oracle' : Oracle__1,
   });
-  const CanisterSlot__1 = IDL.Nat64;
   const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
+  const CanisterSlot__1 = IDL.Nat64;
   const Config = IDL.Record({
-    'anv' : CanisterSlot__1,
     'nft' : CanisterRange,
     'pwr' : CanisterSlot__1,
     'history' : CanisterSlot__1,
@@ -29,7 +29,6 @@ export const idlFactory = ({ IDL }) => {
     'account' : CanisterRange,
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
-    'treasury' : CanisterSlot__1,
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__2 = IDL.Nat64;
@@ -244,13 +243,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
-    'config_get' : IDL.Func([], [Config], ['query']),
     'config_set' : IDL.Func([Config], [], []),
-    'dumpBalances' : IDL.Func(
-        [],
-        [IDL.Vec(IDL.Tuple(AccountIdentifier__2, Balance__2))],
-        ['query'],
-      ),
     'faucet' : IDL.Func(
         [IDL.Record({ 'aid' : AccountIdentifier__2, 'amount' : Balance__2 })],
         [],
@@ -268,16 +261,18 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'oracle_set' : IDL.Func([Oracle], [], []),
-    'purchase_claim' : IDL.Func(
+    'pwr_purchase_claim' : IDL.Func(
         [PurchaseClaimRequest],
         [PurchaseClaimResponse],
         [],
       ),
-    'purchase_intent' : IDL.Func(
+    'pwr_purchase_intent' : IDL.Func(
         [PurchaseIntentRequest],
         [PurchaseIntentResponse],
         [],
       ),
+    'pwr_transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
+    'pwr_withdraw' : IDL.Func([WithdrawRequest], [WithdrawResponse], []),
     'stats' : IDL.Func(
         [],
         [
@@ -305,9 +300,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
-    'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
     'wallet_receive' : IDL.Func([], [], []),
-    'withdraw' : IDL.Func([WithdrawRequest], [WithdrawResponse], []),
   });
   return Class;
 };

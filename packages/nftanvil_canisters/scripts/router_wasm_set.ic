@@ -28,23 +28,9 @@ call as wallet router.wasm_set(
 
 call as wallet router.wasm_set(
     record {
-        name = "anv";
-        wasm = file "../build/anv.wasm";
-    }
-);
-
-
-call as wallet router.wasm_set(
-    record {
         name = "history";
         wasm = file "../build/history.wasm";
     }
 );
 
 
-call as wallet router.wasm_set(
-    record {
-        name = "treasury";
-        wasm = file "../build/treasury.wasm";
-    }
-);

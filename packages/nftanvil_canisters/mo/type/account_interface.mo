@@ -25,18 +25,18 @@ module {
      public type AccountRecord = {
           tokens : Inventory.Inventory;
           var info : ?AddressInfo;
-          var transactions: [Nft.TransactionId]
+          var transactions : [Nft.TransactionId]
           };
 
      public type AccountRecordSerialized = {
-          tokens: [TokenIdentifier];
-          info:?AddressInfo;
-          transactions: [Nft.TransactionId]
+          tokens : [TokenIdentifier];
+          info : ?AddressInfo;
+          transactions : [Nft.TransactionId]
      };
 
      public type AccountMeta = {
           info : ?AddressInfo;
-          transactions: [Nft.TransactionId]
+          transactions : [Nft.TransactionId]
      };
 
      public func AccountRecordSerialize(x : AccountRecord) : AccountRecordSerialized {

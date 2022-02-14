@@ -1218,8 +1218,6 @@ export const NFTInfo = ({ id, meta }) => {
   const qcolor = itemQuality[meta.quality].color;
   let nowMinutes = Math.floor(Date.now() / 1000 / 60);
 
-  console.log(meta);
-
   let things = [
     meta.name ? (
       <Text key={"name"} color={qcolor} fontSize="16px">

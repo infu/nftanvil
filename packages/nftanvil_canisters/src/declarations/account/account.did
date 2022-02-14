@@ -13,10 +13,16 @@ type StatsResponse =
    rts_total_allocation: nat;
    rts_version: text;
  };
+type Oracle = 
+ record {
+   anvFee: nat64;
+   icpCycles: nat64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
 type Config = 
  record {
    account: CanisterRange;
-   anv: CanisterSlot__1;
    history: CanisterSlot__1;
    history_range: CanisterRange;
    nft: CanisterRange;
@@ -24,7 +30,6 @@ type Config =
    pwr: CanisterSlot__1;
    router: principal;
    space: vec vec nat64;
-   treasury: CanisterSlot__1;
  };
 type Class = 
  service {
@@ -33,6 +38,7 @@ type Class =
    config_set: (Config) -> ();
    list: (AccountIdentifier, nat) -> (vec TokenIdentifier__1) query;
    meta: (AccountIdentifier) -> (opt AccountMeta) query;
+   oracle_set: (Oracle) -> ();
    rem: (AccountIdentifier, TokenIndex) -> ();
    stats: () -> (StatsResponse) query;
    wallet_receive: () -> ();

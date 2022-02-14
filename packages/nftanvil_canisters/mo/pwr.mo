@@ -20,6 +20,7 @@ import Blob "mo:base/Blob";
 import Cluster  "./type/Cluster";
 import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim"; 
+import HashRecord "./lib/HashRecord";
 
 
 shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
@@ -27,38 +28,33 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   private stable var _conf : Cluster.Config = Cluster.Config.default();
   private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
   private stable var _cycles_recieved : Nat = Cycles.balance();
+  private stable var _slot : Nft.CanisterSlot = 0;
 
-  private stable var _recharge_accumulated : Nat64 = 0;
-  private stable var _mint_accumulated : Nat64 = 0;
-  private stable var _purchases_accumulated : Nat64 = 0;
-  private stable var _fees_charged : Nat64 = 0;
+  private stable var _tmpAccount: [(AccountIdentifier, Pwr.AccountRecordSerialized)] = [];
 
-  private stable var _icp_deposited : Nat64 = 0;
-  private stable var _icp_withdrawn : Nat64 = 0;
-  private stable var _distributed_seller : Nat64 = 0;
-  private stable var _distributed_affiliate : Nat64 = 0;
-  private stable var _distributed_marketplace : Nat64 = 0;
-  private stable var _distributed_author : Nat64 = 0;
-  private stable var _distributed_anvil : Nat64 = 0;
-
-  public type Balance = Nft.Balance;
-  public type AccountIdentifier = Nft.AccountIdentifier;
-  public type TokenIdentifier = Nft.TokenIdentifier;
-
-  private stable var _tmpBalance : [(AccountIdentifier, Balance)] = [];
+  private var _account: HashRecord.HashRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized> = HashRecord.HashRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Pwr.AccountRecordSerialize, Pwr.AccountRecordUnserialize);
   
-  private var _balance : HashMap.HashMap<AccountIdentifier, Balance> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash);
-
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
+  type AccountIdentifier = Nft.AccountIdentifier;
+  type TokenIdentifier = Nft.TokenIdentifier;
+  type TokenIndex = Nft.TokenIndex;
+  type Slot = Nft.CanisterSlot;
+
+  type TransactionAmount = Nft.Balance;
+  type TransactionFrom = AccountIdentifier;
+  type TransactionTo = AccountIdentifier;
+  type Balance = Nft.Balance;
+
+
+  //Handle canister upgrades
   system func preupgrade() {
-    _tmpBalance := Iter.toArray(_balance.entries());
+      _tmpAccount := Iter.toArray(_account.serialize());
   };
 
   system func postupgrade() {
-     _tmpBalance := [];
+      _tmpAccount := [];
   };
-
 
   public func wallet_receive() : async () {
       let available = Cycles.available();
@@ -67,42 +63,92 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       _cycles_recieved += accepted;
   };
 
+  // public shared({caller}) func anv_transfer(request: Anv.TransferRequest) : async Anv.TransferResponse {
+  //     let aid = Nft.User.toAccountIdentifier(request.from);
+  //     let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
-  public shared({caller}) func config_set(conf : Cluster.Config) : async () {
-      assert(caller == _installer);
-      _conf := conf
-  };
+  //     if (caller_user != request.from) return #err(#Unauthorized(aid));
 
-  public query func config_get() : async Cluster.Config {
-      return _conf;
-  };
+  //     switch(_account.get(aid)) {
+  //           case (?ac) {
 
-  public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {
+  //             if (ac.anv < (request.amount + _oracle.anvFee)) return #err(#InsufficientBalance);
+
+  //             let to_aid = Nft.User.toAccountIdentifier(request.to);
+
+  //             ac.anv := ac.anv - request.amount - _oracle.anvFee;
+              
+  //             balanceAdd( #anv, to_aid, request.amount);
+
+  //             let transactionId = await Cluster.history(_conf).add(#anv(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
+  //             #ok({transactionId});
+
+  //           };
+  //           case (_) return #err(#InsufficientBalance);
+  //       };
+  //   };
+
+
+    public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+        assert(caller == _installer);
+        assert(switch(Nft.APrincipal.toSlot(conf.space, Principal.fromActor(this))) {
+            case (?slot) {
+                _slot := slot;
+                true;
+            };
+            case (null) {
+                false; // current principal is not in space, which means configuration is wrong or canister principal is not correct
+            }
+        });
+        _conf := conf
+    }; 
+
+
+    
+    public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {
         assert(caller == _installer);
         _oracle := oracle
-  };
+    };
 
-  public query func dumpBalances() : async [(AccountIdentifier, Balance)] {
-     Iter.toArray(_balance.entries());
-  };
+    private stable var _recharge_accumulated : Nat64 = 0;
+    private stable var _mint_accumulated : Nat64 = 0;
+    private stable var _purchases_accumulated : Nat64 = 0;
+    private stable var _fees_charged : Nat64 = 0;
+
+    private stable var _icp_deposited : Nat64 = 0;
+    private stable var _icp_withdrawn : Nat64 = 0;
+    private stable var _distributed_seller : Nat64 = 0;
+    private stable var _distributed_affiliate : Nat64 = 0;
+    private stable var _distributed_marketplace : Nat64 = 0;
+    private stable var _distributed_author : Nat64 = 0;
+    private stable var _distributed_anvil : Nat64 = 0;
 
 
-  public query func balance(request: Pwr.BalanceRequest) : async Pwr.BalanceResponse {
-    
-    let aid = Nft.User.toAccountIdentifier(request.user);
 
-    let balance : Balance = switch(_balance.get(aid)) {
-        case (?a) a;
-        case (_) 0;
-     };
-     return {balance; oracle = _oracle}
-  };
+    public query func balance(request: Pwr.BalanceRequest) : async Pwr.BalanceResponse {
+        switch(_account.get(Nft.User.toAccountIdentifier(request.user))) {
+            case (?ac) {
+                {
+                    pwr = ac.pwr;
+                    anv = ac.anv;
+                    oracle = _oracle;
+                }
+            };
+            case (_) {
+              {
+                pwr = 0;
+                anv = 0;
+                oracle = _oracle;
+              }
+            }
+        };
+    };
 
   public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
-    balanceAdd(aid, amount);
+    balanceAdd(#pwr, aid, amount);
   };
 
-  public shared({caller}) func transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {
+  public shared({caller}) func pwr_transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {
     let aid = Nft.User.toAccountIdentifier(request.from);
 
     let isAnvil = Nft.APrincipal.isLegitimate(_conf.space, caller); // Checks if caller is from Anvil principal space
@@ -119,23 +165,18 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
     if (caller_user != request.from) return #err(#Unauthorized(aid));
 
-    switch(_balance.get(aid)) {
-          case (?bal) {
+    switch(_account.get(aid)) {
+          case (?ac) {
 
-            if (bal < (request.amount + _oracle.pwrFee)) return #err(#InsufficientBalance);
+            if (ac.pwr < (request.amount + _oracle.pwrFee)) return #err(#InsufficientBalance);
 
             let to_aid = Nft.User.toAccountIdentifier(request.to);
 
-            let new_balance = bal - request.amount - _oracle.pwrFee;
-            if (new_balance > _oracle.pwrFee) {
-              _balance.put(aid, new_balance);
-            } else {
-              _balance.delete(aid); // Will free memory of empty accounts
-            };
+            ac.pwr :=  ac.pwr - request.amount - _oracle.pwrFee;
+
             _fees_charged += _oracle.pwrFee;
              
-            balanceAdd(to_aid, request.amount);
-
+            balanceAdd(#pwr, to_aid, request.amount);
 
             if (isAnvil) {
               //This avoids adding two transactions for one operation like minting
@@ -150,7 +191,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   };
 
 
-  public shared({caller}) func withdraw(request: Pwr.WithdrawRequest) : async Pwr.WithdrawResponse {
+  public shared({caller}) func pwr_withdraw(request: Pwr.WithdrawRequest) : async Pwr.WithdrawResponse {
     let aid = Nft.User.toAccountIdentifier(request.from);
     let NFTAnvil_PWR_ICP_subaccount = ?Nft.SubAccount.fromNat(1);
     //let NFTAnvil_PWR_ICP_address = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), NFTAnvil_PWR_ICP_subaccount);
@@ -159,19 +200,14 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     
     if (caller_user != request.from) return #err(#Unauthorized(aid));
 
-    switch(_balance.get(aid)) {
-          case (?bal) {
+    switch(_account.get(aid)) {
+          case (?ac) {
 
-            if (bal < (request.amount + _oracle.icpFee)) return #err(#InsufficientBalance);
+            if (ac.pwr < (request.amount + _oracle.icpFee)) return #err(#InsufficientBalance);
 
             let to_aid = Nft.User.toAccountIdentifier(request.to);
 
-            let new_balance = bal - request.amount - _oracle.icpFee;
-            if (new_balance > _oracle.icpFee) {
-              _balance.put(aid, new_balance);
-            } else {
-              _balance.delete(aid); // Will free memory of empty accounts
-            };
+            ac.pwr := ac.pwr - request.amount - _oracle.icpFee;
 
             // IC ledger transfer
             let transfer : Ledger.TransferArgs = {
@@ -196,7 +232,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
                   case (#Err(e)) {
                        // Return balance to user
-                       balanceAdd(to_aid, request.amount); // TODO: Check what happens to the fee and return it to user if we aren't charged
+                       balanceAdd(#pwr, to_aid, request.amount); // TODO: Check what happens to the fee and return it to user if we aren't charged
 
                        #err(#Rejected);
                   }
@@ -211,14 +247,14 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   public shared({caller}) func nft_mint(slot: Nft.CanisterSlot, request: Nft.MintRequest) : async Nft.MintResponse {
     assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
-    
+    let aid = Nft.User.toAccountIdentifier(request.user);
+
     let nft = Cluster.nft(_conf, slot);
 
     // check caller 
     let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     if (caller_user != request.user) return #err(#Unauthorized);
 
-    let aid = Nft.User.toAccountIdentifier(request.user);
 
     let opsCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request.metadata));
     let storageCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request.metadata));
@@ -227,7 +263,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     _fees_charged += _oracle.pwrFee;
 
     // take amount out
-    switch(balanceRem(aid, cost + _oracle.pwrFee)) {
+    switch(balanceRem(#pwr, aid, cost + _oracle.pwrFee)) {
       case (#ok()) ();
       case (#err(e)) return #err(e)
     };
@@ -237,10 +273,12 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
         _mint_accumulated += cost;
 
+        balanceAdd(#anv, aid, cost);
+
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(aid, cost); // return because of fail
+        balanceAdd(#pwr, aid, cost); // return because of fail
 
         return #err(e);
       }
@@ -250,18 +288,18 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   public shared({caller}) func nft_purchase(slot: Nft.CanisterSlot, request: Nft.PurchaseRequest) : async Nft.PurchaseResponse {
     assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
-    
+    let aid = Nft.User.toAccountIdentifier(request.user);
+
     // check caller 
     let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     if (caller_user != request.user) return #err(#Unauthorized);
 
     
     let nft = Cluster.nft(_conf, slot);
-    let aid = Nft.User.toAccountIdentifier(request.user);
     let cost:Nat64 = request.amount;
 
     // take amount out
-    switch(balanceRem(aid, cost + _oracle.pwrFee)) {
+    switch(balanceRem(#pwr, aid, cost + _oracle.pwrFee)) {
       case (#ok()) ();
       case (#err(e)) return #err(e)
     };
@@ -277,7 +315,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(aid, cost); // return because of fail
+        balanceAdd(#pwr, aid, cost); // return because of fail
 
         return #err(e);
       }
@@ -318,11 +356,11 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       
       // give to NFTAnvil
       _distributed_anvil += anvil_cut;
-      balanceAdd(NFTAnvil_PWR_earnings_subaccount, anvil_cut);
+      balanceAdd(#pwr, NFTAnvil_PWR_earnings_subaccount, anvil_cut);
 
-      // give to Minter
+      // give to Author
       _distributed_author += author_cut;
-      balanceAdd(purchase.author.address, author_cut);
+      balanceAdd(#pwr, purchase.author.address, author_cut);
 
 
       // give to Marketplace
@@ -330,7 +368,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
       switch(purchase.marketplace) {
         case (?marketplace) {
-          balanceAdd(marketplace.address, marketplace_cut);
+          balanceAdd(#pwr, marketplace.address, marketplace_cut);
         };
         case (null) ();
       };
@@ -339,7 +377,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       _distributed_affiliate += affiliate_cut;
       switch(purchase.affiliate) {
         case (?affiliate) {
-          balanceAdd(affiliate.address, affiliate_cut);
+          balanceAdd(#pwr, affiliate.address, affiliate_cut);
         };
         case (null) ();
       };
@@ -348,23 +386,24 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       // give to Seller
       _distributed_seller += seller_cut;
 
-      balanceAdd(purchase.seller, seller_cut);
+      balanceAdd(#pwr, purchase.seller, seller_cut);
   };
 
   public shared({caller}) func nft_recharge(slot: Nft.CanisterSlot, request: Nft.RechargeRequest) : async Nft.RechargeResponse {
     assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
-    
+    let aid = Nft.User.toAccountIdentifier(request.user);
+
+
     // check caller 
     let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     if (caller_user != request.user) return #err(#Unauthorized);
 
     
     let nft = Cluster.nft(_conf, slot);
-    let aid = Nft.User.toAccountIdentifier(request.user);
     let cost:Nat64 = request.amount;
 
     // take amount out
-    switch(balanceRem(aid, cost + _oracle.pwrFee)) {
+    switch(balanceRem(#pwr, aid, cost + _oracle.pwrFee)) {
       case (#ok()) ();
       case (#err(e)) return #err(e)
     };
@@ -378,7 +417,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(aid, cost); // return because of fail
+        balanceAdd(#pwr, aid, cost); // return because of fail
 
         return #err(e);
       }
@@ -386,7 +425,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   };
 
   // take ICP out and send them to some address
-  public shared({caller}) func purchase_intent(request: Pwr.PurchaseIntentRequest) : async Pwr.PurchaseIntentResponse {
+  public shared({caller}) func pwr_purchase_intent(request: Pwr.PurchaseIntentRequest) : async Pwr.PurchaseIntentResponse {
   
         let toUserAID = Nft.User.toAccountIdentifier(request.user);
 
@@ -398,7 +437,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         #ok(purchaseAccountId);
   };
 
-  public shared({caller}) func purchase_claim(request: Pwr.PurchaseClaimRequest) : async Pwr.PurchaseClaimResponse {
+  public shared({caller}) func pwr_purchase_claim(request: Pwr.PurchaseClaimRequest) : async Pwr.PurchaseClaimResponse {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
         assert(caller_user == request.user);
 
@@ -430,7 +469,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
                 _icp_deposited += amount.e8s;
 
-                balanceAdd(toUserAID, amount.e8s); // TODO: This 1000 is here for demo only
+                balanceAdd(#pwr, toUserAID, amount.e8s); // TODO: This 1000 is here for demo only
                 
                 let transactionId = await Cluster.history(_conf).add(#pwr(#mint({created=Time.now(); user=Nft.User.toAccountIdentifier(request.user); amount=amount.e8s})));
 
@@ -444,42 +483,59 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         
   };
 
-  private func balanceAdd(aid:AccountIdentifier, amount: Balance) : () {
+
+
+
+  private func balanceAdd(target : {#anv; #pwr}, aid:AccountIdentifier, amount: Balance) : () {
 
       if (amount == 0) return ();
 
-      let current:Balance = switch(_balance.get(aid)) {
-        case (?bal) bal;
-        case (_) 0;
-      };
+     switch(_account.get(aid)) {
+            case (?ac) {
+                
+                switch(target) {
+                  case (#anv) {
+                    ac.anv := ac.anv + amount;
+                  };
+                  case (#pwr) {
+                    ac.pwr := ac.pwr + amount;
+                  };
+                };
+                
+            };
+            case (_) { 
+                 let newobj = Pwr.AccountRecordBlank();
+                 _account.put(aid, newobj); 
 
-      _balance.put(aid, current + amount);
+                 switch(target) {
+                  case (#anv) {
+                    newobj.anv := newobj.anv + amount;
+                  };
+                  case (#pwr) {
+                    newobj.pwr := newobj.pwr + amount;
+                  };
+                };
+
+             }
+        };
   };
 
-  private func balanceRem(aid:AccountIdentifier, amount: Balance) : Result.Result<(), {#InsufficientBalance}> {
-      
-      switch(_balance.get(aid)) {
+  private func balanceRem(target : {#anv; #pwr}, aid:AccountIdentifier, amount: Balance) : Result.Result<(), {#InsufficientBalance}> {
 
-          case (?bal) {
+       switch(_account.get(aid)) {
+            case (?ac) {
 
-            if (bal < amount) return #err(#InsufficientBalance);
+                if (ac.pwr < amount) return #err(#InsufficientBalance);
 
-            let new_balance = bal - amount;
-            
-            if (new_balance >= _oracle.pwrFee) {
+                let new_balance = ac.pwr - amount;
 
-              _balance.put(aid, new_balance);
+                ac.pwr := new_balance;
 
-            } else {
-              _balance.delete(aid); // Will free memory of empty accounts
+                #ok();
+
             };
-
-            #ok();
-
-          };
-          case (_) return #err(#InsufficientBalance);
-      };
-
+            case (_) return #err(#InsufficientBalance);
+        };
   };
 
   public query func stats () : async (Cluster.StatsResponse and { 

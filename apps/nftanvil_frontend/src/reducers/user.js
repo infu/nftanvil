@@ -6,7 +6,6 @@ import Cookies from "js-cookie";
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 //import { treasuryCanister } from "@vvv-interactive/nftanvil-canisters/cjs/treasury.js";
 import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
-import { anvCanister } from "@vvv-interactive/nftanvil-canisters/cjs/anv.js";
 
 import authentication from "../auth";
 
@@ -51,17 +50,12 @@ export const userSlice = createSlice({
     key_nftstorage: null,
   },
   reducers: {
-    icpSet: (state, action) => {
+    balancesSet: (state, action) => {
       return {
         ...state,
         icp: action.payload.icp,
+        anv: action.payload.anv,
         oracle: action.payload.oracle,
-      };
-    },
-    anvSet: (state, action) => {
-      return {
-        ...state,
-        anv: action.payload,
       };
     },
     focusSet: (state, action) => {
@@ -111,8 +105,8 @@ export const userSlice = createSlice({
 export const {
   proSet,
   authSet,
-  icpSet,
-  anvSet,
+  balancesSet,
+
   setNftStorageModal,
   setNftSotrageKey,
   focusSet,
@@ -231,7 +225,6 @@ export const refresh_balances = () => async (dispatch, getState) => {
   await dispatch(refresh_icp_balance());
   if (!(await authentication.client.isAuthenticated())) return;
   dispatch(refresh_pwr_balance());
-  dispatch(refresh_anv_balance());
 
   // dispatch(claim_treasury_balance());
 };
@@ -279,7 +272,7 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
     })
     .then((icp) => {
       let e8s = icp.e8s;
-      //dispatch(icpSet(e8s.toString()));
+
       if (e8s >= 30000n) {
         // automatically wrap ICP
         dispatch(pwr_buy({ amount: e8s - 10000n }));
@@ -298,100 +291,38 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
   let address = s.user.address;
   if (!address) return;
 
-  let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-    agentOptions: { identity },
-  });
+  let pwrcan = pwrCanister(
+    PrincipalFromSlot(s.user.map.space, s.user.map.pwr),
+    {
+      agentOptions: { identity },
+    }
+  );
 
-  await pwr
+  await pwrcan
     .balance({
       user: { address: AccountIdentifier.TextToArray(address) },
     })
-    .then(({ balance, oracle }) => {
-      oracle = mapValues(oracle, (v) => v.toString());
-      dispatch(icpSet({ icp: balance.toString(), oracle }));
+    .then(async ({ pwr, anv, oracle }) => {
+      if (Number(pwr) === 0) {
+        //TODO: Remove in production
+        let fres = await pwrcan.faucet({
+          aid: AccountIdentifier.TextToArray(address),
+          amount: 100000000n,
+        });
+        dispatch(refresh_pwr_balance());
+        return;
+      }
+
+      oracle = BigIntToString(oracle);
+      dispatch(
+        balancesSet({ icp: pwr.toString(), anv: anv.toString(), oracle })
+      );
     })
     .catch((e) => {
       // We are most probably logged out. There is currently no better way to handle expired agentjs chain
       if (e.toString().includes("delegation has expired")) dispatch(logout());
     });
 };
-
-export const refresh_anv_balance = () => async (dispatch, getState) => {
-  let identity = authentication.client.getIdentity();
-
-  let s = getState();
-
-  let address = s.user.address;
-  if (!address) return;
-
-  let anv = anvCanister(PrincipalFromSlot(s.user.map.space, s.user.map.anv), {
-    agentOptions: { identity },
-  });
-
-  await anv
-    .balance({
-      user: { address: AccountIdentifier.TextToArray(address) },
-    })
-    .then((balance) => {
-      dispatch(anvSet(balance.toString()));
-    });
-};
-
-// export const claim_treasury_balance = () => async (dispatch, getState) => {
-//   let identity = authentication.client.getIdentity();
-
-//   let s = getState();
-
-//   let address = AccountIdentifier.TextToArray(s.user.address);
-//   let subaccount = [
-//     AccountIdentifier.TextToArray(s.user.subaccount) || null,
-//   ].filter(Boolean);
-//   if (!address) return;
-
-//   let treasury = treasuryCanister(
-//     PrincipalFromSlot(s.user.map.space, s.user.map.treasury),
-//     {
-//       agentOptions: { identity },
-//     }
-//   );
-
-//   let icp = await treasury.balance({
-//     user: { address },
-//     subaccount,
-//   });
-
-//   //console.log("TREASURY balance response", icp);
-
-//   if (icp > 10000n) {
-//     let bal = await treasury.withdraw({
-//       user: { address },
-//       subaccount,
-//     });
-
-//     //console.log("TREASURY Withdraw response", bal);
-
-//     if (bal.ok) {
-//       let toastId = toast(
-//         <TransactionToast
-//           title="Treasury balance widthdrawn"
-//           transactionId={bal.ok.transactionId}
-//         />,
-//         {
-//           isLoading: false,
-//           type: toast.TYPE.SUCCESS,
-//           position: "bottom-right",
-//           autoClose: true,
-//           hideProgressBar: false,
-//           closeOnClick: false,
-//           pauseOnHover: true,
-//           draggable: false,
-//         }
-//       );
-
-//       dispatch(refresh_icp_balance());
-//     }
-//   }
-// };
 
 export const transfer_icp =
   ({ to, amount }) =>

@@ -20,11 +20,11 @@ import Ledger "./ledger_interface"
 
 module {
     public type Interface = actor {
-        balance          : query BalanceRequest         -> async BalanceResponse;
-        transfer         : shared TransferRequest       -> async TransferResponse;
-        withdraw         : shared WithdrawRequest       -> async WithdrawResponse;
-        purchase_intent  : shared PurchaseIntentRequest -> async PurchaseIntentResponse;
-        purchase_claim   : shared PurchaseClaimRequest  -> async PurchaseClaimResponse;
+        balance              : query BalanceRequest         -> async BalanceResponse;
+        pwr_transfer         : shared TransferRequest       -> async TransferResponse;
+        pwr_withdraw         : shared WithdrawRequest       -> async WithdrawResponse;
+        pwr_purchase_intent  : shared PurchaseIntentRequest -> async PurchaseIntentResponse;
+        pwr_purchase_claim   : shared PurchaseClaimRequest  -> async PurchaseClaimResponse;
     };
 
     public type AccountIdentifier = Nft.AccountIdentifier;
@@ -34,12 +34,52 @@ module {
     public type Memo = Nft.Memo;
 
 
+
+     public type AccountRecord = {
+          var pwr : Nat64;
+          var anv : Nat64;
+          };
+
+     public type AccountRecordSerialized = {
+          pwr : Nat64;
+          anv : Nat64;
+     };
+
+     public type AccountResult = {
+          pwr : Nat64;
+          anv : Nat64;
+     };
+
+     public func AccountRecordSerialize(x : AccountRecord) : AccountRecordSerialized {
+          {
+               pwr = x.pwr;
+               anv = x.anv;
+          }
+     };
+
+     public func AccountRecordUnserialize(x:AccountRecordSerialized) : AccountRecord {
+          {
+               var pwr = x.pwr;
+               var anv = x.anv;
+          }
+     };
+
+     public func AccountRecordBlank() : AccountRecord {
+          {
+               var pwr = 0;
+               var anv = 0;
+          }
+     };
+     
+
+
     public type BalanceRequest = {
         user: Nft.User;
     };
 
     public type BalanceResponse = {
-        balance : Balance;
+        pwr : Balance;
+        anv : Balance;
         oracle : Nft.Oracle;
     };
 
@@ -64,6 +104,8 @@ module {
             #Ledger: Ledger.TransferError
         }
     >;
+
+    public type Currency = {#anv; #pwr};
 
     public type TransferRequest = {
         from       : User;

@@ -31,7 +31,6 @@ import Hash "./lib/Hash";
 import Painless "./lib/Painless";
 import SHA224 "./lib/SHA224";
 import Ledger  "./type/ledger_interface";
-import Treasury  "./type/treasury_interface";
 import Cluster  "./type/Cluster";
 import PWR "./type/pwr_interface";
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
@@ -128,8 +127,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         _tmpToken2Link := Iter.toArray(_token2link.entries());
         _tmpChunk := Iter.toArray(_chunk.entries());
 
-
-        
     };
 
     system func postupgrade() {

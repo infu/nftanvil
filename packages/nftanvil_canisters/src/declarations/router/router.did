@@ -38,7 +38,6 @@ type LogEvent =
 type Config = 
  record {
    account: CanisterRange;
-   anv: CanisterSlot__1;
    history: CanisterSlot__1;
    history_range: CanisterRange;
    nft: CanisterRange;
@@ -46,7 +45,6 @@ type Config =
    pwr: CanisterSlot__1;
    router: principal;
    space: vec vec nat64;
-   treasury: CanisterSlot__1;
  };
 type CanisterSlot__1 = nat64;
 type CanisterSlot = nat64;

@@ -219,7 +219,11 @@ export function RouterStats() {
         </Heading>
 
         <Wrap>
-          <MeterNumber label="refuel" val={info.refuel} metric="cycles" />
+          <MeterNumber
+            label="refuel"
+            val={(Number(BigInt(info.refuel) / 10000000000n) / 100).toFixed(2)}
+            metric="trillion cycles"
+          />
           <MeterNumber
             label="jobs succeeded"
             val={info.jobs_success}

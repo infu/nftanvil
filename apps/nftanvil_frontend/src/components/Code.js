@@ -56,7 +56,7 @@ const hexColors = {
 
 export const ACC = ({ children, short = false }) => {
   let a = children
-    .slice(0, 4)
+    .slice(0, 5)
     .toUpperCase()
     .split("")
     .map((x, idx) => (
@@ -64,9 +64,9 @@ export const ACC = ({ children, short = false }) => {
         {x}
       </span>
     ));
-  let b = children.slice(4, -4);
+  let b = children.slice(5, -5);
   let c = children
-    .slice(-4)
+    .slice(-5)
     .toUpperCase()
     .split("")
     .map((x, idx) => (

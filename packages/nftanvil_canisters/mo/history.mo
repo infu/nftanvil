@@ -30,7 +30,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     private stable var _nextTransaction : Nat32 = 0;
     private stable var _lastDigestedAccount : Nat32 = 0;
-    private stable var _lastDigestedAnvil : Nat32 = 0;
+    // private stable var _lastDigestedAnvil : Nat32 = 0;
 
     private stable var _prevHistoryCanister : ?Principal = null;
 
@@ -155,20 +155,20 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
             return;
         };
 
-        if (_nextTransaction != _lastDigestedAnvil) {
+        // if (_nextTransaction != _lastDigestedAnvil) {
 
-            switch(_transactions[Nat32.toNat(_lastDigestedAnvil)]) {
-                case (?t) {
-                    await digestAnvilNotification(_lastDigestedAnvil, t);
-                };
-                case (_) {
-                    ()
-                };
-            };
+        //     switch(_transactions[Nat32.toNat(_lastDigestedAnvil)]) {
+        //         case (?t) {
+        //             await digestAnvilNotification(_lastDigestedAnvil, t);
+        //         };
+        //         case (_) {
+        //             ()
+        //         };
+        //     };
 
-            _lastDigestedAnvil := _lastDigestedAnvil + 1;
-            return;
-        }
+        //     _lastDigestedAnvil := _lastDigestedAnvil + 1;
+        //     return;
+        // }
     };
 
   
@@ -228,18 +228,18 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     };
 
 
-    private func digestAnvilNotification(txIdx :H.EventIndex, transaction: H.Event) : async () {
+    // private func digestAnvilNotification(txIdx :H.EventIndex, transaction: H.Event) : async () {
 
-        switch(transaction.info) {
-            case (#nft(#mint({user; pwr}))) {
-               await Cluster.anv(_conf).reward({user; spent=pwr});
-            };
-            case (_) {
-               ();
-            };
-        };
+    //     switch(transaction.info) {
+    //         case (#nft(#mint({user; pwr}))) {
+    //            await Cluster.anv(_conf).reward({user; spent=pwr});
+    //         };
+    //         case (_) {
+    //            ();
+    //         };
+    //     };
 
-    };
+    // };
 
 
     public query func stats () : async (Cluster.StatsResponse and { 

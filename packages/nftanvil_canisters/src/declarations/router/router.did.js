@@ -1,9 +1,8 @@
 export const idlFactory = ({ IDL }) => {
-  const CanisterSlot__1 = IDL.Nat64;
   const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
+  const CanisterSlot__1 = IDL.Nat64;
   const Config = IDL.Record({
-    'anv' : CanisterSlot__1,
     'nft' : CanisterRange,
     'pwr' : CanisterSlot__1,
     'history' : CanisterSlot__1,
@@ -12,7 +11,6 @@ export const idlFactory = ({ IDL }) => {
     'account' : CanisterRange,
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
-    'treasury' : CanisterSlot__1,
   });
   const LogEvent = IDL.Record({ 'msg' : IDL.Text, 'time' : IDL.Nat32 });
   const Router = IDL.Service({

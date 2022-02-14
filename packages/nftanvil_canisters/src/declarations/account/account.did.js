@@ -2,11 +2,10 @@ export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const TokenIndex = IDL.Nat16;
   const TransactionId = IDL.Vec(IDL.Nat8);
-  const CanisterSlot__1 = IDL.Nat64;
   const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
+  const CanisterSlot__1 = IDL.Nat64;
   const Config = IDL.Record({
-    'anv' : CanisterSlot__1,
     'nft' : CanisterRange,
     'pwr' : CanisterSlot__1,
     'history' : CanisterSlot__1,
@@ -15,7 +14,6 @@ export const idlFactory = ({ IDL }) => {
     'account' : CanisterRange,
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
-    'treasury' : CanisterSlot__1,
   });
   const TokenIdentifier__1 = IDL.Nat64;
   const TokenIdentifier = IDL.Nat64;
@@ -27,6 +25,12 @@ export const idlFactory = ({ IDL }) => {
   const AccountMeta = IDL.Record({
     'info' : IDL.Opt(AddressInfo),
     'transactions' : IDL.Vec(TransactionId),
+  });
+  const Oracle = IDL.Record({
+    'icpFee' : IDL.Nat64,
+    'anvFee' : IDL.Nat64,
+    'icpCycles' : IDL.Nat64,
+    'pwrFee' : IDL.Nat64,
   });
   const StatsResponse = IDL.Record({
     'cycles_recieved' : IDL.Nat,
@@ -48,6 +52,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'meta' : IDL.Func([AccountIdentifier], [IDL.Opt(AccountMeta)], ['query']),
+    'oracle_set' : IDL.Func([Oracle], [], []),
     'rem' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'wallet_receive' : IDL.Func([], [], []),

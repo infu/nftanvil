@@ -171,16 +171,6 @@ shared({caller = _installer}) actor class Router() = this {
 
 
 
-        // create anv canister
-        job_add(#install_code({
-            slot = _conf.anv;
-            wasm = #anv;
-            mode = #reinstall;
-        }));
-
-        job_add(#oracle_set({slot = _conf.anv; oracle = _oracle}));
-        job_add(#config_set({slot = _conf.anv; config = _conf}));
-
 
         ignore Cluster.Slots.installed_history<()>(_conf, func (slot: CanisterSlot) {
              job_add(#install_code({
@@ -194,16 +184,6 @@ shared({caller = _installer}) actor class Router() = this {
         });
   
 
-
-        // create treasury canister
-        job_add(#install_code({
-            slot = _conf.treasury;
-            wasm = #treasury;
-            mode = #reinstall;
-        }));
-
-        job_add(#oracle_set({slot = _conf.treasury; oracle = _oracle}));
-        job_add(#config_set({slot = _conf.treasury; config = _conf}));
 
 
         // create all account canisters
@@ -250,16 +230,7 @@ shared({caller = _installer}) actor class Router() = this {
         job_add(#config_set({slot = _conf.pwr; config = _conf}));
 
 
-        // create anv canister
-        job_add(#install_code({
-            slot = _conf.anv;
-            wasm = #anv;
-            mode = #upgrade;
-        }));
-
-        job_add(#oracle_set({slot = _conf.anv; oracle = _oracle}));
-        job_add(#config_set({slot = _conf.anv; config = _conf}));
-
+  
 
         ignore Cluster.Slots.installed_history<()>(_conf, func (slot: CanisterSlot) {
             job_add(#install_code({
@@ -275,15 +246,6 @@ shared({caller = _installer}) actor class Router() = this {
         
 
 
-       // create treasury canister
-        job_add(#install_code({
-            slot = _conf.treasury;
-            wasm = #treasury;
-            mode = #upgrade;
-        }));
-
-        job_add(#oracle_set({slot = _conf.treasury; oracle = _oracle}));
-        job_add(#config_set({slot = _conf.treasury; config = _conf}));
 
 
         // upgrade all account canisters
@@ -518,8 +480,8 @@ shared({caller = _installer}) actor class Router() = this {
                     //await job_oracle_set({slot = new_history_slot; oracle = _oracle});
                     await job_conf_set({slot = new_history_slot; config = _conf});
 
-                    let {nft; nft_avail; account; router; pwr; anv; treasury; history; history_range; space} = _conf;
-                    _conf := {nft; nft_avail; account; router; pwr; anv; treasury; history=new_history_slot; history_range; space};
+                    let {nft; nft_avail; account; router; pwr; history; history_range; space} = _conf;
+                    _conf := {nft; nft_avail; account; router; pwr; history=new_history_slot; history_range; space};
                     
                     //job_add(#callback( func () : async () {
                         ignore Cluster.Slots.installed_all(_conf, func (slot: CanisterSlot) {
@@ -556,8 +518,8 @@ shared({caller = _installer}) actor class Router() = this {
                     await job_oracle_set({slot = new_nft; oracle = _oracle});
                     await job_conf_set({slot = new_nft; config = _conf});
                     
-                    let {nft; nft_avail; account; router; pwr; anv; treasury; history; history_range; space} = _conf;
-                    _conf := {nft; nft_avail = new_nft_avail; account; router; pwr; anv; treasury; history; history_range; space};
+                    let {nft; nft_avail; account; router; pwr; history; history_range; space} = _conf;
+                    _conf := {nft; nft_avail = new_nft_avail; account; router; pwr; history; history_range; space};
                  }));
 
                

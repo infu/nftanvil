@@ -19,15 +19,20 @@ import Buffer "mo:base/Buffer";
 import Blob "mo:base/Blob";
 import Array_ "./lib/Array";
 import HashSmash "./lib/HashSmash";
+import Ledger  "./type/ledger_interface";
+
 
 import Prim "mo:prim"; 
 import Cluster  "./type/Cluster";
 import Account "./type/account_interface";
 import HashRecord "./lib/HashRecord";
 
+
 shared({ caller = _installer }) actor class Class() = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _cycles_recieved : Nat = Cycles.balance();
+    private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
+    private stable var _slot : Nft.CanisterSlot = 0;
 
 
      // TYPE ALIASES
@@ -40,6 +45,8 @@ shared({ caller = _installer }) actor class Class() = this {
     private stable var _tmpAccount: [(AccountIdentifier, Account.AccountRecordSerialized)] = [];
 
     private var _account: HashRecord.HashRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized> = HashRecord.HashRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Account.AccountRecordSerialize, Account.AccountRecordUnserialize);
+   
+    private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -61,12 +68,27 @@ shared({ caller = _installer }) actor class Class() = this {
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);
+        assert(switch(Nft.APrincipal.toSlot(conf.space, Principal.fromActor(this))) {
+            case (?slot) {
+                _slot := slot;
+                true;
+            };
+            case (null) {
+                false; // current principal is not in space, which means configuration is wrong or canister principal is not correct
+            }
+        });
         _conf := conf
+    }; 
+    
+    public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {
+        assert(caller == _installer);
+        _oracle := oracle
     };
 
     public shared ({caller}) func add(aid: AccountIdentifier, idx: TokenIndex) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
-        
+        assert(Cluster.aid2slot(_conf, aid) == _slot);
+
         switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
             case (?slot) {
                let tid = Nft.TokenIdentifier.encode(slot, idx);
@@ -91,6 +113,7 @@ shared({ caller = _installer }) actor class Class() = this {
 
     public shared ({caller}) func rem(aid: AccountIdentifier, idx: TokenIndex) : async () {
         assert(Nft.User.validate(#address(aid)) == true);
+        assert(Cluster.aid2slot(_conf, aid) == _slot);
 
         switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
             case (?slot) { 
@@ -179,9 +202,9 @@ shared({ caller = _installer }) actor class Class() = this {
             });
     };
     
-
-
-    public query func stats() : async Cluster.StatsResponse {
+    public query func stats() : async (Cluster.StatsResponse and { 
+        
+    }) {
         {
             cycles = Cycles.balance();
             cycles_recieved = _cycles_recieved;
@@ -193,5 +216,9 @@ shared({ caller = _installer }) actor class Class() = this {
             rts_max_live_size = Prim.rts_max_live_size();
         }
     };
+
+
+
+  
 
 }
