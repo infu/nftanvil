@@ -67,39 +67,9 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         #Other : Text;
     };
 
-
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
 
-    // STATE 
-    // private stable var _tmpBalance : [(TokenIndex, AccountIdentifier)] = [];
-    // private var _balance : HashMap.HashMap<TokenIndex, AccountIdentifier> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
-    
-    // private stable var _tmpMeta : [(TokenIndex, Metadata)] = [];
-    // private var _meta : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tmpMeta.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
-    
-    // private stable var _tmpMetavars : [(TokenIndex, Metavars)] = [];
-    // private var _metavars : HashMap.HashMap<TokenIndex, Metavars> = HashMap.fromIter(_tmpMetavars.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
-    
-    // private stable var _tmpToken2Link: [(TokenIndex, Blob)] = [];
-    // private var _token2link : HashMap.HashMap<TokenIndex, Blob> = HashMap.fromIter(_tmpToken2Link.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
-
-
     private stable var _token : [var ?TokenRecord] = Array.init<?TokenRecord>(65535, null);
-
-
-    // {
-    //     owner:
-    //     metadata:
-    //     metavars:
-    //     secretlink:
-    // }
-
-    // private stable var _tmpAllowance : [(TokenIndex, Principal)] = [];
-    // private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
- 
-
-    // private stable var _tmpChunk : [(Nat32, Blob)] = [];
-    // private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
 
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
@@ -119,30 +89,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     var rand = PseudoRandom.PseudoRandom();
 
     private let thresholdMemory = 1147483648; //  ~1GB
-    // private let thresholdNFTMask:Nft.TokenIndex = 8191; // Dont touch. 13 bit Nat
     private let thresholdNFTCount:Nft.TokenIndex = 65534;//4001; // can go up to 8191
 
-    // //Handle canister upgrades
-    // system func preupgrade() {
-    //     _tmpBalance := Iter.toArray(_balance.entries());
-
-    //     // _tmpAllowance := Iter.toArray(_allowance.entries());
-    //     _tmpMeta := Iter.toArray(_meta.entries());
-    //     _tmpMetavars := Iter.toArray(_metavars.entries());
-
-    //     _tmpToken2Link := Iter.toArray(_token2link.entries());
-    //     _tmpChunk := Iter.toArray(_chunk.entries());
-
-    // };
-
-    // system func postupgrade() {
-    //     _tmpBalance := [];
-
-    //     // _tmpAllowance := [];
-    //     _tmpMeta := [];
-    //     _tmpMetavars := [];
-    //     _tmpChunk := [];
-    // };
     
     public query func balance(request : BalanceRequest) : async BalanceResponse {
          switch(balGet(request)) {
@@ -205,9 +153,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             };
     };
 
-    // public query func debug_getNFTS() : async [(TokenIndex, Metadata)] {
-    //         Iter.toArray(_meta.entries())
-    // };
 
 
     public shared({caller}) func transfer_link(request : Nft.TransferLinkRequest) : async Nft.TransferLinkResponse {
@@ -258,10 +203,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (#ok(t)) {
                 if (keyHash != t.link) return #err(#Rejected);   
 
-                    SNFT_move(t.owner, Nft.User.toAccountIdentifier(request.to), tokenIndex);
-                    await ACC_move(t.owner, Nft.User.toAccountIdentifier(request.to), tokenIndex);
+                    let curOwner = t.owner;
+                    SNFT_move(curOwner, Nft.User.toAccountIdentifier(request.to), tokenIndex);
+                    // note t.owner has changed
+                    await ACC_move(curOwner, Nft.User.toAccountIdentifier(request.to), tokenIndex);
 
-                    let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now();token = tokenId(tokenIndex); from=t.owner; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
+                    let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now();token = tokenId(tokenIndex); from=curOwner; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
 
                     addTransaction(t.vars, transactionId);
 
@@ -296,8 +243,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
 
-
-    // Get accountid and exact ICP amount
     public shared({caller}) func purchase( request: Nft.PurchaseRequest) : async Nft.PurchaseResponse {
         assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 

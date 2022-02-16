@@ -207,12 +207,7 @@ module {
         
             public func encode(slot : CanisterSlot, tokenIndex : TokenIndex) : TokenIdentifier {
                 slot << 16 | Nat64.fromNat(Nat16.toNat(tokenIndex));
-                // let rawTokenId = Array.flatten<Nat8>([
-                //     Blob.toArray(Principal.toBlob(canisterId)),
-                //     Binary.BigEndian.fromNat32(tokenIndex),
-                // ]);
-                
-                // Principal.toText(Principal.fromBlob(Blob.fromArray(rawTokenId)));
+   
             };
 
             public func decode(tokenId : TokenIdentifier) : (CanisterSlot, TokenIndex) {
@@ -220,14 +215,7 @@ module {
                 let idx:Nat16 = Nat16.fromNat(Nat64.toNat(tokenId & 65535)); 
                 (slot, idx)
 
-                // let bs = Blob.toArray(Principal.toBlob(Principal.fromText(tokenId)));
-                // let (rawPrefix, rawToken) = Array_.split(bs, 4);
-                // if (rawPrefix != prefix) return #err("invalid prefix");
-                // let (rawCanister, rawIndex) = Array_.split(rawToken, rawToken.size() - 4 : Nat);
-                // #ok(
-                //     Principal.fromBlob(Blob.fromArray(rawCanister)),
-                //     Binary.BigEndian.toNat32(rawIndex),
-                // );
+        
             };
 
             public func equal(a: TokenIdentifier, b:TokenIdentifier) : Bool {
@@ -238,23 +226,7 @@ module {
                  return Nat32.fromNat(Nat64.toNat( (x << 32) >> 32 ));
             };
 
-            // public func toBlob(tokenId : TokenIdentifier) : TokenIdentifierBlob {
-            //     let bl = Principal.toBlob(Principal.fromText(tokenId));
-            // };
-
-            // public func validate(tokenId : TokenIdentifier) : Bool {
-            //     let bl = toBlob(tokenId);
-            //     if (bl.size() > 100) return false;
-            //     let bs = Blob.toArray(bl);
-            //     let (rawPrefix, rawToken) = Array_.split(bs, 4);
-            //     if (rawPrefix != prefix) return false;
-            //     return true;
-                
-            // };
-
-            // public func fromBlob(b:TokenIdentifierBlob) : Text {
-            //     Principal.toText(Principal.fromBlob(b));
-            // };
+    
         };
 
         public type User = {
@@ -310,10 +282,10 @@ module {
         // Returns the account that is linked to the given token.
         bearer  : query (token :  TokenIdentifier) -> async BearerResponse;
 
-        // (PWR) Mints a new NFT
+        // (PWR proxy call) Mints a new NFT
         mint : shared (request :  MintRequest) -> async  MintResponse;
 
-        // recharge nft
+        // (PWR proxy call) recharge nft
         recharge : shared (request :  RechargeRequest) -> async  RechargeResponse;
 
         // get minting price
@@ -337,7 +309,7 @@ module {
         // (no updates) Returns the AccountIdentifier we have to pay ICP to. 
         // purchase_intent : shared (request:  PurchaseIntentRequest) -> async PurchaseIntentResponse;
 
-        //  When you buy NFT part of the deal is to refill its PWR to max.
+        // (PWR proxy call) When you buy NFT part of the deal is to refill its PWR to max.
         purchase : shared (request: PurchaseRequest) -> async PurchaseResponse;
 
         // (iPWR) Changes "Buynow" price of the NFT
