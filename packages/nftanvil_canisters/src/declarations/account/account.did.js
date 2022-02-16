@@ -32,16 +32,6 @@ export const idlFactory = ({ IDL }) => {
     'icpCycles' : IDL.Nat64,
     'pwrFee' : IDL.Nat64,
   });
-  const StatsResponse = IDL.Record({
-    'cycles_recieved' : IDL.Nat,
-    'rts_max_live_size' : IDL.Nat,
-    'cycles' : IDL.Nat,
-    'rts_memory_size' : IDL.Nat,
-    'rts_total_allocation' : IDL.Nat,
-    'rts_heap_size' : IDL.Nat,
-    'rts_reclaimed' : IDL.Nat,
-    'rts_version' : IDL.Text,
-  });
   const Class = IDL.Service({
     'add' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
     'add_transaction' : IDL.Func([AccountIdentifier, TransactionId], [], []),
@@ -54,7 +44,23 @@ export const idlFactory = ({ IDL }) => {
     'meta' : IDL.Func([AccountIdentifier], [IDL.Opt(AccountMeta)], ['query']),
     'oracle_set' : IDL.Func([Oracle], [], []),
     'rem' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
-    'stats' : IDL.Func([], [StatsResponse], ['query']),
+    'stats' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'cycles_recieved' : IDL.Nat,
+            'total_accounts' : IDL.Nat,
+            'rts_max_live_size' : IDL.Nat,
+            'cycles' : IDL.Nat,
+            'rts_memory_size' : IDL.Nat,
+            'rts_total_allocation' : IDL.Nat,
+            'rts_heap_size' : IDL.Nat,
+            'rts_reclaimed' : IDL.Nat,
+            'rts_version' : IDL.Text,
+          }),
+        ],
+        ['query'],
+      ),
     'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;

@@ -6,10 +6,20 @@ import {
   routerCanister,
   nftCanister,
   pwrCanister,
-  encodeTokenId,
   getMap,
   refreshMap,
 } from "./internal.js";
+
+import {
+  encodeTokenId,
+  decodeTokenId,
+  tokenUrl,
+  ipfsTokenUrl,
+  tokenToText,
+  tokenFromText,
+  principalToAccountIdentifier,
+  getSubAccountArray,
+} from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import {
   uploadFile,
@@ -79,7 +89,7 @@ export const easyMintOne = async ({ user, subaccount, metadata }) => {
     let map = await getMap();
 
     let available = map.nft_avail;
-    let slot = available[Math.floor(Math.random() * available.length)];
+    let slot = Number(available[Math.floor(Math.random() * available.length)]);
 
     let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr));
 
@@ -108,8 +118,6 @@ export const easyMintOne = async ({ user, subaccount, metadata }) => {
 
       let tid = encodeTokenId(slot, tokenIndex);
 
-      console.log("minted", tokenIndex, tid);
-
       for (let { cid, secret } of ipfs_pins) {
         let { ok, err } = await pinIPFS(tid, cid, secret);
         if (err) throw Error("Couldn't pin to IPFS");
@@ -135,6 +143,8 @@ export const easyMintOne = async ({ user, subaccount, metadata }) => {
           await chunkBlob(await blobFrom(metadata.thumb.internal.path), fetch),
           subaccount
         );
+
+      console.log("minted", tokenToText(tid));
 
       return tid;
     } else {

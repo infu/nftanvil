@@ -8,16 +8,22 @@ import {
 } from "@vvv-interactive/nftanvil";
 
 const main = async () => {
-  let { principal, address, balance } = await routerCanister();
+  let { principal, address, subaccount } = await routerCanister();
   console.log("Script address ", address);
-  console.log("Balance", balance);
 
   let map = await getMap();
   let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr));
+
   await pwr.faucet({
     aid: AccountIdentifier.TextToArray(address),
     amount: 1000000000,
   });
+
+  let balance = await pwr.balance({
+    user: { address: AccountIdentifier.TextToArray(address) },
+  });
+
+  console.log("Balance", balance);
 
   // Currently agent-js candid implementation doesn't supply the user with very informative errors,
   // so a creating correct metadata record will be hard. Add one change at a time and test.
@@ -27,7 +33,7 @@ const main = async () => {
     .map((_, idx) => {
       return {
         user: { address: AccountIdentifier.TextToArray(address) },
-        subaccount: [],
+        subaccount: [AccountIdentifier.TextToArray(subaccount)],
         metadata: {
           domain: [],
           name: ["Cat #" + idx],

@@ -295,6 +295,7 @@ type Class =
        rts_reclaimed: nat;
        rts_total_allocation: nat;
        rts_version: text;
+       total_accounts: nat;
      }) query;
    wallet_receive: () -> ();
  };

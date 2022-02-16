@@ -363,14 +363,14 @@ export const MintForm = () => {
                             }
                           >
                             <FormLabel htmlFor="domain">
-                              <FormTip text="Verify domain by placing /.well-known/nftanvil.json with {allowed:[allowed author account ids]}">
-                                Verified domain
+                              <FormTip text="Verify by placing /.well-known/nftanvil.json with {allowed:[allowed author account ids]}.">
+                                Verification url
                               </FormTip>
                             </FormLabel>
                             <Input
                               {...field}
                               id="domain"
-                              placeholder="yourdomain.com"
+                              placeholder="yourdomain.com/my_collection/"
                               variant="filled"
                             />
                             <FormErrorMessage>

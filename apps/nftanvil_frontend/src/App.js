@@ -706,7 +706,20 @@ function App() {
           </RouterSwitch>
         </Center>
       </Box>
-
+      <Box
+        textAlign="center"
+        mt="80px"
+        mb="80px"
+        sx={{
+          fontFamily: "Hexaframe",
+          fontSize: "10px",
+          textTransform: "uppercase",
+          color: "gray.500",
+        }}
+      >
+        Web 3.0 | Smart contracts running on the Internet Computer | Made by 3V
+        Interactive
+      </Box>
       <Nftstorage />
       <ToastContainer theme={theme} />
     </>

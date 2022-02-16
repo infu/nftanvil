@@ -18,7 +18,10 @@ dotenv.config(
 );
 let identity = fileIdentity();
 
-import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+import {
+  principalToAccountIdentifier,
+  getSubAccountArray,
+} from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 let host =
   process.env.NODE_ENV !== "production"
@@ -27,6 +30,13 @@ let host =
 
 if (process.env.NODE_ENV !== "production")
   console.log("WARNING RUNNING IN LOCAL DEVELOPMENT MODE");
+
+export const slotcan = (fn, slot) => {
+  let canister = PrincipalFromSlot(map.space, slot).toText();
+
+  let can = fn(canister, { agentOptions: { fetch, identity, host } });
+  return can;
+};
 
 export const routerCanister = async () => {
   let id = process.env.ROUTER_CANISTER;
@@ -37,9 +47,21 @@ export const routerCanister = async () => {
   let principal = await agent.getPrincipal();
   if (!map) map = await router.config_get();
 
-  let address = principalToAccountIdentifier(principal.toText());
-  let balance = await claimBalance(address);
-  return { router, principal, address, balance, id, map };
+  let address = null;
+  let subaccount = null;
+  for (let i = 0; i < 100000; i++) {
+    let c = principalToAccountIdentifier(principal.toText(), i);
+
+    if (c.substring(0, 3) === "a00") {
+      address = c;
+      subaccount = AccountIdentifier.ArrayToText(getSubAccountArray(i));
+
+      break;
+    }
+  }
+
+  let balance = await claimBalance(address, subaccount);
+  return { router, principal, address, subaccount, balance, id, map, identity };
 };
 
 let map = null;
@@ -52,15 +74,24 @@ export const refreshMap = async () => {
   map = await router.config_get();
 };
 
-export const claimBalance = async (address) => {
+export const claimBalance = async (address, subaccount) => {
   let map = await getMap();
+
   let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr), {
     agentOptions: { identity },
   });
 
+  await pwr
+    .pwr_purchase_claim({
+      user: { address: AccountIdentifier.TextToArray(address) },
+      subaccount: [AccountIdentifier.TextToArray(subaccount)],
+    })
+    .catch((e) => {});
+
   let balance = await pwr.balance({
     user: { address: AccountIdentifier.TextToArray(address) },
   });
+
   return balance;
 };
 

@@ -278,6 +278,7 @@ export const idlFactory = ({ IDL }) => {
         [
           IDL.Record({
             'cycles_recieved' : IDL.Nat,
+            'total_accounts' : IDL.Nat,
             'rts_max_live_size' : IDL.Nat,
             'mint_accumulated' : IDL.Nat64,
             'cycles' : IDL.Nat,

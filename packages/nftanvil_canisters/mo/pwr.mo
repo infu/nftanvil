@@ -32,6 +32,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   private stable var _tmpAccount: [(AccountIdentifier, Pwr.AccountRecordSerialized)] = [];
 
+  private stable var _total_accounts : Nat = 0;
+
   private var _account: HashRecord.HashRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized> = HashRecord.HashRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Pwr.AccountRecordSerialize, Pwr.AccountRecordUnserialize);
   
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
@@ -504,6 +506,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
                 
             };
             case (_) { 
+                 _total_accounts += 1;
                  let newobj = Pwr.AccountRecordBlank();
                  _account.put(aid, newobj); 
 
@@ -550,8 +553,10 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         distributed_marketplace : Nat64;
         distributed_author : Nat64;
         distributed_anvil : Nat64;
+        total_accounts: Nat;
     }) {
         {
+            total_accounts = _total_accounts;
             recharge_accumulated = _recharge_accumulated;
             mint_accumulated = _mint_accumulated;
             purchases_accumulated = _purchases_accumulated;

@@ -62,7 +62,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         #Unauthorized : AccountIdentifier;
         #InsufficientBalance;
         #Rejected;
-        #Other        : Text;
+        #Other : Text;
     };
 
 

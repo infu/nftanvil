@@ -2,6 +2,7 @@ import { easyMint } from "./mint.js";
 
 import {
   routerCanister,
+  slotcan,
   nftCanister,
   accountCanister,
   pwrCanister,
@@ -15,6 +16,7 @@ import {
 
 export {
   routerCanister,
+  slotcan,
   nftCanister,
   accountCanister,
   pwrCanister,

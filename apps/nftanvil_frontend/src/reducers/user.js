@@ -351,7 +351,7 @@ export const transfer_icp =
     });
     let trez;
     try {
-      trez = await pwr.withdraw({
+      trez = await pwr.pwr_withdraw({
         amount,
         from: { address: AccountIdentifier.TextToArray(address) },
         to: { address: AccountIdentifier.TextToArray(to) },
@@ -420,7 +420,7 @@ export const pwr_buy =
       isLoading: true,
     });
 
-    let intent = await pwr.purchase_intent({
+    let intent = await pwr.pwr_purchase_intent({
       user: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
     });
@@ -462,7 +462,7 @@ export const pwr_buy =
     }
 
     try {
-      let claim = await pwr.purchase_claim({
+      let claim = await pwr.pwr_purchase_claim({
         user: { address: AccountIdentifier.TextToArray(address) },
         subaccount,
       });

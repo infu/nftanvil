@@ -17,6 +17,7 @@ import {
   Heading,
 } from "@chakra-ui/react";
 import { Progress } from "@chakra-ui/react";
+import { BigIntToString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
 import { useEffect, useState } from "react";
 import { Principal } from "@dfinity/principal";
@@ -114,7 +115,69 @@ export function AccountStats({ slot }) {
   return (
     <>
       <GridItem>{slot}</GridItem>
+      <GridItem>{Number(stats.total_accounts)}</GridItem>
 
+      <GridItem>{tc(stats.cycles)} TC</GridItem>
+      <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
+
+      <GridItem>{heap_mb}MB</GridItem>
+      <GridItem>{mem_mb}MB</GridItem>
+    </>
+  );
+}
+
+export function PwrStats() {
+  const dispatch = useDispatch();
+
+  const [stats, setStats] = useState(null);
+
+  const load = async () => {
+    setStats(await dispatch(pwr_stats()));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  if (!stats) return null;
+  console.log("PWRSTATS", stats);
+  //const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
+  const heap_mb = Number(stats.rts_heap_size / 1024n / 1024n);
+  const mem_mb = Number(stats.rts_memory_size / 1024n / 1024n);
+
+  return (
+    <>
+      <GridItem>{Number(stats.total_accounts)}</GridItem>
+
+      <GridItem>{tc(stats.cycles)} TC</GridItem>
+      <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
+
+      <GridItem>{heap_mb}MB</GridItem>
+      <GridItem>{mem_mb}MB</GridItem>
+    </>
+  );
+}
+
+export function RouterStats() {
+  const dispatch = useDispatch();
+
+  const [stats, setStats] = useState(null);
+
+  const load = async () => {
+    setStats(await dispatch(router_stats()));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  if (!stats) return null;
+  //const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
+  const heap_mb = Number(stats.rts_heap_size / 1024n / 1024n);
+  const mem_mb = Number(stats.rts_memory_size / 1024n / 1024n);
+
+  return (
+    <>
       <GridItem>{tc(stats.cycles)} TC</GridItem>
       <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
 
@@ -190,13 +253,13 @@ export function HistoryStats({ slot }) {
   );
 }
 
-export function RouterStats() {
+export function Orchestration() {
   const [info, setInfo] = useState(null);
 
   const dispatch = useDispatch();
 
   const load = async () => {
-    setInfo(await dispatch(router_stats()));
+    setInfo(BigIntToString(await dispatch(router_stats())));
   };
 
   useEffect(() => {
@@ -236,13 +299,13 @@ export function RouterStats() {
   );
 }
 
-export function PwrStats() {
+export function Financial() {
   const [info, setInfo] = useState(null);
 
   const dispatch = useDispatch();
 
   const load = async () => {
-    setInfo(await dispatch(pwr_stats()));
+    setInfo(BigIntToString(await dispatch(pwr_stats())));
   };
 
   useEffect(() => {
@@ -361,7 +424,7 @@ export function DashboardPage() {
     ) + 1;
   let total_account = Number(info.map.account[1] - info.map.account[0]) + 1;
 
-  let total_other = 4;
+  let total_other = 2;
 
   let total_history = Number(info.map.history - info.map.history_range[0]) + 1;
 
@@ -373,143 +436,185 @@ export function DashboardPage() {
 
   return (
     <Center>
-      <Stack mt="50px" spacing="3" maxW={"590px"}>
-        <PwrStats />
-        <RouterStats />
-        <Box
-          mt={8}
-          w="100%"
-          bg={"gray.900"}
-          color={"gray.300"}
-          p={5}
-          fontSize="13px"
-          borderRadius="4"
-        >
-          <Heading mb={3} size="md">
-            Cluster
-          </Heading>
+      <Wrap mt={"80px"} justify="center">
+        <Stack mt="50px" spacing="3" maxW={"590px"}>
+          <Financial />
+          <Orchestration />
+          <Box
+            mt={8}
+            w="100%"
+            bg={"gray.900"}
+            color={"gray.300"}
+            p={5}
+            fontSize="13px"
+            borderRadius="4"
+          >
+            <Heading mb={3} size="md">
+              Cluster
+            </Heading>
 
-          <Wrap>
-            <MeterNumber label="total" val={total_range} metric="canisters" />
-            <MeterNumber
-              label="account"
-              val={total_account}
-              metric="canisters"
-            />
-            <MeterNumber label="nft" val={total_nft} metric="canisters" />
-            <MeterNumber label="other" val={total_other} metric="canisters" />
-            <MeterNumber
-              label="history"
-              val={total_history}
-              metric="canisters"
-            />
+            <Wrap>
+              <MeterNumber label="total" val={total_range} metric="canisters" />
+              <MeterNumber
+                label="account"
+                val={total_account}
+                metric="canisters"
+              />
+              <MeterNumber label="nft" val={total_nft} metric="canisters" />
+              <MeterNumber label="other" val={total_other} metric="canisters" />
+              <MeterNumber
+                label="history"
+                val={total_history}
+                metric="canisters"
+              />
 
-            <MeterNumber
-              label="nft available"
-              val={nft_available}
-              metric="canisters"
-            />
+              <MeterNumber
+                label="nft available"
+                val={nft_available}
+                metric="canisters"
+              />
 
-            <MeterNumber
-              label="history available"
-              val={history_available}
-              metric="canisters"
-            />
+              <MeterNumber
+                label="history available"
+                val={history_available}
+                metric="canisters"
+              />
 
-            <Box> {}</Box>
-          </Wrap>
-        </Box>
+              <Box> {}</Box>
+            </Wrap>
+          </Box>
+        </Stack>
+        <Stack mt="50px" spacing="3" maxW={"590px"}>
+          <Box
+            w="100%"
+            bg={"gray.900"}
+            color={"gray.300"}
+            p={5}
+            fontSize="13px"
+            borderRadius="4"
+          >
+            <Heading size="md">Nft</Heading>
+            <Grid mt={3} templateColumns="repeat(8, 1fr)" gap={3}>
+              <GridItem>Canister</GridItem>
+              <GridItem>Minted</GridItem>
+              <GridItem>Burned</GridItem>
+              <GridItem>Transferred</GridItem>
+              <GridItem>Balance</GridItem>
+              <GridItem>Spent</GridItem>
+              <GridItem>Heap</GridItem>
+              <GridItem>Memory</GridItem>
 
-        <Box
-          w="100%"
-          bg={"gray.900"}
-          color={"gray.300"}
-          p={5}
-          fontSize="13px"
-          borderRadius="4"
-        >
-          <Heading size="md">Nft</Heading>
-          <Grid mt={3} templateColumns="repeat(8, 1fr)" gap={3}>
-            <GridItem>Canister</GridItem>
-            <GridItem>Minted</GridItem>
-            <GridItem>Burned</GridItem>
-            <GridItem>Transferred</GridItem>
-            <GridItem>Balance</GridItem>
-            <GridItem>Spent</GridItem>
-            <GridItem>Heap</GridItem>
-            <GridItem>Memory</GridItem>
+              {Array(total_nft)
+                .fill(0)
+                .map((_, idx) => {
+                  return (
+                    <NftStats key={idx} slot={Number(info.map.nft[0]) + idx} />
+                  );
+                })}
+            </Grid>
+          </Box>
 
-            {Array(total_nft)
-              .fill(0)
-              .map((_, idx) => {
-                return (
-                  <NftStats key={idx} slot={Number(info.map.nft[0]) + idx} />
-                );
-              })}
-          </Grid>
-        </Box>
+          <Box
+            w="100%"
+            bg={"gray.900"}
+            color={"gray.300"}
+            p={5}
+            fontSize="13px"
+            borderRadius="4"
+          >
+            <Heading size="md">Account</Heading>
+            <Grid mt={3} templateColumns="repeat(6, 1fr)" gap={3}>
+              <GridItem>Canister</GridItem>
+              <GridItem>Accounts</GridItem>
 
-        <Box
-          w="100%"
-          bg={"gray.900"}
-          color={"gray.300"}
-          p={5}
-          fontSize="13px"
-          borderRadius="4"
-        >
-          <Heading size="md">Account</Heading>
-          <Grid mt={3} templateColumns="repeat(5, 1fr)" gap={3}>
-            <GridItem>Canister</GridItem>
+              <GridItem>Balance</GridItem>
+              <GridItem>Spent</GridItem>
+              <GridItem>Heap</GridItem>
+              <GridItem>Memory</GridItem>
 
-            <GridItem>Balance</GridItem>
-            <GridItem>Spent</GridItem>
-            <GridItem>Heap</GridItem>
-            <GridItem>Memory</GridItem>
+              {Array(total_account)
+                .fill(0)
+                .map((_, idx) => {
+                  return (
+                    <AccountStats
+                      key={idx}
+                      slot={Number(info.map.account[0]) + idx}
+                    />
+                  );
+                })}
+            </Grid>
+          </Box>
 
-            {Array(total_account)
-              .fill(0)
-              .map((_, idx) => {
-                return (
-                  <AccountStats
-                    key={idx}
-                    slot={Number(info.map.account[0]) + idx}
-                  />
-                );
-              })}
-          </Grid>
-        </Box>
+          <Box
+            w="100%"
+            bg={"gray.900"}
+            color={"gray.300"}
+            p={5}
+            fontSize="13px"
+            borderRadius="4"
+          >
+            <Heading size="md">Pwr</Heading>
+            <Grid mt={3} templateColumns="repeat(5, 1fr)" gap={3}>
+              <GridItem>Accounts</GridItem>
+              <GridItem>Balance</GridItem>
+              <GridItem>Spent</GridItem>
+              <GridItem>Heap</GridItem>
+              <GridItem>Memory</GridItem>
 
-        <Box
-          w="100%"
-          bg={"gray.900"}
-          color={"gray.300"}
-          p={5}
-          fontSize="13px"
-          borderRadius="4"
-        >
-          <Heading size="md">History</Heading>
-          <Grid mt="3" templateColumns="repeat(6, 1fr)" gap={3}>
-            <GridItem>Canister</GridItem>
-            <GridItem>Transactions</GridItem>
-            <GridItem>Balance</GridItem>
-            <GridItem>Spent</GridItem>
-            <GridItem>Heap</GridItem>
-            <GridItem>Memory</GridItem>
+              <PwrStats />
+            </Grid>
+          </Box>
 
-            {Array(total_history)
-              .fill(0)
-              .map((_, idx) => {
-                return (
-                  <HistoryStats
-                    key={idx}
-                    slot={Number(info.map.history_range[0]) + idx}
-                  />
-                );
-              })}
-          </Grid>
-        </Box>
+          <Box
+            w="100%"
+            bg={"gray.900"}
+            color={"gray.300"}
+            p={5}
+            fontSize="13px"
+            borderRadius="4"
+          >
+            <Heading size="md">Router</Heading>
+            <Grid mt={3} templateColumns="repeat(4, 1fr)" gap={3}>
+              <GridItem>Balance</GridItem>
+              <GridItem>Spent</GridItem>
+              <GridItem>Heap</GridItem>
+              <GridItem>Memory</GridItem>
 
-        {/* <CanisterInfo
+              <RouterStats />
+            </Grid>
+          </Box>
+
+          <Box
+            w="100%"
+            bg={"gray.900"}
+            color={"gray.300"}
+            p={5}
+            fontSize="13px"
+            borderRadius="4"
+          >
+            <Heading size="md">History</Heading>
+            <Grid mt="3" templateColumns="repeat(6, 1fr)" gap={3}>
+              <GridItem>Canister</GridItem>
+              <GridItem>Transactions</GridItem>
+              <GridItem>Balance</GridItem>
+              <GridItem>Spent</GridItem>
+              <GridItem>Heap</GridItem>
+              <GridItem>Memory</GridItem>
+
+              {Array(total_history)
+                .fill(0)
+                .map((_, idx) => {
+                  return (
+                    <HistoryStats
+                      key={idx}
+                      slot={Number(info.map.history_range[0]) + idx}
+                    />
+                  );
+                })}
+            </Grid>
+          </Box>
+
+          {/* <CanisterInfo
             type="pwr"
             id={PrincipalFromSlot(info.map.space, info.map.pwr).toText()}
           />
@@ -522,7 +627,7 @@ export function DashboardPage() {
             id={PrincipalFromSlot(info.map.space, info.map.treasury).toText()}
           /> */}
 
-        {/* <Grid templateColumns="repeat(75, 1fr)" gap={"1px"}>
+          {/* <Grid templateColumns="repeat(75, 1fr)" gap={"1px"}>
           {Array(Number(info.map.space[0][1] - info.map.space[0][0]))
             .fill(0)
             .map((_, idx) => {
@@ -532,29 +637,30 @@ export function DashboardPage() {
               );
             })}
         </Grid> */}
-        <Box
-          w="100%"
-          bg={"gray.900"}
-          color={"gray.300"}
-          p={5}
-          fontSize="13px"
-          borderRadius="4"
-        >
-          <Heading mb={3} size="md">
-            Log
-          </Heading>
-          {info.log.map((x, idx) => {
-            return (
-              <Stack key={idx} direction="row" spacing="3" mb="2">
-                <Box w="160px" color="gray.500">
-                  {moment(x.time * 1000).format("MM.DD.YY, HH:mm:ss")}
-                </Box>
-                <Box w="100%">{x.msg}</Box>
-              </Stack>
-            );
-          })}
-        </Box>
-      </Stack>
+          <Box
+            w="100%"
+            bg={"gray.900"}
+            color={"gray.300"}
+            p={5}
+            fontSize="13px"
+            borderRadius="4"
+          >
+            <Heading mb={3} size="md">
+              Log
+            </Heading>
+            {info.log.map((x, idx) => {
+              return (
+                <Stack key={idx} direction="row" spacing="3" mb="2">
+                  <Box w="160px" color="gray.500">
+                    {moment(x.time * 1000).format("MM.DD.YY, HH:mm:ss")}
+                  </Box>
+                  <Box w="100%">{x.msg}</Box>
+                </Stack>
+              );
+            })}
+          </Box>
+        </Stack>
+      </Wrap>
     </Center>
   );
 }

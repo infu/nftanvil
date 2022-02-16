@@ -121,11 +121,11 @@ module {
 
             public func slot(accountId : AccountIdentifier, max:CanisterSlot) : CanisterSlot {
                 let bl = Blob.toArray(accountId);
-                let (rawPrefix, rawToken) = Array_.split(bl, 4);
+                let (p1, p2) = Array_.split(bl, 28);
 
-                let crc = Blob_.bytesToNat32(rawPrefix);
+                let x = Blob_.bytesToNat32(p2);
 
-                Nat64.fromNat(Nat32.toNat(crc))  %  max
+                 (Nat64.fromNat(Nat32.toNat(x))  %  (max + 1))
             };
 
             public func equal(a : AccountIdentifier, b : AccountIdentifier) : Bool {
@@ -682,7 +682,7 @@ module {
     public type DomainName = Text;
     public module DomainName = {
         public func validate(t : DomainName) : Bool {
-            t.size() <= 64 //TODO: Make real domain name verification.
+            t.size() <= 256 
         }
     };
     public type Share = Nat16;

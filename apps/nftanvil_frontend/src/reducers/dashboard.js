@@ -16,7 +16,6 @@ export const pwr_stats = () => async (dispatch, getState) => {
 
   let pwr = pwrCanister(canisterId, { agentOptions: { identity } });
   let stats = await pwr.stats();
-  stats = BigIntToString(stats);
   return stats;
 };
 
@@ -30,7 +29,6 @@ export const router_stats = () => async (dispatch, getState) => {
 
   let stats = await router.stats();
 
-  stats = BigIntToString(stats);
   return stats;
 };
 

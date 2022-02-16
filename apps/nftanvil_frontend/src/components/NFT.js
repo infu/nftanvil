@@ -262,11 +262,26 @@ function SetPriceButton({ id }) {
 
 function TransferButton({ id, meta }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [alertOpen, setAlertOpen] = React.useState(false);
+
   const dispatch = useDispatch();
   const initialRef = React.useRef();
 
+  const confirmOk = async () => {
+    let toAddress = initialRef.current.value.toUpperCase();
+
+    onClose();
+
+    await dispatch(transfer({ id, toAddress }));
+  };
+
   const transferOk = async () => {
     let toAddress = initialRef.current.value.toUpperCase();
+    if (toAddress.toLowerCase().indexOf("a00") !== 0) {
+      setAlertOpen(true);
+      return;
+    }
+
     onClose();
 
     await dispatch(transfer({ id, toAddress }));
@@ -277,6 +292,28 @@ function TransferButton({ id, meta }) {
       <Button onClick={onOpen} isDisabled={!meta.transferable}>
         Transfer
       </Button>
+
+      <AlertDialog isOpen={alertOpen} preserveScrollBarGap={true}>
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Doesn't look like NFTAnvil address.
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              All NFTAnvil addresses start with A00 and this one doesn't. If you
+              send to such address you may not be able to access your NFT.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button onClick={() => setAlertOpen(false)}>Cancel</Button>
+              <Button colorScheme="red" onClick={confirmOk} ml={3}>
+                Send anyway
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
 
       <Modal
         initialFocusRef={initialRef}

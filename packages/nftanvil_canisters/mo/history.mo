@@ -26,7 +26,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     // private stable var _tmpEvents : [(H.EventIndex, H.Event)] = [];
     // private stable var _transactions : AssocList.AssocList<H.EventIndex, H.Event> = List.nil<(H.EventIndex, H.Event)>(); //= HashMap.fromIter(_tmpEvents.vals(), 0, H.EventIndex.equal, H.EventIndex.hash)
-    private stable var _transactions : [var ?H.Event] = Array.init<?H.Event>(55000, null);
+    private stable var _transactions : [var ?H.Event] = Array.init<?H.Event>(1005000, null);
 
     private stable var _nextTransaction : Nat32 = 0;
     private stable var _lastDigestedAccount : Nat32 = 0;
@@ -38,7 +38,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     private stable var _slot : Nft.CanisterSlot = 0;
 
 
-    private let _transactions_soft_cap: Nat32 = 50000;
+    private let _transactions_soft_cap: Nat32 = 1000000;
 
     private stable var _cycles_recieved : Nat = Cycles.balance();
 

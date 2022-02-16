@@ -34,6 +34,7 @@ shared({ caller = _installer }) actor class Class() = this {
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
     private stable var _slot : Nft.CanisterSlot = 0;
 
+    private stable var _total_accounts : Nat = 0;
 
      // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -46,7 +47,6 @@ shared({ caller = _installer }) actor class Class() = this {
 
     private var _account: HashRecord.HashRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized> = HashRecord.HashRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Account.AccountRecordSerialize, Account.AccountRecordUnserialize);
    
-    private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -56,6 +56,9 @@ shared({ caller = _installer }) actor class Class() = this {
     system func postupgrade() {
         _tmpAccount := [];
     };
+    
+    private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
+
 
 
     public func wallet_receive() : async () {
@@ -96,6 +99,7 @@ shared({ caller = _installer }) actor class Class() = this {
                let r = switch(_account.get(aid)) {
                    case (?ac) ac;
                    case (_) {
+                        _total_accounts += 1;
                         let blank = Account.AccountRecordBlank();
                         _account.put(aid, blank);  
                         blank;
@@ -122,6 +126,7 @@ shared({ caller = _installer }) actor class Class() = this {
                let r = switch(_account.get(aid)) {
                    case (?ac) {
                        ac.tokens.rem(tid); //HashSmash.rem<AccountIdentifier,TokenIdentifier>(_account, aid, tid);
+                       //TODO: Garbage collect if empty
                    };
                    case (_) { () }
                };
@@ -203,9 +208,10 @@ shared({ caller = _installer }) actor class Class() = this {
     };
     
     public query func stats() : async (Cluster.StatsResponse and { 
-        
+        total_accounts : Nat;
     }) {
         {
+            total_accounts = _total_accounts;
             cycles = Cycles.balance();
             cycles_recieved = _cycles_recieved;
             rts_version = Prim.rts_version();
