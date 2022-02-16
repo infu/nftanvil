@@ -34,6 +34,8 @@ import Ledger  "./type/ledger_interface";
 import Cluster  "./type/Cluster";
 import PWR "./type/pwr_interface";
 import AccountIdentifierArray "mo:principal/AccountIdentifier";
+import HashRecord "./lib/HashRecord";
+import Debug "mo:base/Debug";
 
 
 shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
@@ -49,7 +51,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     type Metadata = Nft.Metadata;
     type Metavars = Nft.Metavars;
     type MetavarsOut = Nft.MetavarsFrozen;
-
+    type TokenRecord = Nft.TokenRecord;
 
     type BalanceRequest = Nft.BalanceRequest;
     type BalanceResponse = Nft.BalanceResponse;
@@ -69,17 +71,21 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     type BalanceInt = Result.Result<(User,TokenIndex,Balance,Balance),BalanceIntError>;
 
     // STATE 
-    private stable var _tmpBalance : [(TokenIndex, AccountIdentifier)] = [];
-    private var _balance : HashMap.HashMap<TokenIndex, AccountIdentifier> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
+    // private stable var _tmpBalance : [(TokenIndex, AccountIdentifier)] = [];
+    // private var _balance : HashMap.HashMap<TokenIndex, AccountIdentifier> = HashMap.fromIter(_tmpBalance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
-    private stable var _tmpMeta : [(TokenIndex, Metadata)] = [];
-    private var _meta : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tmpMeta.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
+    // private stable var _tmpMeta : [(TokenIndex, Metadata)] = [];
+    // private var _meta : HashMap.HashMap<TokenIndex, Metadata> = HashMap.fromIter(_tmpMeta.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
-    private stable var _tmpMetavars : [(TokenIndex, Metavars)] = [];
-    private var _metavars : HashMap.HashMap<TokenIndex, Metavars> = HashMap.fromIter(_tmpMetavars.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
+    // private stable var _tmpMetavars : [(TokenIndex, Metavars)] = [];
+    // private var _metavars : HashMap.HashMap<TokenIndex, Metavars> = HashMap.fromIter(_tmpMetavars.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
     
-    private stable var _tmpToken2Link: [(TokenIndex, Blob)] = [];
-    private var _token2link : HashMap.HashMap<TokenIndex, Blob> = HashMap.fromIter(_tmpToken2Link.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
+    // private stable var _tmpToken2Link: [(TokenIndex, Blob)] = [];
+    // private var _token2link : HashMap.HashMap<TokenIndex, Blob> = HashMap.fromIter(_tmpToken2Link.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
+
+
+    private stable var _token : [var ?TokenRecord] = Array.init<?TokenRecord>(65535, null);
+
 
     // {
     //     owner:
@@ -92,8 +98,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     // private var _allowance : HashMap.HashMap<TokenIndex, Principal> = HashMap.fromIter(_tmpAllowance.vals(), 0, Nft.TokenIndex.equal, Nft.TokenIndex.hash);
  
 
-    private stable var _tmpChunk : [(Nat32, Blob)] = [];
-    private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
+    // private stable var _tmpChunk : [(Nat32, Blob)] = [];
+    // private var _chunk : HashMap.HashMap<Nat32, Blob> = HashMap.fromIter(_tmpChunk.vals(), 0, Nat32.equal, func (x:Nat32) : Nat32 { x });
 
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
@@ -116,27 +122,27 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     // private let thresholdNFTMask:Nft.TokenIndex = 8191; // Dont touch. 13 bit Nat
     private let thresholdNFTCount:Nft.TokenIndex = 65534;//4001; // can go up to 8191
 
-    //Handle canister upgrades
-    system func preupgrade() {
-        _tmpBalance := Iter.toArray(_balance.entries());
+    // //Handle canister upgrades
+    // system func preupgrade() {
+    //     _tmpBalance := Iter.toArray(_balance.entries());
 
-        // _tmpAllowance := Iter.toArray(_allowance.entries());
-        _tmpMeta := Iter.toArray(_meta.entries());
-        _tmpMetavars := Iter.toArray(_metavars.entries());
+    //     // _tmpAllowance := Iter.toArray(_allowance.entries());
+    //     _tmpMeta := Iter.toArray(_meta.entries());
+    //     _tmpMetavars := Iter.toArray(_metavars.entries());
 
-        _tmpToken2Link := Iter.toArray(_token2link.entries());
-        _tmpChunk := Iter.toArray(_chunk.entries());
+    //     _tmpToken2Link := Iter.toArray(_token2link.entries());
+    //     _tmpChunk := Iter.toArray(_chunk.entries());
 
-    };
+    // };
 
-    system func postupgrade() {
-        _tmpBalance := [];
+    // system func postupgrade() {
+    //     _tmpBalance := [];
 
-        // _tmpAllowance := [];
-        _tmpMeta := [];
-        _tmpMetavars := [];
-        _tmpChunk := [];
-    };
+    //     // _tmpAllowance := [];
+    //     _tmpMeta := [];
+    //     _tmpMetavars := [];
+    //     _tmpChunk := [];
+    // };
     
     public query func balance(request : BalanceRequest) : async BalanceResponse {
          switch(balGet(request)) {
@@ -199,15 +205,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             };
     };
 
-    private func resetTransferBindings( meta :Metadata, vars: Metavars) : () {
-        switch (meta.transfer) {
-            case (#unrestricted) { (); };
-            case (#bindsForever) { (); };
-            case (#bindsDuration(setupDuration)) {
-                vars.boundUntil := ?(timeInMinutes() + setupDuration);
-            }
-        }
-    };
     // public query func debug_getNFTS() : async [(TokenIndex, Metadata)] {
     //         Iter.toArray(_meta.entries())
     // };
@@ -224,13 +221,13 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
                  
                    switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
 
                             if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#Rejected);
 
                             if (PWRConsume(tokenIndex, 2) == false) return #err(#OutOfPower);
 
-                            _token2link.put(tokenIndex, request.hash);
+                            t.link := ?request.hash;
 
                             #ok();
                     };
@@ -257,43 +254,21 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         if (slot != _slot) return #err(#Rejected);
 
-        switch(_token2link.get(tokenIndex)) {
-            case (?hash) {
-                if (keyHash != hash) return #err(#Rejected);   
+        switch(getToken(tokenIndex)) {
+            case (#ok(t)) {
+                if (keyHash != t.link) return #err(#Rejected);   
 
-                switch(_balance.get(tokenIndex)) {
-                    case (?from) {
+                    SNFT_move(t.owner, Nft.User.toAccountIdentifier(request.to), tokenIndex);
+                    await ACC_move(t.owner, Nft.User.toAccountIdentifier(request.to), tokenIndex);
 
-                        switch(getMeta(tokenIndex)) {
-                                case (#ok((meta,vars))) {
+                    let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now();token = tokenId(tokenIndex); from=t.owner; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
 
-                                        // TODO: Delete token once used
-                                        // if (AccountIdentifier.equal(from,Nft.User.toAccountIdentifier(request.to))) {
+                    addTransaction(t.vars, transactionId);
 
-                                        // };
-
-                                        SNFT_move(from,Nft.User.toAccountIdentifier(request.to), tokenIndex);
-                                        await ACC_move(from,Nft.User.toAccountIdentifier(request.to), tokenIndex);
-
-                                        resetTransferBindings(meta, vars);
-                                        vars.lastTransfer := timeInMinutes();
-
-                                        let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now();token = tokenId(tokenIndex); from=from; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
-                                        addTransaction(vars, transactionId);
-
-                                        return #ok({transactionId});
-                                };
-                                case (#err()) {
-                                    #err(#Rejected);
-                                }
-                            }
-                    };
-                    case (_) {
-                        #err(#Rejected)
-                    }
-                };
+                    return #ok({transactionId});
+            
             };
-            case (_) {
+            case (#err(e)) {
                 #err(#Rejected)
             };
         }
@@ -333,7 +308,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
      
 
         switch(getMeta(tokenIndex)) {
-            case (#ok((meta,vars))) {
+            case (#ok((meta,vars,t))) {
                 switch(SNFT_tidxGet(tokenIndex)) {
                     case(?seller) {
 
@@ -349,14 +324,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                         SNFT_move(seller, toUserAID, tokenIndex);
 
-                        vars.price := Nft.Price.NotForSale();
-
 
                         // recharge
                         vars.pwrStorage := topStorage;
                         vars.pwrOps := topOps;
                         vars.ttl := null;
-                        vars.lastTransfer := timeInMinutes();
 
                         ignore try {
                             await ACC_move(seller, toUserAID, tokenIndex);
@@ -407,7 +379,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
                             if (meta.rechargeable == false) return #err(#Other("Can't sell nfts which are not rechargeable"));
                             if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#NotTransferable);
                             
@@ -460,7 +432,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 
 
                 switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
 
                             if (isTransferBound(Nft.User.toAccountIdentifier(caller_user), meta, vars) == true) return #err(#NotTransferable);
                             
@@ -469,8 +441,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             SNFT_move(Nft.User.toAccountIdentifier(request.from),Nft.User.toAccountIdentifier(request.to), tokenIndex);
                             await ACC_move(Nft.User.toAccountIdentifier(request.from),Nft.User.toAccountIdentifier(request.to), tokenIndex);
 
-                            resetTransferBindings(meta, vars);
-                            vars.lastTransfer := timeInMinutes();
 
                             let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now(); token =tokenId(tokenIndex); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo= request.memo})));
                             addTransaction(vars, transactionId);
@@ -514,7 +484,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
                 
                                 let aid = Nft.User.toAccountIdentifier(holder);
 
@@ -570,23 +540,28 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         
     };
 
-    private func getMeta(tokenIndex: TokenIndex) : Result.Result<(Metadata, Metavars), ()> {
-        switch( _meta.get(tokenIndex) ) {
-            case (?m) {
-                switch( _metavars.get(tokenIndex) ) {
-                    case (?v) {
-                        #ok((m,v));
-                    };
-                    case (_) {
-                        #err();
-                    }
-                };
+    private func getMeta(tokenIndex: TokenIndex) : Result.Result<(Metadata, Metavars, TokenRecord), ()> {
+        switch( _token[Nat16.toNat(tokenIndex)] ) {
+            case (?t) {
+                #ok((t.meta, t.vars, t));
             };
             case (_) {
                 #err();
             };
         }
     };
+
+    private func getToken(tokenIndex: TokenIndex) : Result.Result<TokenRecord, ()> {
+        switch( _token[Nat16.toNat(tokenIndex)] ) {
+            case (?t) {
+                #ok(t);
+            };
+            case (_) {
+                #err();
+            };
+        }
+    };
+
 
     public query func metadata(token : Nft.TokenIdentifier) : async Nft.MetadataResponse {
        
@@ -600,7 +575,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (?bearer) {
 
                 switch(getMeta(tokenIndex)) {
-                    case (#ok((m,v))) {
+                    case (#ok((m,v,t))) {
                             #ok({
                             bearer = bearer;
                             data = m; 
@@ -646,8 +621,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
         assert((switch(getMeta(request.tokenIndex)) {
-                    case (#ok((meta,vars))) {
-                          (meta.author == Nft.User.toAccountIdentifier(caller_user)) and ((meta.created + 10) > timeInMinutes()); // allows upload of assets up to 10min after minting
+                    case (#ok((meta,vars,t ))) {
+                          (meta.author == Nft.User.toAccountIdentifier(caller_user)) and ((meta.created + 30) > timeInMinutes()); // allows upload of assets up to 30min after minting
                     };
                     case (#err()) {
                        false
@@ -655,50 +630,32 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 }
             ));
 
-        let ctype: Nat32 = switch(request.position) {
-            case (#content) Nft.Chunks.TYPE_CONTENT;
-            case (#thumb) Nft.Chunks.TYPE_THUMB;
-        };
-        
-        let maxChunks: Nat32 = switch(request.position) { // Don't go over the bitmask maximum which is 255
-            case (#content) Nft.Chunks.MAX_CONTENT_CHUNKS; 
-            case (#thumb) Nft.Chunks.MAX_THUMB_CHUNKS;
-        };
 
-        switch(request.position) {
-            case (#content) assert(request.data.size() <= 524288); // 512kb
-            case (#thumb) assert(request.data.size() <= 131072);   // 128kb
-        };
+        switch(getToken(request.tokenIndex)) {
+            case (#ok(t)) {
+                switch(request.position) {
+                        case (#content) {
+                            assert(request.chunkIdx <  Nft.Chunks.MAX_CONTENT_CHUNKS);
+                            assert(request.data.size() <= 524288);
 
-        assert(request.chunkIdx < maxChunks);
-
-        let chunkId = chunkIdEncode(request.tokenIndex, request.chunkIdx, ctype);
-
-        _chunk.put(chunkId, request.data);
-    };
-
-    private func deleteNftChunks(tokenIndex: Nft.TokenIndex) : () {
-      
-        // Delete all content chunks
-        var cnt:Nat32 = 0;
-        while (cnt < Nft.Chunks.MAX_CONTENT_CHUNKS) {
-         
-            _chunk.delete(chunkIdEncode(tokenIndex, cnt, Nft.Chunks.TYPE_CONTENT));
-
-            cnt += 1;
-    
-        };
-
-        // Delete all thumb chunks
-        var tnt:Nat32 = 0;
-        while (tnt < Nft.Chunks.MAX_THUMB_CHUNKS) {
-         
-            _chunk.delete(chunkIdEncode(tokenIndex, tnt, Nft.Chunks.TYPE_THUMB));
-
-            tnt += 1;
+                            t.content[ Nat32.toNat(request.chunkIdx) ] := ?request.data;
+                        };
+                        case (#thumb) {
+                            assert(request.chunkIdx <  Nft.Chunks.MAX_THUMB_CHUNKS);
+                            assert(request.data.size() <= 131072);
+                            
+                            t.thumb := ?request.data;
+                        };
+                    };
+                        
+            };
+            case (#err(e)) {
+                ();
+            }
         };
         
     };
+
 
 
     private func chunkIdEncode(tokenIndex: Nft.TokenIndex, chunkIndex:Nat32, ctype:Nat32) : Nat32 {
@@ -716,40 +673,32 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     public shared({caller}) func fetchChunk(request: Nft.FetchChunkRequest) : async ?Blob {
 
-        let ctype: Nat32 = switch(request.position) {
-            case (#content) 0;
-            case (#thumb) 1;
-        };
         
         assert(request.chunkIdx <= 15);
-        assert(ctype <= 3);
 
-        let chunkId = chunkIdEncode(request.tokenIndex, request.chunkIdx, ctype);  //((request.tokenIndex & thresholdNFTMask) << 19) | ((request.chunkIdx & 255) << 2) | (ctype);
-
-
-        switch(getMeta(request.tokenIndex)) {
-            case (#ok((meta,vars))) {
+        switch(getToken(request.tokenIndex)) {
+            case (#ok(t)) {
                 
-                 let allowed:Bool = switch(meta.secret and ctype == 0) {
-                     case (false) true;
-                     case (true) {
-                            switch(SNFT_tidxGet(request.tokenIndex)) {
-                                case (?ownerAid) {
-                                     let callerAid = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
-                                     Nft.AccountIdentifier.equal(ownerAid,callerAid);
-                                };
-                                case (_) {
-                                    // shouldn't be possible if db is correct
-                                    false;
-                                }
+                 switch(request.position) {
+                     case (#content) {
+                        let allowed:Bool = switch(t.meta.secret and (request.position == #content)) {
+                            case (false) true;
+                            case (true) {
+                                let callerAid = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
+                                Nft.AccountIdentifier.equal(t.owner, callerAid);
                             }
-                     }
-                 };
+                        };
+                        if (allowed == false) return null;
+                        return t.content[ Nat32.toNat(request.chunkIdx) ];
 
-                 if (allowed == false) return null;
-                 _chunk.get(chunkId);
+                     };
+                     case (#thumb) {
+                        return t.thumb;
+                     };
+                 };
+              
             };
-            case (#err()) {
+            case (#err(e)) {
                 null
             }
         }
@@ -758,28 +707,64 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     
     // Painless HTTP response - Start
     private func getChunk(key:Text, index:Nat) : Painless.Chunk {
-        switch(Hex.decode(Text.trimStart(key, #text("/")))) {
-            case (#ok(bytes)) {
-                let n:Nat32 = Blob_.bytesToNat32(bytes);
-                let thisChunk:Nat32 = n | (Nat32.fromNat(index) << 2);
-                let nextChunk:Nat32 = n | ((Nat32.fromNat(index)+1) << 2);
+        switch(httpKeyDecode(key)) {
+            case (#ok((tokenIndex, chunkIndex, ctype))) { // chunkIndex not used here because its streaming the same url
 
-                switch(_chunk.get(thisChunk)) {
-                                case (?a) {
-                                    switch(_chunk.get(nextChunk)) {
-                                        case (?b) {
-                                            #more(a);
-                                        };
-                                        case (null) {
-                                            #end(a);
-                                        }
-                                    }
+
+                switch(getToken(tokenIndex)) {
+                    case (#ok(t)) {
+                        switch(ctype) {
+                            case (0) { // content
+
+                                // Is there a way to check if array index exists without throwing uncatchable error ?
+                                // The following code is pretty ugly, because I can't find way to do the above
+
+                                let max = (Nat32.toNat(Nft.Chunks.MAX_CONTENT_CHUNKS) - 1);
+
+                                if (index > max) return #none;
+
+                                switch(t.content[index]) {
+                                    case (?c) {
+                                        let has_next : Bool = switch(index < max) {
+                                                case (true) {
+                                                    switch(t.content[index + 1]) {
+                                                        case (?c) true;
+                                                        case (null) false;
+                                                        };
+                                                };
+                                                case (false) {
+                                                    false;
+                                                };
+                                            };
+
+                                        if (has_next == false) return #end(c);
+                                        return #more(c);
+                                    };
+                                    case (null) #none;
+                                    
                                 };
-                                case(null) {
-                                    assert(false);
-                                    #none();
+                         
+
+                                
+                            };
+                            case (1) { // thumb
+                                switch(t.thumb) {
+                                    case (?data) {
+                                        #end(data);
+                                    };
+                                    case (null) {
+                                        #none;
+                                    };
                                 };
                             };
+                        };
+                 
+                    };
+                    case (#err(e)) {
+                        #none;
+                    };
+                };
+  
                 
             };
             case (#err(e)) {
@@ -809,9 +794,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         switch(httpKeyDecode(request.url)) {
             case (#ok((tokenIndex, chunkIndex, ctype))) {
 
+                //  Debug.print("http_request tokenIndex" # debug_show(tokenIndex) # " chunkIndex " # debug_show(chunkIndex) # " ctype " # debug_show(ctype));
+
 
                 switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
                            
                              if (ctype == 0 and meta.secret) return Painless.NotFound("Secret content can't be retrieved with http request");
 
@@ -873,15 +860,15 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
 
     private func PWRConsume(tokenIndex: TokenIndex, ops: Nat64) : Nft.PWRConsumeResponse {
-        switch( _metavars.get(tokenIndex)) {
-            case (?vars) {
+        switch(getToken(tokenIndex)) {
+            case (#ok(t)) {
                 let cost = ops * Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.AVG_MESSAGE_COST);
-                if (cost > vars.pwrOps) return false;
+                if (cost > t.vars.pwrOps) return false;
 
-                vars.pwrOps := vars.pwrOps - cost;
+                t.vars.pwrOps := t.vars.pwrOps - cost;
                 true
             };
-            case (_) {
+            case (#err(e)) {
                 false
             }
         }
@@ -915,7 +902,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
         switch(getMeta(tokenIndex)) {
-                case (#ok((m,v))) {
+                case (#ok((m,v,t))) {
                 
                 if (m.rechargeable == false) return #err(#Rejected);
 
@@ -1008,6 +995,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             rechargeable = m.rechargeable;
         };
 
+        let transactionId = await Cluster.history(_conf).add(#nft(#mint({user=author; created=Time.now();token = tokenId(tokenIndex); pwr=mintPricePwr })));
+
         let mvar : Metavars = {
              var boundUntil = switch (md.transfer) {
                     case (#unrestricted) { null };
@@ -1022,7 +1011,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
              var pwrStorage = mintPricePwrStorage;
              var pwrOps = mintPricePwrOps;
              var ttl = m.ttl;
-             var history = [];
+             var history = [transactionId];
              var allowance = null;
              var customVar = m.customVar;
              var lastTransfer = timestamp
@@ -1039,19 +1028,25 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             affiliate;
             };
 
-        assert(switch(_meta.get(tokenIndex)) { // make some memory integrity checks
-            case (?a) false;
-            case (_) true;
-        });
 
-        _meta.put(tokenIndex, md);
-        _metavars.put(tokenIndex, mvar);
+
+        let trec : TokenRecord = {
+            var owner = author;
+            meta = md;
+            vars = mvar;
+            var link = null;
+            content = Array.init<?Blob>( Nat32.toNat(Nft.Chunks.MAX_CONTENT_CHUNKS), null);
+            var thumb = null;
+        };
+
+        _token[ Nat16.toNat(tokenIndex) ] := ?trec;
+
+        // _meta.put(tokenIndex, md);
+        // _metavars.put(tokenIndex, mvar);
 
         SNFT_put(author, tokenIndex);
         await ACC_put(author, tokenIndex);
 
-        let transactionId = await Cluster.history(_conf).add(#nft(#mint({user=author; created=Time.now();token = tokenId(tokenIndex); pwr=mintPricePwr })));
-        addTransaction(mvar, transactionId);
 
         return #ok({tokenIndex; transactionId});
 
@@ -1126,7 +1121,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 if (PWRConsume(tokenIndex, 3) == false) return #err(#OutOfPower);
 
                 switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
 
                             let (slot, _) = Nft.TokenIdentifier.decode(request.socket);
                             let socketCanister = Nft.APrincipal.fromSlot(_conf.space, slot);
@@ -1179,7 +1174,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
      
                 switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
 
                         // switch(switch(meta.collectionId) {
                         //     case (?collectionId) {
@@ -1234,7 +1229,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     if (PWRConsume(tokenIndex, 3) == false) return #err(#OutOfPower);
 
                     switch(getMeta(tokenIndex)) {
-                        case (#ok((meta,vars))) {
+                        case (#ok((meta,vars,t))) {
 
                                 let (slot, _) = Nft.TokenIdentifier.decode(request.plug);
                           
@@ -1287,7 +1282,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
         
                     switch(getMeta(tokenIndex)) {
-                        case (#ok((meta,vars))) {
+                        case (#ok((meta,vars,t))) {
                             SNFT_move(Nft.User.toAccountIdentifier(#principal(caller)),Nft.User.toAccountIdentifier(request.user), tokenIndex);
                             await ACC_move(Nft.User.toAccountIdentifier(#principal(caller)),Nft.User.toAccountIdentifier(request.user), tokenIndex);
 
@@ -1347,7 +1342,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
 
                 switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
 
                         switch (request.allowance) {
                             case (1) {
@@ -1415,30 +1410,35 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     // ***** Storage layer
     private func SNFT_put(aid: AccountIdentifier, tidx: TokenIndex) :  () { 
-        _balance.put(tidx, aid);
-         //await accountActor(aid).add(aid, tidx);
+        switch(getToken(tidx)) {
+            case (#ok(t)) {
+                t.owner := aid;
+            };
+            case (#err(e)) {
+                assert(false);
+                ()
+            }
+        };
+        
 
     };
 
     private func SNFT_tidxGet(tidx: TokenIndex) : ?AccountIdentifier { 
-        _balance.get(tidx);
+        switch(getToken(tidx)) {
+            case (#ok(t)) {
+                ?t.owner;
+            };
+            case (#err(e)) {
+                null;
+            }
+        };
     };
     
-    private func SNFT_del(aid: AccountIdentifier, tidx: TokenIndex) : () {
-        //  if assertations fail storeage is a mish-mash or someone is trying to hack it 
-        let stored_aid = switch(SNFT_tidxGet(tidx)) { case (?a) a; case _ Blob.fromArray([]); };
-        assert(stored_aid == aid);
 
-        _balance.delete(tidx);
-        _token2link.delete(tidx);
 
-        // await accountActor(aid).rem(aid, tidx);   
-    };
 
     private func SNFT_burn(aid: AccountIdentifier, tidx: TokenIndex) :  () {
-        SNFT_del(aid, tidx);
-        _meta.delete(tidx);
-        deleteNftChunks(tidx);
+        _token[ Nat16.toNat(tidx) ] := null;
         _statsBurned := _statsBurned + 1;
     };
 
@@ -1461,9 +1461,31 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     private func SNFT_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : () {
-        SNFT_del(from, tidx);
-        SNFT_put(to, tidx);
-        _statsTransfers := _statsTransfers + 1;
+
+        switch(getToken(tidx)) {
+            case (#ok(t)) {
+                SNFT_put(to, tidx);
+
+                t.link := null;
+                t.vars.lastTransfer := timeInMinutes();
+                t.vars.price := Nft.Price.NotForSale();
+                t.vars.allowance := null;
+
+                switch (t.meta.transfer) {
+                    case (#unrestricted) { (); };
+                    case (#bindsForever) { (); };
+                    case (#bindsDuration(setupDuration)) {
+                        t.vars.boundUntil := ?(timeInMinutes() + setupDuration);
+                    }
+                };
+
+                _statsTransfers := _statsTransfers + 1;
+                
+            };
+            case (#err(e)) {
+                ()
+            }
+        }
     };
 
     private func checkCorrectCannister(cannisterId:Principal) : Bool {
@@ -1524,7 +1546,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (#ok(holder, tokenIndex, bal, allowance)) {
 
             switch(getMeta(tokenIndex)) {
-                    case (#ok((meta,vars))) {
+                    case (#ok((meta,vars,t))) {
                         switch( vars.allowance) {
                             case (?allowed_principal) {
                                 switch (Principal.equal(caller, allowed_principal)) {

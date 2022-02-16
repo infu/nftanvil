@@ -28,6 +28,17 @@ import Blob_ "../lib/Blob";
 
 module {
 
+        public type ClaimLink = Blob;
+
+        public type TokenRecord = {
+            var owner : AccountIdentifier;
+            meta : Metadata;
+            vars : Metavars;
+            var link : ?ClaimLink;
+            content : [var ?Blob];
+            var thumb : ?Blob;
+        };
+
         public type AccountIdentifier = Blob; //32 bytes
         public type AccountIdentifierShort = Blob; //28bytes
 

@@ -139,7 +139,7 @@ const Thumb = styled.div`
   }
 `;
 
-export const NFTMenu = ({ id, meta, owner }) => {
+export const NFTMenu = ({ id, meta, owner, nobuy = false }) => {
   const pro = useSelector((state) => state.user.pro);
 
   return (
@@ -160,7 +160,7 @@ export const NFTMenu = ({ id, meta, owner }) => {
         </Wrap>
       ) : (
         <Wrap>
-          {meta.transferable && meta.price.amount !== "0" ? (
+          {!nobuy && meta.transferable && meta.price.amount !== "0" ? (
             <LoginRequired label="Authenticate to buy">
               <BuyButton id={id} meta={meta} />
             </LoginRequired>
@@ -1087,6 +1087,7 @@ export const NFTPage = (p) => {
 
       <Center>
         <NFTMenu
+          nobuy={!claimed && code}
           owner={
             address && address.toUpperCase() === meta?.bearer?.toUpperCase()
           }
@@ -1110,7 +1111,7 @@ export const NFTPage = (p) => {
       {!claimed && code ? (
         <>
           <Center>
-            <LoginRequired label="Authenticate before claiming">
+            <LoginRequired label="Authenticate to claim">
               <Button
                 isLoading={claiming}
                 loadingText="Claiming"

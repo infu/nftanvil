@@ -120,7 +120,9 @@ const from32bits = (ba) => {
 };
 
 export const encodeChunkId = (tokenIndex, chunkIndex, ctype) => {
-  return (tokenIndex << 19) | ((chunkIndex & 255) << 2) | ctype; // 0 - content , 1 - thumb
+  let r = (tokenIndex << 16) | ((chunkIndex & 255) << 2) | ctype; // 0 - content , 1 - thumb
+  // console.log({ tokenIndex, chunkIndex, ctype }, r);
+  return r;
 };
 
 export const ipfsTokenUrl = (cid) => {
