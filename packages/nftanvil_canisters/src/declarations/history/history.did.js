@@ -133,11 +133,18 @@ export const idlFactory = ({ IDL }) => {
   const ListRequest = IDL.Record({ 'to' : EventIndex, 'from' : EventIndex });
   const Event = IDL.Record({ 'hash' : IDL.Vec(IDL.Nat8), 'info' : EventInfo });
   const ListResponse = IDL.Vec(IDL.Opt(Event));
+  const Oracle = IDL.Record({
+    'icpFee' : IDL.Nat64,
+    'anvFee' : IDL.Nat64,
+    'icpCycles' : IDL.Nat64,
+    'pwrFee' : IDL.Nat64,
+  });
   const Class = IDL.Service({
     'add' : IDL.Func([EventInfo], [AddResponse], []),
     'config_set' : IDL.Func([Config], [], []),
     'info' : IDL.Func([], [InfoResponse], ['query']),
     'list' : IDL.Func([ListRequest], [ListResponse], ['query']),
+    'oracle_set' : IDL.Func([Oracle], [], []),
     'stats' : IDL.Func(
         [],
         [

@@ -10,6 +10,7 @@ import {
   Flex,
   ButtonGroup,
   Spacer,
+  HStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { Principal } from "@dfinity/principal";
@@ -173,20 +174,21 @@ const HistoryEvent = ({ ev, canister, idx }) => {
 
         if (key === "marketplace" || key === "affiliate" || key === "author") {
           if (!val || val.length === 0) return null;
+          if (Array.isArray(val)) val = val[0];
+          if (!val) return null;
+
           return (
             <div key={key}>
               <KeyVal
-                key={idx + "share"}
-                k={key + " share"}
-                v={val.share / 100 + "%"}
-              />
-              <KeyVal
                 key={idx + "addr"}
-                k={key + " address"}
+                k={key}
                 v={
-                  <ACC short={true}>
-                    {AccountIdentifier.ArrayToText(val.address)}
-                  </ACC>
+                  <HStack>
+                    <ACC short={true}>
+                      {AccountIdentifier.ArrayToText(val.address)}
+                    </ACC>
+                    <div>{val.share / 100 + "%"}</div>
+                  </HStack>
                 }
               />
             </div>

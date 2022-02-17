@@ -22,6 +22,7 @@ type User =
  };
 type TransferResponseError = 
  variant {
+   ICE: text;
    InsufficientBalance;
    InvalidToken;
    NotTransferable;
@@ -86,6 +87,7 @@ type PurchaseResponse =
    err:
     variant {
       ErrorWhileRefunding;
+      ICE: text;
       InsufficientBalance;
       InsufficientPayment: Balance__1;
       InvalidToken;
@@ -183,6 +185,7 @@ type MintResponse =
    err:
     variant {
       ClassError: text;
+      ICE: text;
       InsufficientBalance;
       Invalid: text;
       OutOfMemory;

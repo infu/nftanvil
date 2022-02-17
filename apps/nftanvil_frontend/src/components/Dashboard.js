@@ -213,6 +213,8 @@ export function NftStats({ slot }) {
       <GridItem>{stats.minted}</GridItem>
       <GridItem>{stats.burned}</GridItem>
       <GridItem>{stats.transfers}</GridItem>
+      <GridItem>{stats.icall_errors.toString()}</GridItem>
+
       <GridItem>{tc(stats.cycles)} TC</GridItem>
       <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
 
@@ -437,7 +439,7 @@ export function DashboardPage() {
   return (
     <Center>
       <Wrap mt={"80px"} justify="center">
-        <Stack mt="50px" spacing="3" maxW={"590px"}>
+        <Stack mt="50px" spacing="3" maxW={"590px"} w="100%">
           <Financial />
           <Orchestration />
           <Box
@@ -484,7 +486,7 @@ export function DashboardPage() {
             </Wrap>
           </Box>
         </Stack>
-        <Stack mt="50px" spacing="3" maxW={"590px"}>
+        <Stack mt="50px" spacing="3" maxW={"590px"} w="100%">
           <Box
             w="100%"
             bg={"gray.900"}
@@ -494,11 +496,12 @@ export function DashboardPage() {
             borderRadius="4"
           >
             <Heading size="md">Nft</Heading>
-            <Grid mt={3} templateColumns="repeat(8, 1fr)" gap={3}>
+            <Grid mt={3} templateColumns="repeat(9, 1fr)" gap={3}>
               <GridItem>Canister</GridItem>
               <GridItem>Minted</GridItem>
               <GridItem>Burned</GridItem>
               <GridItem>Transferred</GridItem>
+              <GridItem>ICE</GridItem>
               <GridItem>Balance</GridItem>
               <GridItem>Spent</GridItem>
               <GridItem>Heap</GridItem>

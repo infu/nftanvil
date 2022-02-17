@@ -20,7 +20,7 @@ import {
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import pLimit from "p-limit";
-const limit = pLimit(60);
+const limit = pLimit(120);
 
 import { nftCanister } from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 
@@ -109,6 +109,8 @@ const main = async () => {
   );
 };
 
+const delay = (ms) => new Promise((resolve, reject) => setTimeout(resolve, ms));
+
 const monkeyTest = async ({
   principal,
   address,
@@ -117,6 +119,7 @@ const monkeyTest = async ({
   identity,
 }) => {
   try {
+    await delay(Math.random() * 10000);
     let nfts = await mintAlot({ principal, address, subaccount });
     users = randomAddresses({ principal });
 
@@ -215,6 +218,7 @@ const owner_decide = async ({ address, subaccount, nft_id }) => {
       slot,
       token: nft_id,
     });
+
     let prez = await pwr.nft_purchase(BigInt(slot), {
       token: nft_id,
       user: { address: AccountIdentifier.TextToArray(address_to) },
@@ -234,12 +238,6 @@ const owner_decide = async ({ address, subaccount, nft_id }) => {
       amount: 1,
       memo: [],
       subaccount: [AccountIdentifier.TextToArray(subaccount)],
-    });
-
-    await owner_decide({
-      address: address_to,
-      subaccount: subaccount_to,
-      nft_id,
     });
   };
 

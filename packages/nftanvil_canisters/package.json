@@ -7,7 +7,9 @@
     "reinstall:prod": "./scripts/build.sh && ./scripts/reinstall_prod.sh",
     "upgrade:prod": "./scripts/build.sh && ./scripts/upgrade_prod.sh",
     "reinstall:local": "./scripts/build.sh && ./scripts/reinstall_local.sh",
-    "upgrade:local": "./scripts/build.sh && ./scripts/upgrade_local.sh"
+    "upgrade:local": "./scripts/build.sh && ./scripts/upgrade_local.sh",
+    "refuel:local": "./scripts/build.sh && ./scripts/refuel_local.sh",
+    "refuel:prod": "./scripts/build.sh && ./scripts/refuel_prod.sh"
   },
   "browserslist": {
     "production": [

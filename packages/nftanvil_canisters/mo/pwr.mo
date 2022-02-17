@@ -21,6 +21,7 @@ import Cluster  "./type/Cluster";
 import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim"; 
 import HashRecord "./lib/HashRecord";
+import Debug "mo:base/Debug";
 
 
 shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
@@ -147,7 +148,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     };
 
   public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
-    balanceAdd(#pwr, aid, amount);
+    balanceAdd(#pwr, aid, amount); //TODO: Remove in production
   };
 
   public shared({caller}) func pwr_transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {
@@ -366,20 +367,23 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
 
       // give to Marketplace
-      _distributed_marketplace += marketplace_cut;
 
       switch(purchase.marketplace) {
         case (?marketplace) {
+          _distributed_marketplace += marketplace_cut;
           balanceAdd(#pwr, marketplace.address, marketplace_cut);
+          Debug.print("Marketplace cut " # debug_show(marketplace_cut) # " " # debug_show(marketplace));
         };
         case (null) ();
       };
 
       // give to Affiliate
-      _distributed_affiliate += affiliate_cut;
+      
       switch(purchase.affiliate) {
         case (?affiliate) {
+          _distributed_affiliate += affiliate_cut;
           balanceAdd(#pwr, affiliate.address, affiliate_cut);
+          Debug.print("Affiliate cut " # debug_show(affiliate_cut) # " " # debug_show(affiliate));
         };
         case (null) ();
       };

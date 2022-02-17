@@ -8,6 +8,7 @@ type UseResponse =
    err:
     variant {
       ExtensionError: text;
+      ICE: text;
       InsufficientBalance;
       InvalidToken;
       OnCooldown;
@@ -76,6 +77,7 @@ type UnplugError =
  };
 type TransferResponseError = 
  variant {
+   ICE: text;
    InsufficientBalance;
    InvalidToken;
    NotTransferable;
@@ -242,6 +244,7 @@ type PurchaseResponse =
    err:
     variant {
       ErrorWhileRefunding;
+      ICE: text;
       InsufficientBalance;
       InsufficientPayment: Balance;
       InvalidToken;
@@ -331,6 +334,7 @@ type MintResponse =
    err:
     variant {
       ClassError: text;
+      ICE: text;
       InsufficientBalance;
       Invalid: text;
       OutOfMemory;
@@ -500,6 +504,7 @@ type Class =
        burned: nat32;
        cycles: nat;
        cycles_recieved: nat;
+       icall_errors: nat;
        minted: nat16;
        rts_heap_size: nat;
        rts_max_live_size: nat;
@@ -584,6 +589,7 @@ type ApproveResponse =
  variant {
    err:
     variant {
+      ICE: text;
       InsufficientBalance;
       InvalidToken;
       Other: text;

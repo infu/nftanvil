@@ -27,6 +27,7 @@ export const idlFactory = ({ IDL }) => {
   const ApproveResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : IDL.Variant({
+      'ICE' : IDL.Text,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : IDL.Null,
       'Unauthorized' : AccountIdentifier,
@@ -52,6 +53,7 @@ export const idlFactory = ({ IDL }) => {
     'amount' : Balance,
   });
   const TransferResponseError = IDL.Variant({
+    'ICE' : IDL.Text,
     'InsufficientBalance' : IDL.Null,
     'NotTransferable' : IDL.Null,
     'InvalidToken' : IDL.Null,
@@ -227,6 +229,7 @@ export const idlFactory = ({ IDL }) => {
       'transactionId' : TransactionId,
     }),
     'err' : IDL.Variant({
+      'ICE' : IDL.Text,
       'Pwr' : TransferResponseError,
       'Invalid' : IDL.Text,
       'InsufficientBalance' : IDL.Null,
@@ -299,6 +302,7 @@ export const idlFactory = ({ IDL }) => {
       'transactionId' : TransactionId,
     }),
     'err' : IDL.Variant({
+      'ICE' : IDL.Text,
       'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,
       'InsufficientPayment' : Balance,
@@ -437,6 +441,7 @@ export const idlFactory = ({ IDL }) => {
   const UseResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : TransactionId }),
     'err' : IDL.Variant({
+      'ICE' : IDL.Text,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : IDL.Null,
       'Rejected' : IDL.Null,
@@ -483,6 +488,7 @@ export const idlFactory = ({ IDL }) => {
             'transfers' : IDL.Nat32,
             'minted' : IDL.Nat16,
             'cycles' : IDL.Nat,
+            'icall_errors' : IDL.Nat,
             'rts_memory_size' : IDL.Nat,
             'rts_total_allocation' : IDL.Nat,
             'burned' : IDL.Nat32,

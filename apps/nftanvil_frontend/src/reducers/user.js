@@ -266,6 +266,8 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
     agentOptions: { identity },
   });
 
+  //TODO: remove return in production
+  return;
   await ledger
     .account_balance({
       account: AccountIdentifier.TextToArray(address),
@@ -307,7 +309,7 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
         //TODO: Remove in production
         let fres = await pwrcan.faucet({
           aid: AccountIdentifier.TextToArray(address),
-          amount: 100000000n,
+          amount: 800000000n,
         });
         dispatch(refresh_pwr_balance());
         return;
@@ -327,6 +329,8 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
 export const transfer_icp =
   ({ to, amount }) =>
   async (dispatch, getState) => {
+    alert("testnet");
+    return;
     let identity = authentication.client.getIdentity();
 
     let s = getState();

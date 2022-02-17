@@ -426,6 +426,7 @@ module {
         #InvalidToken;
         #Other        : Text;
         #OutOfPower;
+        #ICE: Text;
     };
 
     public type TransferResponse = Result.Result<{transactionId: TransactionId}, TransferResponseError>;
@@ -442,6 +443,7 @@ module {
         #ExtensionError: Text;
         #Other        : Text;
         #OutOfPower;
+        #ICE: Text;
     }>;
 
     public type TransferLinkResponse = Result.Result<(), {
@@ -673,7 +675,7 @@ module {
         public let NFTAnvilShare:Nat = 50; // 0.5%
         public let LimitMarketplace:Nat = 3000; // 30%
         public let LimitAffiliate:Nat = 3000; // 30%
-        public let LimitMinter:Nat = 200; // 2%
+        public let LimitMinter:Nat = 150; // 1.5%
         public let Max : Nat = 10000; // 100%
 
         public func validate(t : Share) : Bool {
@@ -1061,6 +1063,7 @@ module {
             #TreasuryNotifyFailed;
             #InsufficientBalance;
             #InsufficientPayment : Balance;
+            #ICE: Text;
         }
     >;
 
@@ -1100,6 +1103,7 @@ module {
         #Invalid: Text;
         #OutOfMemory;
         #Unauthorized;
+        #ICE: Text;
         #Pwr: TransferResponseError
         }
     >;
@@ -1183,6 +1187,7 @@ module {
             #Unauthorized : AccountIdentifier;
             #InsufficientBalance;
             #OutOfPower;
+            #ICE : Text;
             }
         >;
 

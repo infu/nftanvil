@@ -16,6 +16,13 @@ type PwrEvent =
    transfer: EventFungibleTransaction;
    withdraw: PwrWithdraw;
  };
+type Oracle = 
+ record {
+   anvFee: nat64;
+   icpCycles: nat64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
 type NftEvent = 
  variant {
    approve:
@@ -156,6 +163,7 @@ type Class =
    config_set: (Config) -> ();
    info: () -> (InfoResponse) query;
    list: (ListRequest) -> (ListResponse) query;
+   oracle_set: (Oracle) -> ();
    stats: () ->
     (record {
        cycles: nat;

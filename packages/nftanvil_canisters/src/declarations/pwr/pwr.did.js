@@ -97,6 +97,7 @@ export const idlFactory = ({ IDL }) => {
   const TokenIndex = IDL.Nat16;
   const TransactionId = IDL.Vec(IDL.Nat8);
   const TransferResponseError = IDL.Variant({
+    'ICE' : IDL.Text,
     'InsufficientBalance' : IDL.Null,
     'NotTransferable' : IDL.Null,
     'InvalidToken' : IDL.Null,
@@ -111,6 +112,7 @@ export const idlFactory = ({ IDL }) => {
       'transactionId' : TransactionId,
     }),
     'err' : IDL.Variant({
+      'ICE' : IDL.Text,
       'Pwr' : TransferResponseError,
       'Invalid' : IDL.Text,
       'InsufficientBalance' : IDL.Null,
@@ -150,6 +152,7 @@ export const idlFactory = ({ IDL }) => {
       'transactionId' : TransactionId,
     }),
     'err' : IDL.Variant({
+      'ICE' : IDL.Text,
       'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,
       'InsufficientPayment' : Balance__1,
