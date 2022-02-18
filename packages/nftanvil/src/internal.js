@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 
 import { Principal } from "@dfinity/principal";
 import * as cRouter from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
-import * as cFrontend from "@vvv-interactive/nftanvil-canisters/cjs/frontend.js";
 import * as cNft from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 import * as cAccount from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
 import * as cPwr from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
