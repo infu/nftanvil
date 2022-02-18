@@ -20,7 +20,7 @@ import {
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import pLimit from "p-limit";
-const limit = pLimit(120);
+const limit = pLimit(320);
 
 import { nftCanister } from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 
@@ -54,7 +54,7 @@ const mintAlot = async ({ principal, address, subaccount }) => {
   // Currently agent-js candid implementation doesn't supply the user with very informative errors,
   // so a creating correct metadata record will be hard. Add one change at a time and test.
 
-  let mint_array = Array(5)
+  let mint_array = Array(20)
     .fill(0)
     .map((_, idx) => {
       return {
@@ -119,7 +119,7 @@ const monkeyTest = async ({
   identity,
 }) => {
   try {
-    await delay(Math.random() * 10000);
+    await delay(Math.random() * 30000);
     let nfts = await mintAlot({ principal, address, subaccount });
     users = randomAddresses({ principal });
 

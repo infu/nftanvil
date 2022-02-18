@@ -15,6 +15,8 @@ import {
   Grid,
   GridItem,
   Heading,
+  Tooltip,
+  useClipboard,
 } from "@chakra-ui/react";
 import { Progress } from "@chakra-ui/react";
 import { BigIntToString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
@@ -114,7 +116,9 @@ export function AccountStats({ slot }) {
 
   return (
     <>
-      <GridItem>{slot}</GridItem>
+      <GridItem>
+        <SLOT>{slot}</SLOT>
+      </GridItem>
       <GridItem>{Number(stats.total_accounts)}</GridItem>
 
       <GridItem>{tc(stats.cycles)} TC</GridItem>
@@ -140,7 +144,7 @@ export function PwrStats() {
   }, []);
 
   if (!stats) return null;
-  console.log("PWRSTATS", stats);
+
   //const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);
   const heap_mb = Number(stats.rts_heap_size / 1024n / 1024n);
   const mem_mb = Number(stats.rts_memory_size / 1024n / 1024n);
@@ -209,7 +213,9 @@ export function NftStats({ slot }) {
   //- {stats.canister}
   return (
     <>
-      <GridItem>{slot}</GridItem>
+      <GridItem>
+        <SLOT>{slot}</SLOT>
+      </GridItem>
       <GridItem>{stats.minted}</GridItem>
       <GridItem>{stats.burned}</GridItem>
       <GridItem>{stats.transfers}</GridItem>
@@ -221,6 +227,19 @@ export function NftStats({ slot }) {
       <GridItem>{heap_mb}MB</GridItem>
       <GridItem>{mem_mb}MB</GridItem>
     </>
+  );
+}
+
+export function SLOT({ children }) {
+  const map = useSelector((state) => state.user.map);
+  let p = PrincipalFromSlot(map.space, children).toText();
+
+  const { onCopy } = useClipboard(p);
+
+  return (
+    <Tooltip placement="top-start" label={p}>
+      <div onClick={() => onCopy()}>{children}</div>
+    </Tooltip>
   );
 }
 
@@ -244,7 +263,9 @@ export function HistoryStats({ slot }) {
 
   return (
     <>
-      <GridItem>{slot}</GridItem>
+      <GridItem>
+        <SLOT>{slot}</SLOT>
+      </GridItem>
       <GridItem>{stats.transactions}</GridItem>
       <GridItem>{tc(stats.cycles)} TC</GridItem>
       <GridItem>{tc(stats.cycles_recieved - stats.cycles)} TC</GridItem>
