@@ -43,6 +43,9 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     private stable var _cycles_recieved : Nat = Cycles.balance();
 
+    system func postupgrade() {
+        _cycles_recieved := Cycles.balance();
+    };
 
     public func wallet_receive() : async () {
         let available = Cycles.available();

@@ -94,6 +94,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private let thresholdMemory = 1147483648; //  ~1GB
     private let thresholdNFTCount:Nft.TokenIndex = 65534;//4001; // can go up to 8191
 
+
+    system func postupgrade() {
+        _cycles_recieved := Cycles.balance();
+        _icall_errors := 0;
+    };
     
     public query func balance(request : BalanceRequest) : async BalanceResponse {
          switch(balGet(request)) {
@@ -199,7 +204,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     public shared({caller}) func claim_link(request : Nft.ClaimLinkRequest) : async Nft.ClaimLinkResponse {
     
-        let keyHash = Blob.fromArray(SHA224.sha224(Blob.toArray(request.key)));
         if (Nft.User.validate(request.to) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
 
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
@@ -208,6 +212,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         switch(getToken(tokenIndex)) {
             case (#ok(t)) {
+                if (t.link == null) return #err(#Rejected);  
+
+                let keyHash = Blob.fromArray(SHA224.sha224(Blob.toArray(request.key)));
+ 
                 if (keyHash != t.link) return #err(#Rejected);   
 
                     let curOwner = t.owner;
@@ -1114,8 +1122,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                     SNFT_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
                                     await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
 
-                                    vars.lastTransfer := timeInMinutes();
-                                    vars.price := Nft.Price.NotForSale();
+                                    //vars.lastTransfer := timeInMinutes();
+                                    //vars.price := Nft.Price.NotForSale();
 
                                     let transactionId = await Cluster.history(_conf).add(#nft(#socket({user=Nft.User.toAccountIdentifier(request.user); created=Time.now();plug = request.plug; socket=request.socket; memo=request.memo})));
                                     addTransaction(vars, transactionId);

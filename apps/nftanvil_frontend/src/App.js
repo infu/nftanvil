@@ -585,7 +585,9 @@ function MobileMenu() {
             <Link to="/history">
               <MenuItem>History</MenuItem>
             </Link>
-
+            <Link to="/dashboard">
+              <MenuItem icon={<InfoOutlineIcon />}>Dashboard</MenuItem>
+            </Link>
             {anonymous ? (
               <MenuItem onClick={() => dispatch(login())}>
                 Authenticate

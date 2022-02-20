@@ -119,9 +119,24 @@ const from32bits = (ba) => {
   return value;
 };
 
+const bitShiftLeft = (x, l) => {
+  return (x << l) >>> 0;
+};
+
+const bitShiftRight = (x, l) => {
+  return x >>> l;
+};
+
+const bitUnsignedFix = (x) => {
+  return x >>> 0;
+};
+
 export const encodeChunkId = (tokenIndex, chunkIndex, ctype) => {
-  let r = (tokenIndex << 16) | ((chunkIndex & 255) << 2) | ctype; // 0 - content , 1 - thumb
-  // console.log({ tokenIndex, chunkIndex, ctype }, r);
+  let r = bitUnsignedFix(
+    bitShiftLeft(tokenIndex, 16) |
+      bitUnsignedFix(bitShiftRight(chunkIndex & 255, 2) | ctype)
+  ); // 0 - content , 1 - thumb
+  //console.log({ tokenIndex, chunkIndex, ctype }, r);
   return r;
 };
 

@@ -20,7 +20,7 @@ import Blob "mo:base/Blob";
 import Cluster  "./type/Cluster";
 import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim"; 
-import HashRecord "./lib/HashRecord";
+import TrieRecord "./lib/TrieRecord";
 import Debug "mo:base/Debug";
 
 
@@ -35,7 +35,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   private stable var _total_accounts : Nat = 0;
 
-  private var _account: HashRecord.HashRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized> = HashRecord.HashRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Pwr.AccountRecordSerialize, Pwr.AccountRecordUnserialize);
+  private var _account: TrieRecord.TrieRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized> = TrieRecord.TrieRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Pwr.AccountRecordSerialize, Pwr.AccountRecordUnserialize);
   
   private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
@@ -57,6 +57,9 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   system func postupgrade() {
       _tmpAccount := [];
+
+      _cycles_recieved := Cycles.balance();
+
   };
 
   public func wallet_receive() : async () {

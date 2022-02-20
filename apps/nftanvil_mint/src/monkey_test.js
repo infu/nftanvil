@@ -20,7 +20,7 @@ import {
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import pLimit from "p-limit";
-const limit = pLimit(320);
+const limit = pLimit(120);
 
 import { nftCanister } from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 

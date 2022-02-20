@@ -19,7 +19,7 @@ module {
     public type Oracle = Nft.Oracle;
 
     public let MGR_MIN_INACTIVE_CAN_CYCLES = 100_000_000_000;
-    public let MGR_MIN_ACTIVE_CAN_CYCLES = 2_000_000_000_000;
+    public let MGR_MIN_ACTIVE_CAN_CYCLES = 7_000_000_000_000;
     public let MGR_IGNORE_CYCLES = 1_000_000_000;
 
     public type Config = {

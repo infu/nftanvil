@@ -25,7 +25,7 @@ import Ledger  "./type/ledger_interface";
 import Prim "mo:prim"; 
 import Cluster  "./type/Cluster";
 import Account "./type/account_interface";
-import HashRecord "./lib/HashRecord";
+import TrieRecord "./lib/TrieRecord";
 
 
 shared({ caller = _installer }) actor class Class() = this {
@@ -45,7 +45,7 @@ shared({ caller = _installer }) actor class Class() = this {
 
     private stable var _tmpAccount: [(AccountIdentifier, Account.AccountRecordSerialized)] = [];
 
-    private var _account: HashRecord.HashRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized> = HashRecord.HashRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Account.AccountRecordSerialize, Account.AccountRecordUnserialize);
+    private var _account: TrieRecord.TrieRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized> = TrieRecord.TrieRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Account.AccountRecordSerialize, Account.AccountRecordUnserialize);
    
 
     //Handle canister upgrades
@@ -55,6 +55,7 @@ shared({ caller = _installer }) actor class Class() = this {
 
     system func postupgrade() {
         _tmpAccount := [];
+        _cycles_recieved := Cycles.balance();
     };
     
     private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
