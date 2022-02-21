@@ -207,15 +207,12 @@ module {
         
             public func encode(slot : CanisterSlot, tokenIndex : TokenIndex) : TokenIdentifier {
                 slot << 16 | Nat64.fromNat(Nat16.toNat(tokenIndex));
-   
             };
 
             public func decode(tokenId : TokenIdentifier) : (CanisterSlot, TokenIndex) {
                 let slot:Nat64 = tokenId >> 16;
                 let idx:Nat16 = Nat16.fromNat(Nat64.toNat(tokenId & 65535)); 
                 (slot, idx)
-
-        
             };
 
             public func equal(a: TokenIdentifier, b:TokenIdentifier) : Bool {
@@ -264,6 +261,21 @@ module {
             };
         };
     
+
+
+    public type Config = {
+        router: Principal;
+
+        nft: CanisterRange;
+        nft_avail: [CanisterSlot];
+        account: CanisterRange;
+        pwr: CanisterSlot;
+        anvil: CanisterSlot;
+        //treasury: CanisterSlot;
+        history: CanisterSlot;
+        history_range: CanisterRange;
+        space:[[Nat64]];
+    };
 
     public type Interface = actor {
 
@@ -365,6 +377,26 @@ module {
     };
 
     public type TransactionId = Blob;
+    public type EventIndex = Nat32;
+
+    public module TransactionId = { 
+        public func encode(history_slot: CanisterSlot, idx: EventIndex) : TransactionId { 
+                let raw = Array.flatten<Nat8>([
+                    Blob_.nat64ToBytes(history_slot),
+                    Binary.BigEndian.fromNat32(idx),
+                ]);
+                
+                Blob.fromArray(raw)
+        };
+
+        public func decode(tx: TransactionId) : {history_slot: CanisterSlot; idx: EventIndex} { 
+                let (slotArr, idxArr) = Array_.split<Nat8>(Blob.toArray(tx), 8);
+                {
+                    history_slot = Blob_.bytesToNat64(slotArr);
+                    idx = Blob_.bytesToNat32(idxArr);
+                }
+        };
+    };
 
     public type BalanceRequest = {
         user  : User; 

@@ -21,7 +21,9 @@ import {
   principalToAccountIdentifier,
   getSubAccountArray,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+
 let host =
   process.env.NODE_ENV !== "production"
     ? "http://localhost:8000"

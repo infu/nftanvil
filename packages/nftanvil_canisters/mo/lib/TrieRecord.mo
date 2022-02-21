@@ -32,6 +32,11 @@ module {
             h.put(k, r);
         };
         
+
+        public func keys() : Iter.Iter<K> {
+            h.keys();
+        };
+
         public func delete(k : K) : () {
             h.delete(k)
         }

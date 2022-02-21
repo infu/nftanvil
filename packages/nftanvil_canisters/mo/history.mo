@@ -112,7 +112,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         // let (newEvents, _) = AssocList.replace(_transactions, index, H.EventIndex.equal, ?event); //_transactions.put(index, event);
         // _transactions := newEvents;
         
-        let transactionId = H.TransactionId.encode(_slot, index);
+        let transactionId = Nft.TransactionId.encode(_slot, index);
         transactionId;
     };
 
@@ -129,6 +129,10 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
             // AssocList.find<H.EventIndex, H.Event>(_transactions, request.from + Nat32.fromNat(index), H.EventIndex.equal)
             //_transactions.get(request.from + Nat32.fromNat(index));
         });
+    };
+
+    public query func get(idx: H.EventIndex) : async ?H.Event {
+        _transactions[Nat32.toNat(idx)];
     };
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
@@ -229,7 +233,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
         let it = Iter.fromArray(ids);
         for (aid in it) {
-            let tx = H.TransactionId.encode(_slot, txIdx);
+            let tx = Nft.TransactionId.encode(_slot, txIdx);
             await Cluster.accountFromAid(_conf, aid).add_transaction(aid, tx);
         };
        

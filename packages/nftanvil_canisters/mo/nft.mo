@@ -263,12 +263,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func purchase( request: Nft.PurchaseRequest) : async Nft.PurchaseResponse {
         assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 
-        
         let toUserAID = Nft.User.toAccountIdentifier(request.user);
         
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
      
-
         switch(getMeta(tokenIndex)) {
             case (#ok((meta,vars,t))) {
                 switch(SNFT_tidxGet(tokenIndex)) {

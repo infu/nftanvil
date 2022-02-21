@@ -25,6 +25,7 @@ module {
         pwr_withdraw         : shared WithdrawRequest       -> async WithdrawResponse;
         pwr_purchase_intent  : shared PurchaseIntentRequest -> async PurchaseIntentResponse;
         pwr_purchase_claim   : shared PurchaseClaimRequest  -> async PurchaseClaimResponse;
+        nft_mint             : shared (slot: Nft.CanisterSlot, request: Nft.MintRequest) -> async Nft.MintResponse;
     };
 
     public type AccountIdentifier = Nft.AccountIdentifier;

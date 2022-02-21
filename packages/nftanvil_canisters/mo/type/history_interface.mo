@@ -25,6 +25,8 @@ module {
         add          : shared AddRequest        -> async AddResponse;
         list         : query ListRequest        -> async ListResponse;
         info         : query ()                 -> async InfoResponse;
+        get          : query (EventIndex)        -> async ?Event;
+
         // when history canister is full, another one is created
     }; 
 
@@ -36,7 +38,7 @@ module {
     public type TokenIdentifier = Nft.TokenIdentifier;
     public type Timestamp = Time.Time;
 
-    public type EventIndex = Nat32;
+    public type EventIndex = Nft.EventIndex; //deprecated. Should be called TransactionIndex
     public module EventIndex = {
         public func equal (a:EventIndex, b:EventIndex): Bool {
             a == b
@@ -47,16 +49,8 @@ module {
     };
 
     public type TransactionId = Blob;
-    public module TransactionId = { 
-        public func encode(history_slot: Nft.CanisterSlot, idx: EventIndex) : TransactionId { 
-                let raw = Array.flatten<Nat8>([
-                    Blob_.nat64ToBytes(history_slot),
-                    Binary.BigEndian.fromNat32(idx),
-                ]);
-                
-                Blob.fromArray(raw)
-        };
-    };
+
+
 
     public type Event = {
         info : EventInfo;

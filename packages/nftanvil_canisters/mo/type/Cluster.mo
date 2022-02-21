@@ -22,20 +22,9 @@ module {
     public let MGR_MIN_ACTIVE_CAN_CYCLES = 7_000_000_000_000;
     public let MGR_IGNORE_CYCLES = 1_000_000_000;
 
-    public type Config = {
-        router: Principal;
 
-        nft: CanisterRange;
-        nft_avail: [CanisterSlot];
-        account: CanisterRange;
-        pwr: CanisterSlot;
-        //anv: CanisterSlot;
-        //treasury: CanisterSlot;
-        history: CanisterSlot;
-        history_range: CanisterRange;
-        space:[[Nat64]];
-    };
-
+    public type Config = Nft.Config;
+   
     public module Config = {
         public func default() : Config {
             {
@@ -44,7 +33,7 @@ module {
                 nft_avail = [];
                 account = (5010,5013);
                 pwr = 5002;
-               // anv = 5003;
+                anvil = 5003;
                // treasury = 5004;
                 history = 5100;
                 history_range = (5100,5500);
@@ -82,13 +71,15 @@ module {
     // };
    
 
-    // public func treasury_address(conf : Config) : Nft.AccountIdentifier {
-    //     Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, conf.treasury), null);
-    // };
+    public func treasury_address(conf : Config) : Nft.AccountIdentifier {
+        Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, conf.anvil), null);
+    };
 
     public func nft_address(conf : Config, slot : CanisterSlot) : Nft.AccountIdentifier {
         Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, slot), null);
     };
+
+ 
 
    
     public func pwr(conf : Config) : Pwr.Interface {

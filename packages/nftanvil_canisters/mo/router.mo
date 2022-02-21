@@ -441,8 +441,7 @@ shared({caller = _installer}) actor class Router() = this {
                                     nft_avail = [0,1,2];
                                     account = (21,22);
                                     pwr = 25;
-                                    anv = 26;
-                                    treasury = 27;
+                                    anvil = 26;
                                     history = 30;
                                     history_range = (30,50);
                                     space = [[range_start, range_end]]
@@ -480,8 +479,8 @@ shared({caller = _installer}) actor class Router() = this {
                     //await job_oracle_set({slot = new_history_slot; oracle = _oracle});
                     await job_conf_set({slot = new_history_slot; config = _conf});
 
-                    let {nft; nft_avail; account; router; pwr; history; history_range; space} = _conf;
-                    _conf := {nft; nft_avail; account; router; pwr; history=new_history_slot; history_range; space};
+                    let {nft; nft_avail; account; router; pwr; anvil; history; history_range; space} = _conf;
+                    _conf := {nft; nft_avail; account; router; pwr;  anvil; history=new_history_slot; history_range; space};
                     
                     //job_add(#callback( func () : async () {
                         ignore Cluster.Slots.installed_all(_conf, func (slot: CanisterSlot) {
@@ -513,13 +512,12 @@ shared({caller = _installer}) actor class Router() = this {
                             x != slot
                         }),[new_nft]);
 
-                    
                     await job_install_code({slot = new_nft; wasm = #nft; mode= #install});
                     await job_oracle_set({slot = new_nft; oracle = _oracle});
                     await job_conf_set({slot = new_nft; config = _conf});
                     
-                    let {nft; nft_avail; account; router; pwr; history; history_range; space} = _conf;
-                    _conf := {nft; nft_avail = new_nft_avail; account; router; pwr; history; history_range; space};
+                    let {nft; nft_avail; account; router; pwr; anvil; history; history_range; space} = _conf;
+                    _conf := {nft; nft_avail = new_nft_avail; account; router; pwr; anvil; history; history_range; space};
                  }));
 
                
