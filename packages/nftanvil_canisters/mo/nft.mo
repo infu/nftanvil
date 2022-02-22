@@ -336,7 +336,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             };
 
     };
- 
+  
+  
 
     public shared({caller}) func set_price(request: Nft.SetPriceRequest) : async Nft.SetPriceResponse {
             if (request.price.amount < 100000) return #err(#TooLow);
