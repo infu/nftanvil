@@ -9,6 +9,7 @@ import Iter "mo:base/Iter";
 import Time "mo:base/Time";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
+import Debug "mo:base/Debug";
 
 
 shared({caller = _installer}) actor class Class() : async Anvil.Interface = this {
@@ -21,7 +22,7 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
   private stable var _tmpToken: [(TokenIdentifier, Anvil.TokenRecordSerialized)] = [];
   private var _token : TrieRecord.TrieRecord<TokenIdentifier, Anvil.TokenRecord, Anvil.TokenRecordSerialized> = TrieRecord.TrieRecord<TokenIdentifier, Anvil.TokenRecord, Anvil.TokenRecordSerialized>( _tmpToken.vals(),  Nft.TokenIdentifier.equal, Nft.TokenIdentifier.hash, Anvil.TokenRecordSerialize, Anvil.TokenRecordUnserialize);
 
-  private stable var _mintedTokens : Nat = 0;
+  private stable var _registeredTokens : Nat = 0;
   private stable var _current_balance : Nft.Balance = 0;
   private stable var _total_withdrawn : Nft.Balance = 0;
   private stable var _total_earned : Nft.Balance = 0;
@@ -35,30 +36,45 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
       _tmpToken := [];
   };
 
-  public shared({caller}) func mint(slot: Nft.CanisterSlot, request: Nft.MintRequest) : async Nft.MintResponse {
+//   public shared({caller}) func nft_mint(slot: Nft.CanisterSlot, request: Nft.MintRequest) : async Nft.MintResponse {
 
-      // redirect mint request
-      if (_mintedTokens >= 10000) return #err(#Rejected);
+//       // redirect mint request
+//       if (_registeredTokens >= 10000) return #err(#Rejected);
 
-      let pwr = Cluster.pwr(_conf);
+//       let pwr = Cluster.pwr(_conf);
 
-      switch(await pwr.nft_mint(slot, request)) {
-          case (#ok(resp)) {
-                let {tokenIndex} = resp;
-                let tokenId = Nft.TokenIdentifier.encode(slot, tokenIndex);
-                _mintedTokens += 1;
+//       switch(await pwr.nft_mint(slot, request)) {
+//           case (#ok(resp)) {
+//                 let {tokenIndex} = resp;
+//                 let tokenId = Nft.TokenIdentifier.encode(slot, tokenIndex);
+//                 _registeredTokens += 1;
 
-                if (_mintedTokens >= 10000) return #err(#Rejected);
+//                 if (_registeredTokens >= 10000) return #err(#Rejected);
 
-                _token.put(tokenId, Anvil.TokenRecordBlank());
+//                 _token.put(tokenId, Anvil.TokenRecordBlank());
 
-                #ok(resp);
-          };
+//                 #ok(resp);
+//           };
 
-          case (#err(e)) return #err(e);
-      };
+//           case (#err(e)) return #err(e);
+//       };
 
+//   };
+
+
+  public shared({caller}) func register_token(tid: TokenIdentifier) : async Anvil.RegisterResponse {
+
+    _registeredTokens += 1;
+    
+    if (_registeredTokens >= 10000) return #err("Limit reached");
+
+    _token.put(tid, Anvil.TokenRecordBlank());
+
+    #ok();
+       
   };
+
+
 
   public query func all_tokens() : async [(TokenIdentifier, Anvil.TokenRecordSerialized)] {
       Iter.toArray(_token.serialize());
@@ -82,11 +98,13 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
       };
 
       // 4. take account_id from tx memo
-      let (bearer,token) = switch(tx.info) {
+      let (bearer, token) = switch(tx.info) {
           case (#nft(#use({memo; user; created; token}))) {
 
               // Check if transaction is from the last 60 min
-              if (created < Time.now() - 60*60) return #err("Transaction is too old (>1h)");
+            //   Debug.print("created" # debug_show(created));
+            //   Debug.print("now" # debug_show(Time.now() - 60*60*1000000000));
+              if (created < Time.now() - 60*60*1000000000) return #err("Transaction is too old (>1h)");
 
               // 5. take nft_id from tx and check if its anvil nft against saved ids
               switch(_token.get(token)) {
@@ -131,8 +149,10 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
 
               let payout = total - tr.withdrawn - _oracle.pwrFee;
 
+              Debug.print("DBGPamount " # debug_show(payout));
+
               let prev_amount = tr.withdrawn;
-              
+
               tr.withdrawn := total;
 
               // 10. send balance from contract account to user account - with wrapped icp(pwr) transfer
@@ -190,14 +210,22 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
      getBalance(token);
   };
 
+   public shared({caller}) func config_set(conf : Cluster.Config) : async () {
+        assert(caller == _installer);
+        _conf := conf
+        
+    };
+
+   public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {
+        assert(caller == _installer);
+        _oracle := oracle
+    };
+
+
   public shared({caller}) func refresh() : async () {
       //TODO: this func can be called by anyone, but only once a day
 
-      _conf := await Cluster.router(_conf).config_get();
-
-      let {pwr; oracle} = await Cluster.pwr(_conf).balance({user=#address(Cluster.treasury_address(_conf))} );
-
-      _oracle := oracle;
+      let {pwr} = await Cluster.pwr(_conf).balance({user=#address(Cluster.treasury_address(_conf))} );
 
       let diff = pwr - _current_balance;
       
@@ -206,5 +234,7 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
       _current_balance := pwr;
 
   };
+
+  
 
 }

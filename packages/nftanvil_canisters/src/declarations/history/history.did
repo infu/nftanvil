@@ -149,11 +149,12 @@ type Cooldown = nat32;
 type Config = 
  record {
    account: CanisterRange;
-   history: CanisterSlot__1;
+   anvil: CanisterSlot;
+   history: CanisterSlot;
    history_range: CanisterRange;
    nft: CanisterRange;
-   nft_avail: vec CanisterSlot__1;
-   pwr: CanisterSlot__1;
+   nft_avail: vec CanisterSlot;
+   pwr: CanisterSlot;
    router: principal;
    space: vec vec nat64;
  };
@@ -161,6 +162,7 @@ type Class =
  service {
    add: (EventInfo) -> (AddResponse);
    config_set: (Config) -> ();
+   get: (EventIndex) -> (opt Event) query;
    info: () -> (InfoResponse) query;
    list: (ListRequest) -> (ListResponse) query;
    oracle_set: (Oracle) -> ();
@@ -178,7 +180,6 @@ type Class =
      }) query;
    wallet_receive: () -> ();
  };
-type CanisterSlot__1 = nat64;
 type CanisterSlot = nat64;
 type CanisterRange = 
  record {

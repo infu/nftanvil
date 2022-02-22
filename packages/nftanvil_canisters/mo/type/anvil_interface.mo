@@ -6,7 +6,7 @@ module {
     public type Interface = actor {
 
             // mint function proxy which makes sure the nft author is the smart contract
-            mint : shared (slot: Nft.CanisterSlot, request: Nft.MintRequest) -> async Nft.MintResponse;
+            register_token : shared (tid: Nft.TokenIdentifier) -> async RegisterResponse;
 
             // balance - check the nft icp balance
             balance : query (request: BalanceRequest) -> async BalanceResponse;
@@ -19,7 +19,7 @@ module {
 
     };
 
-
+    public type RegisterResponse = Result.Result<(), Text>;
 
     public type TokenRecord = {
           var withdrawn : Nat64;

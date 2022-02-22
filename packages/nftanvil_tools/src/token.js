@@ -25,7 +25,6 @@ export const getSubAccountArray = (s) => {
   if (Array.isArray(s)) {
     return s.concat(Array(32 - s.length).fill(0));
   } else {
-    //32 bit number only
     return Array(28)
       .fill(0)
       .concat(to32bits(s ? s : 0));
@@ -43,6 +42,7 @@ export const encodeTokenId = (slot, index) => {
 };
 
 export const decodeTokenId = (t) => {
+  t = Number(t);
   let slot = t >> 16;
   let index = t & 65535; // 16 bits
   return { slot, index };

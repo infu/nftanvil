@@ -1,0 +1,71 @@
+type WithdrawResponse = 
+ variant {
+   err: text;
+   ok: record {
+         amount: Balance;
+         transactionId: TransactionId;
+       };
+ };
+type WithdrawRequest = 
+ record {
+   aid: AccountIdentifier;
+   subaccount: opt SubAccount;
+   tx: TransactionId;
+ };
+type TransactionId = blob;
+type TokenRecordSerialized = record {withdrawn: nat64;};
+type TokenIdentifier = nat64;
+type SubAccount = blob;
+type RegisterResponse = 
+ variant {
+   err: text;
+   ok;
+ };
+type Oracle = 
+ record {
+   anvFee: nat64;
+   icpCycles: nat64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
+type Config = 
+ record {
+   account: CanisterRange;
+   anvil: CanisterSlot;
+   history: CanisterSlot;
+   history_range: CanisterRange;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot;
+   pwr: CanisterSlot;
+   router: principal;
+   space: vec vec nat64;
+ };
+type Class = 
+ service {
+   all_tokens: () ->
+    (vec record {
+           TokenIdentifier;
+           TokenRecordSerialized;
+         }) query;
+   balance: (BalanceRequest) -> (BalanceResponse) query;
+   config_set: (Config) -> ();
+   oracle_set: (Oracle) -> ();
+   refresh: () -> ();
+   register_token: (TokenIdentifier) -> (RegisterResponse);
+   withdraw: (WithdrawRequest) -> (WithdrawResponse);
+ };
+type CanisterSlot = nat64;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
+ };
+type BalanceResponse = 
+ variant {
+   err;
+   ok: Balance;
+ };
+type BalanceRequest = nat64;
+type Balance = nat64;
+type AccountIdentifier = blob;
+service : () -> Class

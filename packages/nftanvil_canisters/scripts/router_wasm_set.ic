@@ -33,4 +33,9 @@ call as wallet router.wasm_set(
     }
 );
 
-
+call as wallet router.wasm_set(
+    record {
+        name = "anvil";
+        wasm = file "../build/anvil.wasm";
+    }
+);

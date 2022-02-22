@@ -16,6 +16,7 @@ done
 `dfx cache show`/moc --idl --hide-warnings `vessel sources 2>>/dev/null` -c mo/router.mo -o build/router.wasm &
 `dfx cache show`/moc --idl --hide-warnings `vessel sources 2>>/dev/null` -c mo/pwr.mo -o build/pwr.wasm &
 `dfx cache show`/moc --idl --hide-warnings `vessel sources 2>>/dev/null` -c mo/history.mo -o build/history.wasm &
+`dfx cache show`/moc --idl --hide-warnings `vessel sources 2>>/dev/null` -c mo/anvil.mo -o build/anvil.wasm &
 
 
 wait
@@ -34,4 +35,7 @@ didc bind src/declarations/pwr/pwr.did --target js > src/declarations/pwr/pwr.di
 
 mv build/history.did src/declarations/history/
 didc bind src/declarations/history/history.did --target js > src/declarations/history/history.did.js
+
+mv build/anvil.did src/declarations/anvil/
+didc bind src/declarations/anvil/anvil.did --target js > src/declarations/anvil/anvil.did.js
 

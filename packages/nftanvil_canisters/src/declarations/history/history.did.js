@@ -114,24 +114,24 @@ export const idlFactory = ({ IDL }) => {
   const AddResponse = IDL.Vec(IDL.Nat8);
   const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
-  const CanisterSlot__1 = IDL.Nat64;
   const Config = IDL.Record({
     'nft' : CanisterRange,
-    'pwr' : CanisterSlot__1,
-    'history' : CanisterSlot__1,
-    'nft_avail' : IDL.Vec(CanisterSlot__1),
+    'pwr' : CanisterSlot,
+    'anvil' : CanisterSlot,
+    'history' : CanisterSlot,
+    'nft_avail' : IDL.Vec(CanisterSlot),
     'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
     'account' : CanisterRange,
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
   });
   const EventIndex = IDL.Nat32;
+  const Event = IDL.Record({ 'hash' : IDL.Vec(IDL.Nat8), 'info' : EventInfo });
   const InfoResponse = IDL.Record({
     'total' : EventIndex,
     'previous' : IDL.Opt(IDL.Principal),
   });
   const ListRequest = IDL.Record({ 'to' : EventIndex, 'from' : EventIndex });
-  const Event = IDL.Record({ 'hash' : IDL.Vec(IDL.Nat8), 'info' : EventInfo });
   const ListResponse = IDL.Vec(IDL.Opt(Event));
   const Oracle = IDL.Record({
     'icpFee' : IDL.Nat64,
@@ -142,6 +142,7 @@ export const idlFactory = ({ IDL }) => {
   const Class = IDL.Service({
     'add' : IDL.Func([EventInfo], [AddResponse], []),
     'config_set' : IDL.Func([Config], [], []),
+    'get' : IDL.Func([EventIndex], [IDL.Opt(Event)], ['query']),
     'info' : IDL.Func([], [InfoResponse], ['query']),
     'list' : IDL.Func([ListRequest], [ListResponse], ['query']),
     'oracle_set' : IDL.Func([Oracle], [], []),

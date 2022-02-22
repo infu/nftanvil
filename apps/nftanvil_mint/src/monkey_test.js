@@ -44,7 +44,7 @@ const mintAlot = async ({ principal, address, subaccount }) => {
 
   await pwr.faucet({
     aid: AccountIdentifier.TextToArray(address),
-    amount: 1000000000,
+    amount: 100000000000000,
   });
 
   // let balance = await pwr.balance({
@@ -80,7 +80,7 @@ const mintAlot = async ({ principal, address, subaccount }) => {
           custom: [],
           customVar: [],
           authorShare: 150,
-          price: { amount: 100000, marketplace: [], affiliate: [] },
+          price: { amount: 1000000000, marketplace: [], affiliate: [] },
           rechargeable: true,
         },
       };

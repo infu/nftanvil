@@ -35,10 +35,10 @@ const limit = pLimit(
 import { blobFrom } from "fetch-blob/from.js";
 import { NFTStorage } from "nft.storage";
 
-export const easyMint = async (arr) => {
+export const easyMint = async (arr, proxy_canister = false) => {
   return await Promise.all(
     arr.map((a) => {
-      return limit(() => easyMintOne(a));
+      return limit(() => easyMintOne(a, proxy_canister));
     })
   );
 };
@@ -55,7 +55,10 @@ export const uploadIPFS = async (token, up) => {
   return cid;
 };
 
-export const easyMintOne = async ({ user, subaccount, metadata }) => {
+export const easyMintOne = async (
+  { user, subaccount, metadata },
+  proxy_canister
+) => {
   const onetry = async (tryidx) => {
     let ipfs_pins = [];
     if (metadata?.content[0]?.ipfs?.path) {
@@ -91,7 +94,10 @@ export const easyMintOne = async ({ user, subaccount, metadata }) => {
     let available = map.nft_avail;
     let slot = Number(available[Math.floor(Math.random() * available.length)]);
 
-    let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr));
+    // Note, only use mint function with targetcan. Other functions are not proxied
+    let targetcan = proxy_canister
+      ? pwrCanister(proxy_canister)
+      : pwrCanister(PrincipalFromSlot(map.space, map.pwr));
 
     let nftcan = PrincipalFromSlot(map.space, slot);
 
@@ -107,7 +113,7 @@ export const easyMintOne = async ({ user, subaccount, metadata }) => {
         metadata.thumb.internal.path
       );
 
-    let s = await pwr.nft_mint(slot, { user, subaccount, metadata });
+    let s = await targetcan.nft_mint(slot, { user, subaccount, metadata });
     if (s.err && s.err.OutOfMemory === null) {
       console.log("canister full, retrying");
       await refreshMap();

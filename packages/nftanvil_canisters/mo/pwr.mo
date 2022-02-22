@@ -357,7 +357,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       assert(total > 0);
       assert((seller_cut + marketplace_cut + affiliate_cut + author_cut + anvil_cut) == total);
 
-      let NFTAnvil_PWR_earnings_subaccount = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(10) );
+      let NFTAnvil_PWR_earnings_subaccount = Cluster.treasury_address(_conf);
+      //Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(10) );
       
       
       // give to NFTAnvil

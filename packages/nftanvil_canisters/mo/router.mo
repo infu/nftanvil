@@ -37,7 +37,7 @@ shared({caller = _installer}) actor class Router() = this {
     private var _wasm_account : [Nat8] = [];
     private var _wasm_pwr : [Nat8] = [];
     private var _wasm_history : [Nat8] = [];
-    private var _wasm_anv : [Nat8] = [];
+    private var _wasm_anvil : [Nat8] = [];
     private var _wasm_treasury : [Nat8] = [];
 
     private var _job_processing : Bool = false;
@@ -61,7 +61,7 @@ shared({caller = _installer}) actor class Router() = this {
 
     public type Job_Install_Code = {
         slot : CanisterSlot;
-        wasm : {#nft; #account; #pwr; #history; #anv; #treasury};
+        wasm : {#nft; #account; #pwr; #history; #anvil; #treasury};
         mode : {#reinstall; #upgrade; #install};
     };
 
@@ -169,6 +169,16 @@ shared({caller = _installer}) actor class Router() = this {
         job_add(#oracle_set({slot = _conf.pwr; oracle = _oracle}));
         job_add(#config_set({slot = _conf.pwr; config = _conf}));
 
+        // create anvil canister
+        job_add(#install_code({
+            slot = _conf.anvil;
+            wasm = #anvil;
+            mode = #reinstall;
+        }));
+
+
+        job_add(#oracle_set({slot = _conf.anvil; oracle = _oracle}));
+        job_add(#config_set({slot = _conf.anvil; config = _conf}));
 
 
 
@@ -229,6 +239,20 @@ shared({caller = _installer}) actor class Router() = this {
         job_add(#oracle_set({slot = _conf.pwr; oracle = _oracle}));
         job_add(#config_set({slot = _conf.pwr; config = _conf}));
 
+
+        // create anvil canister
+        job_add(#install_code({
+            slot = _conf.anvil;
+            wasm = #anvil;
+            mode = #upgrade;
+        }));
+
+
+        job_add(#oracle_set({slot = _conf.anvil; oracle = _oracle}));
+        job_add(#config_set({slot = _conf.anvil; config = _conf}));
+
+
+  
 
   
 
@@ -370,8 +394,7 @@ shared({caller = _installer}) actor class Router() = this {
                   case (#account) _wasm_account;
                   case (#pwr) _wasm_pwr;
                   case (#history) _wasm_history;
-                  case (#anv) _wasm_anv;
-                  case (#treasury) _wasm_treasury;
+                  case (#anvil) _wasm_anvil;
 
               };
               mode;
@@ -536,7 +559,7 @@ shared({caller = _installer}) actor class Router() = this {
             case ("account") _wasm_account := wasm;
             case ("pwr") _wasm_pwr := wasm;
             case ("history") _wasm_history := wasm;
-            case ("anv") _wasm_anv := wasm;
+            case ("anvil") _wasm_anvil := wasm;
             case ("treasury") _wasm_treasury := wasm;
 
             case (_) { assert(false); (); }

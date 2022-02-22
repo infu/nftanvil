@@ -5,6 +5,8 @@ import * as cRouter from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import * as cNft from "@vvv-interactive/nftanvil-canisters/cjs/nft.js";
 import * as cAccount from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
 import * as cPwr from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
+import * as cAnvil from "@vvv-interactive/nftanvil-canisters/cjs/anvil.js";
+
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 export { PrincipalFromSlot };
 
@@ -98,6 +100,10 @@ export const claimBalance = async (address, subaccount) => {
 
 export const nftCanister = (id) => {
   return cNft.nftCanister(id, { agentOptions: { fetch, identity, host } });
+};
+
+export const anvilCanister = (id) => {
+  return cAnvil.anvilCanister(id, { agentOptions: { fetch, identity, host } });
 };
 
 export const pwrCanister = (id) => {
