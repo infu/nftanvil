@@ -300,7 +300,8 @@ export const MintForm = () => {
                               { position: "bottom-center" }
                             );
                           }
-                          let f = await resizeImage(info.url, 124, 124, true);
+                          let f = await resizeImage(info.url, 432, 432, true);
+                          console.log("resized", f);
                           props.setFieldValue("thumb", f);
                         }
                       }}
@@ -343,7 +344,8 @@ export const MintForm = () => {
                       onChange={async (info) => {
                         if (info.type.indexOf("image/") !== -1) {
                           if (info.size > 1024 * 128) {
-                            let x = await resizeImage(info.url, 124, 124);
+                            let x = await resizeImage(info.url, 432, 432);
+                            console.log("resized", x);
                             props.setFieldValue("thumb", x);
                             toast.info(
                               "Image was too big. Resizing automatically",

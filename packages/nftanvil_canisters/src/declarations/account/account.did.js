@@ -37,7 +37,7 @@ export const idlFactory = ({ IDL }) => {
     'add_transaction' : IDL.Func([AccountIdentifier, TransactionId], [], []),
     'config_set' : IDL.Func([Config], [], []),
     'list' : IDL.Func(
-        [AccountIdentifier, IDL.Nat],
+        [AccountIdentifier, IDL.Nat, IDL.Nat],
         [IDL.Vec(TokenIdentifier__1)],
         ['query'],
       ),

@@ -139,6 +139,45 @@ const Thumb = styled.div`
   }
 `;
 
+const ThumbLarge = styled.div`
+  width: 216px;
+  height: 216px;
+  border-radius: 6px;
+  position: relative;
+  box-overflow: hidden;
+
+  .custom {
+    top: 0px;
+    left: 0px;
+    position: absolute;
+    object-fit: cover;
+    object-position: center center;
+    height: 216px;
+    width: 216px;
+    border-radius: 8px;
+  }
+
+  .price {
+    position: absolute;
+    padding-bottom: 3px;
+    padding-left: 10px;
+    border-radius: 0px 0px 6px 6px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+    padding-top: 20px;
+    z-index: 1000;
+    text-shadow: 4px 4px 2px rgba(0, 0, 0, 0.6);
+    background: linear-gradient(
+      4deg,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 0.3) 51%,
+      rgba(0, 0, 0, 0) 74%,
+      rgba(0, 0, 0, 0) 100%
+    );
+  }
+`;
+
 export const NFTMenu = ({ id, meta, owner, nobuy = false }) => {
   const pro = useSelector((state) => state.user.pro);
 
@@ -977,7 +1016,36 @@ export const NFTPopover = ({ meta }) => {
   );
 };
 
-export const NFT = ({ id }) => {
+export const NFTLarge = ({ id }) => {
+  const meta = useSelector((state) => state.nft[id]);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(nftFetch(id));
+  }, [id, dispatch]);
+
+  return (
+    <ThumbLarge>
+      <Link to={"/" + id}>
+        {meta?.thumb?.ipfs?.url ? (
+          <img alt="" className="custom" src={meta.thumb.ipfs.url} />
+        ) : meta?.thumb?.internal?.url ? (
+          <img alt="" className="custom" src={meta.thumb.internal.url} />
+        ) : (
+          ""
+        )}
+        {meta && meta.price.amount && meta.price.amount !== "0" ? (
+          <div className="price">
+            <ICP>{meta.price.amount}</ICP>
+          </div>
+        ) : null}
+      </Link>
+    </ThumbLarge>
+  );
+};
+
+export const NFT = ({ id, thumbSize }) => {
   const meta = useSelector((state) => state.nft[id]);
 
   const dispatch = useDispatch();
@@ -1180,6 +1248,7 @@ export const NFTPreview = (p) => {
       <NFTContent meta={p} />
       <NFTInfo meta={p} />
       <NFTThumb meta={p} />
+      <NFTThumbLarge meta={p} />
     </Stack>
   );
 };
@@ -1197,6 +1266,21 @@ export const NFTThumb = (p) => {
       {c.url ? <img className="custom" alt="" src={c.url} /> : ""}
       <div className="border" />
     </Thumb>
+  );
+};
+
+export const NFTThumbLarge = (p) => {
+  if (p.meta?.thumb?.external) return null;
+
+  const c =
+    p.meta?.thumb?.internal || p.meta?.thumb?.ipfs || p.meta?.thumb?.external;
+
+  if (!c) return null;
+
+  return (
+    <ThumbLarge {...p}>
+      {c.url ? <img className="custom" alt="" src={c.url} /> : ""}
+    </ThumbLarge>
   );
 };
 

@@ -148,10 +148,12 @@ shared({ caller = _installer }) actor class Class() = this {
         };
     };
 
-    public query func list(aid: AccountIdentifier, page:Nat) : async [TokenIdentifier] {
-        assert(Nft.User.validate(#address(aid)) == true); 
+    public query func list(aid: AccountIdentifier, from:Nat, to:Nat) : async [TokenIdentifier] {
+        assert(Nft.User.validate(#address(aid)) == true);
+        let total = to - from;
+        assert(total <= 100);
 
-        let rez:[var TokenIdentifier] = Array.init<TokenIdentifier>(100,0);
+        let rez:[var TokenIdentifier] = Array.init<TokenIdentifier>(total, 0);
 
           switch(_account.get(aid)) {
                    case (?acc) {
@@ -159,8 +161,8 @@ shared({ caller = _installer }) actor class Class() = this {
                     let it = acc.tokens.list(); //HashSmash.list<AccountIdentifier,TokenIdentifier>(_account, aid);
 
                     var index = 0;
-                    let pstart = page*100;
-                    let pend = (page+1)*100;
+                    let pstart = from;
+                    let pend = to;
                     label l for (tid:TokenIdentifier in it) {
                         if (index >= pend) break l;
 

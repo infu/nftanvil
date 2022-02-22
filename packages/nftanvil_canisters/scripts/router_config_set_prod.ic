@@ -10,6 +10,7 @@ call as wallet router.config_set(
         router = principal "${ROUTER_ID}";
         nft = record {0:nat64; 5000:nat64};
         nft_avail = vec {0:nat64; 1:nat64; 2:nat64};
+        anvil = 5003:nat64;
         account = record {5010:nat64; 5013:nat64};
         pwr = 5002:nat64;
         history = 5100:nat64;

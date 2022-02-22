@@ -438,13 +438,13 @@ export function DashboardPage() {
   }, [dispatch]);
 
   if (!info) return null;
-
+  console.log("CINFO", info);
   //info.map.space[0] = [BigInt(5000), BigInt(10000)];
   let total_range = Number(info.map.space[0][1] - info.map.space[0][0]) + 1;
   let total_nft =
-    Number(
-      info.map.nft_avail[info.map.nft_avail.length - 1] - info.map.nft[0]
-    ) + 1;
+    Number(info.map.nft_avail[info.map.nft_avail.length - 1]) -
+    Number(info.map.nft[0]) +
+    1;
   let total_account = Number(info.map.account[1] - info.map.account[0]) + 1;
 
   let total_other = 2;
