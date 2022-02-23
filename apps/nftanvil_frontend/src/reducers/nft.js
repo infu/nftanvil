@@ -86,7 +86,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
 
     // data
 
-    // domain: data.domain[0],
+    domain: data.domain[0],
     // use: data.use[0],
     // hold: data.hold[0],
     thumb: data.thumb,

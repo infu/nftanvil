@@ -61,6 +61,9 @@ import {
 
 import Dfinity from "./assets/dfinity.svg";
 
+import PoweredDark from "./assets/powered.dark.svg";
+import PoweredLight from "./assets/powered.light.svg";
+
 import { Switch as RouterSwitch, Route, Redirect } from "react-router";
 
 import { Link } from "react-router-dom";
@@ -364,7 +367,7 @@ function LoginBox() {
                     mt="10px"
                     color="gray.500"
                   >
-                    Supported fungible: <ICP /> <ANV />
+                    Supported fungible: <ICP />
                   </Text>
                   {/* {pro ? (
                     <>
@@ -721,11 +724,15 @@ function App() {
           fontFamily: "Hexaframe",
           fontSize: "10px",
           textTransform: "uppercase",
-          color: "gray.500",
+          color: theme === "dark" ? "gray.300" : "gray.700",
         }}
       >
-        Web 3.0 | Smart contracts running on the Internet Computer | Made by 3V
-        Interactive
+        Web 3.0 | Made by 3V Interactive
+        <img
+          style={{ margin: "10px auto" }}
+          src={theme === "dark" ? PoweredDark : PoweredLight}
+          alt=""
+        />
       </Box>
       <Nftstorage />
       <ToastContainer theme={theme} />

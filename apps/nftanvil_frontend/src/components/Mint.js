@@ -176,6 +176,8 @@ const record2request = (v) => {
 };
 
 export const MintForm = () => {
+  const mode = useColorModeValue("light", "dark");
+
   const { width, height } = useWindowSize();
   const isDesktop = width > 480;
   const address = useSelector((state) => state.user.address);
@@ -365,8 +367,10 @@ export const MintForm = () => {
                             }
                           >
                             <FormLabel htmlFor="domain">
-                              <FormTip text="Verify by placing /.well-known/nftanvil.json with {allowed:[allowed author account ids]}.">
-                                Verification url
+                              <FormTip
+                                text={`Will have external link to that location. It must be verified by placing /.well-known/nftanvil.json with {"/pathname":["allowed_author_aid","another_allowed_author_aid"]}.`}
+                              >
+                                Verified collection url
                               </FormTip>
                             </FormLabel>
                             <Input
@@ -583,7 +587,7 @@ export const MintForm = () => {
                               //placeholder="Select option"
                               variant="filled"
                             >
-                              {itemQuality.map((x, idx) => (
+                              {itemQuality[mode].map((x, idx) => (
                                 <option key={idx} value={idx}>
                                   {x.label}
                                 </option>

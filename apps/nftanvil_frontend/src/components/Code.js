@@ -5,6 +5,7 @@ import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accounti
 import { useSelector } from "react-redux";
 
 import { Tooltip } from "@chakra-ui/react";
+import { useColorModeValue } from "@chakra-ui/react";
 const Stx = styled.span`
   font-family: Hexaframe;
   letter-spacing: 1px;
@@ -29,38 +30,62 @@ const Sacc = styled.span`
   font-size: 80%;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgb(230, 240, 240);
+  color: ${(props) =>
+    props.mode === "light" ? "rgb(230, 240, 240)" : "rgb(90, 100, 100)"};
   b {
     color: rgb(170, 255, 0);
   }
 `;
 
 const hexColors = {
-  0: "#49fc32",
-  1: "#a7ef15",
-  2: "#e8dc16",
-  3: "#ffbb33",
-  4: "#ff906c",
-  5: "#ff87b3",
-  6: "#ff92ff",
-  7: "#ffa9ff",
-  8: "#c8c8ff",
-  9: "#00e4ff",
-  A: "#00f3ff",
-  B: "#29f7db",
-  C: "#c9e1bb",
-  D: "#ffc8d1",
-  E: "#e8cfff",
-  F: "#cdd9fd",
+  light: {
+    0: "#49fc32",
+    1: "#a7ef15",
+    2: "#e8dc16",
+    3: "#ffbb33",
+    4: "#ff906c",
+    5: "#ff87b3",
+    6: "#ff92ff",
+    7: "#ffa9ff",
+    8: "#c8c8ff",
+    9: "#00e4ff",
+    A: "#00f3ff",
+    B: "#29f7db",
+    C: "#c9e1bb",
+    D: "#ffc8d1",
+    E: "#e8cfff",
+    F: "#cdd9fd",
+  },
+  dark: {
+    0: "#219812",
+    1: "#6f9f0d",
+    2: "#8c8509",
+    3: "#946507",
+    4: "#902705",
+    5: "#840835",
+    6: "#8e088e",
+    7: "#950b95",
+    8: "#09098b",
+    9: "#097b88",
+    A: "#07757a",
+    B: "#067969",
+    C: "#38850b",
+    D: "#a41d33",
+    E: "#4e1187",
+    F: "#153081",
+  },
 };
 
 export const ACC = ({ children, short = false }) => {
+  const mode = useColorModeValue("dark", "light");
+  const color = hexColors[mode];
+
   let a = children
     .slice(0, 5)
     .toUpperCase()
     .split("")
     .map((x, idx) => (
-      <span key={idx} style={{ color: hexColors[x] }}>
+      <span key={idx} style={{ color: color[x] }}>
         {x}
       </span>
     ));
@@ -70,13 +95,13 @@ export const ACC = ({ children, short = false }) => {
     .toUpperCase()
     .split("")
     .map((x, idx) => (
-      <span key={idx} style={{ color: hexColors[x] }}>
+      <span key={idx} style={{ color: color[x] }}>
         {x}
       </span>
     ));
 
   return (
-    <Sacc>
+    <Sacc mode={mode}>
       <b>{a}</b>
       {short ? "..." : b}
       <b>{c}</b>
@@ -219,7 +244,7 @@ const Sicp = styled.span`
   }
 `;
 
-export const ICP = ({ children }) => {
+export const ICP = ({ children, digits = 4 }) => {
   const icpCycles = BigInt(useSelector((state) => state.user.oracle.icpCycles));
 
   if (!children)
@@ -233,6 +258,7 @@ export const ICP = ({ children }) => {
 
   let val = AccountIdentifier.e8sToIcp(children);
   let [a, b] = val.toString().split(".");
+  b = b.substring(0, digits);
   return (
     <Tooltip hasArrow placement="top-start" label={`${xdr.toFixed(2)} XDR`}>
       <Sicp>
@@ -247,14 +273,17 @@ const Shash = styled.span`
   font-size: 8px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgb(110, 200, 170);
+  color: ${(props) =>
+    props.mode === "light" ? "#377a5f" : "rgb(110, 200, 170)"};
 
   b {
-    color: rgb(140, 240, 220);
+    color: ${(props) =>
+      props.mode === "light" ? "#005e47" : "rgb(140, 240, 220)"};
   }
 `;
 
 export const HASH = ({ children, short = false }) => {
+  const mode = useColorModeValue("light", "dark");
   let t = short
     ? (children = children.slice(0, 4) + ".." + children.slice(-4))
     : children;
@@ -262,5 +291,5 @@ export const HASH = ({ children, short = false }) => {
   let txt = t
     .split("")
     .map((x, idx) => (Math.floor(idx / 2) % 2 == 0 ? <b key={idx}>{x}</b> : x));
-  return <Shash>{txt}</Shash>;
+  return <Shash mode={mode}>{txt}</Shash>;
 };

@@ -19,10 +19,16 @@ export const inventorySlice = createSlice({
     metaSet: (state, action) => {
       return { ...state, [action.payload.aid + "meta"]: action.payload.meta };
     },
+    verifiedDomainSet: (state, action) => {
+      return {
+        ...state,
+        [action.payload.domain + "_domain"]: action.payload.data,
+      };
+    },
   },
 });
 
-export const { pageSet, metaSet } = inventorySlice.actions;
+export const { pageSet, metaSet, verifiedDomainSet } = inventorySlice.actions;
 
 export const loadInventory =
   (aid, pageIdx, max) => async (dispatch, getState) => {
@@ -51,5 +57,32 @@ export const loadInventory =
     list = list.filter((x) => x !== 0n).map((x) => tokenToText(x));
     dispatch(pageSet({ aid, pageIdx, list }));
   };
+
+export const verifyDomain = (domain) => async (dispatch, getState) => {
+  let s = getState();
+
+  if (s.inventory[domain + "_domain"] === undefined) {
+    dispatch(verifiedDomainSet({ domain, data: -1 }));
+
+    let data = await new Promise((resolve, reject) => {
+      fetch("https://" + domain + "/.well-known/nftanvil.json")
+        .then((response) => response.json())
+        .then((data) => {
+          try {
+            resolve(data);
+          } catch (e) {
+            console.log(e);
+            resolve(false);
+          }
+        })
+        .catch((e) => {
+          console.log(e);
+          resolve(false);
+        });
+    });
+
+    dispatch(verifiedDomainSet({ domain, data }));
+  }
+};
 
 export default inventorySlice.reducer;

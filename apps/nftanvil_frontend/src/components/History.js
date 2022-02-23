@@ -251,7 +251,6 @@ export const History = (p) => {
   );
 
   if (!events || !events.length) return null;
-  console.log("EVENTS", events);
 
   let evlist = [];
   for (let idx = events.length; idx >= 0; idx--) {

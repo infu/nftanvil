@@ -2,6 +2,7 @@
 
 import {
   Text,
+  useColorMode,
   Stack,
   Box,
   useColorModeValue,
@@ -25,6 +26,7 @@ import {
   recharge,
   recharge_quote,
 } from "../reducers/nft";
+import { verifyDomain } from "../reducers/inventory";
 import { setDominantColor } from "../reducers/user";
 import { NftHistory } from "./History";
 import { Spinner } from "@chakra-ui/react";
@@ -141,8 +143,7 @@ const Thumb = styled.div`
 
 const ThumbLarge = styled.div`
   width: 216px;
-  height: 216px;
-  border-radius: 6px;
+  height: 270px;
   position: relative;
   box-overflow: hidden;
 
@@ -154,10 +155,11 @@ const ThumbLarge = styled.div`
     object-position: center center;
     height: 216px;
     width: 216px;
-    border-radius: 8px;
+    border-radius: 8px 8px 0px 0px;
   }
 
-  .price {
+  .info {
+    font-size: 12px;
     position: absolute;
     padding-bottom: 3px;
     padding-left: 10px;
@@ -165,16 +167,30 @@ const ThumbLarge = styled.div`
     left: 0px;
     bottom: 0px;
     right: 0px;
-    padding-top: 20px;
-    z-index: 1000;
-    text-shadow: 4px 4px 2px rgba(0, 0, 0, 0.6);
-    background: linear-gradient(
-      4deg,
-      rgba(0, 0, 0, 1) 0%,
-      rgba(0, 0, 0, 0.3) 51%,
-      rgba(0, 0, 0, 0) 74%,
-      rgba(0, 0, 0, 0) 100%
-    );
+    height: 54px;
+    // text-shadow: 4px 4px 2px rgba(0, 0, 0, 0.6);
+    background: ${(props) => (props.mode === "light" ? "#fff" : "#1d1b24")};
+    border: 1px solid
+      ${(props) => (props.mode === "light" ? "#c4bcdb" : "#3f3855")};
+    border-top: 0px solid;
+    .label {
+      font-size: 9px;
+      margin-bottom: -2px;
+    }
+    .collection {
+      position: absolute;
+      top: 0px;
+    }
+    .author {
+      position: absolute;
+      top: 19px;
+    }
+    .price {
+      text-align: right;
+      position: absolute;
+      top: 19px;
+      right: 8px;
+    }
   }
 `;
 
@@ -1019,27 +1035,47 @@ export const NFTPopover = ({ meta }) => {
 export const NFTLarge = ({ id }) => {
   const meta = useSelector((state) => state.nft[id]);
 
+  const mode = useColorModeValue("light", "dark");
+
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(nftFetch(id));
   }, [id, dispatch]);
 
+  if (!meta) return null;
+
   return (
-    <ThumbLarge>
+    <ThumbLarge mode={mode}>
       <Link to={"/" + id}>
-        {meta?.thumb?.ipfs?.url ? (
+        {meta.thumb?.ipfs?.url ? (
           <img alt="" className="custom" src={meta.thumb.ipfs.url} />
-        ) : meta?.thumb?.internal?.url ? (
+        ) : meta.thumb?.internal?.url ? (
           <img alt="" className="custom" src={meta.thumb.internal.url} />
         ) : (
           ""
         )}
-        {meta && meta.price.amount && meta.price.amount !== "0" ? (
-          <div className="price">
-            <ICP>{meta.price.amount}</ICP>
+
+        <div className="info">
+          {meta.domain ? (
+            <div className="collection">
+              <MetaDomain meta={meta} showLink={false} />
+            </div>
+          ) : null}
+
+          <div className="author">
+            <div className="label">AUTHOR</div>
+            <div>
+              <ACC short={true}>{meta.author}</ACC>
+            </div>
           </div>
-        ) : null}
+          {meta.price.amount && meta.price.amount !== "0" ? (
+            <div className="price">
+              <div className="label">PRICE</div>
+              <ICP digits={2}>{meta.price.amount}</ICP>
+            </div>
+          ) : null}
+        </div>
       </Link>
     </ThumbLarge>
   );
@@ -1284,60 +1320,66 @@ export const NFTThumbLarge = (p) => {
   );
 };
 
-const verifyDomain = lodash.debounce((meta, cb) => {
-  fetch("https://" + meta.domain + "/.well-known/nftanvil.json")
-    .then((response) => response.json())
-    .then((data) => {
-      try {
-        cb(data.allowed.indexOf(meta.author) !== -1);
-      } catch (e) {
-        console.log(e);
-        cb(false);
-      }
-    })
-    .catch((e) => {
-      console.log(e);
-      cb(false);
-    });
-}, 1000);
-
-const MetaDomain = ({ meta }) => {
-  const [isLoading, setLoading] = useState(true);
-  const [verified, setVerified] = useState(false);
+const MetaDomain = ({ meta, showLink }) => {
+  let url = new URL("https://" + meta.domain);
+  const dispatch = useDispatch();
+  const domainInfo = useSelector(
+    (state) => state.inventory[url.hostname + "_domain"]
+  );
+  const isLoading = domainInfo === -1 ? true : false;
+  let verified = false;
+  try {
+    if (
+      !isLoading &&
+      typeof domainInfo === "object" &&
+      domainInfo[url.pathname].indexOf(meta.author) !== -1
+    )
+      verified = true;
+  } catch (e) {
+    console.log(e);
+  }
 
   useEffect(() => {
-    setVerified(false);
-    setLoading(true);
+    dispatch(verifyDomain(url.hostname));
+  }, [url.hostname, dispatch]);
 
-    verifyDomain(meta, (verified) => {
-      if (verified) {
-        setVerified(true);
-        setLoading(false);
-      } else {
-        setLoading(false);
-      }
-    });
-  }, [meta.domain]);
+  let urlSafe = verified ? "https://" + url.hostname + url.pathname : null;
 
-  return (
-    <Box
-      color={verified ? "green.300" : isLoading ? null : "red.300"}
-      as={verified ? null : isLoading ? null : "s"}
-    >
+  let content = (
+    <>
       {meta.domain}{" "}
       {isLoading ? (
         <Spinner size="xs" />
       ) : verified ? (
         <VerifiedIcon w={"16px"} h={"16px"} />
       ) : null}
+    </>
+  );
+
+  return (
+    <Box
+      color={verified ? "green.300" : isLoading ? null : "red.300"}
+      as={verified ? null : isLoading ? null : "s"}
+    >
+      {showLink && urlSafe ? (
+        <a href={urlSafe} rel="noreferrer" target="_blank">
+          {content}
+        </a>
+      ) : (
+        content
+      )}
     </Box>
   );
 };
 
 export const NFTInfo = ({ id, meta }) => {
-  const bg = useColorModeValue("gray.500", "gray.700");
+  const mode = useColorModeValue("light", "dark");
+
+  const bg = useColorModeValue("gray.100", "gray.700");
+  const textColor = useColorModeValue("gray.900", "gray.100");
+
   if (!meta || !("quality" in meta)) return null;
-  const qcolor = itemQuality[meta.quality].color;
+  const qcolor = itemQuality[mode][meta.quality].color;
   let nowMinutes = Math.floor(Date.now() / 1000 / 60);
 
   let things = [
@@ -1355,7 +1397,9 @@ export const NFTInfo = ({ id, meta }) => {
         ))}
       </Wrap>
     ) : null,
-    meta.domain ? <MetaDomain key={"domain"} meta={meta} /> : null,
+    meta.domain ? (
+      <MetaDomain key={"domain"} meta={meta} showLink={true} />
+    ) : null,
     "bindsForever" in meta.transfer ? (
       <Text key={"bindsForever"} fontSize="14px">
         Binds on transfer
@@ -1451,7 +1495,14 @@ export const NFTInfo = ({ id, meta }) => {
 
   if (!things.length) return null;
   return (
-    <Box bg={bg} borderRadius="md" w={350} p={2} sx={{ position: "relative" }}>
+    <Box
+      bg={bg}
+      color={textColor}
+      borderRadius="md"
+      w={350}
+      p={2}
+      sx={{ position: "relative" }}
+    >
       {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
 
       <Stack spacing={0}>{things}</Stack>
