@@ -14,7 +14,9 @@ export const pwr_stats = () => async (dispatch, getState) => {
   let canisterId = PrincipalFromSlot(s.user.map.space, s.user.map.pwr);
   let identity = authentication.client.getIdentity();
 
-  let pwr = pwrCanister(canisterId, { agentOptions: { identity } });
+  let pwr = pwrCanister(canisterId, {
+    agentOptions: authentication.getAgentOptions(),
+  });
   let stats = await pwr.stats();
   return stats;
 };
@@ -24,7 +26,7 @@ export const router_stats = () => async (dispatch, getState) => {
   let canisterId = s.user.map.router;
   let identity = authentication.client.getIdentity();
   let { router } = routerCanister(canisterId, {
-    agentOptions: { identity },
+    agentOptions: authentication.getAgentOptions(),
   });
 
   let stats = await router.stats();
@@ -39,7 +41,9 @@ export const nft_stats =
     let canisterId = PrincipalFromSlot(s.user.map.space, slot);
     let identity = authentication.client.getIdentity();
 
-    let nft = nftCanister(canisterId, { agentOptions: { identity } });
+    let nft = nftCanister(canisterId, {
+      agentOptions: authentication.getAgentOptions(),
+    });
     let stats = await nft.stats();
     stats.canister = canisterId.toText();
 
@@ -53,7 +57,9 @@ export const account_stats =
     let canisterId = PrincipalFromSlot(s.user.map.space, slot);
     let identity = authentication.client.getIdentity();
 
-    let can = accountCanister(canisterId, { agentOptions: { identity } });
+    let can = accountCanister(canisterId, {
+      agentOptions: authentication.getAgentOptions(),
+    });
     let stats = await can.stats();
     stats.canister = canisterId.toText();
 
@@ -67,7 +73,9 @@ export const history_stats =
     let canisterId = PrincipalFromSlot(s.user.map.space, slot);
     let identity = authentication.client.getIdentity();
 
-    let can = historyCanister(canisterId, { agentOptions: { identity } });
+    let can = historyCanister(canisterId, {
+      agentOptions: authentication.getAgentOptions(),
+    });
     let stats = await can.stats();
     stats.canister = canisterId.toText();
 

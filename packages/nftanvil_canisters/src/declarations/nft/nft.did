@@ -429,7 +429,6 @@ type ItemTransfer =
 type ItemName = text;
 type ItemLore = text;
 type IPFS_CID = text;
-type ICPath = text;
 type HeaderField = 
  record {
    text;
@@ -445,6 +444,7 @@ type FetchChunkRequest =
    subaccount: opt SubAccount;
    tokenIndex: TokenIndex;
  };
+type ExternalUrl = text;
 type DomainName = text;
 type CustomVar = blob;
 type CustomData = blob;
@@ -452,7 +452,7 @@ type Cooldown = nat32;
 type ContentType = text;
 type Content = 
  variant {
-   external: ICPath;
+   external: ExternalUrl;
    internal: record {
                contentType: ContentType;
                size: nat32;

@@ -218,7 +218,7 @@ function ICPBOX({ mobile }) {
           <ICP>{icp}</ICP>
         </MenuItem>
       ) : (
-        <Tooltip hasArrow label="Internet Computer main currency">
+        <Tooltip hasArrow label="testICP">
           <Button onClick={onOpen}>
             <ICP>{icp}</ICP>
           </Button>
@@ -342,6 +342,14 @@ function LoginBox() {
               <PopoverContent w={350} sx={{ textAlign: "left" }}>
                 <PopoverArrow />
                 <PopoverBody>
+                  <Text
+                    casing="uppercase"
+                    fontSize="xs"
+                    mt="10px"
+                    color="red.400"
+                  >
+                    Please do not send real ICP to this address during TESTNET
+                  </Text>
                   <Text
                     casing="uppercase"
                     fontSize="xs"

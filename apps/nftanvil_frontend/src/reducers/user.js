@@ -173,7 +173,7 @@ export const auth =
     if (pro) dispatch(proSet(true));
 
     router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
-      agentOptions: { identity },
+      agentOptions: authentication.getAgentOptions(),
     });
 
     let map = await router.config_get();
@@ -246,7 +246,7 @@ export const logout = () => async (dispatch, getState) => {
 
   const identity = await authClient.getIdentity();
   router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
-    agentOptions: { identity },
+    agentOptions: authentication.getAgentOptions(),
   });
 
   let principal = identity.getPrincipal().toString();
@@ -263,7 +263,7 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
   if (!address) return;
 
   let ledger = ledgerCanister({
-    agentOptions: { identity },
+    agentOptions: authentication.getAgentOptions(),
   });
 
   //TODO: remove return in production
@@ -295,9 +295,7 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
 
   let pwrcan = pwrCanister(
     PrincipalFromSlot(s.user.map.space, s.user.map.pwr),
-    {
-      agentOptions: { identity },
-    }
+    { agentOptions: authentication.getAgentOptions() }
   );
 
   await pwrcan
@@ -341,7 +339,7 @@ export const transfer_icp =
     ].filter(Boolean);
 
     let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-      agentOptions: { identity },
+      agentOptions: authentication.getAgentOptions(),
     });
 
     let toastId = toast("Sending...", {
@@ -405,7 +403,7 @@ export const pwr_buy =
     let identity = authentication.client.getIdentity();
 
     let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-      agentOptions: { identity },
+      agentOptions: authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -432,7 +430,9 @@ export const pwr_buy =
 
     let paymentAddress = intent.ok;
 
-    let ledger = ledgerCanister({ agentOptions: { identity } });
+    let ledger = ledgerCanister({
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let ledger_result = await ledger.transfer({
       memo: 0,

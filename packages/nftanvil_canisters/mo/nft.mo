@@ -272,11 +272,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 switch(SNFT_tidxGet(tokenIndex)) {
                     case(?seller) {
 
-                        let {marketplace; affiliate; amount} = vars.price;
-
+                        let {marketplace;  amount} = vars.price;
+                        let {affiliate} = request;
                         if (amount == 0) return #err(#NotForSale);
-                        let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
 
+                        let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
 
                         if (request.amount < amount) return #err(#InsufficientPayment(amount));
 
@@ -285,9 +285,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                         let payment = amount - recharge_cost;
 
                         if (payment == 0) return #err(#Rejected);
-
-
-
 
                         // recharge
                         vars.pwrStorage := topStorage;
@@ -359,12 +356,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                             let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
                             
-                            let {amount; marketplace; affiliate} = request.price;
+                            let {amount; marketplace} = request.price;
 
                             vars.price := {
                                 amount = amount + diffStorage + diffOps + _oracle.pwrFee;
                                 marketplace;
-                                affiliate;
                                 };
 
                             _priceIndex := _priceIndex + 1;
@@ -917,22 +913,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         };
     };
 
-    // private func pwrExtract({from: AccountIdentifier; subaccount: ?Nft.SubAccount; amount: Balance}) : async Result.Result<(), Nft.TransferResponseError> {
-    //       switch(await Cluster.pwr(_conf).transfer({
-    //         from = #address(from);
-    //         to = #address(Cluster.nft_address(_conf, _slot));
-    //         amount;
-    //         memo = Blob.fromArray([]);
-    //         subaccount;
-    //         })) {
-    //             case (#ok({transactionId})) {
-    //                 #ok();
-    //             };
-    //             case (#err(e)) {
-    //                 return #err(e)
-    //             };
-    //         };
-    // };
 
     private func SNFT_mint(author:AccountIdentifier, request: Nft.MintRequest) : async Nft.MintResponse {
 
@@ -944,10 +924,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let mintPricePwr : Nat64 = mintPricePwrOps + mintPricePwrStorage;
 
 
-        // switch(await pwrExtract({from= author; amount= mintPricePwr; subaccount = request.subaccount})) {
-        //     case (#ok()) {};
-        //     case (#err(e)) return #err(#Pwr(e));
-        // };
+
 
         let tokenIndex = _nextTokenId;
         _nextTokenId := _nextTokenId + 1;
@@ -1003,13 +980,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(md, mvar);
                             
-        let {amount; marketplace; affiliate} = m.price;
+        let {amount; marketplace} = m.price;
 
         if (amount != 0) {
             mvar.price := {
                 amount = amount + diffStorage + diffOps + _oracle.pwrFee;
                 marketplace;
-                affiliate;
                 };
         };
 
@@ -1026,8 +1002,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         _token[ Nat16.toNat(tokenIndex) ] := ?trec;
 
-        // _meta.put(tokenIndex, md);
-        // _metavars.put(tokenIndex, mvar);
+
 
         SNFT_put(author, tokenIndex);
         await ACC_put(author, tokenIndex);
@@ -1052,13 +1027,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
             });
     };
-    // public func mint_quote(request: Nft.MetadataInput) : async Nft.MintQuoteResponse {
-    //     {
-    //         transfer = _oracle.pwrFee;
-    //         ops = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request));
-    //         storage = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request));
-    //     }
-    // };
+
 
     public shared({caller}) func mint(request: Nft.MintRequest) : async Nft.MintResponse {
         assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
@@ -1071,7 +1040,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         if ((thresholdNFTCount  <= _nextTokenId) or (thresholdMemory <= Prim.rts_memory_size() )) {
             _available := false;
-            await Cluster.router(_conf).event_nft_full();
+            await Cluster.router(_conf).event_nft_full(Principal.fromActor(this));
             return #err(#OutOfMemory);
             };
 
@@ -1121,8 +1090,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                     SNFT_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
                                     await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
 
-                                    //vars.lastTransfer := timeInMinutes();
-                                    //vars.price := Nft.Price.NotForSale();
+
 
                                     let transactionId = await Cluster.history(_conf).add(#nft(#socket({user=Nft.User.toAccountIdentifier(request.user); created=Time.now();plug = request.plug; socket=request.socket; memo=request.memo})));
                                     addTransaction(vars, transactionId);
@@ -1153,9 +1121,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func socket(request: Nft.SocketRequest) : async Nft.SocketResponse {
         
 
-
         if ( Nft.APrincipal.isLegitimate(_conf.space, caller) == false ) return #err(#NotLegitimateCaller);
-        //if (Array_.exists(_conf.nft, caller, Principal.equal) == false) return #err(#NotLegitimateCaller);
         
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
@@ -1165,29 +1131,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 switch(getMeta(tokenIndex)) {
                     case (#ok((meta,vars,t))) {
 
-                        // switch(switch(meta.collectionId) {
-                        //     case (?collectionId) {
-
-                        //         // get permission from class canister
-                        //         switch (await Cluster.collection(_conf).socket_allow(request, collectionId)) {
-                        //             case (#ok()) {                                        
-                        //                 #ok()
-                        //             };
-                        //             case (#err(e)) #err(#ClassError(e));
-                        //         };
-                        //     };
-                        //     case (null) {
-                        //         // canisters without class don't need permission
-                        //         #ok()
-                        //     }
-                        // }) {
-                        //     case (#ok()) {
-                                if (Iter.size(Iter.fromArray(vars.sockets)) >= 10) return #err(#SocketsFull);
-                                vars.sockets := Array.append(vars.sockets, [request.plug]);
-                                #ok();
-                        //     };
-                        //     case (#err(e)) #err(e);
-                        // }
+                            if (Iter.size(Iter.fromArray(vars.sockets)) >= 10) return #err(#SocketsFull);
+                            vars.sockets := Array.append(vars.sockets, [request.plug]);
+                            #ok();
+                       
                         
                     };
                     case (#err()) {
@@ -1388,7 +1335,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     }) {
         {
             icall_errors = _icall_errors;
-            minted = _nextTokenId;
+            minted = _nextTokenId - 1;
             burned = _statsBurned;
             transfers = _statsTransfers;
             cycles = Cycles.balance();

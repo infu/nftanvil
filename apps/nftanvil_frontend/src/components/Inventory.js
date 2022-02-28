@@ -103,7 +103,9 @@ export const Inventory = (p) => {
         end={items.length < maxItems}
       />
 
-      {meta ? <NftHistory transactions={meta.transactions} /> : null}
+      {meta ? (
+        <NftHistory transactions={meta.transactions} showThumb={true} />
+      ) : null}
     </Stack>
   );
 };
@@ -112,7 +114,7 @@ export const InventoryLarge = (p) => {
   const address = p.match.params.address;
   const pageIdx =
     (p.match.params.pageIdx && parseInt(p.match.params.pageIdx, 10)) || 0;
-  const maxItems = 20;
+  const maxItems = 40;
 
   const acc = useSelector((state) => state.user.map.account);
   const { width, height } = useWindowSize();
@@ -172,7 +174,9 @@ export const InventoryLarge = (p) => {
         lg={true}
       />
 
-      {meta ? <NftHistory transactions={meta.transactions} /> : null}
+      {meta ? (
+        <NftHistory transactions={meta.transactions} showThumb={true} />
+      ) : null}
     </Stack>
   );
 };

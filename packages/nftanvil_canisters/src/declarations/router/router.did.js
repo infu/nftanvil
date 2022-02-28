@@ -18,7 +18,7 @@ export const idlFactory = ({ IDL }) => {
     'config_set' : IDL.Func([Config], [], []),
     'create_local_canisters' : IDL.Func([], [], []),
     'event_history_full' : IDL.Func([], [], []),
-    'event_nft_full' : IDL.Func([], [], []),
+    'event_nft_full' : IDL.Func([IDL.Principal], [], []),
     'log_get' : IDL.Func([], [IDL.Vec(LogEvent)], ['query']),
     'refuel' : IDL.Func([], [], []),
     'refuel_unoptimised' : IDL.Func([], [], []),

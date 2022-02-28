@@ -264,12 +264,12 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
     let opsCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request.metadata));
     let storageCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request.metadata));
-    let cost:Nat64 = storageCost + opsCost; // calculate it here
+    let cost:Nat64 = storageCost + opsCost + _oracle.pwrFee; // calculate it here
 
     _fees_charged += _oracle.pwrFee;
 
     // take amount out
-    switch(balanceRem(#pwr, aid, cost + _oracle.pwrFee)) {
+    switch(balanceRem(#pwr, aid, cost )) {
       case (#ok()) ();
       case (#err(e)) return #err(e)
     };
@@ -284,7 +284,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(#pwr, aid, cost); // return because of fail
+        balanceAdd(#pwr, aid, cost); // return because of fail TODO: Do not return pwrFee if error was intentional (if that is possible)
 
         return #err(e);
       }
@@ -302,10 +302,20 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
     
     let nft = Cluster.nft(_conf, slot);
-    let cost:Nat64 = request.amount;
+
+    let affiliate_amount:Nat64 = switch(request.affiliate) {
+        case (?affiliate) {
+          affiliate.amount;
+        };
+        case (null) {
+          0;
+        }
+      };
+
+    let cost:Nat64 = request.amount + _oracle.pwrFee + affiliate_amount;
 
     // take amount out
-    switch(balanceRem(#pwr, aid, cost + _oracle.pwrFee)) {
+    switch(balanceRem(#pwr, aid, cost)) {
       case (#ok()) ();
       case (#err(e)) return #err(e)
     };
@@ -321,7 +331,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(#pwr, aid, cost); // return because of fail
+        balanceAdd(#pwr, aid, cost - _oracle.pwrFee); // return because of fail. 
 
         return #err(e);
       }
@@ -343,22 +353,14 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         }
       };
 
-      let affiliate_cut:Nat64 = switch(purchase.affiliate) {
-        case (?affiliate) {
-          total * Nat64.fromNat(Nft.Share.limit(affiliate.share, Nft.Share.LimitAffiliate)) / Nat64.fromNat(Nft.Share.Max);
-        };
-        case (null) {
-          0;
-        }
-      };
 
-      let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut - affiliate_cut;
+
+      let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut ;
 
       assert(total > 0);
-      assert((seller_cut + marketplace_cut + affiliate_cut + author_cut + anvil_cut) == total);
+      assert((seller_cut + marketplace_cut  + author_cut + anvil_cut) == total);
 
       let NFTAnvil_PWR_earnings_subaccount = Cluster.treasury_address(_conf);
-      //Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(10) );
       
       
       // give to NFTAnvil
@@ -371,7 +373,6 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
 
       // give to Marketplace
-
       switch(purchase.marketplace) {
         case (?marketplace) {
           _distributed_marketplace += marketplace_cut;
@@ -382,16 +383,14 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       };
 
       // give to Affiliate
-      
       switch(purchase.affiliate) {
         case (?affiliate) {
-          _distributed_affiliate += affiliate_cut;
-          balanceAdd(#pwr, affiliate.address, affiliate_cut);
-          Debug.print("Affiliate cut " # debug_show(affiliate_cut) # " " # debug_show(affiliate));
+          _distributed_affiliate += affiliate.amount;
+          balanceAdd(#pwr, affiliate.address, affiliate.amount);
+          Debug.print("Affiliate cut " # debug_show(affiliate.amount) # " " # debug_show(affiliate));
         };
         case (null) ();
       };
-
 
       // give to Seller
       _distributed_seller += seller_cut;

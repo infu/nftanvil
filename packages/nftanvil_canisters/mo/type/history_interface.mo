@@ -303,7 +303,7 @@ module {
                             switch(e.affiliate) { 
                                 case (?a) Array.flatten<Nat8>([ 
                                     Blob.toArray(a.address),
-                                    Blob_.nat16ToBytes(a.share)
+                                    Blob_.nat64ToBytes(a.amount)
                                 ]);
                                 case (null) []
                             }

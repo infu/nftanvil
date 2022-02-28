@@ -7,6 +7,7 @@ import {
   useColorModeValue,
   Center,
   Button,
+  Stack,
   Flex,
   ButtonGroup,
   Spacer,
@@ -51,6 +52,8 @@ import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accounti
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 
 import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
+
+import { NFTLarge } from "./NFT";
 
 const SHOW = 10; // max records shown on screen
 const TAIL_INTERVAL = 1000; // every 1 sec
@@ -110,7 +113,7 @@ const Val = styled.div`
   font-weight: normal;
 `;
 
-const HistoryEvent = ({ ev, canister, idx }) => {
+const HistoryEvent = ({ ev, canister, idx, showThumb = true }) => {
   const boxColor = useColorModeValue("white", "gray.700");
   const space = useSelector((state) => state.user.map.space);
 
@@ -126,12 +129,12 @@ const HistoryEvent = ({ ev, canister, idx }) => {
     )
   );
   let timestamp = Number(BigInt(details.created) / 1000000n);
-
   //TODO: This is will be done in a better way
-  return (
+
+  const inner = (
     <Box bg={boxColor} borderRadius={"4"} border={1} p={3} mb={2}>
       <KeyVal
-        k={"Transaction"}
+        k={"TX"}
         v={
           <Link to={"/" + transactionId}>
             <TX>{transactionId}</TX>
@@ -213,6 +216,19 @@ const HistoryEvent = ({ ev, canister, idx }) => {
       <KeyVal k={"Hash"} v={<HASH>{toHexString(ev.hash)}</HASH>} />
     </Box>
   );
+
+  if (!showThumb) return inner;
+
+  return (
+    <Stack direction="horizontal" spacing="0">
+      {"token" in details ? (
+        <Box w="250px" mb="7px" mr="7px">
+          <NFTLarge id={tokenToText(details.token)} />
+        </Box>
+      ) : null}
+      {inner}
+    </Stack>
+  );
 };
 
 export const History = (p) => {
@@ -260,6 +276,7 @@ export const History = (p) => {
         idx={idx + from}
         canister={canister}
         ev={events[idx] ? events[idx][0] : null}
+        showThumb={true}
       />
     );
   }
@@ -350,7 +367,7 @@ export const HistoryTx = (p) => {
   );
 };
 
-export const NftHistory = ({ transactions }) => {
+export const NftHistory = ({ transactions, showThumb }) => {
   const [events, setEvents] = useState([]);
 
   const dispatch = useDispatch();
@@ -370,7 +387,13 @@ export const NftHistory = ({ transactions }) => {
     <Center>
       <Box mt={8} maxW={"590px"} w="100%">
         {events.map(({ idx, canister, data }, n) => (
-          <HistoryEvent key={n} idx={idx} canister={canister} ev={data} />
+          <HistoryEvent
+            key={n}
+            idx={idx}
+            canister={canister}
+            ev={data}
+            showThumb={showThumb}
+          />
         ))}
       </Box>
     </Center>

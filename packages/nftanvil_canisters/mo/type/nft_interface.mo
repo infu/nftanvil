@@ -855,10 +855,11 @@ module {
                 share : Share
                 };
                 
-        affiliate : ?{
-                address : AccountIdentifier;
-                share : Share
-                };
+        // affiliate : ?{  //TODO: this shouldn't be in set price
+        //         address : AccountIdentifier;
+        //         share : Share
+        //         };
+
         // idx : Nat32;
         // rechargeStorage : Nat32;
         // rechargeOps : Nat32;
@@ -869,7 +870,7 @@ module {
             {
                 amount = 0;
                 marketplace = null;
-                affiliate = null;
+                // affiliate = null;
             }
         }
     };
@@ -1027,7 +1028,10 @@ module {
         user : User;
         subaccount: ?SubAccount;
         amount: Balance;
-        
+        affiliate : ?{
+                    address : AccountIdentifier;
+                    amount: Balance;
+                    };
     };
 
     public type SetPriceRequest = {
@@ -1157,11 +1161,11 @@ module {
                 marketplace : ?{
                     address : AccountIdentifier;
                     share : Share
-                    };
+                    }; 
 
                 affiliate : ?{
                     address : AccountIdentifier;
-                    share : Share
+                    amount : Balance
                     };
 
         };

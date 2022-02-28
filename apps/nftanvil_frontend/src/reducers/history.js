@@ -51,9 +51,7 @@ export const loadInfo = () => async (dispatch, getState) => {
 
   let history = historyCanister(
     PrincipalFromSlot(s.user.map.space, s.user.map.history),
-    {
-      agentOptions: { identity },
-    }
+    { agentOptions: authentication.getAgentOptions() }
   );
 
   let { total, previous } = await history.info();
@@ -78,7 +76,7 @@ export const loadHistory =
     dispatch(loadInfo());
 
     let history = historyCanister(Principal.fromText(canister), {
-      agentOptions: { identity },
+      agentOptions: authentication.getAgentOptions(),
     });
 
     let events = await history.list({
@@ -106,7 +104,7 @@ export const loadNftHistory =
         let canister = PrincipalFromSlot(s.user.map.space, slot);
 
         let history = historyCanister(canister, {
-          agentOptions: { identity },
+          agentOptions: authentication.getAgentOptions(),
         });
         let resp = await history.list({
           from: idx,

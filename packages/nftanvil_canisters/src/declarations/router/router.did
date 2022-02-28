@@ -4,7 +4,7 @@ type Router =
    config_set: (Config) -> ();
    create_local_canisters: () -> ();
    event_history_full: () -> ();
-   event_nft_full: () -> ();
+   event_nft_full: (principal) -> ();
    log_get: () -> (vec LogEvent) query;
    refuel: () -> ();
    refuel_unoptimised: () -> ();

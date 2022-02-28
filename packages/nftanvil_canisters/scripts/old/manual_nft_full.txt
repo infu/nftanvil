@@ -1,0 +1,1 @@
+dfx canister --wallet="vlgg5-pyaaa-aaaai-qaqba-cai" --network ic call router event_nft_full 'principal "p6u54-wyaaa-aaaai-qcmka-cai"'

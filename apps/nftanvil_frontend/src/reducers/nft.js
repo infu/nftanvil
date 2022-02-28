@@ -67,7 +67,9 @@ export const nftFetch = (id) => async (dispatch, getState) => {
   let { index, slot } = decodeTokenId(tid);
 
   let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
-  let nftcan = nftCanister(canister, { agentOptions: { identity } });
+  let nftcan = nftCanister(canister, {
+    agentOptions: authentication.getAgentOptions(),
+  });
 
   let resp = await nftcan.metadata(tid);
   if (!resp) throw Error("Can't fetch NFT meta");
@@ -154,7 +156,9 @@ export const nftMediaGet = async (
   let { index, slot } = decodeTokenId(tid);
   let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-  let nftcan = nftCanister(canister, { agentOptions: { identity } });
+  let nftcan = nftCanister(canister, {
+    agentOptions: authentication.getAgentOptions(),
+  });
 
   let src = await fetchFile(
     nftcan,
@@ -213,7 +217,7 @@ export const nft_purchase =
     let { slot } = decodeTokenId(tid);
     //let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    // let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    // let nftcan = nftCanister(canister, { agentOptions: authentication.getAgentOptions() });
 
     let address = s.user.address;
     let subaccount = [
@@ -223,7 +227,7 @@ export const nft_purchase =
     console.log("BUYING", id, amount);
 
     let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-      agentOptions: { identity },
+      agentOptions: authentication.getAgentOptions(),
     });
 
     let toastId = toast("Purchasing...", {
@@ -285,7 +289,9 @@ export const purchase_intent =
     //console.log("t", id, slot, tokenFromText(id));
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
     let subaccount = [
@@ -314,7 +320,9 @@ export const set_price =
     console.log("Setting price", id, { slot });
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
 
@@ -343,7 +351,9 @@ export const transfer =
     let { slot } = decodeTokenId(tid);
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
 
@@ -415,7 +425,9 @@ export const plug =
     let { slot } = decodeTokenId(tokenFromText(plug_id));
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
     let subaccount = [
@@ -445,7 +457,9 @@ export const unsocket =
     let { slot } = decodeTokenId(tokenFromText(socket_id));
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
     let subaccount = [
@@ -476,9 +490,9 @@ export const recharge =
     let { slot } = decodeTokenId(tid);
     // let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    // let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    // let nftcan = nftCanister(canister, { agentOptions: authentication.getAgentOptions() });
     let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-      agentOptions: { identity },
+      agentOptions: authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -552,7 +566,9 @@ export const burn =
     let { slot } = decodeTokenId(tid);
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
     let subaccount = [
@@ -585,7 +601,9 @@ export const approve =
     let { slot } = decodeTokenId(tid);
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
     let subaccount = [
@@ -615,7 +633,9 @@ export const use =
     let { slot } = decodeTokenId(tid);
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
     let subaccount = [
@@ -649,7 +669,9 @@ export const transfer_link =
     let { index, slot } = decodeTokenId(tid);
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
     let subaccount = [
@@ -722,7 +744,9 @@ export const claim_link =
 
     let identity = authentication.client.getIdentity();
 
-    let nftcan = nftCanister(canister, { agentOptions: { identity } });
+    let nftcan = nftCanister(canister, {
+      agentOptions: authentication.getAgentOptions(),
+    });
 
     let address = s.user.address;
 
@@ -852,10 +876,12 @@ export const mint = (vals) => async (dispatch, getState) => {
 
   let identity = authentication.client.getIdentity();
 
-  let nft = nftCanister(canisterId, { agentOptions: { identity } });
+  let nft = nftCanister(canisterId, {
+    agentOptions: authentication.getAgentOptions(),
+  });
 
   let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-    agentOptions: { identity },
+    agentOptions: authentication.getAgentOptions(),
   });
 
   console.log(
@@ -903,7 +929,7 @@ export const mint = (vals) => async (dispatch, getState) => {
       throw Error("Insufficient Balance");
     }
     console.log("REZ", mrez);
-    if (!("ok" in mrez)) throw mrez.err;
+    if (!("ok" in mrez)) throw Error(JSON.stringify(mrez.err));
 
     let { tokenIndex, transactionId } = mrez.ok;
     let id = tokenToText(encodeTokenId(slot, tokenIndex));
@@ -954,13 +980,12 @@ export const mint = (vals) => async (dispatch, getState) => {
 
       closeOnClick: true,
 
-      render: (
-        <TransactionFailed title="Minting failed" message={JSON.stringify(e)} />
-      ),
+      render: <TransactionFailed title="Minting failed" message={e.message} />,
       // autoClose: 9000,
     });
 
     console.error(e);
+    throw e;
   }
 
   dispatch(refresh_balances());

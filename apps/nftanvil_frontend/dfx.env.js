@@ -49,6 +49,12 @@ if (process.env.NODE_ENV !== "production")
   txt +=
     "REACT_APP_IDENTITY_PROVIDER=http://localhost:8000?canisterId=rwlgt-iiaaa-aaaaa-aaaaa-cai\n";
 
+if (process.env.NODE_ENV !== "production") {
+  txt += "REACT_APP_IC_GATEWAY=http://localhost:3000\n";
+} else {
+  txt += "REACT_APP_IC_GATEWAY=https://5rttq-yqaaa-aaaai-qa2ea-cai.ic0.app\n";
+}
+
 fs.writeFileSync(
   ".env." +
     (process.env.NODE_ENV === "production" ? "production" : "development") +

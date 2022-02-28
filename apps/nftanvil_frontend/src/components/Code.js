@@ -260,7 +260,7 @@ export const ICP = ({ children, digits = 4 }) => {
   let [a, b] = val.toString().split(".");
   b = b.substring(0, digits);
   return (
-    <Tooltip hasArrow placement="top-start" label={`${xdr.toFixed(2)} XDR`}>
+    <Tooltip hasArrow placement="left" label={`${xdr.toFixed(2)} XDR`}>
       <Sicp>
         {a}.<span>{b}</span> <b>ICP</b>
       </Sicp>

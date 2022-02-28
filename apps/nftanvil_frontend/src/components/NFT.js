@@ -1240,7 +1240,9 @@ export const NFTPage = (p) => {
           ) : null}
         </>
       ) : null}
-      {meta.history ? <NftHistory transactions={meta.history} /> : null}
+      {meta.history ? (
+        <NftHistory transactions={meta.history} showThumb={false} />
+      ) : null}
     </Stack>
   );
 };

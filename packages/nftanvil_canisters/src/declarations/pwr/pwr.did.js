@@ -34,7 +34,7 @@ export const idlFactory = ({ IDL }) => {
   const Balance__2 = IDL.Nat64;
   const ContentType = IDL.Text;
   const IPFS_CID = IDL.Text;
-  const ICPath = IDL.Text;
+  const ExternalUrl = IDL.Text;
   const Content = IDL.Variant({
     'internal' : IDL.Record({
       'contentType' : ContentType,
@@ -45,7 +45,7 @@ export const idlFactory = ({ IDL }) => {
       'contentType' : ContentType,
       'size' : IDL.Nat32,
     }),
-    'external' : ICPath,
+    'external' : ExternalUrl,
   });
   const DomainName = IDL.Text;
   const Share = IDL.Nat16;

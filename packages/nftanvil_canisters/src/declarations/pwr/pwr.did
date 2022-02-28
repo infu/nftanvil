@@ -231,15 +231,15 @@ type ItemTransfer =
    unrestricted;
  };
 type IPFS_CID = text;
-type ICPath = text;
 type ICP = record {e8s: nat64;};
+type ExternalUrl = text;
 type DomainName = text;
 type CustomVar = blob;
 type CustomData = blob;
 type ContentType = text;
 type Content = 
  variant {
-   external: ICPath;
+   external: ExternalUrl;
    internal: record {
                contentType: ContentType;
                size: nat32;

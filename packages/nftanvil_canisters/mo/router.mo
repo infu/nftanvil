@@ -483,7 +483,6 @@ shared({caller = _installer}) actor class Router() = this {
                 };
             };
 
-
             ();
 
     };
@@ -521,8 +520,14 @@ shared({caller = _installer}) actor class Router() = this {
         }
     };
 
-    public shared({caller}) func event_nft_full() : async () {
-        switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
+    public shared({caller}) func event_nft_full(x: Principal) : async () {
+
+        let target = switch(caller == _installer) {
+            case (true) x;
+            case (false) caller;
+        };
+
+        switch(Nft.APrincipal.toSlot(_conf.space, target)) {
             case (?slot) {
                 log("event_nft_full " # debug_show({slot}) );
     
@@ -538,7 +543,9 @@ shared({caller = _installer}) actor class Router() = this {
                     await job_install_code({slot = new_nft; wasm = #nft; mode= #install});
                     await job_oracle_set({slot = new_nft; oracle = _oracle});
                     await job_conf_set({slot = new_nft; config = _conf});
-                    
+                    //await job_refuel({slot = new_nft;});
+
+
                     let {nft; nft_avail; account; router; pwr; anvil; history; history_range; space} = _conf;
                     _conf := {nft; nft_avail = new_nft_avail; account; router; pwr; anvil; history; history_range; space};
                  }));
