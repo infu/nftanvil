@@ -36,30 +36,6 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
       _tmpToken := [];
   };
 
-//   public shared({caller}) func nft_mint(slot: Nft.CanisterSlot, request: Nft.MintRequest) : async Nft.MintResponse {
-
-//       // redirect mint request
-//       if (_registeredTokens >= 10000) return #err(#Rejected);
-
-//       let pwr = Cluster.pwr(_conf);
-
-//       switch(await pwr.nft_mint(slot, request)) {
-//           case (#ok(resp)) {
-//                 let {tokenIndex} = resp;
-//                 let tokenId = Nft.TokenIdentifier.encode(slot, tokenIndex);
-//                 _registeredTokens += 1;
-
-//                 if (_registeredTokens >= 10000) return #err(#Rejected);
-
-//                 _token.put(tokenId, Anvil.TokenRecordBlank());
-
-//                 #ok(resp);
-//           };
-
-//           case (#err(e)) return #err(e);
-//       };
-
-//   };
 
 
   public shared({caller}) func register_token(tid: TokenIdentifier) : async Anvil.RegisterResponse {
@@ -238,3 +214,35 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
   
 
 }
+
+
+
+
+
+
+
+
+//   public shared({caller}) func nft_mint(slot: Nft.CanisterSlot, request: Nft.MintRequest) : async Nft.MintResponse {
+
+//       // redirect mint request
+//       if (_registeredTokens >= 10000) return #err(#Rejected);
+
+//       let pwr = Cluster.pwr(_conf);
+
+//       switch(await pwr.nft_mint(slot, request)) {
+//           case (#ok(resp)) {
+//                 let {tokenIndex} = resp;
+//                 let tokenId = Nft.TokenIdentifier.encode(slot, tokenIndex);
+//                 _registeredTokens += 1;
+
+//                 if (_registeredTokens >= 10000) return #err(#Rejected);
+
+//                 _token.put(tokenId, Anvil.TokenRecordBlank());
+
+//                 #ok(resp);
+//           };
+
+//           case (#err(e)) return #err(e);
+//       };
+
+//   };

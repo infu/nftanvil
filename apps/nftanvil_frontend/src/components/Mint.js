@@ -109,7 +109,6 @@ const form2record = (v) => {
     price: {
       amount: AccountIdentifier.icpToE8s(v.price),
       marketplace: [],
-      affiliate: [],
     },
     authorShare: v.authorShare,
     name: v.name,
@@ -313,25 +312,27 @@ export const MintForm = () => {
                       validateExternalType={validateExternalType}
                       pro={pro}
                     />
-                    <Field name="secret">
-                      {({ field, form }) => (
-                        <FormControl
-                          isInvalid={form.errors.secret}
-                          display="flex"
-                          alignItems="center"
-                        >
-                          <FormLabel htmlFor="secret" mb="0">
-                            <FormTip text="Content will be visible only to the owner. It's stored inside IC's private canister memory">
-                              Secret content
-                            </FormTip>
-                          </FormLabel>
-                          <Switch {...field} id="secret" />
-                          <FormErrorMessage ml="10px" mt="-3px">
-                            {form.errors.secret}
-                          </FormErrorMessage>
-                        </FormControl>
-                      )}
-                    </Field>
+                    {pro ? (
+                      <Field name="secret">
+                        {({ field, form }) => (
+                          <FormControl
+                            isInvalid={form.errors.secret}
+                            display="flex"
+                            alignItems="center"
+                          >
+                            <FormLabel htmlFor="secret" mb="0">
+                              <FormTip text="Content will be visible only to the owner. It's stored inside IC's private canister memory">
+                                Secret content, public thumbnail
+                              </FormTip>
+                            </FormLabel>
+                            <Switch {...field} id="secret" />
+                            <FormErrorMessage ml="10px" mt="-3px">
+                              {form.errors.secret}
+                            </FormErrorMessage>
+                          </FormControl>
+                        )}
+                      </Field>
+                    ) : null}
 
                     <File
                       form={props}

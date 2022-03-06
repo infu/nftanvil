@@ -262,6 +262,10 @@ type PurchaseResponse =
  };
 type PurchaseRequest = 
  record {
+   affiliate: opt record {
+                    address: AccountIdentifier;
+                    amount: Balance;
+                  };
    amount: Balance;
    subaccount: opt SubAccount;
    token: TokenIdentifier;
@@ -269,10 +273,6 @@ type PurchaseRequest =
  };
 type Price = 
  record {
-   affiliate: opt record {
-                    address: AccountIdentifier;
-                    share: Share;
-                  };
    amount: nat64;
    marketplace: opt record {
                       address: AccountIdentifier;
@@ -312,7 +312,7 @@ type NFTPurchase =
  record {
    affiliate: opt record {
                     address: AccountIdentifier;
-                    share: Share;
+                    amount: Balance;
                   };
    amount: Balance;
    author: record {

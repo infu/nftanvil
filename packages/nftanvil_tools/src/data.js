@@ -123,17 +123,35 @@ export const uploadFile = async (
   tokenIndex,
   position,
   chunks,
-  subaccount
+  subaccount,
+  tried = 0
 ) => {
-  await Promise.all(
-    chunks.map(async (chunk, idx) => {
-      return nft.uploadChunk({
-        subaccount,
-        position: { [position]: null },
-        chunkIdx: idx,
+  try {
+    await Promise.all(
+      chunks.map(async (chunk, idx) => {
+        return nft.uploadChunk({
+          subaccount,
+          position: { [position]: null },
+          chunkIdx: idx,
+          tokenIndex,
+          data: await blobPrepare(chunk),
+        });
+      })
+    ).then((re) => {});
+  } catch (e) {
+    await delay(2000 + tried * 1000);
+
+    if (tried < 3)
+      return await uploadFile(
+        nft,
         tokenIndex,
-        data: await blobPrepare(chunk),
-      });
-    })
-  ).then((re) => {});
+        position,
+        chunks,
+        subaccount,
+        tried + 1
+      );
+    else throw e;
+  }
 };
+
+const delay = (ms) => new Promise((resolve, reject) => setTimeout(resolve, ms));

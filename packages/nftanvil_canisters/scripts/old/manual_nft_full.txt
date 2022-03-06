@@ -1,1 +1,3 @@
-dfx canister --wallet="vlgg5-pyaaa-aaaai-qaqba-cai" --network ic call router event_nft_full 'principal "p6u54-wyaaa-aaaai-qcmka-cai"'
+dfx canister --wallet="vlgg5-pyaaa-aaaai-qaqba-cai" --network ic call router event_nft_full 'principal "pzv3i-3aaaa-aaaai-qcmkq-cai"'
+dfx canister --wallet="vlgg5-pyaaa-aaaai-qaqba-cai" --network ic call router event_nft_full 'principal "pqwqu-niaaa-aaaai-qcmla-cai"'
+dfx canister --wallet="vlgg5-pyaaa-aaaai-qaqba-cai" --network ic call router event_nft_full 'principal "pxxwa-aqaaa-aaaai-qcmlq-cai"'

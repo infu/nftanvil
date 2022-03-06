@@ -36,7 +36,7 @@ export const idlFactory = ({ IDL }) => {
     }),
     'recharge' : Balance__1,
     'affiliate' : IDL.Opt(
-      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier__1 })
+      IDL.Record({ 'address' : AccountIdentifier__1, 'amount' : Balance__1 })
     ),
     'buyer' : AccountIdentifier__1,
     'amount' : Balance__1,

@@ -134,6 +134,7 @@ export function PwrStats() {
   const dispatch = useDispatch();
 
   const [stats, setStats] = useState(null);
+  const map = useSelector((state) => state.user.map);
 
   const load = async () => {
     setStats(await dispatch(pwr_stats()));
@@ -151,6 +152,9 @@ export function PwrStats() {
 
   return (
     <>
+      <GridItem>
+        <SLOT>{map.pwr}</SLOT>
+      </GridItem>
       <GridItem>{Number(stats.total_accounts)}</GridItem>
 
       <GridItem>{tc(stats.cycles)} TC</GridItem>
@@ -578,7 +582,9 @@ export function DashboardPage() {
             borderRadius="4"
           >
             <Heading size="md">Pwr</Heading>
-            <Grid mt={3} templateColumns="repeat(5, 1fr)" gap={3}>
+            <Grid mt={3} templateColumns="repeat(6, 1fr)" gap={3}>
+              <GridItem>Canister</GridItem>
+
               <GridItem>Accounts</GridItem>
               <GridItem>Balance</GridItem>
               <GridItem>Spent</GridItem>

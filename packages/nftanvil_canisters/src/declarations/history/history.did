@@ -84,7 +84,7 @@ type NFTPurchase =
  record {
    affiliate: opt record {
                     address: AccountIdentifier__1;
-                    share: Share;
+                    amount: Balance__1;
                   };
    amount: Balance__1;
    author: record {

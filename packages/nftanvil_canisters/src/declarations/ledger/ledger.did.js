@@ -25,9 +25,22 @@ export const idlFactory = ({ IDL }) => {
     Ok: BlockIndex,
     Err: TransferError,
   });
+  const NotifyArgs = IDL.Record({
+    to_subaccount: IDL.Opt(SubAccount),
+    from_subaccount: IDL.Opt(SubAccount),
+    // notify_using_protobuf: IDL.Bool,
+    to_canister: IDL.Principal,
+    max_fee: Tokens,
+    block_height: BlockIndex,
+  });
+  const NotifyResult = IDL.Variant({
+    Ok: IDL.Vec(IDL.Nat8),
+    Err: IDL.Text,
+  });
   return IDL.Service({
     account_balance: IDL.Func([AccountBalanceArgs], [Tokens], ["query"]),
     transfer: IDL.Func([TransferArgs], [TransferResult], []),
+    notify_dfx: IDL.Func([NotifyArgs], [NotifyResult], []),
   });
 };
 export const init = ({ IDL }) => {

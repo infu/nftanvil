@@ -181,7 +181,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
             ac.pwr :=  ac.pwr - request.amount - _oracle.pwrFee;
 
             _fees_charged += _oracle.pwrFee;
-             
+
             balanceAdd(#pwr, to_aid, request.amount);
 
             if (isAnvil) {
@@ -322,20 +322,20 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
     _fees_charged += _oracle.pwrFee;
 
-   switch(await nft.purchase(request)) {
-      case (#ok(resp)) {
+    switch(await nft.purchase(request)) {
+        case (#ok(resp)) {
 
-        _purchases_accumulated += cost;
-        distribute_purchase(resp.purchase);
+          _purchases_accumulated += cost;
+          distribute_purchase(resp.purchase);
 
-        return #ok(resp);
-      };
-      case (#err(e)) {
-        balanceAdd(#pwr, aid, cost - _oracle.pwrFee); // return because of fail. 
+          return #ok(resp);
+        };
+        case (#err(e)) {
+          balanceAdd(#pwr, aid, cost - _oracle.pwrFee); // return because of fail. 
 
-        return #err(e);
+          return #err(e);
+        }
       }
-    }
   };
   
   private func distribute_purchase(purchase: Nft.NFTPurchase) : () {
@@ -352,8 +352,6 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
           0;
         }
       };
-
-
 
       let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut ;
 
@@ -456,6 +454,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         
         let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), 0, toUserAID);
         
+
+
         let {e8s = payment} = await ledger.account_balance({
             account = purchaseAccountId
         });

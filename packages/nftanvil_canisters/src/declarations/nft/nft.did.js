@@ -175,9 +175,6 @@ export const idlFactory = ({ IDL }) => {
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
     ),
-    'affiliate' : IDL.Opt(
-      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
-    ),
     'amount' : IDL.Nat64,
   });
   const MetavarsFrozen = IDL.Record({
@@ -278,6 +275,9 @@ export const idlFactory = ({ IDL }) => {
     'token' : TokenIdentifier,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
+    'affiliate' : IDL.Opt(
+      IDL.Record({ 'address' : AccountIdentifier, 'amount' : Balance })
+    ),
     'amount' : Balance,
   });
   const Time = IDL.Int;
@@ -291,7 +291,7 @@ export const idlFactory = ({ IDL }) => {
     'author' : IDL.Record({ 'share' : Share, 'address' : AccountIdentifier }),
     'recharge' : Balance,
     'affiliate' : IDL.Opt(
-      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
+      IDL.Record({ 'address' : AccountIdentifier, 'amount' : Balance })
     ),
     'buyer' : AccountIdentifier,
     'amount' : Balance,

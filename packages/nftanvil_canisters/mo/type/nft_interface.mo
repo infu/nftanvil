@@ -46,7 +46,7 @@ module {
         public type CanisterRange = (CanisterSlot, CanisterSlot);
 
         public module APrincipal = {
-       
+
             public func fromSlot(space:[[Nat64]], slot: CanisterSlot) : Principal {
                 let start = space[0][0];
                 Principal.fromBlob(Blob.fromArray(_Array.concat<Nat8>(
@@ -282,7 +282,7 @@ module {
         // Returns the balance of account.
         balance    : query (request : BalanceRequest) -> async BalanceResponse;
 
-        // (iPWR) Transfers between two accounts
+        // (iPWR)  Transfers between two accounts
         transfer   : shared (request : TransferRequest) -> async TransferResponse;
 
         // Returns the metadata of the given token.
@@ -294,7 +294,7 @@ module {
         // Returns the account that is linked to the given token.
         bearer  : query (token :  TokenIdentifier) -> async BearerResponse;
 
-        // (PWR proxy call) Mints a new NFT
+        // (PWR proxy call)  Mints a new NFT
         mint : shared (request :  MintRequest) -> async  MintResponse;
 
         // (PWR proxy call) recharge nft
@@ -306,10 +306,10 @@ module {
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
         allowance : query (request : Allowance.Request) -> async Allowance.Response;
 
-        // (iPWR) Allows the given spender to withdraw from your account multiple times, up to the given allowance.
+        // (iPWR)  Allows the given spender to withdraw from your account multiple times, up to the given allowance.
         approve   : shared (request : Allowance.ApproveRequest) -> async Allowance.ApproveResponse;
 
-        // (returns stored PWR) NFT is removed from memory completely. Burn reciept is added to history
+        // (returns stored PWR)  NFT is removed from memory completely. Burn reciept is added to history
         burn      : shared (request : BurnRequest) -> async BurnResponse;
 
         // (iPWR) Saves a hash inside which can be used for claiming
@@ -852,7 +852,7 @@ module {
         amount : Nat64;
         marketplace : ?{
                 address : AccountIdentifier;
-                share : Share
+                share : Share 
                 };
                 
         // affiliate : ?{  //TODO: this shouldn't be in set price

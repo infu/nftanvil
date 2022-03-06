@@ -237,7 +237,6 @@ function SetPriceButton({ id }) {
     let price = {
       amount: AccountIdentifier.icpToE8s(parseFloat(initialRef.current.value)),
       marketplace: [],
-      affiliate: [],
     };
 
     onClose();
