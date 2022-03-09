@@ -89,7 +89,7 @@ import {
 } from "../components/TransactionToast";
 import { TX, ACC, NFTA, HASH, ICP, PWR } from "./Code";
 import { toHexString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
-
+import { MARKETPLACE_AID, MARKETPLACE_SHARE, ANVIL_SHARE } from "../config.js";
 import {
   AVG_MESSAGE_COST,
   FULLY_CHARGED_MINUTES,
@@ -226,7 +226,7 @@ export const NFTMenu = ({ id, meta, owner, nobuy = false }) => {
   );
 };
 
-function SetPriceButton({ id }) {
+function SetPriceButton({ id, meta }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
   const address = useSelector((state) => state.user.address);
@@ -234,10 +234,21 @@ function SetPriceButton({ id }) {
   const initialRef = React.useRef();
 
   const setPriceOk = async () => {
+    let amount = AccountIdentifier.icpToE8s(
+      parseFloat(initialRef.current.value) /
+        (1 - (MARKETPLACE_SHARE + ANVIL_SHARE + meta.authorShare) / 10000)
+    );
+
     let price = {
-      amount: AccountIdentifier.icpToE8s(parseFloat(initialRef.current.value)),
-      marketplace: [],
+      amount: amount,
+      marketplace: [
+        {
+          address: AccountIdentifier.TextToArray(MARKETPLACE_AID),
+          share: MARKETPLACE_SHARE,
+        },
+      ],
     };
+    console.log(price);
 
     onClose();
     let toastId = toast("Setting price...", {
@@ -301,6 +312,21 @@ function SetPriceButton({ id }) {
               </FormLabel>
               <Input ref={initialRef} placeholder="0.001" />
             </FormControl>
+            <Box fontSize="12px" mt={2}>
+              <Text>The amount you specify is increased by:</Text>
+              <Text>
+                {(MARKETPLACE_SHARE / 100).toFixed(2)}% Marketplace share.
+              </Text>
+              <Text>
+                {(ANVIL_SHARE / 100).toFixed(2)}% Anvil protocol share.
+              </Text>
+              <Text>
+                {(meta.authorShare / 100).toFixed(2)}% NFT author share.
+              </Text>
+              <Text>
+                Additional flat recharge fee if it's not fully charged.
+              </Text>
+            </Box>
           </ModalBody>
           <ModalFooter>
             <Button onClick={onClose}>Cancel</Button>

@@ -7,6 +7,8 @@ import * as cAccount from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
 import * as cPwr from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
 import * as cAnvil from "@vvv-interactive/nftanvil-canisters/cjs/anvil.js";
 import * as cLedger from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
+import * as cTreasury from "@vvv-interactive/nftanvil-canisters/cjs/treasury.js";
+import * as cHistory from "@vvv-interactive/nftanvil-canisters/cjs/history.js";
 
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 export { PrincipalFromSlot };
@@ -111,8 +113,20 @@ export const pwrCanister = (id) => {
   return cPwr.pwrCanister(id, { agentOptions: { fetch, identity, host } });
 };
 
+export const historyCanister = (id) => {
+  return cHistory.historyCanister(id, {
+    agentOptions: { fetch, identity, host },
+  });
+};
+
 export const ledgerCanister = () => {
   return cLedger.ledgerCanister({ agentOptions: { fetch, identity, host } });
+};
+
+export const treasuryCanister = () => {
+  return cTreasury.treasuryCanister({
+    agentOptions: { fetch, identity, host },
+  });
 };
 
 export const accountCanister = (id) => {

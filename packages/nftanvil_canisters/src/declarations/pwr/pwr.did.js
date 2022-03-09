@@ -1,11 +1,11 @@
 export const idlFactory = ({ IDL }) => {
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
-  const User__1 = IDL.Variant({
+  const User__2 = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
   });
-  const BalanceRequest = IDL.Record({ 'user' : User__1 });
-  const Balance = IDL.Nat64;
+  const BalanceRequest = IDL.Record({ 'user' : User__2 });
+  const Balance__1 = IDL.Nat64;
   const Oracle__1 = IDL.Record({
     'icpFee' : IDL.Nat64,
     'anvFee' : IDL.Nat64,
@@ -13,15 +13,17 @@ export const idlFactory = ({ IDL }) => {
     'pwrFee' : IDL.Nat64,
   });
   const BalanceResponse = IDL.Record({
-    'anv' : Balance,
-    'pwr' : Balance,
+    'anv' : Balance__1,
+    'pwr' : Balance__1,
     'oracle' : Oracle__1,
   });
+  const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
+  const Balance__3 = IDL.Nat64;
   const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'nft' : CanisterRange,
-    'pwr' : CanisterSlot,
+    'pwr' : CanisterRange,
     'anvil' : CanisterSlot,
     'history' : CanisterSlot,
     'nft_avail' : IDL.Vec(CanisterSlot),
@@ -29,9 +31,8 @@ export const idlFactory = ({ IDL }) => {
     'account' : CanisterRange,
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
+    'treasury' : CanisterSlot,
   });
-  const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
-  const Balance__2 = IDL.Nat64;
   const ContentType = IDL.Text;
   const IPFS_CID = IDL.Text;
   const ExternalUrl = IDL.Text;
@@ -85,11 +86,11 @@ export const idlFactory = ({ IDL }) => {
     'rechargeable' : IDL.Bool,
     'customVar' : IDL.Opt(CustomVar),
   });
-  const SubAccount__1 = IDL.Vec(IDL.Nat8);
+  const SubAccount__2 = IDL.Vec(IDL.Nat8);
   const MintRequest = IDL.Record({
     'metadata' : MetadataInput,
-    'user' : User__1,
-    'subaccount' : IDL.Opt(SubAccount__1),
+    'user' : User__2,
+    'subaccount' : IDL.Opt(SubAccount__2),
   });
   const TokenIndex = IDL.Nat16;
   const TransactionId = IDL.Vec(IDL.Nat8);
@@ -120,15 +121,15 @@ export const idlFactory = ({ IDL }) => {
     }),
   });
   const TokenIdentifier = IDL.Nat64;
-  const Balance__1 = IDL.Nat64;
+  const Balance__2 = IDL.Nat64;
   const PurchaseRequest = IDL.Record({
     'token' : TokenIdentifier,
-    'user' : User__1,
-    'subaccount' : IDL.Opt(SubAccount__1),
+    'user' : User__2,
+    'subaccount' : IDL.Opt(SubAccount__2),
     'affiliate' : IDL.Opt(
-      IDL.Record({ 'address' : AccountIdentifier, 'amount' : Balance__1 })
+      IDL.Record({ 'address' : AccountIdentifier, 'amount' : Balance__2 })
     ),
-    'amount' : Balance__1,
+    'amount' : Balance__2,
   });
   const Time = IDL.Int;
   const NFTPurchase = IDL.Record({
@@ -139,12 +140,12 @@ export const idlFactory = ({ IDL }) => {
     ),
     'seller' : AccountIdentifier,
     'author' : IDL.Record({ 'share' : Share, 'address' : AccountIdentifier }),
-    'recharge' : Balance__1,
+    'recharge' : Balance__2,
     'affiliate' : IDL.Opt(
-      IDL.Record({ 'address' : AccountIdentifier, 'amount' : Balance__1 })
+      IDL.Record({ 'address' : AccountIdentifier, 'amount' : Balance__2 })
     ),
     'buyer' : AccountIdentifier,
-    'amount' : Balance__1,
+    'amount' : Balance__2,
   });
   const PurchaseResponse = IDL.Variant({
     'ok' : IDL.Record({
@@ -155,7 +156,7 @@ export const idlFactory = ({ IDL }) => {
       'ICE' : IDL.Text,
       'TreasuryNotifyFailed' : IDL.Null,
       'Refunded' : IDL.Null,
-      'InsufficientPayment' : Balance__1,
+      'InsufficientPayment' : Balance__2,
       'ErrorWhileRefunding' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : IDL.Null,
@@ -167,14 +168,14 @@ export const idlFactory = ({ IDL }) => {
   });
   const RechargeRequest = IDL.Record({
     'token' : TokenIdentifier,
-    'user' : User__1,
-    'subaccount' : IDL.Opt(SubAccount__1),
-    'amount' : Balance__1,
+    'user' : User__2,
+    'subaccount' : IDL.Opt(SubAccount__2),
+    'amount' : Balance__2,
   });
   const RechargeResponse = IDL.Variant({
     'ok' : IDL.Null,
     'err' : IDL.Variant({
-      'InsufficientPayment' : Balance__1,
+      'InsufficientPayment' : Balance__2,
       'RechargeUnnecessary' : IDL.Null,
       'InsufficientBalance' : IDL.Null,
       'InvalidToken' : IDL.Null,
@@ -188,14 +189,14 @@ export const idlFactory = ({ IDL }) => {
     'icpCycles' : IDL.Nat64,
     'pwrFee' : IDL.Nat64,
   });
-  const User = IDL.Variant({
+  const User__1 = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
   });
-  const SubAccount = IDL.Vec(IDL.Nat8);
+  const SubAccount__1 = IDL.Vec(IDL.Nat8);
   const PurchaseClaimRequest = IDL.Record({
-    'user' : User,
-    'subaccount' : IDL.Opt(SubAccount),
+    'user' : User__1,
+    'subaccount' : IDL.Opt(SubAccount__1),
   });
   const ICP = IDL.Record({ 'e8s' : IDL.Nat64 });
   const BlockIndex = IDL.Nat64;
@@ -214,8 +215,8 @@ export const idlFactory = ({ IDL }) => {
     }),
   });
   const PurchaseIntentRequest = IDL.Record({
-    'user' : User,
-    'subaccount' : IDL.Opt(SubAccount),
+    'user' : User__1,
+    'subaccount' : IDL.Opt(SubAccount__1),
   });
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
   const PurchaseIntentResponse = IDL.Variant({
@@ -224,16 +225,22 @@ export const idlFactory = ({ IDL }) => {
   });
   const Memo = IDL.Vec(IDL.Nat8);
   const TransferRequest = IDL.Record({
-    'to' : User,
-    'from' : User,
+    'to' : User__1,
+    'from' : User__1,
     'memo' : Memo,
-    'subaccount' : IDL.Opt(SubAccount),
-    'amount' : Balance,
+    'subaccount' : IDL.Opt(SubAccount__1),
+    'amount' : Balance__1,
   });
   const TransferResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : TransferResponseError,
   });
+  const User = IDL.Variant({
+    'principal' : IDL.Principal,
+    'address' : AccountIdentifier,
+  });
+  const SubAccount = IDL.Vec(IDL.Nat8);
+  const Balance = IDL.Nat64;
   const WithdrawRequest = IDL.Record({
     'to' : User,
     'from' : User,
@@ -246,9 +253,18 @@ export const idlFactory = ({ IDL }) => {
   });
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
+    'balanceAddExternal' : IDL.Func(
+        [
+          IDL.Variant({ 'anv' : IDL.Null, 'pwr' : IDL.Null }),
+          AccountIdentifier__2,
+          Balance__3,
+        ],
+        [],
+        [],
+      ),
     'config_set' : IDL.Func([Config], [], []),
     'faucet' : IDL.Func(
-        [IDL.Record({ 'aid' : AccountIdentifier__2, 'amount' : Balance__2 })],
+        [IDL.Record({ 'aid' : AccountIdentifier__2, 'amount' : Balance__3 })],
         [],
         [],
       ),

@@ -45,6 +45,7 @@ import {
   pwr_stats,
   account_stats,
   router_stats,
+  financial,
 } from "../reducers/dashboard";
 
 import styled from "@emotion/styled";
@@ -130,19 +131,19 @@ export function AccountStats({ slot }) {
   );
 }
 
-export function PwrStats() {
+export function PwrStats({ slot }) {
   const dispatch = useDispatch();
 
   const [stats, setStats] = useState(null);
   const map = useSelector((state) => state.user.map);
 
   const load = async () => {
-    setStats(await dispatch(pwr_stats()));
+    setStats(await dispatch(pwr_stats({ slot })));
   };
 
   useEffect(() => {
     load();
-  }, []);
+  }, [slot]);
 
   if (!stats) return null;
 
@@ -153,7 +154,7 @@ export function PwrStats() {
   return (
     <>
       <GridItem>
-        <SLOT>{map.pwr}</SLOT>
+        <SLOT>{slot}</SLOT>
       </GridItem>
       <GridItem>{Number(stats.total_accounts)}</GridItem>
 
@@ -332,7 +333,7 @@ export function Financial() {
   const dispatch = useDispatch();
 
   const load = async () => {
-    setInfo(BigIntToString(await dispatch(pwr_stats())));
+    setInfo(BigIntToString(await dispatch(financial())));
   };
 
   useEffect(() => {
@@ -450,6 +451,7 @@ export function DashboardPage() {
     Number(info.map.nft[0]) +
     1;
   let total_account = Number(info.map.account[1] - info.map.account[0]) + 1;
+  let total_pwr = Number(info.map.pwr[1] - info.map.pwr[0]) + 1;
 
   let total_other = 2;
 
@@ -465,7 +467,7 @@ export function DashboardPage() {
     <Center>
       <Wrap mt={"80px"} justify="center">
         <Stack mt="50px" spacing="3" maxW={"590px"} w="100%">
-          <Financial />
+          {/* <Financial /> */}
           <Orchestration />
           <Box
             mt={8}
@@ -591,7 +593,13 @@ export function DashboardPage() {
               <GridItem>Heap</GridItem>
               <GridItem>Memory</GridItem>
 
-              <PwrStats />
+              {Array(total_pwr)
+                .fill(0)
+                .map((_, idx) => {
+                  return (
+                    <PwrStats key={idx} slot={Number(info.map.pwr[0]) + idx} />
+                  );
+                })}
             </Grid>
           </Box>
 

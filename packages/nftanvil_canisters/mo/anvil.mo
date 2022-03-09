@@ -132,9 +132,12 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
               tr.withdrawn := total;
 
               // 10. send balance from contract account to user account - with wrapped icp(pwr) transfer
+
+              let profits_address = Cluster.profits_address(_conf);
+
               try {
-                switch(await Cluster.pwr(_conf).pwr_transfer({
-                    from = #address(Cluster.treasury_address(_conf));
+                switch(await Cluster.pwrFromAid(_conf, profits_address).pwr_transfer({
+                    from = #address(profits_address);
                     to = #address(bearer);
                     amount = payout;
                     memo = Blob.fromArray([]);
@@ -200,8 +203,9 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
 
   public shared({caller}) func refresh() : async () {
       //TODO: this func can be called by anyone, but only once a day
+      let profits_address = Cluster.profits_address(_conf);
 
-      let {pwr} = await Cluster.pwr(_conf).balance({user=#address(Cluster.treasury_address(_conf))} );
+      let {pwr} = await Cluster.pwrFromAid(_conf, profits_address).balance({user=#address(profits_address)} );
 
       let diff = pwr - _current_balance;
       

@@ -6,6 +6,7 @@ import Pwr "./pwr_interface";
 import History "./history_interface";
 import Account "./account_interface";
 import Ledger "./ledger_interface";
+import Treasury "./treasury_interface";
 import Float "mo:base/Float";
 import Int64 "mo:base/Int64";
 import Nat16 "mo:base/Nat16";
@@ -21,7 +22,7 @@ module {
     public let MGR_MIN_INACTIVE_CAN_CYCLES = 100_000_000_000;
     public let MGR_MIN_ACTIVE_CAN_CYCLES = 10_000_000_000_000;
     public let MGR_IGNORE_CYCLES = 1_000_000_000;
-
+    public let TIME_BETWEEN_REFUELS =  14400000000000; //1000000000*60*60*4; // 4 hours;
 
     public type Config = Nft.Config;
    
@@ -32,9 +33,9 @@ module {
                 nft = (0,5000);
                 nft_avail = [];
                 account = (5010,5013);
-                pwr = 5002;
+                pwr = (5050,5053);
                 anvil = 5003;
-               // treasury = 5004;
+                treasury = 5004;
                 history = 5100;
                 history_range = (5100,5500);
                 space = [[17830671, 17836454]]
@@ -70,20 +71,24 @@ module {
     //     actor(Principal.toText(conf.collection)) : Collection.Interface;
     // };
    
+    public func profits_address(conf : Config) : Nft.AccountIdentifier {
+        Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, conf.anvil), null);
+    };
+
+    public func treasury(conf : Config) : Treasury.Interface {
+        actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.treasury))) :  Treasury.Interface;
+    };
 
     public func treasury_address(conf : Config) : Nft.AccountIdentifier {
-        Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, conf.anvil), null);
+        Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, conf.treasury), null);
     };
 
     public func nft_address(conf : Config, slot : CanisterSlot) : Nft.AccountIdentifier {
         Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, slot), null);
     };
 
- 
-
-   
-    public func pwr(conf : Config) : Pwr.Interface {
-        actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.pwr))) : Pwr.Interface;
+    public func pwr(conf : Config, slot : CanisterSlot) : Pwr.Interface {
+        actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, slot))) :  Pwr.Interface;
     };
 
     public func history(conf : Config) : History.Interface {
@@ -99,9 +104,11 @@ module {
     };
 
     public func accountFromAid(conf : Config, aid : Nft.AccountIdentifier) : Account.Interface {
-        let (start, end) = conf.account;
-        let max = end - start;
-        actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, start + Nft.AccountIdentifier.slot(aid, max)))) : Account.Interface;
+        account(conf, aid2slot(conf, aid));
+    };
+
+    public func pwrFromAid(conf : Config, aid : Nft.AccountIdentifier) : Pwr.Interface {
+        pwr(conf, pwr2slot(conf, aid));
     };
 
     public func aid2slot(conf: Config, aid : Nft.AccountIdentifier) : CanisterSlot {
@@ -110,6 +117,12 @@ module {
         start + Nft.AccountIdentifier.slot(aid, max);
     };
 
+    public func pwr2slot(conf: Config, aid : Nft.AccountIdentifier) : CanisterSlot {
+        let (start, end) = conf.pwr;
+        let max = end - start;
+        start + Nft.AccountIdentifier.slot(aid, max);
+    };
+    
     public func ledger(conf: Config): Ledger.Interface {
         actor("ryjl3-tyaaa-aaaaa-aaaba-cai") : Ledger.Interface;
     };
@@ -158,6 +171,14 @@ module {
             });
         };
 
+        public func installed_pwr<T>(conf: Config, fn : (CanisterSlot) -> T) : [T] {
+            return Array_.amap<T>(Nat64.toNat(conf.pwr.1 - conf.pwr.0) + 1, func (index: Nat) : T {
+                let slot: CanisterSlot = conf.pwr.0 + Nat64.fromNat(index);
+                return fn(slot);
+            });
+        };
+
+
         public func installed_all(conf: Config, fn : (CanisterSlot) -> ()) : () {
 
             ignore installed_nft<()>(conf, func (slot: CanisterSlot) {
@@ -173,10 +194,11 @@ module {
                 fn(slot);
             });
 
+            ignore installed_pwr<()>(conf, func (slot: CanisterSlot) {
+                 fn(slot);
+            });
 
-            // single cans
-            fn(conf.pwr);
-
+       
 
         };
 

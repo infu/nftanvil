@@ -269,9 +269,9 @@ module {
         nft: CanisterRange;
         nft_avail: [CanisterSlot];
         account: CanisterRange;
-        pwr: CanisterSlot;
+        pwr: CanisterRange;
         anvil: CanisterSlot;
-        //treasury: CanisterSlot;
+        treasury: CanisterSlot;
         history: CanisterSlot;
         history_range: CanisterRange;
         space:[[Nat64]];
@@ -415,7 +415,6 @@ module {
         anvFee : Nat64; 
     };
 
-
     public type BurnRequest = {
         user       : User;
         token      : TokenIdentifier;
@@ -423,7 +422,7 @@ module {
         memo       : Memo;
         subaccount : ?SubAccount;
     };
-    
+ 
     public type TransferRequest = {
         from       : User;
         to         : User;
@@ -872,7 +871,24 @@ module {
                 marketplace = null;
                 // affiliate = null;
             }
-        }
+        };
+
+        public func hash(x: Price) : [Nat8] {
+            _Array.concat<Nat8>(
+                    Blob_.nat64ToBytes(x.amount),
+                    switch(x.marketplace) {
+                        case (?{address; share}) {
+                            _Array.concat<Nat8>(
+                                Blob.toArray(address),
+                                Blob_.nat16ToBytes(share)
+                            )
+                        };
+                        case (null) {
+                            []
+                        }
+                    }
+                )
+        };
     };
  
     public module MetadataInput = {
@@ -1048,7 +1064,7 @@ module {
     };
 
     public type SetPriceResponse = Result.Result<
-        (), {
+        {transactionId: TransactionId}, {
             #InvalidToken ;
             #TooHigh;
             #TooLow;
@@ -1057,6 +1073,7 @@ module {
             #Unauthorized : AccountIdentifier;
             #Other        : Text;
             #OutOfPower;
+            #ICE: Text;
         }
     >;
 
@@ -1167,7 +1184,6 @@ module {
                     address : AccountIdentifier;
                     amount : Balance
                     };
-
         };
         
     public module Allowance = {
@@ -1202,7 +1218,6 @@ module {
         >;
 
     };
-
 
 
 

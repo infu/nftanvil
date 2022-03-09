@@ -18,10 +18,16 @@ export const idlFactory = ({ IDL }) => {
     'cooldown' : Cooldown,
   });
   const TokenIdentifier = IDL.Nat64;
-  const Time = IDL.Int;
-  const TokenIdentifier__1 = IDL.Nat64;
   const Share = IDL.Nat16;
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
+  const Price = IDL.Record({
+    'marketplace' : IDL.Opt(
+      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier__1 })
+    ),
+    'amount' : IDL.Nat64,
+  });
+  const Time = IDL.Int;
+  const TokenIdentifier__1 = IDL.Nat64;
   const Balance__1 = IDL.Nat64;
   const NFTPurchase = IDL.Record({
     'created' : Time,
@@ -81,6 +87,12 @@ export const idlFactory = ({ IDL }) => {
       'user' : AccountIdentifier,
       'spender' : IDL.Principal,
     }),
+    'price' : IDL.Record({
+      'created' : Timestamp,
+      'token' : TokenIdentifier,
+      'user' : AccountIdentifier,
+      'price' : Price,
+    }),
     'transfer' : IDL.Record({
       'to' : AccountIdentifier,
       'created' : Timestamp,
@@ -116,7 +128,7 @@ export const idlFactory = ({ IDL }) => {
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'nft' : CanisterRange,
-    'pwr' : CanisterSlot,
+    'pwr' : CanisterRange,
     'anvil' : CanisterSlot,
     'history' : CanisterSlot,
     'nft_avail' : IDL.Vec(CanisterSlot),
@@ -124,6 +136,7 @@ export const idlFactory = ({ IDL }) => {
     'account' : CanisterRange,
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
+    'treasury' : CanisterSlot,
   });
   const EventIndex = IDL.Nat32;
   const Event = IDL.Record({ 'hash' : IDL.Vec(IDL.Nat8), 'info' : EventInfo });

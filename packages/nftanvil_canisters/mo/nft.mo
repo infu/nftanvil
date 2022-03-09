@@ -8,6 +8,7 @@ import HashMap "mo:base/HashMap";
 import Array "mo:base/Array";
 import Int "mo:base/Int";
 import Int32 "mo:base/Int32";
+import Int64 "mo:base/Int64";
 
 import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
@@ -120,11 +121,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
                  SNFT_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
                  await ACC_burn(Nft.User.toAccountIdentifier(request.user), tokenIndex);
-                try {
-                let transactionId = await Cluster.history(_conf).add(#nft(#burn({created=Time.now();token = request.token; user=Nft.User.toAccountIdentifier(request.user); memo=request.memo})));
+                 try {
+                 let transactionId = await Cluster.history(_conf).add(#nft(#burn({created=Time.now();token = request.token; user=Nft.User.toAccountIdentifier(request.user); memo=request.memo})));
 
-                return #ok({transactionId});
-                } catch (e) {
+                 return #ok({transactionId});
+                 } catch (e) {
                     _icall_errors += 1;
                     #err(#ICE(debug_show(Error.code(e)) # " " # Error.message(e)));
                     };
@@ -357,15 +358,25 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
                             
                             let {amount; marketplace} = request.price;
-
-                            vars.price := {
+                            
+                            let new_price = {
                                 amount = amount + diffStorage + diffOps + _oracle.pwrFee;
                                 marketplace;
                                 };
+                                
+                            vars.price := new_price;
 
                             _priceIndex := _priceIndex + 1;
 
-                            #ok();
+                            try {
+                                let transactionId = await Cluster.history(_conf).add(#nft(#price({created=Time.now(); token = tokenId(tokenIndex); user=Nft.User.toAccountIdentifier(request.user); price=new_price})));
+                                addTransaction(vars, transactionId);
+
+                                return #ok({transactionId});
+                            } catch (e) {
+                                _icall_errors += 1;
+                                #err(#ICE(debug_show(Error.code(e)) # " " # Error.message(e)));
+                                };
 
                            };
                     case (#err()) {
@@ -851,7 +862,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         }
     };
 
-    private func charge_calc_missing(m:Nft.Metadata, v:Nft.Metavars) : (Nat64, Nat64,Nat64, Nat64) {
+    private func charge_calc_missing(m:Nft.Metadata, v:Nft.Metavars) : (Nat64, Nat64, Nat64, Nat64) {
 
         let {pwrOps; pwrStorage} = Nft.MetavarsFreeze(v);
 
@@ -863,12 +874,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let topStorage : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.priceStorage({ttl;custom;content;thumb;quality}));
         let topOps : Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.Pricing.priceOps({ttl}));
 
-        let diffStorage = topStorage - pwrStorage;
-        assert(diffStorage >= 0);
-        let diffOps = topOps - pwrOps;
-        assert(diffOps >= 0);
-        let total = diffStorage + diffOps;
-
+        let diffStorage:Nat64 = Int64.toNat64(Int64.max(Int64.fromNat64(topStorage) - Int64.fromNat64(pwrStorage), 0));
+        
+        let diffOps:Nat64 =  Int64.toNat64(Int64.max(Int64.fromNat64(topOps) - Int64.fromNat64(pwrOps), 0));
+        
+        let total:Nat64 = diffStorage + diffOps;
+ 
         return (topStorage, topOps, diffStorage, diffOps);
     };
 

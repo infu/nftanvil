@@ -112,6 +112,13 @@ module {
             memo: Memo;
         };
 
+        #price : {
+            created: Timestamp;
+            user: AccountIdentifier;
+            token: TokenIdentifier;
+            price: Nft.Price;
+        };
+
         #purchase : NFTPurchase;
 
         #mint : {
@@ -228,6 +235,15 @@ module {
                         Blob_.nat64ToBytes(token),
                         Nft.ItemUse.hash(use),
                         Blob.toArray(memo)
+                    ])
+                };
+                case (#price({created;user;token;price})) {
+                    Array.flatten<Nat8>([
+                        [5:Nat8],
+                        Blob_.intToBytes(created),
+                        Blob.toArray(user),
+                        Blob_.nat64ToBytes(token),
+                        Nft.Price.hash(price)
                     ])
                 };
                 case (#mint({created;token;pwr;user})) { // todo add use

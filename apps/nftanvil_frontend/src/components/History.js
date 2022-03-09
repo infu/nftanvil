@@ -211,6 +211,25 @@ const HistoryEvent = ({ ev, canister, idx, showThumb = true }) => {
           val = <ICP>{val}</ICP>;
         }
 
+        if (key === "price") {
+          val = (
+            <HStack>
+              <div>
+                <ICP>{val.amount}</ICP>
+              </div>
+              {val.marketplace[0] ? (
+                <div>
+                  marketplace share{" "}
+                  {(val.marketplace[0].share / 100).toFixed(2)}% -
+                  <ACC short={true}>
+                    {AccountIdentifier.ArrayToText(val.marketplace[0].address)}
+                  </ACC>
+                </div>
+              ) : null}
+            </HStack>
+          );
+        }
+
         return <KeyVal key={idx} k={key} v={val} />;
       })}
       <KeyVal k={"Hash"} v={<HASH>{toHexString(ev.hash)}</HASH>} />

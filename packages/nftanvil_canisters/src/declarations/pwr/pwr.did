@@ -10,6 +10,11 @@ type WithdrawRequest =
    subaccount: opt SubAccount;
    to: User;
  };
+type User__2 = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
 type User__1 = 
  variant {
    address: AccountIdentifier;
@@ -38,11 +43,11 @@ type TransferResponse =
  };
 type TransferRequest = 
  record {
-   amount: Balance;
-   from: User;
+   amount: Balance__1;
+   from: User__1;
    memo: Memo;
-   subaccount: opt SubAccount;
-   to: User;
+   subaccount: opt SubAccount__1;
+   to: User__1;
  };
 type TransferError = 
  variant {
@@ -58,6 +63,7 @@ type TokenIdentifier = nat64;
 type Time = int;
 type Tags = vec Tag;
 type Tag = text;
+type SubAccount__2 = blob;
 type SubAccount__1 = blob;
 type SubAccount = blob;
 type Share = nat16;
@@ -66,7 +72,7 @@ type RechargeResponse =
    err:
     variant {
       InsufficientBalance;
-      InsufficientPayment: Balance__1;
+      InsufficientPayment: Balance__2;
       InvalidToken;
       RechargeUnnecessary;
       Rejected;
@@ -76,10 +82,10 @@ type RechargeResponse =
  };
 type RechargeRequest = 
  record {
-   amount: Balance__1;
-   subaccount: opt SubAccount__1;
+   amount: Balance__2;
+   subaccount: opt SubAccount__2;
    token: TokenIdentifier;
-   user: User__1;
+   user: User__2;
  };
 type Quality = nat8;
 type PurchaseResponse = 
@@ -89,7 +95,7 @@ type PurchaseResponse =
       ErrorWhileRefunding;
       ICE: text;
       InsufficientBalance;
-      InsufficientPayment: Balance__1;
+      InsufficientPayment: Balance__2;
       InvalidToken;
       NotEnoughToRefund;
       NotForSale;
@@ -107,12 +113,12 @@ type PurchaseRequest =
  record {
    affiliate: opt record {
                     address: AccountIdentifier;
-                    amount: Balance__1;
+                    amount: Balance__2;
                   };
-   amount: Balance__1;
-   subaccount: opt SubAccount__1;
+   amount: Balance__2;
+   subaccount: opt SubAccount__2;
    token: TokenIdentifier;
-   user: User__1;
+   user: User__2;
  };
 type PurchaseIntentResponse = 
  variant {
@@ -121,8 +127,8 @@ type PurchaseIntentResponse =
  };
 type PurchaseIntentRequest = 
  record {
-   subaccount: opt SubAccount;
-   user: User;
+   subaccount: opt SubAccount__1;
+   user: User__1;
  };
 type PurchaseClaimResponse = 
  variant {
@@ -134,8 +140,8 @@ type PurchaseClaimResponse =
  };
 type PurchaseClaimRequest = 
  record {
-   subaccount: opt SubAccount;
-   user: User;
+   subaccount: opt SubAccount__1;
+   user: User__1;
  };
 type Price = 
  record {
@@ -163,9 +169,9 @@ type NFTPurchase =
  record {
    affiliate: opt record {
                     address: AccountIdentifier;
-                    amount: Balance__1;
+                    amount: Balance__2;
                   };
-   amount: Balance__1;
+   amount: Balance__2;
    author: record {
              address: AccountIdentifier;
              share: Share;
@@ -176,7 +182,7 @@ type NFTPurchase =
                       address: AccountIdentifier;
                       share: Share;
                     };
-   recharge: Balance__1;
+   recharge: Balance__2;
    seller: AccountIdentifier;
    token: TokenIdentifier;
  };
@@ -201,8 +207,8 @@ type MintResponse =
 type MintRequest = 
  record {
    metadata: MetadataInput;
-   subaccount: opt SubAccount__1;
-   user: User__1;
+   subaccount: opt SubAccount__2;
+   user: User__2;
  };
 type MetadataInput = 
  record {
@@ -258,17 +264,22 @@ type Config =
    history_range: CanisterRange;
    nft: CanisterRange;
    nft_avail: vec CanisterSlot;
-   pwr: CanisterSlot;
+   pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   treasury: CanisterSlot;
  };
 type Class = 
  service {
    balance: (BalanceRequest) -> (BalanceResponse) query;
+   balanceAddExternal: (variant {
+                          anv;
+                          pwr;
+                        }, AccountIdentifier__2, Balance__3) -> ();
    config_set: (Config) -> ();
    faucet: (record {
               aid: AccountIdentifier__2;
-              amount: Balance__2;
+              amount: Balance__3;
             }) -> ();
    nft_mint: (CanisterSlot, MintRequest) -> (MintResponse);
    nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);
@@ -310,15 +321,16 @@ type CanisterRange =
    CanisterSlot;
  };
 type BlockIndex = nat64;
+type Balance__3 = nat64;
 type Balance__2 = nat64;
 type Balance__1 = nat64;
 type BalanceResponse = 
  record {
-   anv: Balance;
+   anv: Balance__1;
    oracle: Oracle__1;
-   pwr: Balance;
+   pwr: Balance__1;
  };
-type BalanceRequest = record {user: User__1;};
+type BalanceRequest = record {user: User__2;};
 type Balance = nat64;
 type Attributes = vec Attribute;
 type Attribute = 

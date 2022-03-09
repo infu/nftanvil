@@ -1,0 +1,75 @@
+type WithdrawRequest = 
+ record {
+   amount: Balance;
+   from: User;
+   subaccount: opt SubAccount;
+   to: User;
+ };
+type WithdrawIntermediateResponse = 
+ variant {
+   Err: TransferError;
+   Ok: BlockIndex;
+ };
+type User = 
+ variant {
+   address: AccountIdentifier;
+   "principal": principal;
+ };
+type TransferError = 
+ variant {
+   BadFee: record {expected_fee: ICP;};
+   InsufficientFunds: record {balance: ICP;};
+   TxCreatedInFuture;
+   TxDuplicate: record {duplicate_of: BlockIndex;};
+   TxTooOld: record {allowed_window_nanos: nat64;};
+ };
+type SubAccount = blob;
+type StatsResponse = 
+ record {
+   cycles: nat;
+   cycles_recieved: nat;
+   rts_heap_size: nat;
+   rts_max_live_size: nat;
+   rts_memory_size: nat;
+   rts_reclaimed: nat;
+   rts_total_allocation: nat;
+   rts_version: text;
+ };
+type Oracle = 
+ record {
+   anvFee: nat64;
+   icpCycles: nat64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
+type ICP = record {e8s: nat64;};
+type Config = 
+ record {
+   account: CanisterRange;
+   anvil: CanisterSlot;
+   history: CanisterSlot;
+   history_range: CanisterRange;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot;
+   pwr: CanisterRange;
+   router: principal;
+   space: vec vec nat64;
+   treasury: CanisterSlot;
+ };
+type Class = 
+ service {
+   config_set: (Config) -> ();
+   oracle_set: (Oracle) -> ();
+   pwr_withdraw: (WithdrawRequest) -> (WithdrawIntermediateResponse);
+   stats: () -> (StatsResponse) query;
+ };
+type CanisterSlot = nat64;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
+ };
+type BlockIndex = nat64;
+type Balance = nat64;
+type AccountIdentifier = blob;
+service : () -> Class

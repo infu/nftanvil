@@ -3,7 +3,7 @@ export const idlFactory = ({ IDL }) => {
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'nft' : CanisterRange,
-    'pwr' : CanisterSlot,
+    'pwr' : CanisterRange,
     'anvil' : CanisterSlot,
     'history' : CanisterSlot,
     'nft_avail' : IDL.Vec(CanisterSlot),
@@ -11,8 +11,15 @@ export const idlFactory = ({ IDL }) => {
     'account' : CanisterRange,
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
+    'treasury' : CanisterSlot,
   });
   const LogEvent = IDL.Record({ 'msg' : IDL.Text, 'time' : IDL.Nat32 });
+  const Oracle = IDL.Record({
+    'icpFee' : IDL.Nat64,
+    'anvFee' : IDL.Nat64,
+    'icpCycles' : IDL.Nat64,
+    'pwrFee' : IDL.Nat64,
+  });
   const Router = IDL.Service({
     'config_get' : IDL.Func([], [Config], ['query']),
     'config_set' : IDL.Func([Config], [], []),
@@ -20,9 +27,11 @@ export const idlFactory = ({ IDL }) => {
     'event_history_full' : IDL.Func([], [], []),
     'event_nft_full' : IDL.Func([IDL.Principal], [], []),
     'log_get' : IDL.Func([], [IDL.Vec(LogEvent)], ['query']),
+    'oracle_set' : IDL.Func([Oracle], [], []),
     'refuel' : IDL.Func([], [], []),
     'refuel_unoptimised' : IDL.Func([], [], []),
     'reinstall' : IDL.Func([], [], []),
+    'start_all' : IDL.Func([], [], []),
     'stats' : IDL.Func(
         [],
         [
@@ -34,6 +43,7 @@ export const idlFactory = ({ IDL }) => {
             'cycles' : IDL.Nat,
             'rts_memory_size' : IDL.Nat,
             'rts_total_allocation' : IDL.Nat,
+            'maintenance' : IDL.Bool,
             'rts_heap_size' : IDL.Nat,
             'rts_reclaimed' : IDL.Nat,
             'rts_version' : IDL.Text,
@@ -42,6 +52,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'stop_all' : IDL.Func([], [], []),
     'upgrade' : IDL.Func([], [], []),
     'wallet_receive' : IDL.Func([], [], []),
     'wasm_set' : IDL.Func(

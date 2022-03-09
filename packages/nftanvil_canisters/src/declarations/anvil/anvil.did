@@ -36,9 +36,10 @@ type Config =
    history_range: CanisterRange;
    nft: CanisterRange;
    nft_avail: vec CanisterSlot;
-   pwr: CanisterSlot;
+   pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   treasury: CanisterSlot;
  };
 type Class = 
  service {

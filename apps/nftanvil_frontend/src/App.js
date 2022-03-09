@@ -735,7 +735,7 @@ function App() {
           color: theme === "dark" ? "gray.300" : "gray.700",
         }}
       >
-        Web 3.0 | Made by 3V Interactive
+        Web 3.0 | Made by VVV DAO
         <img
           style={{ margin: "10px auto" }}
           src={theme === "dark" ? PoweredDark : PoweredLight}

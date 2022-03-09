@@ -8,7 +8,7 @@ export const idlFactory = ({ IDL }) => {
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'nft' : CanisterRange,
-    'pwr' : CanisterSlot,
+    'pwr' : CanisterRange,
     'anvil' : CanisterSlot,
     'history' : CanisterSlot,
     'nft_avail' : IDL.Vec(CanisterSlot),
@@ -16,6 +16,7 @@ export const idlFactory = ({ IDL }) => {
     'account' : CanisterRange,
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
+    'treasury' : CanisterSlot,
   });
   const Oracle = IDL.Record({
     'icpFee' : IDL.Nat64,

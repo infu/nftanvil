@@ -175,6 +175,7 @@ type SetPriceResponse =
  variant {
    err:
     variant {
+      ICE: text;
       InsufficientBalance;
       InvalidToken;
       NotTransferable;
@@ -184,7 +185,7 @@ type SetPriceResponse =
       TooLow;
       Unauthorized: AccountIdentifier;
     };
-   ok;
+   ok: record {transactionId: TransactionId;};
  };
 type SetPriceRequest = 
  record {
@@ -471,9 +472,10 @@ type Config =
    history_range: CanisterRange;
    nft: CanisterRange;
    nft_avail: vec CanisterSlot;
-   pwr: CanisterSlot;
+   pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   treasury: CanisterSlot;
  };
 type CommonError = 
  variant {

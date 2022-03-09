@@ -226,9 +226,15 @@ export const nft_purchase =
 
     console.log("BUYING", id, amount);
 
-    let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-      agentOptions: authentication.getAgentOptions(),
-    });
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        s.user.map.space,
+        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+      ),
+      {
+        agentOptions: authentication.getAgentOptions(),
+      }
+    );
 
     let toastId = toast("Purchasing...", {
       type: toast.TYPE.INFO,
@@ -247,6 +253,7 @@ export const nft_purchase =
         token: tokenFromText(id),
         user: { address: AccountIdentifier.TextToArray(address) },
         subaccount,
+        affiliate: [],
         amount,
       });
 
@@ -317,7 +324,9 @@ export const set_price =
     let identity = authentication.client.getIdentity();
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
+
     console.log("Setting price", id, { slot });
+
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
@@ -489,13 +498,19 @@ export const recharge =
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
     // let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let address = s.user.address;
 
     // let nftcan = nftCanister(canister, { agentOptions: authentication.getAgentOptions() });
-    let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-      agentOptions: authentication.getAgentOptions(),
-    });
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        s.user.map.space,
+        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+      ),
+      {
+        agentOptions: authentication.getAgentOptions(),
+      }
+    );
 
-    let address = s.user.address;
     let subaccount = [
       AccountIdentifier.TextToArray(s.user.subaccount) || null,
     ].filter(Boolean);
@@ -875,18 +890,28 @@ export const mint = (vals) => async (dispatch, getState) => {
   let canisterId = PrincipalFromSlot(s.user.map.space, slot);
 
   let identity = authentication.client.getIdentity();
+  let address = s.user.address;
 
   let nft = nftCanister(canisterId, {
     agentOptions: authentication.getAgentOptions(),
   });
 
-  let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-    agentOptions: authentication.getAgentOptions(),
-  });
+  let pwr = pwrCanister(
+    PrincipalFromSlot(
+      s.user.map.space,
+      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+    ),
+    {
+      agentOptions: authentication.getAgentOptions(),
+    }
+  );
 
   console.log(
     "PWR Canister",
-    PrincipalFromSlot(s.user.map.space, s.user.map.pwr).toText()
+    PrincipalFromSlot(
+      s.user.map.space,
+      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+    ).toText()
   );
 
   console.log(
@@ -894,7 +919,6 @@ export const mint = (vals) => async (dispatch, getState) => {
     PrincipalFromSlot(s.user.map.space, slot).toText()
   );
 
-  let address = s.user.address;
   let subaccount = [
     AccountIdentifier.TextToArray(s.user.subaccount) || null,
   ].filter(Boolean);

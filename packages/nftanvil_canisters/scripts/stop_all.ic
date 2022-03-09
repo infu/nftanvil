@@ -1,0 +1,7 @@
+import wallet = "${WALLET_ID}" as "../src/declarations/cycles/cycles.did";
+
+import router = "${ROUTER_ID}" as "../src/declarations/router/router.did";
+
+identity default "~/.config/dfx/identity/default/identity.pem";
+
+call as wallet router.stop_all();

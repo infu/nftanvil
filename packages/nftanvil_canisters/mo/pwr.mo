@@ -57,9 +57,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   system func postupgrade() {
       _tmpAccount := [];
-
       _cycles_recieved := Cycles.balance();
-
   };
 
   public func wallet_receive() : async () {
@@ -132,7 +130,10 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
 
     public query func balance(request: Pwr.BalanceRequest) : async Pwr.BalanceResponse {
-        switch(_account.get(Nft.User.toAccountIdentifier(request.user))) {
+        let aid = Nft.User.toAccountIdentifier(request.user);
+        assert(Cluster.pwr2slot(_conf, aid) == _slot);
+
+        switch(_account.get(aid)) {
             case (?ac) {
                 {
                     pwr = ac.pwr;
@@ -151,11 +152,22 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     };
 
   public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
+    assert(Cluster.pwr2slot(_conf, aid) == _slot);
     balanceAdd(#pwr, aid, amount); //TODO: Remove in production
+  };
+
+  public shared({caller}) func balanceAddExternal(target : {#anv; #pwr}, aid:AccountIdentifier, amount: Balance) : async () {
+    
+    assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
+
+    assert(Cluster.pwr2slot(_conf, aid) == _slot);
+
+    balanceAdd(target, aid, amount);
   };
 
   public shared({caller}) func pwr_transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {
     let aid = Nft.User.toAccountIdentifier(request.from);
+    assert(Cluster.pwr2slot(_conf, aid) == _slot);
 
     let isAnvil = Nft.APrincipal.isLegitimate(_conf.space, caller); // Checks if caller is from Anvil principal space
     let caller_user:Nft.User = switch(isAnvil) {
@@ -182,7 +194,10 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
             _fees_charged += _oracle.pwrFee;
 
-            balanceAdd(#pwr, to_aid, request.amount);
+//            await balanceAddExternal(#pwr, to_aid, request.amount);
+            await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternal(#pwr, to_aid, request.amount);
+             // balanceAddExternal(#pwr, to_aid, request.amount);
+
 
             if (isAnvil) {
               //This avoids adding two transactions for one operation like minting
@@ -196,11 +211,9 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       };
   };
 
-
+ 
   public shared({caller}) func pwr_withdraw(request: Pwr.WithdrawRequest) : async Pwr.WithdrawResponse {
     let aid = Nft.User.toAccountIdentifier(request.from);
-    let NFTAnvil_PWR_ICP_subaccount = ?Nft.SubAccount.fromNat(1);
-    //let NFTAnvil_PWR_ICP_address = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), NFTAnvil_PWR_ICP_subaccount);
 
     let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
     
@@ -215,39 +228,33 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
             ac.pwr := ac.pwr - request.amount - _oracle.icpFee;
 
-            // IC ledger transfer
-            let transfer : Ledger.TransferArgs = {
-                  memo = 0;
-                  amount = {e8s = request.amount};
-                  fee = {e8s = _oracle.icpFee};
-                  from_subaccount = NFTAnvil_PWR_ICP_subaccount;
-                  to = to_aid;
-                  created_at_time = null;
-                  };
-
-              switch(await ledger.transfer(transfer)) {
-                  case (#Ok(blockIndex)) {
-                      // #ok(amount)
-
-                        _icp_withdrawn += request.amount + _oracle.icpFee; 
-                        let transactionId = await Cluster.history(_conf).add(#pwr(#withdraw({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from);to=Nft.User.toAccountIdentifier(request.to); amount=request.amount})));
+             
+              switch(try { await Cluster.treasury(_conf).pwr_withdraw(request) } catch (e) { #Err(); }) {
+                case (#Ok(blockIndex)) {
+                      try {
+                        _icp_withdrawn += request.amount + _oracle.icpFee;
+                      
+                        let transactionId = await Cluster.history(_conf).add(#pwr(#withdraw({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); amount=request.amount})));
 
                         #ok({transactionId});
+                      } catch (e) {
+                        return #err(#Other("Operation executed, but adding transaction to history failed"));
+                      }
 
-                  };
+                };
 
-                  case (#Err(e)) {
-                       // Return balance to user
-                       balanceAdd(#pwr, to_aid, request.amount); // TODO: Check what happens to the fee and return it to user if we aren't charged
+                case (#Err(e)) {
+                      // Return balance to user
+                      balanceAdd(#pwr, to_aid, request.amount);
+                      #err(#Rejected);
+                }
+              }; 
+          
 
-                       #err(#Rejected);
-                  }
-              };
-
-            
           };
           case (_) return #err(#InsufficientBalance);
       };
+
   };
 
 
@@ -288,7 +295,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
         return #err(e);
       }
-    }
+    };
     // if fail then return amount
   };
 
@@ -322,11 +329,71 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
     _fees_charged += _oracle.pwrFee;
 
-    switch(await nft.purchase(request)) {
+    switch(try {await nft.purchase(request) } catch (e) { #err(#Rejected) }) {
         case (#ok(resp)) {
 
           _purchases_accumulated += cost;
-          distribute_purchase(resp.purchase);
+          let purchase = resp.purchase;
+          
+          // distribute_purchase(resp.purchase);
+
+          let total:Nat64 = purchase.amount;
+
+          let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
+          let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(purchase.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
+        
+          let marketplace_cut:Nat64 = switch(purchase.marketplace) {
+            case (?marketplace) {
+              total * Nat64.fromNat(Nft.Share.limit(marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
+            };
+            case (null) {
+              0;
+            }
+          };
+
+          let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut ;
+
+          assert(total > 0);
+          assert((seller_cut + marketplace_cut  + author_cut + anvil_cut) == total);
+
+          let NFTAnvil_profits = Cluster.profits_address(_conf);
+          
+          
+          // give to NFTAnvil
+          _distributed_anvil += anvil_cut;
+          await Cluster.pwrFromAid(_conf, NFTAnvil_profits).balanceAddExternal(#pwr, NFTAnvil_profits, anvil_cut);
+
+          // give to Author
+          _distributed_author += author_cut;
+          await Cluster.pwrFromAid(_conf, purchase.author.address).balanceAddExternal(#pwr, purchase.author.address, author_cut);
+
+
+          // give to Marketplace
+          switch(purchase.marketplace) {
+            case (?marketplace) {
+              _distributed_marketplace += marketplace_cut;
+              await Cluster.pwrFromAid(_conf, marketplace.address).balanceAddExternal(#pwr, marketplace.address, marketplace_cut);
+              Debug.print("Marketplace cut " # debug_show(marketplace_cut) # " " # debug_show(marketplace));
+            };
+            case (null) ();
+          };
+
+          // give to Affiliate
+          switch(purchase.affiliate) {
+            case (?affiliate) {
+              _distributed_affiliate += affiliate.amount;
+              await Cluster.pwrFromAid(_conf, affiliate.address).balanceAddExternal(#pwr, affiliate.address, affiliate.amount);
+              Debug.print("Affiliate cut " # debug_show(affiliate.amount) # " " # debug_show(affiliate));
+            };
+            case (null) ();
+          };
+
+          // give to Seller
+          _distributed_seller += seller_cut;
+
+          await Cluster.pwrFromAid(_conf, purchase.seller).balanceAddExternal(#pwr, purchase.seller, seller_cut);
+          
+
 
           return #ok(resp);
         };
@@ -338,63 +405,65 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       }
   };
   
-  private func distribute_purchase(purchase: Nft.NFTPurchase) : () {
-      let total:Nat64 = purchase.amount;
+  
+  //   private func distribute_purchase(purchase: Nft.NFTPurchase) : () {
+  //     let total:Nat64 = purchase.amount;
 
-      let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
-      let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(purchase.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
+  //     let anvil_cut:Nat64 = total * Nat64.fromNat(Nft.Share.NFTAnvilShare) / Nat64.fromNat(Nft.Share.Max); // 0.5%
+  //     let author_cut:Nat64= total * Nat64.fromNat(Nft.Share.limit(purchase.author.share, Nft.Share.LimitMinter)) / Nat64.fromNat(Nft.Share.Max);
      
-      let marketplace_cut:Nat64 = switch(purchase.marketplace) {
-        case (?marketplace) {
-          total * Nat64.fromNat(Nft.Share.limit(marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
-        };
-        case (null) {
-          0;
-        }
-      };
+  //     let marketplace_cut:Nat64 = switch(purchase.marketplace) {
+  //       case (?marketplace) {
+  //         total * Nat64.fromNat(Nft.Share.limit(marketplace.share, Nft.Share.LimitMarketplace)) / Nat64.fromNat(Nft.Share.Max);
+  //       };
+  //       case (null) {
+  //         0;
+  //       }
+  //     };
 
-      let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut ;
+  //     let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut ;
 
-      assert(total > 0);
-      assert((seller_cut + marketplace_cut  + author_cut + anvil_cut) == total);
+  //     assert(total > 0);
+  //     assert((seller_cut + marketplace_cut  + author_cut + anvil_cut) == total);
 
-      let NFTAnvil_PWR_earnings_subaccount = Cluster.treasury_address(_conf);
+  //     let NFTAnvil_profits = Cluster.profits_address(_conf);
       
       
-      // give to NFTAnvil
-      _distributed_anvil += anvil_cut;
-      balanceAdd(#pwr, NFTAnvil_PWR_earnings_subaccount, anvil_cut);
+  //     // give to NFTAnvil
+  //     _distributed_anvil += anvil_cut;
+  //     await Cluster.pwrFromAid(_conf, NFTAnvil_profits).balanceAddExternal(#pwr, NFTAnvil_profits, anvil_cut);
 
-      // give to Author
-      _distributed_author += author_cut;
-      balanceAdd(#pwr, purchase.author.address, author_cut);
+  //     // give to Author
+  //     _distributed_author += author_cut;
+  //     await Cluster.pwrFromAid(_conf, purchase.author.address).balanceAddExternal(#pwr, purchase.author.address, author_cut);
 
 
-      // give to Marketplace
-      switch(purchase.marketplace) {
-        case (?marketplace) {
-          _distributed_marketplace += marketplace_cut;
-          balanceAdd(#pwr, marketplace.address, marketplace_cut);
-          Debug.print("Marketplace cut " # debug_show(marketplace_cut) # " " # debug_show(marketplace));
-        };
-        case (null) ();
-      };
+  //     // give to Marketplace
+  //     switch(purchase.marketplace) {
+  //       case (?marketplace) {
+  //         _distributed_marketplace += marketplace_cut;
+  //         await Cluster.pwrFromAid(_conf, marketplace.address).balanceAddExternal(#pwr, marketplace.address, marketplace_cut);
+  //         Debug.print("Marketplace cut " # debug_show(marketplace_cut) # " " # debug_show(marketplace));
+  //       };
+  //       case (null) ();
+  //     };
 
-      // give to Affiliate
-      switch(purchase.affiliate) {
-        case (?affiliate) {
-          _distributed_affiliate += affiliate.amount;
-          balanceAdd(#pwr, affiliate.address, affiliate.amount);
-          Debug.print("Affiliate cut " # debug_show(affiliate.amount) # " " # debug_show(affiliate));
-        };
-        case (null) ();
-      };
+  //     // give to Affiliate
+  //     switch(purchase.affiliate) {
+  //       case (?affiliate) {
+  //         _distributed_affiliate += affiliate.amount;
+  //         await Cluster.pwrFromAid(_conf, affiliate.address).balanceAddExternal(#pwr, affiliate.address, affiliate.amount);
+  //         Debug.print("Affiliate cut " # debug_show(affiliate.amount) # " " # debug_show(affiliate));
+  //       };
+  //       case (null) ();
+  //     };
 
-      // give to Seller
-      _distributed_seller += seller_cut;
+  //     // give to Seller
+  //     _distributed_seller += seller_cut;
 
-      balanceAdd(#pwr, purchase.seller, seller_cut);
-  };
+  //     await Cluster.pwrFromAid(_conf, purchase.seller).balanceAddExternal(#pwr, purchase.seller, seller_cut);
+  // };
+
 
   public shared({caller}) func nft_recharge(slot: Nft.CanisterSlot, request: Nft.RechargeRequest) : async Nft.RechargeResponse {
     assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
@@ -448,13 +517,11 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
         assert(caller_user == request.user);
 
-        let NFTAnvil_PWR_ICP_address = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?Nft.SubAccount.fromNat(1));
-
         let toUserAID = Nft.User.toAccountIdentifier(request.user);
         
-        let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), 0, toUserAID);
-        
+        assert(Cluster.pwr2slot(_conf, toUserAID) == _slot);
 
+        let (purchaseAccountId, purchaseSubAccount) = Nft.AccountIdentifier.purchaseAccountId(Principal.fromActor(this), 0, toUserAID);
 
         let {e8s = payment} = await ledger.account_balance({
             account = purchaseAccountId
@@ -469,7 +536,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
             amount;
             fee = {e8s = _oracle.icpFee};
             from_subaccount = ?purchaseSubAccount;
-            to = NFTAnvil_PWR_ICP_address;
+            to = Cluster.treasury_address(_conf);
             created_at_time = null;
             };
 
@@ -560,7 +627,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         distributed_marketplace : Nat64;
         distributed_author : Nat64;
         distributed_anvil : Nat64;
-        total_accounts: Nat;
+        total_accounts : Nat;
     }) {
         {
             total_accounts = _total_accounts;

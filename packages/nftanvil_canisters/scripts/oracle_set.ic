@@ -1,0 +1,14 @@
+import wallet = "${WALLET_ID}" as "../src/declarations/cycles/cycles.did";
+
+import router = "${ROUTER_ID}" as "../src/declarations/router/router.did";
+
+identity default "~/.config/dfx/identity/default/identity.pem";
+
+call as wallet router.oracle_set(
+    record {
+        icpCycles = ${E8S_CYCLES}:nat64;
+        icpFee = 10000:nat64; 
+        pwrFee = 10000:nat64;
+        anvFee = 10000:nat64;
+    }
+);

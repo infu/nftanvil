@@ -6,15 +6,18 @@ type Router =
    event_history_full: () -> ();
    event_nft_full: (principal) -> ();
    log_get: () -> (vec LogEvent) query;
+   oracle_set: (Oracle) -> ();
    refuel: () -> ();
    refuel_unoptimised: () -> ();
    reinstall: () -> ();
+   start_all: () -> ();
    stats: () ->
     (record {
        cycles: nat;
        cycles_recieved: nat;
        jobs_fail: nat;
        jobs_success: nat;
+       maintenance: bool;
        refuel: nat;
        rts_heap_size: nat;
        rts_max_live_size: nat;
@@ -23,12 +26,20 @@ type Router =
        rts_total_allocation: nat;
        rts_version: text;
      }) query;
+   stop_all: () -> ();
    upgrade: () -> ();
    wallet_receive: () -> ();
    wasm_set: (record {
                 name: text;
                 wasm: vec nat8;
               }) -> ();
+ };
+type Oracle = 
+ record {
+   anvFee: nat64;
+   icpCycles: nat64;
+   icpFee: nat64;
+   pwrFee: nat64;
  };
 type LogEvent = 
  record {
@@ -43,9 +54,10 @@ type Config =
    history_range: CanisterRange;
    nft: CanisterRange;
    nft_avail: vec CanisterSlot;
-   pwr: CanisterSlot;
+   pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   treasury: CanisterSlot;
  };
 type CanisterSlot = nat64;
 type CanisterRange = 

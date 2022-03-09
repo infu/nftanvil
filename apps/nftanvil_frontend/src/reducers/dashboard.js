@@ -9,17 +9,23 @@ import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal
 import authentication from "../auth";
 import { BigIntToString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
-export const pwr_stats = () => async (dispatch, getState) => {
-  let s = getState();
-  let canisterId = PrincipalFromSlot(s.user.map.space, s.user.map.pwr);
-  let identity = authentication.client.getIdentity();
+export const financial =
+  ({}) =>
+  async (dispatch, getState) => {};
 
-  let pwr = pwrCanister(canisterId, {
-    agentOptions: authentication.getAgentOptions(),
-  });
-  let stats = await pwr.stats();
-  return stats;
-};
+export const pwr_stats =
+  ({ slot }) =>
+  async (dispatch, getState) => {
+    let s = getState();
+    let canisterId = PrincipalFromSlot(s.user.map.space, slot);
+    let identity = authentication.client.getIdentity();
+
+    let pwr = pwrCanister(canisterId, {
+      agentOptions: authentication.getAgentOptions(),
+    });
+    let stats = await pwr.stats();
+    return stats;
+  };
 
 export const router_stats = () => async (dispatch, getState) => {
   let s = getState();

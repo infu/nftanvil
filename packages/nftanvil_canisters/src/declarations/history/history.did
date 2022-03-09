@@ -16,6 +16,14 @@ type PwrEvent =
    transfer: EventFungibleTransaction;
    withdraw: PwrWithdraw;
  };
+type Price = 
+ record {
+   amount: nat64;
+   marketplace: opt record {
+                      address: AccountIdentifier__1;
+                      share: Share;
+                    };
+ };
 type Oracle = 
  record {
    anvFee: nat64;
@@ -43,6 +51,13 @@ type NftEvent =
     record {
       created: Timestamp;
       pwr: Balance;
+      token: TokenIdentifier;
+      user: AccountIdentifier;
+    };
+   price:
+    record {
+      created: Timestamp;
+      price: Price;
       token: TokenIdentifier;
       user: AccountIdentifier;
     };
@@ -154,9 +169,10 @@ type Config =
    history_range: CanisterRange;
    nft: CanisterRange;
    nft_avail: vec CanisterSlot;
-   pwr: CanisterSlot;
+   pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   treasury: CanisterSlot;
  };
 type Class = 
  service {

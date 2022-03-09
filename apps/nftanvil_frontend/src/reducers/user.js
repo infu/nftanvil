@@ -267,7 +267,8 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
   });
 
   //TODO: remove return in production
-  return;
+  if (!window.dbg) return;
+
   await ledger
     .account_balance({
       account: AccountIdentifier.TextToArray(address),
@@ -294,7 +295,10 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
   if (!address) return;
 
   let pwrcan = pwrCanister(
-    PrincipalFromSlot(s.user.map.space, s.user.map.pwr),
+    PrincipalFromSlot(
+      s.user.map.space,
+      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+    ),
     { agentOptions: authentication.getAgentOptions() }
   );
 
@@ -327,8 +331,10 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
 export const transfer_icp =
   ({ to, amount }) =>
   async (dispatch, getState) => {
-    alert("testnet");
-    return;
+    if (!window.dbg) {
+      alert("testnet");
+      return;
+    }
     let identity = authentication.client.getIdentity();
 
     let s = getState();
@@ -338,9 +344,15 @@ export const transfer_icp =
       AccountIdentifier.TextToArray(s.user.subaccount) || null,
     ].filter(Boolean);
 
-    let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-      agentOptions: authentication.getAgentOptions(),
-    });
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        s.user.map.space,
+        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+      ),
+      {
+        agentOptions: authentication.getAgentOptions(),
+      }
+    );
 
     let toastId = toast("Sending...", {
       type: toast.TYPE.INFO,
@@ -401,12 +413,18 @@ export const pwr_buy =
     let s = getState();
 
     let identity = authentication.client.getIdentity();
-
-    let pwr = pwrCanister(PrincipalFromSlot(s.user.map.space, s.user.map.pwr), {
-      agentOptions: authentication.getAgentOptions(),
-    });
-
     let address = s.user.address;
+
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        s.user.map.space,
+        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+      ),
+      {
+        agentOptions: authentication.getAgentOptions(),
+      }
+    );
+
     let subaccount = [
       AccountIdentifier.TextToArray(s.user.subaccount) || null,
     ].filter(Boolean);

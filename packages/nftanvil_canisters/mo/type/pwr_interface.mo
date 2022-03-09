@@ -16,12 +16,14 @@ import Principal "mo:principal/Principal";
 import RawAccountId "mo:principal/AccountIdentifier";
 import Text "mo:base/Text";
 import Nft "./nft_interface";
-import Ledger "./ledger_interface"
+import Ledger "./ledger_interface";
+import Treasury "./treasury_interface";
 
 module {
     public type Interface = actor {
         balance              : query BalanceRequest         -> async BalanceResponse;
         pwr_transfer         : shared TransferRequest       -> async TransferResponse;
+        balanceAddExternal   : shared ({#anv; #pwr}, AccountIdentifier, Balance) -> async ();
         pwr_withdraw         : shared WithdrawRequest       -> async WithdrawResponse;
         pwr_purchase_intent  : shared PurchaseIntentRequest -> async PurchaseIntentResponse;
         pwr_purchase_claim   : shared PurchaseClaimRequest  -> async PurchaseClaimResponse;
@@ -36,41 +38,41 @@ module {
 
 
 
-     public type AccountRecord = {
-          var pwr : Nat64;
-          var anv : Nat64;
-          };
+    public type AccountRecord = {
+        var pwr : Nat64;
+        var anv : Nat64;
+        };
 
-     public type AccountRecordSerialized = {
-          pwr : Nat64;
-          anv : Nat64;
-     };
+    public type AccountRecordSerialized = {
+        pwr : Nat64;
+        anv : Nat64;
+    };
 
-     public type AccountResult = {
-          pwr : Nat64;
-          anv : Nat64;
-     };
+    public type AccountResult = {
+        pwr : Nat64;
+        anv : Nat64;
+    };
 
-     public func AccountRecordSerialize(x : AccountRecord) : AccountRecordSerialized {
-          {
-               pwr = x.pwr;
-               anv = x.anv;
-          }
-     };
+    public func AccountRecordSerialize(x : AccountRecord) : AccountRecordSerialized {
+        {
+            pwr = x.pwr;
+            anv = x.anv;
+        }
+    };
 
-     public func AccountRecordUnserialize(x:AccountRecordSerialized) : AccountRecord {
-          {
-               var pwr = x.pwr;
-               var anv = x.anv;
-          }
-     };
+    public func AccountRecordUnserialize(x:AccountRecordSerialized) : AccountRecord {
+        {
+            var pwr = x.pwr;
+            var anv = x.anv;
+        }
+    };
 
-     public func AccountRecordBlank() : AccountRecord {
-          {
-               var pwr = 0;
-               var anv = 0;
-          }
-     };
+    public func AccountRecordBlank() : AccountRecord {
+        {
+            var pwr = 0;
+            var anv = 0;
+        }
+    };
      
 
 
@@ -119,16 +121,8 @@ module {
 
     public type TransferResponse = Result.Result<{transactionId: Blob}, Nft.TransferResponseError>;
 
-
-    public type WithdrawRequest = {
-        from       : User;
-        to         : User;
-        amount     : Balance;
-        subaccount : ?SubAccount;
-    };
-
-
-    public type WithdrawResponse = Result.Result<{transactionId: Blob}, Nft.TransferResponseError>;
+    public type WithdrawRequest = Treasury.WithdrawRequest;
+    public type WithdrawResponse = Treasury.WithdrawResponse;
 
 
 }   
