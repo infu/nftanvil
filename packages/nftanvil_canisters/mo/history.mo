@@ -24,7 +24,6 @@ import H "./type/history_interface";
 
 shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
-
     private stable var _transactions : [var ?H.Event] = Array.init<?H.Event>(1005000, null);
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
 
@@ -35,7 +34,6 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
 
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _slot : Nft.CanisterSlot = 0;
-
 
     private let _transactions_soft_cap: Nat32 = 1000000;
 

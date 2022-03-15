@@ -48,6 +48,7 @@ export const userSlice = createSlice({
     pro: false,
     modal_nftstorage: false,
     key_nftstorage: null,
+    disclaimer: true,
   },
   reducers: {
     balancesSet: (state, action) => {
@@ -98,6 +99,12 @@ export const userSlice = createSlice({
         key_nftstorage: action.payload,
       };
     },
+    setDisclaimer: (state, action) => {
+      return {
+        ...state,
+        disclaimer: action.payload,
+      };
+    },
   },
 });
 
@@ -106,11 +113,11 @@ export const {
   proSet,
   authSet,
   balancesSet,
-
   setNftStorageModal,
   setNftSotrageKey,
   focusSet,
   mapSet,
+  setDisclaimer,
 } = userSlice.actions;
 
 export const proModeSet = (v) => (dispatch) => {
@@ -166,6 +173,7 @@ export const auth =
     }
 
     dispatch(loadNftStorageKey());
+    dispatch(loadDisclaimer());
 
     console.log("ROUTER", process.env.REACT_APP_ROUTER_CANISTER_ID);
 
@@ -229,6 +237,16 @@ export const refresh_balances = () => async (dispatch, getState) => {
   // dispatch(claim_treasury_balance());
 };
 
+export const loadDisclaimer = () => async (dispatch, getState) => {
+  let key = Cookies.get("disclaimer") === "true" || false;
+  dispatch(setDisclaimer(key));
+};
+
+export const saveDisclaimer = (key) => async (dispatch, getState) => {
+  Cookies.set("disclaimer", key);
+  dispatch(setDisclaimer(key));
+};
+
 export const loadNftStorageKey = () => async (dispatch, getState) => {
   let key = Cookies.get("nftstoragekey");
   dispatch(setNftSotrageKey(key));
@@ -265,9 +283,6 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
   let ledger = ledgerCanister({
     agentOptions: authentication.getAgentOptions(),
   });
-
-  //TODO: remove return in production
-  if (!window.dbg) return;
 
   await ledger
     .account_balance({
@@ -331,10 +346,6 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
 export const transfer_icp =
   ({ to, amount }) =>
   async (dispatch, getState) => {
-    if (!window.dbg) {
-      alert("testnet");
-      return;
-    }
     let identity = authentication.client.getIdentity();
 
     let s = getState();

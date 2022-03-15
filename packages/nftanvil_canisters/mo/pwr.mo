@@ -151,10 +151,10 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         };
     };
 
-  public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
-    assert(Cluster.pwr2slot(_conf, aid) == _slot);
-    balanceAdd(#pwr, aid, amount); //TODO: Remove in production
-  };
+  // public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
+  //   assert(Cluster.pwr2slot(_conf, aid) == _slot);
+  //   balanceAdd(#pwr, aid, amount); //TODO: Remove in production
+  // };
 
   public shared({caller}) func balanceAddExternal(target : {#anv; #pwr}, aid:AccountIdentifier, amount: Balance) : async () {
     
@@ -271,9 +271,9 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
     let opsCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceOps(request.metadata));
     let storageCost: Nat64 = Cluster.Oracle.cycle_to_pwr(_oracle, Nft.MetadataInput.priceStorage(request.metadata));
-    let cost:Nat64 = storageCost + opsCost + _oracle.pwrFee; // calculate it here
+    let cost:Nat64 = storageCost + opsCost; // calculate it here
 
-    _fees_charged += _oracle.pwrFee;
+   // _fees_charged += _oracle.pwrFee;
 
     // take amount out
     switch(balanceRem(#pwr, aid, cost )) {
@@ -281,7 +281,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       case (#err(e)) return #err(e)
     };
 
-    switch(await nft.mint(request)) {
+    switch(try {await nft.mint(request)} catch (e) { #err(#Rejected) } ) {
       case (#ok(resp)) {
 
         _mint_accumulated += cost;
@@ -333,8 +333,11 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         case (#ok(resp)) {
 
           _purchases_accumulated += cost;
+
           let purchase = resp.purchase;
-          
+
+          _recharge_accumulated += purchase.recharge;
+
           // distribute_purchase(resp.purchase);
 
           let total:Nat64 = purchase.amount;
@@ -351,13 +354,12 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
             }
           };
 
-          let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut ;
+          let seller_cut:Nat64 = total - anvil_cut - author_cut - marketplace_cut;
 
           assert(total > 0);
           assert((seller_cut + marketplace_cut  + author_cut + anvil_cut) == total);
 
           let NFTAnvil_profits = Cluster.profits_address(_conf);
-          
           
           // give to NFTAnvil
           _distributed_anvil += anvil_cut;
@@ -486,7 +488,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
     _fees_charged += _oracle.pwrFee;
 
-    switch(await nft.recharge(request)) {
+    switch(try {await nft.recharge(request)} catch (e) { #err(#Rejected)}) {
       case (#ok(resp)) {
 
         _recharge_accumulated += cost;

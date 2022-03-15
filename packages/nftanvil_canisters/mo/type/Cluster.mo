@@ -52,7 +52,7 @@ module {
     public module Oracle = {
         public func default() : Oracle {
             {
-                icpCycles = 160000; // e8s to cycles
+                icpCycles = 115007; // e8s to cycles
                 icpFee = 10000; 
                 pwrFee = 10000;
                 anvFee = 10000;

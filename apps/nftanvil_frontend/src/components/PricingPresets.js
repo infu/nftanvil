@@ -35,7 +35,7 @@ export const PwrPrice = ({ record, valid }) => {
       if (!valid) return;
       // setPwrPrice(0);
       dispatch(mint_quote(record)).then((re) => {
-        setPwrPrice(re.transfer + re.ops + re.storage);
+        setPwrPrice(re.ops + re.storage);
       });
     },
     300,
@@ -109,7 +109,7 @@ function OptionIcLite({ record, valid }) {
       <Tooltip
         placement="top-start"
         label={
-          "10% prepaid and the rest 90% is paid on sale or can be manually recharged. If none of these happens, the nft expires in 2 years"
+          "10% prepaid for 18years and the rest 90% gets paid on sale or can be manually recharged. If none of these happens, the nft expires in 2 years"
         }
       >
         <Text fontSize="12px">10% prepaid</Text>
@@ -138,7 +138,14 @@ function OptionIcPremium({ record, valid }) {
         L33T
       </Text>
       <Text fontSize="12px">IC storage</Text>
-      <Text fontSize="12px">100% prepaid</Text>
+      <Tooltip
+        placement="top-start"
+        label={
+          "100% prepaid for 18years. We keep the reserves in ICP (later staked ICP). We can't guarantee that it will be enough for 18years if ICP price is bearish. However if it is bullish, this charge may cover the NFT costs forever"
+        }
+      >
+        <Text fontSize="12px">100% prepaid</Text>
+      </Tooltip>
       <PwrPrice record={changed} valid={valid} />
     </>
   );

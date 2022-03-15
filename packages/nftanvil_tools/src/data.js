@@ -129,7 +129,7 @@ export const uploadFile = async (
   try {
     await Promise.all(
       chunks.map(async (chunk, idx) => {
-        return nft.uploadChunk({
+        return nft.upload_chunk({
           subaccount,
           position: { [position]: null },
           chunkIdx: idx,

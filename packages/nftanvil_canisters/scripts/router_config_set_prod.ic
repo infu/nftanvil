@@ -9,10 +9,10 @@ call as wallet router.config_set(
     record {
         router = principal "${ROUTER_ID}";
         nft = record {0:nat64; 5000:nat64};
-        nft_avail = vec {0:nat64; 1:nat64; 2:nat64};
+        nft_avail = vec {0:nat64; 1:nat64; 2:nat64; 3:nat64; 4:nat64; 5:nat64; 6:nat64; 7:nat64; 8:nat64};
         anvil = 5003:nat64;
-        account = record {5010:nat64; 5013:nat64};
-        pwr = record {5050:nat64; 5053:nat64};
+        account = record {5010:nat64; 5042:nat64};
+        pwr = record {5050:nat64; 5082:nat64};
         treasury = 5004:nat64;
         history = 5100:nat64;
         history_range = record {5100:nat64; 5500:nat64};

@@ -1,3 +1,4 @@
+//Ratoko is the better toko
 import Array "mo:base/Array";
 import Array_ "mo:array/Array";
 import _Array "../lib/Array";
@@ -331,10 +332,10 @@ module {
         use       : shared (request: UseRequest) -> async UseResponse;
 
         // (iPWR) Used to store files
-        uploadChunk : shared (request: UploadChunkRequest) -> async ();
+        upload_chunk : shared (request: UploadChunkRequest) -> async ();
 
         // (no updates) This function is only way to fetch NFTs with secret storage. The rest will use http, because it can be cached.
-        fetchChunk : shared (request: FetchChunkRequest) -> async ?Blob;
+        fetch_chunk : shared (request: FetchChunkRequest) -> async ?Blob;
 
         // (iPWR) Plugs NFT into socket. Socket func of the recipient NFT is called
         plug       : shared (request: PlugRequest) -> async PlugResponse;
@@ -418,7 +419,6 @@ module {
     public type BurnRequest = {
         user       : User;
         token      : TokenIdentifier;
-        amount     : Balance;
         memo       : Memo;
         subaccount : ?SubAccount;
     };
@@ -427,7 +427,6 @@ module {
         from       : User;
         to         : User;
         token      : TokenIdentifier;
-        amount     : Balance;
         memo       : Memo;
         subaccount : ?SubAccount;
     };
@@ -445,7 +444,6 @@ module {
         from       : User;
         hash       : Blob;
         token      : TokenIdentifier;
-        amount     : Balance;
         subaccount : ?SubAccount;
     };
 
@@ -513,7 +511,7 @@ module {
 
     public type ContentType = Text;
     public module ContentType = {
-        public let Allowed:[ContentType] = ["application/octet-stream","image/jpeg","image/gif","image/png","video/ogg","video/mpeg","video/mp4","video/webm","image/webp","audio/mpeg","audio/aac","audio/ogg","audio/opus","audio/webm"]; // Warning: Allowing other types shoud go trough security check
+        public let Allowed:[ContentType] = ["application/octet-stream","image/jpeg","image/gif","image/png","video/ogg","video/mpeg","video/mp4","video/webm","image/webp","audio/mpeg","audio/aac","audio/ogg","audio/opus","audio/webm","image/svg+xml"]; // Warning: Allowing other types shoud go trough security check
         public func validate(t : ContentType) : Bool {
             switch(Array.find(Allowed, func (a : ContentType) : Bool { a == t })) {
                 case (?x) true;
@@ -609,7 +607,7 @@ module {
             }
         };
 
-        public func hash (e: ItemUse) : [Nat8] {
+        public func hash(e: ItemUse) : [Nat8] {
             Array.flatten<Nat8>(
                 switch(e) {
                     case (#cooldown(duration)) {
@@ -789,7 +787,7 @@ module {
         // WARNING: Has to mirror calculations in pricing.js
         public let QUALITY_PRICE : Nat64 = 1000; // max quality price per min
         public let STORAGE_KB_PER_MIN : Nat64 = 8; // prices are in cycles
-        public let AVG_MESSAGE_COST : Nat64 = 3000000; // prices are in cycles
+        public let AVG_MESSAGE_COST : Nat64 = 4000000; // prices are in cycles
         public let FULLY_CHARGED_MINUTES : Nat64 = 8409600; //(16 * 365 * 24 * 60) 16 years
         public let FULLY_CHARGED_MESSAGES : Nat64 = 5840; // 1 message per day
 
@@ -799,8 +797,8 @@ module {
             thumb:Content;
             quality:Quality;
             ttl: ?Nat32;
-        }) : Nat64 {
-             let cost_per_min = Pricing.STORAGE_KB_PER_MIN * 50 // cost for nft metadata stored in the cluster
+        }) : Nat64 { // half goes to rechare pool paid to IC the other half goes to NFTAnvil community pool
+             let cost_per_min = Pricing.STORAGE_KB_PER_MIN * 100 // cost for nft metadata stored in the cluster
             + OptPrice(custom, CustomData.price)
             + OptPrice(content, Content.price)
             + Content.price(thumb)
@@ -808,26 +806,26 @@ module {
 
             switch(ttl) {
                 case (null) {
-                    cost_per_min * Pricing.FULLY_CHARGED_MINUTES
+                    cost_per_min * Pricing.FULLY_CHARGED_MINUTES * 2
                 };
                 case (?t) {
-                    cost_per_min * Nat64.fromNat(Nat32.toNat(t)) 
+                    cost_per_min * Nat64.fromNat(Nat32.toNat(t)) * 2
                 }
             }
         };
 
-        public func priceOps({
+        public func priceOps({ // half goes to rechare pool paid to IC the other half goes to NFTAnvil community pool
             ttl:?Nat32
         }) : Nat64 {
 
             switch(ttl) {
                 case (null) {
-                     Pricing.FULLY_CHARGED_MESSAGES * Pricing.AVG_MESSAGE_COST
+                     Pricing.FULLY_CHARGED_MESSAGES * Pricing.AVG_MESSAGE_COST * 2
                 };
 
                 case (?t) {
-                     Nat64.fromNat(Nat32.toNat(t)) * Pricing.AVG_MESSAGE_COST / 60 / 24 // 1 message a day
-                    + Pricing.AVG_MESSAGE_COST * 100 // minimum 100 messages
+                     (Nat64.fromNat(Nat32.toNat(t)) * Pricing.AVG_MESSAGE_COST / 60 / 24 // 1 message a day
+                    + Pricing.AVG_MESSAGE_COST * 100) * 2 // minimum 100 messages
                 }
             }
         };

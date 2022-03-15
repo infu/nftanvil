@@ -9,6 +9,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { useSelector, useDispatch } from "react-redux";
 import { push } from "connected-react-router";
 import { DashboardPage } from "./components/Dashboard";
+import { Disclaimer } from "./components/Disclaimer";
+import { Waiting } from "./components/Waiting";
+import Cookies from "js-cookie";
 
 import {
   login,
@@ -218,11 +221,9 @@ function ICPBOX({ mobile }) {
           <ICP>{icp}</ICP>
         </MenuItem>
       ) : (
-        <Tooltip hasArrow label="testICP">
-          <Button onClick={onOpen}>
-            <ICP>{icp}</ICP>
-          </Button>
-        </Tooltip>
+        <Button onClick={onOpen}>
+          <ICP>{icp}</ICP>
+        </Button>
       )}
 
       <Modal
@@ -348,7 +349,19 @@ function LoginBox() {
                     mt="10px"
                     color="red.400"
                   >
-                    Please do not send real ICP to this address during TESTNET
+                    This is early alpha. We advise you to not keep more than 1
+                    ICP in this wallet for long periods of time.
+                  </Text>
+                  <Text
+                    casing="uppercase"
+                    fontSize="xs"
+                    mt="10px"
+                    color="cyan.400"
+                  >
+                    When you send ICP to this address the dapp will
+                    automatically wrap it for faster usage within the protocol.
+                    That costs 0.0002 ICP in fees paid to IC. When you make a
+                    transfer it gets automatically unwrapped.
                   </Text>
                   <Text
                     casing="uppercase"
@@ -678,8 +691,11 @@ function MainMenu() {
 }
 function App() {
   const mapLoaded = useSelector((state) => state.user.map.history);
+
   const theme = useColorModeValue("light", "dark");
   if (!mapLoaded) return null;
+
+  if (Cookies.get("admin") !== "true") return <Waiting />;
 
   return (
     <>
@@ -698,9 +714,9 @@ function App() {
             pointerEvents: "none",
           }}
         />
-
+        <Disclaimer />
         <MainMenu />
-        <AlertTestNet />
+        {/* <AlertTestNet /> */}
         <Center>
           <RouterSwitch>
             <Route path="/mint" component={Mint} />

@@ -25,7 +25,7 @@ module {
         add          : shared AddRequest        -> async AddResponse;
         list         : query ListRequest        -> async ListResponse;
         info         : query ()                 -> async InfoResponse;
-        get          : query (EventIndex)        -> async ?Event;
+        get          : query (EventIndex)       -> async ?Event;
 
         // when history canister is full, another one is created
     }; 
@@ -246,7 +246,7 @@ module {
                         Nft.Price.hash(price)
                     ])
                 };
-                case (#mint({created;token;pwr;user})) { // todo add use
+                case (#mint({created;token;pwr;user})) {  
                     Array.flatten<Nat8>([
                         [6:Nat8],
                         Blob_.intToBytes(created),

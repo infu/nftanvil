@@ -27,6 +27,7 @@ import {
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 import pLimit from "p-limit";
 const limit = pLimit(
@@ -60,6 +61,7 @@ export const easyMintOne = async (
   proxy_canister
 ) => {
   const onetry = async (tryidx) => {
+    await delay(1);
     let ipfs_pins = [];
     if (metadata?.content[0]?.ipfs?.path) {
       let blob = await blobFrom(metadata.content[0].ipfs.path);
@@ -97,7 +99,15 @@ export const easyMintOne = async (
     // Note, only use mint function with targetcan. Other functions are not proxied
     let targetcan = proxy_canister
       ? pwrCanister(proxy_canister)
-      : pwrCanister(PrincipalFromSlot(map.space, map.pwr));
+      : pwrCanister(
+          PrincipalFromSlot(
+            map.space,
+            AccountIdentifier.TextToSlot(
+              AccountIdentifier.ArrayToText(user.address),
+              map.pwr
+            )
+          )
+        );
 
     let nftcan = PrincipalFromSlot(map.space, slot);
 

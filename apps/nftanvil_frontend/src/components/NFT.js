@@ -26,6 +26,15 @@ import {
   recharge,
   recharge_quote,
 } from "../reducers/nft";
+
+import {
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+} from "@chakra-ui/react";
+
 import { verifyDomain } from "../reducers/inventory";
 import { setDominantColor } from "../reducers/user";
 import { NftHistory } from "./History";
@@ -234,8 +243,11 @@ function SetPriceButton({ id, meta }) {
   const initialRef = React.useRef();
 
   const setPriceOk = async () => {
+    let priceval = parseFloat(initialRef.current.value);
+    if (priceval > 0.06) priceval = 0.06;
+
     let amount = AccountIdentifier.icpToE8s(
-      parseFloat(initialRef.current.value) /
+      priceval /
         (1 - (MARKETPLACE_SHARE + ANVIL_SHARE + meta.authorShare) / 10000)
     );
 
@@ -310,7 +322,24 @@ function SetPriceButton({ id, meta }) {
               <FormLabel>
                 Price in <ICP />
               </FormLabel>
-              <Input ref={initialRef} placeholder="0.001" />
+
+                  <NumberInput
+                    
+                    w={"100%"}
+                    precision={4}
+                    step={0.01}
+                    max="0.06"
+                    min="0.0004"
+                    variant="filled"
+                  >
+                    <NumberInputField ref={initialRef} />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+
+              {/* <Input  ref={initialRef} placeholder="0.001" max="0.06" min="0.0004"/> */}
             </FormControl>
             <Box fontSize="12px" mt={2}>
               <Text>The amount you specify is increased by:</Text>
@@ -884,6 +913,16 @@ export const BuyButton = ({ id, meta }) => {
 
             <AlertDialogBody>
               Buy for {AccountIdentifier.e8sToIcp(amount)} ICP ?
+              <Text fontSize="12px" mt="2">
+                The price includes full recharge
+              </Text>
+              <Text fontSize="14px" fontWeight={"bold"} mt="2">
+                Please make sure the seller or the author are reputable and
+                known to you. If the NFT has domain verification, make sure you
+                trust its domain. Someone could have minted artwork downloaded
+                from the Internet without the rights to do so. Being displayed
+                here doesn't make it legitimate.
+              </Text>
             </AlertDialogBody>
 
             <AlertDialogFooter>
@@ -891,7 +930,7 @@ export const BuyButton = ({ id, meta }) => {
                 Cancel
               </Button>
               <Button colorScheme="red" onClick={buyOk} ml={3}>
-                Buy
+                Buy. I understand the risks
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -187,7 +187,7 @@ const fetchFile = async (
     Array(chunks)
       .fill(0)
       .map((_, chunkIdx) => {
-        return nft.fetchChunk({
+        return nft.fetch_chunk({
           tokenIndex,
           chunkIdx,
           position: { [position]: null },
@@ -935,7 +935,7 @@ export const mint = (vals) => async (dispatch, getState) => {
       ),
     });
 
-    console.log("mint vals", slot, vals);
+    // console.log("mint vals", slot, vals);
     let mrez = await pwr.nft_mint(BigInt(slot), {
       user: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
@@ -952,7 +952,7 @@ export const mint = (vals) => async (dispatch, getState) => {
     if (mrez?.err?.InsufficientBalance === null) {
       throw Error("Insufficient Balance");
     }
-    console.log("REZ", mrez);
+    // console.log("REZ", mrez);
     if (!("ok" in mrez)) throw Error(JSON.stringify(mrez.err));
 
     let { tokenIndex, transactionId } = mrez.ok;

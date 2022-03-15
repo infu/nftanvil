@@ -40,8 +40,9 @@ const mintAlot = async ({ principal, address, subaccount }) => {
   //console.log("Script address ", address);
 
   let map = await getMap();
-  let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr));
-
+  let pwr = pwrCanister(
+    PrincipalFromSlot(map.space, AccountIdentifier.TextToSlot(address, map.pwr))
+  );
   await pwr.faucet({
     aid: AccountIdentifier.TextToArray(address),
     amount: 100000000000000,

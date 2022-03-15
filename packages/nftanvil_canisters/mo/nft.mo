@@ -1,5 +1,7 @@
 // All rights reserved by 3V Interactive
 // Developer contributions are rewarded with stake
+// Language: Ratoko (Its like motoko, but purer)
+// Note: Ratoko is the better toko
 
 import Nft "./type/nft_interface";
 import Text "mo:base/Text";
@@ -110,12 +112,11 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     
     public shared({caller}) func burn(request : Nft.BurnRequest) : async Nft.BurnResponse {
 
-        if (request.amount != 1) return #err(#Other("Must use amount of 1"));
         if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
-        if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid User"));
 
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.user}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {
@@ -170,8 +171,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     public shared({caller}) func transfer_link(request : Nft.TransferLinkRequest) : async Nft.TransferLinkResponse {
         
-        if (request.amount != 1) return #err(#Other("Must use amount of 1"));
-        if (Nft.User.validate(request.from) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.from) == false) return #err(#Other("Invalid User"));
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
  
@@ -194,8 +194,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     }
                 }
 
-                
-                 }; 
+            }; 
             case (#err(#InvalidToken)) return #err(#InvalidToken);
             case (#err(#Unauthorized(e))) return #err(#Unauthorized(e));
             case (#err(#InsufficientBalance(e))) return #err(#InsufficientBalance(e));
@@ -205,7 +204,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     public shared({caller}) func claim_link(request : Nft.ClaimLinkRequest) : async Nft.ClaimLinkResponse {
     
-        if (Nft.User.validate(request.to) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.to) == false) return #err(#Other("Invalid User"));
 
         let (slot, tokenIndex) = Nft.TokenIdentifier.decode(request.token);
 
@@ -222,15 +221,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                     let curOwner = t.owner;
                     SNFT_move(curOwner, Nft.User.toAccountIdentifier(request.to), tokenIndex);
                     // note t.owner has changed
+
                     await ACC_move(curOwner, Nft.User.toAccountIdentifier(request.to), tokenIndex);
 
-                    
                     let transactionId = await Cluster.history(_conf).add(#nft(#transfer({created=Time.now();token = tokenId(tokenIndex); from=curOwner; to=Nft.User.toAccountIdentifier(request.to); memo=Blob.fromArray([])})));
 
                     addTransaction(t.vars, transactionId);
 
                     return #ok({transactionId});
-                       
             
             };
             case (#err(e)) {
@@ -281,7 +279,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                         if (request.amount < amount) return #err(#InsufficientPayment(amount));
 
-                        let recharge_cost =  _oracle.pwrFee + diffStorage + diffOps;
+                        let recharge_cost = _oracle.pwrFee + diffStorage + diffOps;
 
                         let payment = amount - recharge_cost;
 
@@ -396,7 +394,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     public shared({caller}) func transfer(request : TransferRequest) : async TransferResponse {
 
-        if (request.amount != 1) return #err(#Other("Must use amount of 1"));
         if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
         if (Nft.User.validate(request.from) == false) return #err(#Other("Invalid from"));
@@ -458,7 +455,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
     public shared({caller}) func use(request : Nft.UseRequest) : async Nft.UseResponse {
 
-        if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid User"));
         if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
@@ -605,7 +602,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
 
 
-    public shared({caller}) func uploadChunk(request: Nft.UploadChunkRequest) : async () {
+    public shared({caller}) func upload_chunk(request: Nft.UploadChunkRequest) : async () {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
         assert((switch(getMeta(request.tokenIndex)) {
@@ -659,7 +656,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
 
-    public shared({caller}) func fetchChunk(request: Nft.FetchChunkRequest) : async ?Blob {
+    public shared({caller}) func fetch_chunk(request: Nft.FetchChunkRequest) : async ?Blob {
 
         
         assert(request.chunkIdx <= 15);
@@ -1190,7 +1187,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                             tid != request.plug
                                         });
 
-                                        let transactionId =  await Cluster.history(_conf).add(#nft(#unsocket({user=Nft.User.toAccountIdentifier(request.user); created=Time.now();plug = request.plug; socket=request.socket; memo = request.memo})));
+                                        let transactionId = await Cluster.history(_conf).add(#nft(#unsocket({user=Nft.User.toAccountIdentifier(request.user); created=Time.now();plug = request.plug; socket=request.socket; memo = request.memo})));
                                         addTransaction(vars, transactionId);
 
                                         #ok({transactionId});
@@ -1264,7 +1261,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     public query func allowance(request : Nft.Allowance.Request) : async Nft.Allowance.Response {
-        if (Nft.User.validate(request.owner) == false) return #err(#Other("Invalid User. Account identifiers must be all uppercase"));
+        if (Nft.User.validate(request.owner) == false) return #err(#Other("Invalid User"));
 
         switch ( balGetAllowance(balGet({token = request.token; user = request.owner}),request.spender)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance, allowance)) {

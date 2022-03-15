@@ -216,18 +216,21 @@ export const MintForm = () => {
         secret: false,
         tags: [],
       }}
-      onSubmit={(values, actions) => {
+      onSubmit={async (values, actions) => {
         // setInterval(() => {
-
-        setTimeout(() => {
-          actions.setSubmitting(false);
-        }, 500);
 
         // console.log("FORM VALUES", values);
         // dispatch(mint());
         // }, 1000);
 
-        dispatch(mint(record2request(form2record(values))));
+        try {
+          await dispatch(mint(record2request(form2record(values))));
+          actions.setSubmitting(false);
+        } catch (e) {
+          actions.setSubmitting(false);
+          throw e;
+        }
+
         // dispatch(sendSolution(values.code));
       }}
     >
@@ -668,11 +671,14 @@ export const MintForm = () => {
                               <NumberInput
                                 {...field}
                                 onChange={(num) => {
+                                  num = num > 0.06 ? 0.06 : num;
                                   props.setFieldValue("price", num);
                                 }}
                                 w={"100%"}
                                 precision={4}
                                 step={0.01}
+                                 max="0.06"
+                                  min="0.0004"
                                 variant="filled"
                               >
                                 <NumberInputField />

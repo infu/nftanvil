@@ -5,17 +5,17 @@ module {
 
     public type Interface = actor {
 
-            // mint function proxy which makes sure the nft author is the smart contract
-            register_token : shared (tid: Nft.TokenIdentifier) -> async RegisterResponse;
+            // // mint function proxy which makes sure the nft author is the smart contract
+            // register_token : shared (tid: Nft.TokenIdentifier) -> async RegisterResponse;
 
-            // balance - check the nft icp balance
-            balance : query (request: BalanceRequest) -> async BalanceResponse;
+            // // balance - check the nft icp balance
+            // balance : query (request: BalanceRequest) -> async BalanceResponse;
 
-            // withdraw - take rewards
-            withdraw : shared (request: WithdrawRequest) -> async WithdrawResponse;
+            // // withdraw - take rewards
+            // withdraw : shared (request: WithdrawRequest) -> async WithdrawResponse;
 
-            // refresh_icp_balance - take balance from pwr ledger and also take _config
-            refresh : shared () -> async ();
+            // // refresh_icp_balance - take balance from pwr ledger and also take _config
+            // refresh : shared () -> async ();
 
     };
 

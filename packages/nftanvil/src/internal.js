@@ -66,8 +66,7 @@ export const routerCanister = async () => {
     }
   }
 
-  let balance = await claimBalance(address, subaccount);
-  return { router, principal, address, subaccount, balance, id, map, identity };
+  return { router, principal, address, subaccount, id, map, identity };
 };
 
 let map = null;
@@ -83,9 +82,15 @@ export const refreshMap = async () => {
 export const claimBalance = async (address, subaccount) => {
   let map = await getMap();
 
-  let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr), {
-    agentOptions: { identity },
-  });
+  let pwr = pwrCanister(
+    PrincipalFromSlot(
+      map.space,
+      AccountIdentifier.TextToSlot(address, map.pwr)
+    ),
+    {
+      agentOptions: { fetch, identity, host },
+    }
+  );
 
   await pwr
     .pwr_purchase_claim({

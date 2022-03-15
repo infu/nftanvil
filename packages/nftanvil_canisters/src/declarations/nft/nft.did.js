@@ -50,7 +50,6 @@ export const idlFactory = ({ IDL }) => {
     'memo' : Memo,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
-    'amount' : Balance,
   });
   const TransferResponseError = IDL.Variant({
     'ICE' : IDL.Text,
@@ -367,7 +366,6 @@ export const idlFactory = ({ IDL }) => {
     'from' : User,
     'memo' : Memo,
     'subaccount' : IDL.Opt(SubAccount),
-    'amount' : Balance,
   });
   const TransferResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : TransactionId }),
@@ -378,7 +376,6 @@ export const idlFactory = ({ IDL }) => {
     'from' : User,
     'hash' : IDL.Vec(IDL.Nat8),
     'subaccount' : IDL.Opt(SubAccount),
-    'amount' : Balance,
   });
   const TransferLinkResponse = IDL.Variant({
     'ok' : IDL.Null,
@@ -462,7 +459,7 @@ export const idlFactory = ({ IDL }) => {
     'burn' : IDL.Func([BurnRequest], [BurnResponse], []),
     'claim_link' : IDL.Func([ClaimLinkRequest], [ClaimLinkResponse], []),
     'config_set' : IDL.Func([Config], [], []),
-    'fetchChunk' : IDL.Func(
+    'fetch_chunk' : IDL.Func(
         [FetchChunkRequest],
         [IDL.Opt(IDL.Vec(IDL.Nat8))],
         [],
@@ -510,7 +507,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'unplug' : IDL.Func([UnsocketRequest], [UnplugResponse], []),
     'unsocket' : IDL.Func([UnsocketRequest], [UnsocketResponse], []),
-    'uploadChunk' : IDL.Func([UploadChunkRequest], [], []),
+    'upload_chunk' : IDL.Func([UploadChunkRequest], [], []),
     'use' : IDL.Func([UseRequest], [UseResponse], []),
     'wallet_receive' : IDL.Func([], [], []),
   });

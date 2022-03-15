@@ -10,7 +10,8 @@
     "monkey": "../../node_modules/.bin/babel-node --no-deprecation src/monkey_test.js",
     "anvil": "../../node_modules/.bin/babel-node --no-deprecation src/mint_anvil.js",
     "testanvil": "../../node_modules/.bin/babel-node --no-deprecation src/test_anvil.js",
-    "testledger": "../../node_modules/.bin/babel-node --no-deprecation src/test_ledger.js"
+    "testledger": "../../node_modules/.bin/babel-node --no-deprecation src/test_ledger.js",
+    "security_test": "../../node_modules/.bin/babel-node --no-deprecation src/security_test.js"
   },
   "dependencies": {
     "@vvv-interactive/nftanvil": "^0.3.1",

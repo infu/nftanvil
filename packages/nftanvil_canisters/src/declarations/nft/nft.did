@@ -93,7 +93,6 @@ type TransferResponse =
  };
 type TransferRequest = 
  record {
-   amount: Balance;
    from: User;
    memo: Memo;
    subaccount: opt SubAccount;
@@ -115,7 +114,6 @@ type TransferLinkResponse =
  };
 type TransferLinkRequest = 
  record {
-   amount: Balance;
    from: User;
    hash: blob;
    subaccount: opt SubAccount;
@@ -491,7 +489,7 @@ type Class =
    burn: (BurnRequest) -> (BurnResponse);
    claim_link: (ClaimLinkRequest) -> (ClaimLinkResponse);
    config_set: (Config) -> ();
-   fetchChunk: (FetchChunkRequest) -> (opt blob);
+   fetch_chunk: (FetchChunkRequest) -> (opt blob);
    http_request: (Request) -> (Response) query;
    http_request_streaming_callback: (Token) -> (Callback) query;
    metadata: (TokenIdentifier) -> (MetadataResponse) query;
@@ -522,7 +520,7 @@ type Class =
    transfer_link: (TransferLinkRequest) -> (TransferLinkResponse);
    unplug: (UnsocketRequest) -> (UnplugResponse);
    unsocket: (UnsocketRequest) -> (UnsocketResponse);
-   uploadChunk: (UploadChunkRequest) -> ();
+   upload_chunk: (UploadChunkRequest) -> ();
    use: (UseRequest) -> (UseResponse);
    wallet_receive: () -> ();
  };
@@ -559,7 +557,6 @@ type BurnResponse =
  };
 type BurnRequest = 
  record {
-   amount: Balance;
    memo: Memo;
    subaccount: opt SubAccount;
    token: TokenIdentifier;

@@ -22,13 +22,15 @@ import {
 const main = async () => {
   let { principal, address, subaccount } = await routerCanister();
   console.log("Script principal ", principal);
+  let balance = await claimBalance(address, subaccount); // if you sent ICP to that address it needs to be claimed
 
   let map = await getMap();
 
   console.log("Address ", address, "subaccount", subaccount);
 
-  let pwr = pwrCanister(PrincipalFromSlot(map.space, map.pwr));
-
+  let pwr = pwrCanister(
+    PrincipalFromSlot(map.space, AccountIdentifier.TextToSlot(address, map.pwr))
+  );
   await pwr.faucet({
     aid: AccountIdentifier.TextToArray(address),
     amount: 1000000000,
