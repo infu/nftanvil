@@ -324,7 +324,6 @@ function SetPriceButton({ id, meta }) {
               </FormLabel>
 
                   <NumberInput
-                    
                     w={"100%"}
                     precision={4}
                     step={0.01}
