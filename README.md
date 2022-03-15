@@ -2,8 +2,6 @@
 
 https://nftanvil.com
 
-https://5rttq-yqaaa-aaaai-qa2ea-cai.raw.ic0.app
-
 NPM Packages: https://www.npmjs.com/org/vvv-interactive
 
 Made by VVV Interactive
