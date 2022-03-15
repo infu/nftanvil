@@ -4,7 +4,7 @@ https://nftanvil.com
 
 NPM Packages: https://www.npmjs.com/org/vvv-interactive
 
-Made by VVV DAO
+Made by VVV
 
 Blockchain Technologies Used:
 
