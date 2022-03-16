@@ -16,6 +16,7 @@ import {
   AccountIdentifier,
   getMap,
   PrincipalFromSlot,
+  claimBalance
 } from "./internal.js";
 
 export {
@@ -35,4 +36,5 @@ export {
   AccountIdentifier,
   getMap,
   PrincipalFromSlot,
+  claimBalance
 };

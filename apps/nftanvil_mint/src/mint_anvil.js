@@ -6,6 +6,7 @@ import {
   AccountIdentifier,
   PrincipalFromSlot,
   anvilCanister,
+  claimBalance
 } from "@vvv-interactive/nftanvil";
 
 import {
@@ -31,7 +32,7 @@ const main = async () => {
   let pwr = pwrCanister(
     PrincipalFromSlot(map.space, AccountIdentifier.TextToSlot(address, map.pwr))
   );
-  
+
   await pwr.faucet({
     aid: AccountIdentifier.TextToArray(address),
     amount: 1000000000,
