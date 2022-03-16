@@ -152,7 +152,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     };
 
   // public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
-  //   assert(Cluster.pwr2slot(_conf, aid) == _slot);
+  //   errrrrr dont uncomment by mistake assert(Cluster.pwr2slot(_conf, aid) == _slot);
   //   balanceAdd(#pwr, aid, amount); //TODO: Remove in production
   // };
 
@@ -606,7 +606,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
                 if (ac.pwr < amount) return #err(#InsufficientBalance);
 
-                let new_balance = ac.pwr - amount;
+                let new_balance = ac.pwr - amount; // TODO: bug here, make sure it uses target not pwr
 
                 ac.pwr := new_balance;
 

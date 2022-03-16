@@ -504,10 +504,13 @@ export const ProToggle = () => {
 function Logo(props) {
   return (
     <Box {...props}>
-      <Stack direction="horizontal" ml="6px">
+      <Stack direction="horizontal" ml="6px" sx={{position:"relative"}}>
         <img src={anvillogo} width="30px" />
-        <Text mt="7px" ml="10px" sx={{ fontFamily: "Greycliff" }}>
+        <Text mt="7px" ml="10px" sx={{ fontFamily: "Greycliff", position:"absolute", top:"-5px",left:"30px" }}>
           NFT<b>ANVIL</b>
+        </Text>
+         <Text mt="7px" fontSize="11.4px" ml="10px" sx={{ position:"absolute", left:"30px",top:"12px", width:"85px", fontFamily: "Greycliff" }}>
+         mint a promise
         </Text>
       </Stack>
     </Box>
@@ -695,7 +698,7 @@ function App() {
   const theme = useColorModeValue("light", "dark");
   if (!mapLoaded) return null;
 
-  if (Cookies.get("admin") !== "true") return <Waiting />;
+  // if (Cookies.get("admin") !== "true") return <Waiting />;
 
   return (
     <>

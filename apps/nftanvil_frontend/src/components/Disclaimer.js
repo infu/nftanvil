@@ -110,7 +110,7 @@ export function Disclaimer() {
               onClick={onAgree}
               fontWeight="bold"
             >
-              I understand the risks involved, proceed to the app
+              I understand the risks involved,<br/> proceed to the app
             </Button>
           </Text>
         </ModalBody>

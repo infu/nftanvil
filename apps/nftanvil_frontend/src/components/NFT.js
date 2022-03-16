@@ -323,20 +323,20 @@ function SetPriceButton({ id, meta }) {
                 Price in <ICP />
               </FormLabel>
 
-                  <NumberInput
-                    w={"100%"}
-                    precision={4}
-                    step={0.01}
-                    max="0.06"
-                    min="0.0004"
-                    variant="filled"
-                  >
-                    <NumberInputField ref={initialRef} />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
+              <NumberInput
+                w={"100%"}
+                precision={4}
+                step={0.01}
+                max="0.06"
+                min="0.0004"
+                variant="filled"
+              >
+                <NumberInputField ref={initialRef} />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
 
               {/* <Input  ref={initialRef} placeholder="0.001" max="0.06" min="0.0004"/> */}
             </FormControl>
