@@ -1,6 +1,6 @@
 {
   "name": "@vvv-interactive/nftanvil-canisters",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "scripts": {
     "watch": "babel -d cjs src --copy-files --watch",
     "build": "./scripts/build.sh && babel -d cjs src --copy-files",
