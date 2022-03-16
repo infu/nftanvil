@@ -1,6 +1,6 @@
 {
   "name": "nftanvil_backup",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "main": "index.js",
   "type": "module",
   "private": true,
@@ -9,9 +9,9 @@
     "history": "../../node_modules/.bin/babel-node --no-deprecation src/history.js"
   },
   "dependencies": {
-    "@vvv-interactive/nftanvil": "^0.5.0",
-    "@vvv-interactive/nftanvil-canisters": "^0.5.0",
-    "@vvv-interactive/nftanvil-tools": "^0.5.0",
+    "@vvv-interactive/nftanvil": "^0.6.0",
+    "@vvv-interactive/nftanvil-canisters": "^0.6.0",
+    "@vvv-interactive/nftanvil-tools": "^0.6.0",
     "dotenv": "^10.0.0"
   }
 }

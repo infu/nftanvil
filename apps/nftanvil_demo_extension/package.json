@@ -1,6 +1,6 @@
 {
   "name": "nftanvil_demo_extension",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "main": "index.js",
   "license": "MIT"
 }
