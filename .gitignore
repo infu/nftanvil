@@ -19,6 +19,7 @@ cjs
 src/declarations
 # testing
 /coverage
+tmp/
 
 identity.json
 
