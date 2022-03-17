@@ -105,7 +105,7 @@ export const claimBalance = async (address, subaccount) => {
     let paymentAddress = intent.ok;
 
     let ledger = ledgerCanister({
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: { fetch, identity, host },
     });
 
     let ledger_result = await ledger.transfer({
