@@ -93,6 +93,25 @@ export const claimBalance = async (address, subaccount) => {
       }
     ); 
  //
+    let ledger = ledgerCanister({
+      agentOptions: { fetch, identity, host },
+    });
+
+
+    let amount = await ledger
+    .account_balance({
+      account: AccountIdentifier.TextToArray(address),
+    })
+    .then((icp) => {
+      let e8s = icp.e8s;
+      return icp.e8s - 10000n;
+    })
+    .catch((e) => {
+      if (process.env.NODE_ENV === "production") console.log(e); // Will always show bug in dev mode because there is ledger canister on the local replica
+      return 0n;
+    });
+
+    if (amount < 20000n) return;
 
 
     let intent = await pwr.pwr_purchase_intent({
@@ -104,9 +123,7 @@ export const claimBalance = async (address, subaccount) => {
 
     let paymentAddress = intent.ok;
 
-    let ledger = ledgerCanister({
-      agentOptions: { fetch, identity, host },
-    });
+
 
     let ledger_result = await ledger.transfer({
       memo: 0,
