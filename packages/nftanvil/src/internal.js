@@ -80,17 +80,61 @@ export const refreshMap = async () => {
 };
 
 export const claimBalance = async (address, subaccount) => {
-  let map = await getMap();
+  //let map = await getMap();
 
-  let pwr = pwrCanister(
-    PrincipalFromSlot(
-      map.space,
-      AccountIdentifier.TextToSlot(address, map.pwr)
-    ),
-    {
-      agentOptions: { fetch, identity, host },
+  // ssss
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        map.space,
+        AccountIdentifier.TextToSlot(address, map.pwr)
+      ),
+      {
+        agentOptions: { fetch, identity, host },
+      }
+    ); 
+ //
+
+
+    let intent = await pwr.pwr_purchase_intent({
+      user: { address: AccountIdentifier.TextToArray(address) },
+      subaccount : [AccountIdentifier.TextToArray(subaccount)],
+    });
+
+    if (intent.err) throw intent.err;
+
+    let paymentAddress = intent.ok;
+
+    let ledger = ledgerCanister({
+      agentOptions: authentication.getAgentOptions(),
+    });
+
+    let ledger_result = await ledger.transfer({
+      memo: 0,
+      amount: { e8s: amount },
+      fee: { e8s: 10000n },
+      from_subaccount: [AccountIdentifier.TextToArray(subaccount)],
+      to: paymentAddress,
+      created_at_time: [],
+    });
+
+    if (ledger_result.Ok) {
+  
+    } else {
+      console.error(ledger_result.Err);
+      return;
     }
-  );
+
+  // eeee
+
+  // let pwr = pwrCanister(
+  //   PrincipalFromSlot(
+  //     map.space,
+  //     AccountIdentifier.TextToSlot(address, map.pwr)
+  //   ),
+  //   {
+  //     agentOptions: { fetch, identity, host },
+  //   }
+  // );
 
   await pwr
     .pwr_purchase_claim({
