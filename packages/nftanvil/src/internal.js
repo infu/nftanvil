@@ -28,12 +28,7 @@ import {
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 let host =
-  process.env.NODE_ENV !== "production"
-    ? "http://localhost:8000"
-    : "https://" + process.env.FRONTEND_CANISTER + ".ic0.app";
-
-if (process.env.NODE_ENV !== "production")
-  console.log("WARNING RUNNING IN LOCAL DEVELOPMENT MODE");
+  process.env.NETWORK !== "ic" ? "http://localhost:8000" : "https://ic0.app";
 
 export const slotcan = (fn, slot) => {
   let canister = PrincipalFromSlot(map.space, slot).toText();
@@ -104,7 +99,6 @@ export const claimBalance = async (address, subaccount) => {
       return icp.e8s - 10000n;
     })
     .catch((e) => {
-      if (process.env.NODE_ENV === "production") console.log(e); // Will always show bug in dev mode because there is ledger canister on the local replica
       return 0n;
     });
 
