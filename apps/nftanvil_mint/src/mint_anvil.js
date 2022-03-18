@@ -6,7 +6,7 @@ import {
   AccountIdentifier,
   PrincipalFromSlot,
   anvilCanister,
-  claimBalance
+  claimBalance,
 } from "@vvv-interactive/nftanvil";
 
 import {
@@ -43,6 +43,7 @@ const main = async () => {
   });
 
   console.log("Balance", balance);
+  if (balance.pwr <= 0n) return;
 
   // Currently agent-js candid implementation doesn't supply the user with very informative errors,
   // so a creating correct metadata record will be hard. Add one change at a time and test.
@@ -56,7 +57,7 @@ const main = async () => {
         metadata: {
           domain: [],
           name: ["Anvil #" + idx],
-          lore: ["Take share of smart contract profits"],
+          lore: ["Governance tokens"],
           quality: 1,
           secret: false,
           transfer: { unrestricted: null },

@@ -17,9 +17,7 @@ import { encodeTokenId } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import fetch from "node-fetch";
 import { fileIdentity } from "./identity.js";
 
-dotenv.config(
-  process.env.NODE_ENV !== "production" ? { path: ".dev.env" } : {}
-);
+dotenv.config({});
 let identity = fileIdentity();
 
 import {
@@ -83,22 +81,21 @@ export const claimBalance = async (address, subaccount) => {
   //let map = await getMap();
 
   // ssss
-    let pwr = pwrCanister(
-      PrincipalFromSlot(
-        map.space,
-        AccountIdentifier.TextToSlot(address, map.pwr)
-      ),
-      {
-        agentOptions: { fetch, identity, host },
-      }
-    ); 
- //
-    let ledger = ledgerCanister({
+  let pwr = pwrCanister(
+    PrincipalFromSlot(
+      map.space,
+      AccountIdentifier.TextToSlot(address, map.pwr)
+    ),
+    {
       agentOptions: { fetch, identity, host },
-    });
+    }
+  );
+  //
+  let ledger = ledgerCanister({
+    agentOptions: { fetch, identity, host },
+  });
 
-
-    let amount = await ledger
+  let amount = await ledger
     .account_balance({
       account: AccountIdentifier.TextToArray(address),
     })
@@ -111,35 +108,31 @@ export const claimBalance = async (address, subaccount) => {
       return 0n;
     });
 
-    if (amount < 20000n) return;
+  if (amount < 20000n) return;
 
+  let intent = await pwr.pwr_purchase_intent({
+    user: { address: AccountIdentifier.TextToArray(address) },
+    subaccount: [AccountIdentifier.TextToArray(subaccount)],
+  });
 
-    let intent = await pwr.pwr_purchase_intent({
-      user: { address: AccountIdentifier.TextToArray(address) },
-      subaccount : [AccountIdentifier.TextToArray(subaccount)],
-    });
+  if (intent.err) throw intent.err;
 
-    if (intent.err) throw intent.err;
+  let paymentAddress = intent.ok;
 
-    let paymentAddress = intent.ok;
+  let ledger_result = await ledger.transfer({
+    memo: 0,
+    amount: { e8s: amount },
+    fee: { e8s: 10000n },
+    from_subaccount: [AccountIdentifier.TextToArray(subaccount)],
+    to: paymentAddress,
+    created_at_time: [],
+  });
 
-
-
-    let ledger_result = await ledger.transfer({
-      memo: 0,
-      amount: { e8s: amount },
-      fee: { e8s: 10000n },
-      from_subaccount: [AccountIdentifier.TextToArray(subaccount)],
-      to: paymentAddress,
-      created_at_time: [],
-    });
-
-    if (ledger_result.Ok) {
-  
-    } else {
-      console.error(ledger_result.Err);
-      return;
-    }
+  if (ledger_result.Ok) {
+  } else {
+    console.error(ledger_result.Err);
+    return;
+  }
 
   // eeee
 
