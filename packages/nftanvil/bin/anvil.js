@@ -189,7 +189,7 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
         quality: "quality" in s ? s.quality : 1,
         secret: "secret" in s ? s.secret : false,
         transfer: "transfer" in s ? s.transfer : { unrestricted: null },
-        ttl: ["ttl" in s ? s.ttl : 103680],
+        ttl: ["ttl" in s ? s.ttl : 1036800],
         content:
           "content" in s
             ? [
