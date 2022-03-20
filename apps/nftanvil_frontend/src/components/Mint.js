@@ -677,8 +677,8 @@ export const MintForm = () => {
                                 w={"100%"}
                                 precision={4}
                                 step={0.01}
-                                 max="0.06"
-                                  min="0.0004"
+                                max="0.06"
+                                min="0"
                                 variant="filled"
                               >
                                 <NumberInputField />

@@ -38,7 +38,7 @@ export const slotcan = (fn, slot) => {
 };
 
 export const routerCanister = async () => {
-  let id = process.env.ROUTER_CANISTER;
+  let id = process.env.ROUTER_CANISTER || "kbzti-laaaa-aaaai-qe2ma-cai";
   let { router, agent } = cRouter.routerCanister(id, {
     agentOptions: { fetch, identity, host },
   });

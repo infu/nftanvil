@@ -56,10 +56,9 @@ export const uploadIPFS = async (token, up) => {
   return cid;
 };
 
-export const easyMintOne = async (
-  { user, subaccount, metadata },
-  proxy_canister
-) => {
+export const easyMintOne = async (xx, proxy_canister) => {
+  if (!xx) return null;
+  let { user, subaccount, metadata } = xx;
   const onetry = async (tryidx) => {
     await delay(1);
     let ipfs_pins = [];
