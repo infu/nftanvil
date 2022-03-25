@@ -336,7 +336,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
   
 
     public shared({caller}) func set_price(request: Nft.SetPriceRequest) : async Nft.SetPriceResponse {
-            if (request.price.amount < 100000) return #err(#TooLow);
+            if ((request.price.amount != 0) and (request.price.amount < 100000)) return #err(#TooLow);
             if (request.price.amount > 1000000000000) return #err(#TooHigh);
 
             if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid user"));
@@ -358,7 +358,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             let {amount; marketplace} = request.price;
                             
                             let new_price = {
-                                amount = amount + diffStorage + diffOps + _oracle.pwrFee;
+                                amount = switch(amount != 0) {
+                                    case (true) amount + diffStorage + diffOps + _oracle.pwrFee;
+                                    case (false) amount
+                                };
                                 marketplace;
                                 };
                                 

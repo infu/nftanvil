@@ -118,12 +118,6 @@ function PageTabs(p) {
             Mint
           </Button>
         </Link>
-
-        <Link to="/history">
-          <Button variant="solid" colorScheme="gray">
-            History
-          </Button>
-        </Link>
       </ButtonGroup>
     </Box>
   );
@@ -466,6 +460,9 @@ function LoginBox() {
             <Link to="/dashboard">
               <MenuItem icon={<InfoOutlineIcon />}>Dashboard</MenuItem>
             </Link>
+            <Link to="/history">
+              <MenuItem>History</MenuItem>
+            </Link>
             <Box align="left" pl="3" pt="1" pb="1">
               <ProToggle />
             </Box>
@@ -504,13 +501,33 @@ export const ProToggle = () => {
 function Logo(props) {
   return (
     <Box {...props}>
-      <Stack direction="horizontal" ml="6px" sx={{position:"relative"}}>
+      <Stack direction="horizontal" ml="6px" sx={{ position: "relative" }}>
         <img src={anvillogo} width="30px" />
-        <Text mt="7px" ml="10px" sx={{ fontFamily: "Greycliff", position:"absolute", top:"-5px",left:"30px" }}>
+        <Text
+          mt="7px"
+          ml="10px"
+          sx={{
+            fontFamily: "Greycliff",
+            position: "absolute",
+            top: "-5px",
+            left: "30px",
+          }}
+        >
           NFT<b>ANVIL</b>
         </Text>
-         <Text mt="7px" fontSize="11.4px" ml="10px" sx={{ position:"absolute", left:"30px",top:"12px", width:"85px", fontFamily: "Greycliff" }}>
-         mint a promise
+        <Text
+          mt="7px"
+          fontSize="11.4px"
+          ml="10px"
+          sx={{
+            position: "absolute",
+            left: "30px",
+            top: "12px",
+            width: "85px",
+            fontFamily: "Greycliff",
+          }}
+        >
+          mint a promise
         </Text>
       </Stack>
     </Box>

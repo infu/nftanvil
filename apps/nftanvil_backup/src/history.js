@@ -17,12 +17,14 @@ const main = async () => {
 
   let historyCan = PrincipalFromSlot(map.space, map.history);
   console.log("principal", historyCan.toText());
-  return;
+
   let history = historyCanister(historyCan);
 
   let info = await history.stats();
 
-  console.log("Info", info);
+  let some = await history.info();
+
+  console.log("Info", info, some);
 };
 
 main();

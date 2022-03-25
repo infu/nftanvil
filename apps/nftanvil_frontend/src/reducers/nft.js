@@ -699,7 +699,6 @@ export const transfer_link =
       from: { address: AccountIdentifier.TextToArray(address) },
       hash: Array.from(hash),
       token: tid,
-      amount: 1,
       subaccount,
     });
     if (rez.err) throw rez.err;

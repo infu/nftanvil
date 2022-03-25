@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#!/usr/bin/env NODE_OPTIONS=--no-warnings node
 import {
   easyMint,
   routerCanister,
@@ -23,12 +23,21 @@ import {
   getSubAccountArray,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
+import {
+  chunkBlob,
+  encodeLink,
+  decodeLink,
+  generateKeyHashPair,
+  uploadFile,
+} from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+
 import fs from "fs";
 import mime from "mime";
 import { Command } from "commander";
 import figlet from "figlet";
 import path from "path";
 import pLimit from "p-limit";
+import getRandomValues from "get-random-values";
 const limit = pLimit(
   process.env.MINT_CONCURRENCY ? parseInt(process.env.MINT_CONCURRENCY, 10) : 20
 ); // Number of concurrent async requests. Don't get it too high or network may block you
@@ -42,7 +51,7 @@ console.log(
 );
 
 const burnEverything = async () => {
-  let { principal, address, subaccount } = await routerCanister();
+  let { address, subaccount } = await routerCanister();
 
   let map = await getMap();
 
@@ -81,7 +90,7 @@ const burnEverything = async () => {
 };
 
 const balanceAndAddress = async () => {
-  let { principal, address, subaccount } = await routerCanister();
+  let { address, subaccount } = await routerCanister();
 
   let map = await getMap();
 
@@ -102,6 +111,86 @@ const balanceAndAddress = async () => {
     "ICP",
     "(" + balance.pwr + " e8s)"
   );
+};
+
+const giftMain = async (NFT_FROM, NFT_TO) => {
+  let { address, subaccount } = await routerCanister();
+  let giftCodes = {};
+  try {
+    giftCodes = JSON.parse(fs.readFileSync("./giftcodes.json"));
+  } catch (e) {}
+  let map = await getMap();
+  //  = JSON.parse(fs.readFileSync("./input.js"));
+  let minted;
+  try {
+    minted = JSON.parse(fs.readFileSync("./minted.json"));
+  } catch (e) {
+    console.log("minted.json not found");
+    return;
+  }
+
+  let data = await new Promise((resolve, reject) => {
+    import(path.resolve(process.cwd(), "./input.js")).then((importedModule) => {
+      resolve(importedModule.default);
+    });
+  });
+
+  if (!data) {
+    console.log("No input.js invalid");
+    return;
+  }
+
+  let tokens = [];
+  for (let i = NFT_FROM; i < NFT_TO; i++) {
+    tokens.push(i);
+  }
+
+  let results = await Promise.all(
+    tokens.map((i) =>
+      limit(async () => {
+        let tid = minted[i];
+        if (!tid) {
+          console.log("index", i, "missing from minted.json");
+          return "x";
+        }
+
+        try {
+          let { index, slot } = decodeTokenId(tid);
+
+          let canister = PrincipalFromSlot(map.space, slot).toText();
+
+          let nft = nftCanister(canister);
+
+          let { key, hash } = generateKeyHashPair(getRandomValues);
+
+          let rez = await nft.transfer_link({
+            hash: Array.from(hash),
+            subaccount: [AccountIdentifier.TextToArray(subaccount)],
+            token: tid,
+            from: { address: AccountIdentifier.TextToArray(address) },
+          });
+          if ("err" in rez) throw rez.err;
+
+          let code = encodeLink(slot, index, key);
+          return "nftanvil.com/" + code;
+        } catch (e) {
+          return "-";
+
+          console.log(e);
+          console.log("Failed creating gift for token", tid);
+        }
+      })
+    )
+  );
+
+  for (let [idx, re] of results.entries()) {
+    let ridx = idx + NFT_FROM;
+    console.log("RE", ridx, re);
+    giftCodes[ridx] = re;
+  }
+
+  fs.writeFileSync("./giftcodes.json", JSON.stringify(giftCodes));
+  console.log("DONE. Saved in giftcodes.json");
 };
 
 const mintMain = async (NFT_FROM, NFT_TO) => {
@@ -276,6 +365,16 @@ program
   .action((from, to, options) => {
     console.log(`Minting from ${from} to ${to}`);
     mintMain(parseInt(from, 10), parseInt(to, 10));
+  });
+
+program
+  .command("gift")
+  .description("Creates gift links for nfts from index to index")
+  .argument("<number>", "from index")
+  .argument("<number>", "to index")
+  .action((from, to, options) => {
+    console.log(`Creating gift links from ${from} to ${to}`);
+    giftMain(parseInt(from, 10), parseInt(to, 10));
   });
 
 program.parse();

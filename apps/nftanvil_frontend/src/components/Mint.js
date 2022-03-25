@@ -671,13 +671,12 @@ export const MintForm = () => {
                               <NumberInput
                                 {...field}
                                 onChange={(num) => {
-                                  num = num > 0.06 ? 0.06 : num;
                                   props.setFieldValue("price", num);
                                 }}
                                 w={"100%"}
                                 precision={4}
                                 step={0.01}
-                                max="0.06"
+                                max="0.12"
                                 min="0"
                                 variant="filled"
                               >

@@ -27,30 +27,33 @@ import {
 } from "../components/TransactionToast";
 import { mapValues } from "lodash";
 
+const initialState = {
+  address: null,
+  subaccount: null,
+  principal: null,
+  anonymous: true,
+  focused: true,
+  icp: "0",
+  anv: "0",
+  map: {},
+  acccan: "",
+  oracle: {
+    icpCycles: "160000",
+    icpFee: "10000",
+    pwrFee: "10000",
+    anvFee: "10000",
+  },
+  pro: false,
+  modal_nftstorage: false,
+  key_nftstorage: null,
+  disclaimer: true,
+};
+
 export const userSlice = createSlice({
   name: "user",
-  initialState: {
-    address: null,
-    subaccount: null,
-    principal: null,
-    anonymous: true,
-    focused: true,
-    icp: "0",
-    anv: "0",
-    map: {},
-    acccan: "",
-    oracle: {
-      icpCycles: "160000",
-      icpFee: "10000",
-      pwrFee: "10000",
-      anvFee: "10000",
-    },
-    pro: false,
-    modal_nftstorage: false,
-    key_nftstorage: null,
-    disclaimer: true,
-  },
+  initialState,
   reducers: {
+    resetReducer: () => initialState,
     balancesSet: (state, action) => {
       return {
         ...state,
@@ -110,6 +113,7 @@ export const userSlice = createSlice({
 
 // Action creators are generated for each case reducer function
 export const {
+  resetReducer,
   proSet,
   authSet,
   balancesSet,
@@ -269,7 +273,9 @@ export const logout = () => async (dispatch, getState) => {
 
   let principal = identity.getPrincipal().toString();
   let anonymous = !(await authClient.isAuthenticated());
-  dispatch(authSet({ address: null, principal, anonymous }));
+  //dispatch(authSet({ address: null, principal, anonymous }));
+  dispatch(resetReducer());
+  dispatch(auth());
 };
 
 export const refresh_icp_balance = () => async (dispatch, getState) => {

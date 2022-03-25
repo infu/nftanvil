@@ -104,6 +104,8 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     };
 
     public query func list(request: H.ListRequest) : async H.ListResponse {
+        assert((request.to - request.from) <= 100);
+        assert(request.to > request.from);
         Array_.amap<?H.Event>(Nat32.toNat(request.to - request.from), func (index: Nat) : ?H.Event { 
             _transactions[Nat32.toNat(request.from + Nat32.fromNat(index))];
         });

@@ -295,7 +295,7 @@ export const History = (p) => {
         idx={idx + from}
         canister={canister}
         ev={events[idx] ? events[idx][0] : null}
-        showThumb={true}
+        showThumb={false}
       />
     );
   }

@@ -28,7 +28,7 @@ import {
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 let host =
-  process.env.NETWORK !== "ic" ? "http://localhost:8000" : "https://ic0.app";
+  process.env.NETWORK == "local" ? "http://localhost:8000" : "https://ic0.app";
 
 export const slotcan = (fn, slot) => {
   let canister = PrincipalFromSlot(map.space, slot).toText();
@@ -127,18 +127,6 @@ export const claimBalance = async (address, subaccount) => {
     console.error(ledger_result.Err);
     return;
   }
-
-  // eeee
-
-  // let pwr = pwrCanister(
-  //   PrincipalFromSlot(
-  //     map.space,
-  //     AccountIdentifier.TextToSlot(address, map.pwr)
-  //   ),
-  //   {
-  //     agentOptions: { fetch, identity, host },
-  //   }
-  // );
 
   await pwr
     .pwr_purchase_claim({

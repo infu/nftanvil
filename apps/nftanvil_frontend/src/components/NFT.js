@@ -241,10 +241,60 @@ function SetPriceButton({ id, meta }) {
   const address = useSelector((state) => state.user.address);
 
   const initialRef = React.useRef();
+  const removeSale = async () => {
+    onClose();
+    let toastId = toast("Removing from sale...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
 
+    let price = {
+      amount: 0,
+      marketplace: [
+        {
+          address: AccountIdentifier.TextToArray(MARKETPLACE_AID),
+          share: MARKETPLACE_SHARE,
+        },
+      ],
+    };
+
+    try {
+      await dispatch(set_price({ id, price }));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <div>
+            <div>Removed from sale.</div>
+          </div>
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+    } catch (e) {
+      console.error("Remove from sale error", e);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <TransactionFailed
+            title="Removing from sale failed"
+            message={e.message}
+          />
+        ),
+      });
+    }
+  };
   const setPriceOk = async () => {
     let priceval = parseFloat(initialRef.current.value);
-    if (priceval > 0.06) priceval = 0.06;
 
     let amount = AccountIdentifier.icpToE8s(
       priceval /
@@ -327,8 +377,8 @@ function SetPriceButton({ id, meta }) {
                 w={"100%"}
                 precision={4}
                 step={0.01}
-                max="0.06"
-                min="0.0004"
+                max="0.12"
+                min="0"
                 variant="filled"
               >
                 <NumberInputField ref={initialRef} />
@@ -358,8 +408,11 @@ function SetPriceButton({ id, meta }) {
           </ModalBody>
           <ModalFooter>
             <Button onClick={onClose}>Cancel</Button>
+            <Button ml={3} onClick={removeSale}>
+              Remove from sale
+            </Button>
             <Button ml={3} onClick={setPriceOk}>
-              Set
+              Set for sale
             </Button>
           </ModalFooter>
         </ModalContent>
