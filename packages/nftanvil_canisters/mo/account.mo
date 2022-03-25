@@ -42,12 +42,10 @@ shared({ caller = _installer }) actor class Class() = this {
     type TokenIndex = Nft.TokenIndex;
     type Slot = Nft.CanisterSlot;
 
-
     private stable var _tmpAccount: [(AccountIdentifier, Account.AccountRecordSerialized)] = [];
 
     private var _account: TrieRecord.TrieRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized> = TrieRecord.TrieRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Account.AccountRecordSerialize, Account.AccountRecordUnserialize);
    
-
     //Handle canister upgrades
     system func preupgrade() {
         _tmpAccount := Iter.toArray(_account.serialize());
@@ -60,15 +58,12 @@ shared({ caller = _installer }) actor class Class() = this {
     
     private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
-
-
     public func wallet_receive() : async () {
         let available = Cycles.available();
         let accepted = Cycles.accept(available);
         assert (accepted == available);
         _cycles_recieved += accepted;
     };
-
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);

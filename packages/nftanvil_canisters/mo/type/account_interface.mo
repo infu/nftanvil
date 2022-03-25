@@ -12,7 +12,7 @@ module {
           rem : shared (aid: Nft.AccountIdentifier, idx:Nft.TokenIndex) -> async ();
           add_transaction : shared (aid: Nft.AccountIdentifier, tx: Nft.TransactionId) -> async ();
           meta : query (aid: Nft.AccountIdentifier) -> async ?AccountMeta;
-          };
+     };
 
      public type TokenIdentifier = Nft.TokenIdentifier;
 
@@ -26,7 +26,7 @@ module {
           tokens : Inventory.Inventory;
           var info : ?AddressInfo;
           var transactions : [Nft.TransactionId]
-          };
+     };
 
      public type AccountRecordSerialized = {
           tokens : [TokenIdentifier];

@@ -113,6 +113,85 @@ const balanceAndAddress = async () => {
   );
 };
 
+const transferMain = async (NFT_FROM, NFT_TO, TO_ADDRESS) => {
+  let { address, subaccount } = await routerCanister();
+
+  let map = await getMap();
+  //  = JSON.parse(fs.readFileSync("./input.js"));
+  let minted;
+  try {
+    minted = JSON.parse(fs.readFileSync("./minted.json"));
+  } catch (e) {
+    console.log("minted.json not found");
+    return;
+  }
+
+  let data = await new Promise((resolve, reject) => {
+    import(path.resolve(process.cwd(), "./input.js")).then((importedModule) => {
+      resolve(importedModule.default);
+    });
+  });
+
+  if (!data) {
+    console.log("No input.js invalid");
+    return;
+  }
+
+  let tokens = [];
+  for (let i = NFT_FROM; i < NFT_TO; i++) {
+    tokens.push(i);
+  }
+
+  let results = await Promise.all(
+    tokens.map((i) =>
+      limit(async () => {
+        let tid = minted[i];
+        if (!tid) {
+          console.log("index", i, "missing from minted.json");
+          return false;
+        }
+
+        try {
+          let { index, slot } = decodeTokenId(tid);
+
+          let canister = PrincipalFromSlot(map.space, slot).toText();
+
+          let nft = nftCanister(canister);
+
+          let rez = await nft.transfer({
+            subaccount: [AccountIdentifier.TextToArray(subaccount)],
+            token: tid,
+            from: { address: AccountIdentifier.TextToArray(address) },
+            to: { address: AccountIdentifier.TextToArray(TO_ADDRESS) },
+            memo: [],
+          });
+
+          if ("err" in rez) throw rez.err;
+
+          return true;
+        } catch (e) {
+          console.log(e);
+          console.log("Failed creating gift for token", tid);
+          return false;
+        }
+      })
+    )
+  );
+
+  let ok = 0;
+  let fail = 0;
+  for (let [idx, re] of results.entries()) {
+    let ridx = idx + NFT_FROM;
+    if (re) ok++;
+    else {
+      fail++;
+      console.log(ridx, "transfer failed");
+    }
+  }
+
+  console.log(`DONE. ${fail} failed. ${ok} ok. `);
+};
+
 const giftMain = async (NFT_FROM, NFT_TO) => {
   let { address, subaccount } = await routerCanister();
   let giftCodes = {};
@@ -174,10 +253,9 @@ const giftMain = async (NFT_FROM, NFT_TO) => {
           let code = encodeLink(slot, index, key);
           return "nftanvil.com/" + code;
         } catch (e) {
-          return "-";
-
           console.log(e);
           console.log("Failed creating gift for token", tid);
+          return "-";
         }
       })
     )
@@ -375,6 +453,17 @@ program
   .action((from, to, options) => {
     console.log(`Creating gift links from ${from} to ${to}`);
     giftMain(parseInt(from, 10), parseInt(to, 10));
+  });
+
+program
+  .command("transfer")
+  .description("Transfer nfts from index to index to another address")
+  .argument("<number>", "from index")
+  .argument("<number>", "to index")
+  .argument("<string>", "address")
+  .action((from, to, address, options) => {
+    console.log(`Transferring nfts from ${from} - ${to} to ${address}`);
+    transferMain(parseInt(from, 10), parseInt(to, 10), address);
   });
 
 program.parse();
