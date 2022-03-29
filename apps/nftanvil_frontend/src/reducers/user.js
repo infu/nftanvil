@@ -199,7 +199,7 @@ export const auth =
     //   return [x[0].toString(), x[1].toString()];
     // });
 
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.REACT_APP_LOCAL_BACKEND) {
       console.log(
         "Proxy command:\n icx-proxy --address 127.0.0.1:8453 --dns-alias " +
           map.nft_avail
@@ -328,15 +328,15 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
       user: { address: AccountIdentifier.TextToArray(address) },
     })
     .then(async ({ pwr, anv, oracle }) => {
-      if (Number(pwr) === 0) {
-        //TODO: Remove in production
-        let fres = await pwrcan.faucet({
-          aid: AccountIdentifier.TextToArray(address),
-          amount: 800000000n,
-        });
-        dispatch(refresh_pwr_balance());
-        return;
-      }
+      // if (Number(pwr) === 0) {
+      //   //TODO: Remove in production
+      //   let fres = await pwrcan.faucet({
+      //     aid: AccountIdentifier.TextToArray(address),
+      //     amount: 800000000n,
+      //   });
+      //   dispatch(refresh_pwr_balance());
+      //   return;
+      // }
 
       oracle = BigIntToString(oracle);
       dispatch(

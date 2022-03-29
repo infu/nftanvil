@@ -9,7 +9,7 @@ import basex from "base-x";
 var token_base = basex("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ");
 
 export const principalToAccountIdentifier = (p, s) => {
-  const padding = Buffer("\x0Aaccount-id");
+  const padding = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100]; //Buffer("\x0Aaccount-id");
   const array = new Uint8Array([
     ...padding,
     ...Principal.fromText(p).toUint8Array(),

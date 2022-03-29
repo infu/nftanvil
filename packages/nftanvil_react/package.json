@@ -1,17 +1,19 @@
 {
   "name": "@vvv-interactive/nftanvil-react",
   "version": "0.16.0",
-  "main": "dist/build.js",
+  "main": "cjs/index.js",
   "license": "MIT",
   "dependencies": {
+    "@vvv-interactive/nftanvil-canisters": "^0.16.0",
+    "@vvv-interactive/nftanvil-tools": "^0.16.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-redux": "^7.2.6"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --mode production",
-    "watch": "webpack --watch"
+    "watch": "babel -d cjs src --copy-files --watch",
+    "build": "babel -d cjs src --copy-files"
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.16.7",
@@ -31,5 +33,14 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "peerDependencies": {
+    "@dfinity/agent": "^0.10.4",
+    "@dfinity/auth-client": "^0.10.4",
+    "@dfinity/authentication": "^0.10.4",
+    "@dfinity/candid": "^0.10.4",
+    "@dfinity/identity": "^0.10.4",
+    "@dfinity/principal": "^0.10.4",
+    "react-toastify": "^8.2.0"
   }
 }
