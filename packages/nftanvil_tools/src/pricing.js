@@ -10,11 +10,11 @@ export const priceStorage = ({ custom, content, thumb, quality, ttl }) => {
   let cost_per_min = STORAGE_KB_PER_MIN * 100n;
   cost_per_min += (BigInt(custom) * STORAGE_KB_PER_MIN) / 1024n;
 
-  if (content?.internal)
+  if (content && content.internal)
     cost_per_min +=
       (BigInt(content.internal.size) * STORAGE_KB_PER_MIN) / 1024n;
 
-  if (thumb?.internal)
+  if (thumb && thumb.internal)
     cost_per_min += (BigInt(thumb.internal.size) * STORAGE_KB_PER_MIN) / 1024n;
 
   cost_per_min += BigInt(Math.pow(quality, 3)) * QUALITY_PRICE;

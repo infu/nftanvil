@@ -6,7 +6,7 @@ export { idlFactory } from "./declarations/router/router.did.js";
 
 // CANISTER_ID is replaced by webpack based on node environment
 export const routerCanister = (canisterId, options) => {
-  const agent = new HttpAgent({ ...options?.agentOptions });
+  const agent = new HttpAgent({ ...(options ? options.agentOptions : {}) });
 
   // Fetch root key for certificate validation during development
   if (process.env.NODE_ENV !== "production") {
@@ -22,7 +22,7 @@ export const routerCanister = (canisterId, options) => {
   let actor = Actor.createActor(idlFactory, {
     agent,
     canisterId: canisterId.toText ? canisterId.toText() : canisterId,
-    ...options?.actorOptions,
+    ...(options ? options.actorOptions : {}),
   });
   return { router: actor, agent };
 };

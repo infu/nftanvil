@@ -7,7 +7,7 @@ export { idlFactory } from "./declarations/ledger/ledger.did.js";
 export const canisterId = "ryjl3-tyaaa-aaaaa-aaaba-cai"; //process.env.NFT_CANISTER_ID;
 
 export const ledgerCanister = (options) => {
-  const agent = new HttpAgent({ ...options?.agentOptions });
+  const agent = new HttpAgent({ ...(options ? options.agentOptions : {}) });
 
   // Fetch root key for certificate validation during development
   if (process.env.NODE_ENV !== "production") {
@@ -23,6 +23,6 @@ export const ledgerCanister = (options) => {
   return Actor.createActor(idlFactory, {
     agent,
     canisterId,
-    ...options?.actorOptions,
+    ...(options ? options.actorOptions : {}),
   });
 };

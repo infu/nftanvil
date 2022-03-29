@@ -5,7 +5,7 @@ import { idlFactory } from "./declarations/nft/nft.did.js";
 export { idlFactory } from "./declarations/nft/nft.did.js";
 
 export const nftCanister = (canisterId, options) => {
-  const agent = new HttpAgent({ ...options?.agentOptions });
+  const agent = new HttpAgent({ ...(options ? options.agentOptions : {}) });
 
   // Fetch root key for certificate validation during development
   if (process.env.NODE_ENV !== "production") {
@@ -21,6 +21,6 @@ export const nftCanister = (canisterId, options) => {
   return Actor.createActor(idlFactory, {
     agent,
     canisterId: canisterId.toText ? canisterId.toText() : canisterId,
-    ...options?.actorOptions,
+    ...(options ? options.actorOptions : {}),
   });
 };
