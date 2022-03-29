@@ -194,9 +194,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
             _fees_charged += _oracle.pwrFee;
 
-//            await balanceAddExternal(#pwr, to_aid, request.amount);
             await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternal(#pwr, to_aid, request.amount);
-             // balanceAddExternal(#pwr, to_aid, request.amount);
 
 
             if (isAnvil) {
@@ -604,11 +602,20 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
        switch(_account.get(aid)) {
             case (?ac) {
 
-                if (ac.pwr < amount) return #err(#InsufficientBalance);
-
-                let new_balance = ac.pwr - amount; // TODO: bug here, make sure it uses target not pwr
-
-                ac.pwr := new_balance;
+                switch(target) {
+                  case (#anv) {
+                    if (ac.anv < amount) return #err(#InsufficientBalance);
+                    ac.anv := ac.anv - amount;
+                  };
+                  case (#pwr) {
+                    if (ac.pwr < amount) return #err(#InsufficientBalance);
+                    ac.pwr := ac.pwr - amount;
+                  };
+                };
+                
+                if ((ac.anv < _oracle.anvFee) and (ac.pwr < _oracle.pwrFee)) {
+                  _account.delete(aid);
+                };
 
                 #ok();
 

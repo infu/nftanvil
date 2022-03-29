@@ -660,7 +660,7 @@ export const MintForm = () => {
                       </Field>
                     ) : null}
 
-                    {pro ? (
+                    {false && pro ? (
                       <Field name="price">
                         {({ field, form }) => (
                           <FormControl
@@ -676,7 +676,7 @@ export const MintForm = () => {
                                 w={"100%"}
                                 precision={4}
                                 step={0.01}
-                                max="0.12"
+                                //max="0.12"
                                 min="0"
                                 variant="filled"
                               >

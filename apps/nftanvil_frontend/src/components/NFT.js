@@ -377,7 +377,7 @@ function SetPriceButton({ id, meta }) {
                 w={"100%"}
                 precision={4}
                 step={0.01}
-                max="0.12"
+                //max="0.12"
                 min="0"
                 variant="filled"
               >
