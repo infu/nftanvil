@@ -12,7 +12,7 @@ import { DashboardPage } from "./components/Dashboard";
 import { Disclaimer } from "./components/Disclaimer";
 import { Waiting } from "./components/Waiting";
 import Cookies from "js-cookie";
-
+import { MyComponent } from "@vvv-interactive/nftanvil-react";
 import {
   login,
   proModeSet,
@@ -734,6 +734,7 @@ function App() {
             pointerEvents: "none",
           }}
         />
+        <MyComponent />
         <Disclaimer />
         <MainMenu />
         {/* <AlertTestNet /> */}

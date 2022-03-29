@@ -16,7 +16,7 @@
   "npmClient": "yarn",
   "dependencies": {
     "@babel/cli": "^7.16.0",
-    "@babel/core": "^7.16.0",
+    "@babel/core": "^7.17.8",
     "@babel/node": "^7.16.0",
     "yarn-audit-fix": "^9.2.0"
   }

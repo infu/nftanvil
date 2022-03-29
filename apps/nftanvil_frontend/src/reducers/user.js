@@ -542,7 +542,6 @@ export const pwr_buy =
 
 export const window_focus = () => async (dispatch, getState) => {
   dispatch(focusSet(true));
-
   dispatch(refresh_balances());
 };
 
