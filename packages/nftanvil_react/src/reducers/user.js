@@ -84,11 +84,11 @@ export const userSlice = createSlice({
 export const { resetReducer, proSet, authSet, balancesSet, focusSet, mapSet } =
   userSlice.actions;
 
-export const login = () => (dispatch) => {
-  dispatch(auth(false));
+export const user_login = () => (dispatch) => {
+  dispatch(user_auth(false));
 };
 
-export const auth =
+export const user_auth =
   (allowAnonymous = true) =>
   async (dispatch, getState) => {
     await authentication.create();
@@ -166,25 +166,25 @@ export const auth =
     dispatch(
       authSet({ address, subaccount, principal, anonymous, map, acccan })
     );
-    dispatch(refresh_balances());
+    dispatch(user_refresh_balances());
   };
 
-export const refresh_config = () => async (dispatch, getState) => {
+export const user_refresh_config = () => async (dispatch, getState) => {
   let map = await router.config_get();
   map = BigIntToString(map);
   // console.log("ROUTER MAP", map);
   dispatch(mapSet(map));
 };
 
-export const refresh_balances = () => async (dispatch, getState) => {
+export const user_refresh_balances = () => async (dispatch, getState) => {
   if (!authentication || !authentication.client) return;
   if (!(await authentication.client.isAuthenticated())) return;
-  await dispatch(refresh_icp_balance());
+  await dispatch(user_refresh_icp_balance());
   if (!(await authentication.client.isAuthenticated())) return;
-  dispatch(refresh_pwr_balance());
+  dispatch(user_refresh_pwr_balance());
 };
 
-export const logout = () => async (dispatch, getState) => {
+export const user_logout = () => async (dispatch, getState) => {
   var authClient = await AuthClient.create();
 
   authClient.logout();
@@ -200,10 +200,10 @@ export const logout = () => async (dispatch, getState) => {
   //dispatch(authSet({ address: null, principal, anonymous }));
 
   dispatch(resetReducer());
-  dispatch(auth());
+  dispatch(user_auth());
 };
 
-export const refresh_icp_balance = () => async (dispatch, getState) => {
+export const user_refresh_icp_balance = () => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
 
   let s = getState();
@@ -224,7 +224,7 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
 
       if (e8s >= 30000n) {
         // automatically wrap ICP
-        dispatch(pwr_buy({ amount: e8s - 10000n }));
+        dispatch(user_pwr_buy({ amount: e8s - 10000n }));
       }
     })
     .catch((e) => {
@@ -232,7 +232,7 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
     });
 };
 
-export const refresh_pwr_balance = () => async (dispatch, getState) => {
+export const user_refresh_pwr_balance = () => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
 
   let s = getState();
@@ -270,11 +270,12 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
     })
     .catch((e) => {
       // We are most probably logged out. There is currently no better way to handle expired agentjs chain
-      if (e.toString().includes("delegation has expired")) dispatch(logout());
+      if (e.toString().includes("delegation has expired"))
+        dispatch(user_logout());
     });
 };
 
-export const transfer_icp =
+export const user_transfer_icp =
   ({ to, amount }) =>
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
@@ -307,13 +308,13 @@ export const transfer_icp =
 
       if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
 
-      dispatch(refresh_balances());
+      dispatch(user_refresh_balances());
     } catch (e) {}
 
     return trez;
   };
 
-export const pwr_buy =
+export const user_pwr_buy =
   ({ amount }) =>
   async (dispatch, getState) => {
     let s = getState();
@@ -359,7 +360,6 @@ export const pwr_buy =
     if (ledger_result.Ok) {
     } else {
       console.error(ledger_result.Err);
-
       return;
     }
 
@@ -374,12 +374,12 @@ export const pwr_buy =
       let { transactionId } = claim.ok;
     } catch (e) {}
 
-    dispatch(refresh_balances());
+    dispatch(user_refresh_balances());
   };
 
 export const window_focus = () => async (dispatch, getState) => {
   dispatch(focusSet(true));
-  dispatch(refresh_balances());
+  dispatch(user_refresh_balances());
 };
 
 export const window_blur = () => async (dispatch, getState) => {

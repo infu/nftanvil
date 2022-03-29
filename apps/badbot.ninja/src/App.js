@@ -8,12 +8,12 @@ import {
   tokenFromText,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import {
-  AnvilProvider,
   TestAnvilComponent,
   useAnvilDispatch,
   useAnvilSelector,
-  login,
-  logout,
+  user_login,
+  user_logout,
+  nft_fetch,
 } from "@vvv-interactive/nftanvil-react";
 import logo from "./logo.svg";
 import "./App.css";
@@ -28,7 +28,7 @@ function Test() {
       {address ? (
         <button
           onClick={() => {
-            dispatch(logout());
+            dispatch(user_logout());
           }}
         >
           Logout
@@ -36,7 +36,7 @@ function Test() {
       ) : (
         <button
           onClick={() => {
-            dispatch(login());
+            dispatch(user_login());
           }}
         >
           Authenticate
@@ -47,6 +47,7 @@ function Test() {
 }
 
 function App() {
+  const loaded = useAnvilSelector((state) => state.user.map.history);
   const [nfts, setNfts] = React.useState(false);
   const load = async () => {
     let url =
@@ -58,16 +59,15 @@ function App() {
   useEffect(() => {
     load();
   }, []);
+  if (!loaded) return null;
 
   return (
-    <AnvilProvider>
-      <div className="App">
-        <header className="App-header">
-          <Test /> <TestAnvilComponent />;
-          <NFTPage nfts={nfts} />
-        </header>
-      </div>
-    </AnvilProvider>
+    <div className="App">
+      <header className="App-header">
+        <Test /> <TestAnvilComponent />
+        <NFTPage nfts={nfts} />
+      </header>
+    </div>
   );
 }
 
@@ -80,9 +80,28 @@ function NFTPage({ nfts }) {
   return (
     <>
       {slice.map((nft, idx) => {
-        return <div key={idx}>{nft[0]}</div>;
+        return <NFT id={tokenToText(nft[0])} key={idx} />;
       })}
     </>
+  );
+}
+
+function NFT({ id }) {
+  const meta = useAnvilSelector((state) => state.nft[id]);
+
+  const dispatch = useAnvilDispatch();
+
+  useEffect(() => {
+    dispatch(nft_fetch(id));
+  }, [id, dispatch]);
+
+  if (!meta) return null;
+
+  console.log("META", meta);
+  return (
+    <div>
+      {id} - {meta.name}
+    </div>
   );
 }
 

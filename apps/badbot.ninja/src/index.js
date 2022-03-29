@@ -3,10 +3,13 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import { AnvilProvider } from "@vvv-interactive/nftanvil-react";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <AnvilProvider>
+      <App />
+    </AnvilProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );
