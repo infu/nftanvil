@@ -1,38 +1,121 @@
-.App {
+body {
+  background-color: #282c34;
+
+  color: white;
+}
+
+.Title {
+  text-align: center;
+  font-size: 45px;
+}
+.Subtitle {
+  font-size: 23px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.collection {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+}
+.c-actions {
+  width: 500px;
+  text-align: center;
+  margin: 0px auto 32px auto;
+}
+
+.nft-sm {
+  max-width: 650px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 16px;
+}
+.nft-quality {
+  font-size: 12px;
+  margin-top: 6px;
+  color: #626a7a;
+}
+.nft-img {
+  width: 256px;
+  height: auto;
+}
+.nft-img img {
+  width: 100%;
+}
+
+.nft-info {
+  width: 100%;
+  padding-left: 16px;
+  font-size: 16px;
+}
+.nft-name {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.nft-lore {
+  padding-top: 12px;
+  font-size: 14px;
+}
+
+.nft-attr-box {
+  margin-left: 32px;
+  width: 170px;
+}
+
+.nft-attr {
+  display: flex;
+  width: 100%;
+}
+.nft-attr .label {
+  width: 80px;
+  color: #626a7a;
+}
+.nft-attr .val {
+  width: 30px;
+  text-align: right;
+}
+
+.user {
+  margin: auto;
+  max-width: 600px;
+  margin-top: 32px;
+}
+.user .address {
+  font-size: 13px;
+  text-align: center;
+}
+.user .icp {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 18px;
+}
+.user .actions {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.filters {
+  text-align: center;
+  margin-bottom: 8px;
+}
+button {
+  background-color: #444a57;
   color: white;
+  border: 1px solid #2d3950;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+select {
+  background-color: #444a57;
+  color: white;
+  border: 1px solid #2d3950;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
 }
