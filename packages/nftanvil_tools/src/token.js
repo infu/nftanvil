@@ -147,18 +147,18 @@ export const ipfsTokenUrl = (cid) => {
 export const tokenUrl = (space, tid, type) => {
   let { index, slot } = decodeTokenId(tid);
   let canister = PrincipalFromSlot(space, slot).toText();
-  if (process.env.NODE_ENV === "production") {
-    return (
-      "https://" +
-      canister +
-      ".raw.ic0.app/" +
-      encodeChunkId(index, 0, type === "content" ? 0 : 1).toString(16)
-    );
-  } else {
+  if (process.env.REACT_APP_LOCAL_BACKEND) {
     return (
       "http://" +
       slot +
       ".lvh.me:8453/" +
+      encodeChunkId(index, 0, type === "content" ? 0 : 1).toString(16)
+    );
+  } else {
+    return (
+      "https://" +
+      canister +
+      ".raw.ic0.app/" +
       encodeChunkId(index, 0, type === "content" ? 0 : 1).toString(16)
     );
   }
