@@ -80,6 +80,7 @@ export function Collection({ nfts }) {
           setPage(0);
         }}
       >
+        <option value={false}>---</option>
         {ATTR.map((att, idx) => (
           <option key={idx} value={att}>
             with {att}
