@@ -6,6 +6,10 @@
       },
       "source": ["build/"],
       "type": "assets"
+    },
+    "collection": {
+      "main": "mo/collection.mo",
+      "type": "motoko"
     }
   },
   "defaults": {

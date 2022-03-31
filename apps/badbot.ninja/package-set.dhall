@@ -3,16 +3,16 @@ let Package =
     { name : Text, version : Text, repo : Text, dependencies : List Text }
 
 let additions = [
-   { name = "sha"
+  { name = "anvil"
+  , repo = "https://github.com/infu/anvil.mo"
+  , version = "v0.1.1"
+  , dependencies = ["array", "base", "hash", "encoding", "sha"]
+  },
+  { name = "sha"
    , repo = "https://github.com/aviate-labs/sha.mo"
    , version = "v0.1.1"
    , dependencies = [ "base" ]
-   },
-  { name = "asset-storage"
-   , repo = "https://github.com/aviate-labs/asset-storage.mo"
-   , version = "asset-storage-0.7.0"
-   , dependencies = [ "base" ]
-   },
+  },
   { name = "array"
   , repo = "https://github.com/aviate-labs/array.mo"
   , version = "v0.1.1"

@@ -3,7 +3,6 @@ import Array "mo:base/Array";
 import Binary "mo:encoding/Binary";
 import CRC32 "mo:hash/CRC32";
 import Principal "mo:base/Principal";
-import Blob_ "mo:vvv/Blob";
 import Result "mo:base/Result";
 
 module {

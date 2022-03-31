@@ -55,7 +55,6 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         _oracle := oracle
     };
 
-
     public shared({caller}) func add(eventinfo: H.EventInfo) : async H.AddResponse {
 
         assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
