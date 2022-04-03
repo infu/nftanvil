@@ -631,6 +631,10 @@ shared({caller = _installer}) actor class Router() = this {
         return _conf;
     };
 
+    public query func settings_get() : async (Nft.Config, Nft.Oracle) {
+        return (_conf, _oracle);
+    };
+
     public shared({caller}) func oracle_set(oracle : Cluster.Oracle) : async () {
         assert(caller == _installer);
         _oracle := oracle;

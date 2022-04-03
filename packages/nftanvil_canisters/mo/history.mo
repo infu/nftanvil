@@ -84,7 +84,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
             hash = Blob.fromArray(SHA224.sha224(
                 Array.flatten<Nat8>([
                     previousTransactionHash,
-                    H.EventInfo.hash(eventinfo)
+                    Nft.EventInfo.hash(eventinfo)
                     ])));
         };
 

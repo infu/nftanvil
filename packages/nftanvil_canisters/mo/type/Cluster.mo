@@ -29,7 +29,7 @@ module {
     public module Config = {
         public func default() : Config {
             {
-                router = Principal.fromText("aaaaa-aa");
+                router = Principal.fromText("kbzti-laaaa-aaaai-qe2ma-cai");
                 nft = (0,5000);
                 nft_avail = [];
                 account = (5010,5013);

@@ -45,9 +45,11 @@ for (const canister in canisters) {
     "\n";
 }
 
-if (process.env.NODE_ENV !== "production")
+if (process.env.NODE_ENV !== "production") {
   txt +=
     "REACT_APP_IDENTITY_PROVIDER=http://localhost:8000?canisterId=rwlgt-iiaaa-aaaaa-aaaaa-cai\n";
+  txt += "REACT_APP_LOCAL_BACKEND=true\n";
+}
 
 if (process.env.NODE_ENV !== "production") {
   txt += "REACT_APP_IC_GATEWAY=http://localhost:3000\n";

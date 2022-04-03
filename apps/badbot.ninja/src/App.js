@@ -16,10 +16,15 @@ import {
 } from "@vvv-interactive/nftanvil-react";
 import { User } from "./components/User";
 import { Collection } from "./components/Collection";
+import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 
 import logo from "./logo.svg";
 import nfts from "./nfts.json";
 import "./App.css";
+
+import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
+
+import { createCollectionActor } from "./declarations/collection.js";
 
 function App() {
   const loaded = useAnvilSelector((state) => state.user.map.history);
@@ -29,7 +34,21 @@ function App() {
     <div className="App">
       <div className="Title">Bad Bot Ninja</div>
       <div className="Subtitle">gear for post-apocalyptic overlords</div>
+      <button
+        onClick={async () => {
+          let txid = TransactionId.fromText("TX888888DA1D4MZOQ");
+          txid = [...txid]; // transforms ArrayBuffer to Array;
 
+          await authentication.create();
+          let collection = createCollectionActor({
+            agentOptions: authentication.getAgentOptions(),
+          });
+          let resp = await collection.check_tx(txid);
+          console.log(resp);
+        }}
+      >
+        Test
+      </button>
       <User />
       <br />
       <br />

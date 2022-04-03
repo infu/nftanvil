@@ -21,5 +21,5 @@ export function toText(bytes) {
 }
 
 export function fromText(t) {
-  return bs.decode(t.slice(2));
+  return bs.decode(t.slice(2).toLowerCase());
 }

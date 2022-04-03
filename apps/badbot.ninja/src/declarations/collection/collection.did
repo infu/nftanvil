@@ -1,3 +1,9 @@
+type TransactionId = blob;
+type Transaction = 
+ record {
+   hash: blob;
+   info: EventInfo;
+ };
 type TokenIdentifier = nat64;
 type Timestamp = int;
 type Time = int;
@@ -22,13 +28,6 @@ type Price =
                       address: AccountIdentifier;
                       share: Share;
                     };
- };
-type Oracle = 
- record {
-   anvFee: nat64;
-   icpCycles: nat64;
-   icpFee: nat64;
-   pwrFee: nat64;
  };
 type NftEvent = 
  variant {
@@ -116,28 +115,11 @@ type NFTPurchase =
    token: TokenIdentifier;
  };
 type Memo = blob;
-type ListResponse = vec opt Event;
-type ListRequest = 
- record {
-   from: EventIndex;
-   to: EventIndex;
- };
 type ItemUse = 
  variant {
    consume;
    cooldown: Cooldown;
    prove;
- };
-type InfoResponse = 
- record {
-   previous: opt principal;
-   total: EventIndex;
- };
-type EventInfo__1 = 
- variant {
-   anv: AnvEvent;
-   nft: NftEvent;
-   pwr: PwrEvent;
  };
 type EventInfo = 
  variant {
@@ -145,7 +127,6 @@ type EventInfo =
    nft: NftEvent;
    pwr: PwrEvent;
  };
-type EventIndex = nat32;
 type EventFungibleTransaction = 
  record {
    amount: Balance;
@@ -160,55 +141,12 @@ type EventFungibleMint =
    created: Timestamp;
    user: AccountIdentifier;
  };
-type Event = 
- record {
-   hash: blob;
-   info: EventInfo;
- };
 type Cooldown = nat32;
-type Config = 
- record {
-   account: CanisterRange;
-   anvil: CanisterSlot;
-   history: CanisterSlot;
-   history_range: CanisterRange;
-   nft: CanisterRange;
-   nft_avail: vec CanisterSlot;
-   pwr: CanisterRange;
-   router: principal;
-   space: vec vec nat64;
-   treasury: CanisterSlot;
- };
 type Class = 
  service {
-   add: (EventInfo__1) -> (AddResponse);
-   config_set: (Config) -> ();
-   get: (EventIndex) -> (opt Event) query;
-   info: () -> (InfoResponse) query;
-   list: (ListRequest) -> (ListResponse) query;
-   oracle_set: (Oracle) -> ();
-   stats: () ->
-    (record {
-       cycles: nat;
-       cycles_recieved: nat;
-       rts_heap_size: nat;
-       rts_max_live_size: nat;
-       rts_memory_size: nat;
-       rts_reclaimed: nat;
-       rts_total_allocation: nat;
-       rts_version: text;
-       transactions: nat32;
-     }) query;
-   wallet_receive: () -> ();
- };
-type CanisterSlot = nat64;
-type CanisterRange = 
- record {
-   CanisterSlot;
-   CanisterSlot;
+   check_tx: (TransactionId) -> (opt Transaction);
  };
 type Balance = nat64;
 type AnvEvent = variant {transfer: EventFungibleTransaction;};
-type AddResponse = blob;
 type AccountIdentifier = blob;
 service : () -> Class

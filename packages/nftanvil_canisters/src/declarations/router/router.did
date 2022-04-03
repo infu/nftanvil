@@ -1,15 +1,16 @@
 type Router = 
  service {
-   config_get: () -> (Config) query;
-   config_set: (Config) -> ();
+   config_get: () -> (Config__1) query;
+   config_set: (Config__1) -> ();
    create_local_canisters: () -> ();
    event_history_full: () -> ();
    event_nft_full: (principal) -> ();
    log_get: () -> (vec LogEvent) query;
-   oracle_set: (Oracle) -> ();
+   oracle_set: (Oracle__1) -> ();
    refuel: () -> ();
    refuel_unoptimised: () -> ();
    reinstall: () -> ();
+   settings_get: () -> (Config, Oracle) query;
    start_all: () -> ();
    stats: () ->
     (record {
@@ -34,6 +35,13 @@ type Router =
                 wasm: vec nat8;
               }) -> ();
  };
+type Oracle__1 = 
+ record {
+   anvFee: nat64;
+   icpCycles: nat64;
+   icpFee: nat64;
+   pwrFee: nat64;
+ };
 type Oracle = 
  record {
    anvFee: nat64;
@@ -45,6 +53,19 @@ type LogEvent =
  record {
    msg: text;
    time: nat32;
+ };
+type Config__1 = 
+ record {
+   account: CanisterRange;
+   anvil: CanisterSlot;
+   history: CanisterSlot;
+   history_range: CanisterRange;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot;
+   pwr: CanisterRange;
+   router: principal;
+   space: vec vec nat64;
+   treasury: CanisterSlot;
  };
 type Config = 
  record {

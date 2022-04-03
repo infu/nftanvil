@@ -1,4 +1,5 @@
 export const idlFactory = ({ IDL }) => {
+  const TransactionId = IDL.Vec(IDL.Nat8);
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const Timestamp = IDL.Int;
   const Memo = IDL.Vec(IDL.Nat8);
@@ -112,70 +113,17 @@ export const idlFactory = ({ IDL }) => {
     'mint' : EventFungibleMint,
     'transfer' : EventFungibleTransaction,
   });
-  const EventInfo__1 = IDL.Variant({
-    'anv' : AnvEvent,
-    'nft' : NftEvent,
-    'pwr' : PwrEvent,
-  });
-  const AddResponse = IDL.Vec(IDL.Nat8);
-  const CanisterSlot = IDL.Nat64;
-  const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
-  const Config = IDL.Record({
-    'nft' : CanisterRange,
-    'pwr' : CanisterRange,
-    'anvil' : CanisterSlot,
-    'history' : CanisterSlot,
-    'nft_avail' : IDL.Vec(CanisterSlot),
-    'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
-    'account' : CanisterRange,
-    'history_range' : CanisterRange,
-    'router' : IDL.Principal,
-    'treasury' : CanisterSlot,
-  });
-  const EventIndex = IDL.Nat32;
   const EventInfo = IDL.Variant({
     'anv' : AnvEvent,
     'nft' : NftEvent,
     'pwr' : PwrEvent,
   });
-  const Event = IDL.Record({ 'hash' : IDL.Vec(IDL.Nat8), 'info' : EventInfo });
-  const InfoResponse = IDL.Record({
-    'total' : EventIndex,
-    'previous' : IDL.Opt(IDL.Principal),
-  });
-  const ListRequest = IDL.Record({ 'to' : EventIndex, 'from' : EventIndex });
-  const ListResponse = IDL.Vec(IDL.Opt(Event));
-  const Oracle = IDL.Record({
-    'icpFee' : IDL.Nat64,
-    'anvFee' : IDL.Nat64,
-    'icpCycles' : IDL.Nat64,
-    'pwrFee' : IDL.Nat64,
+  const Transaction = IDL.Record({
+    'hash' : IDL.Vec(IDL.Nat8),
+    'info' : EventInfo,
   });
   const Class = IDL.Service({
-    'add' : IDL.Func([EventInfo__1], [AddResponse], []),
-    'config_set' : IDL.Func([Config], [], []),
-    'get' : IDL.Func([EventIndex], [IDL.Opt(Event)], ['query']),
-    'info' : IDL.Func([], [InfoResponse], ['query']),
-    'list' : IDL.Func([ListRequest], [ListResponse], ['query']),
-    'oracle_set' : IDL.Func([Oracle], [], []),
-    'stats' : IDL.Func(
-        [],
-        [
-          IDL.Record({
-            'cycles_recieved' : IDL.Nat,
-            'rts_max_live_size' : IDL.Nat,
-            'cycles' : IDL.Nat,
-            'rts_memory_size' : IDL.Nat,
-            'rts_total_allocation' : IDL.Nat,
-            'transactions' : IDL.Nat32,
-            'rts_heap_size' : IDL.Nat,
-            'rts_reclaimed' : IDL.Nat,
-            'rts_version' : IDL.Text,
-          }),
-        ],
-        ['query'],
-      ),
-    'wallet_receive' : IDL.Func([], [], []),
+    'check_tx' : IDL.Func([TransactionId], [IDL.Opt(Transaction)], []),
   });
   return Class;
 };
