@@ -16,26 +16,31 @@ import PseudoRandom "mo:anvil/lib/PseudoRandom";
 
 shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
+  // list of tokens for sale or airdrop
   private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(100000, null);
 
   private stable var _tmpUsed: [(Nft.TransactionId, Bool)] = [];
 
+  // memory with used transactions - to avoid double spending attack
   private var _used: TrieRecord.TrieRecord<Nft.TransactionId, Bool, Bool> = TrieRecord.TrieRecord<Nft.TransactionId, Bool, Bool>( _tmpUsed.vals(),  Blob.equal, Blob.hash, func (x) {x}, func (x) {x});
 
   private stable var _tmpAccount: [(Nft.AccountIdentifier, IF.AccountRecordSerialized)] = [];
 
+  // temporary memory with account - purchased tokens. We can't send all purchased tokens in one call, so we need to store them
   private var _account: TrieRecord.TrieRecord<Nft.AccountIdentifier, IF.AccountRecord, IF.AccountRecordSerialized> = TrieRecord.TrieRecord<Nft.AccountIdentifier, IF.AccountRecord, IF.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, IF.AccountRecordSerialize, IF.AccountRecordUnserialize);
   
+  // Count of available nfts
   private var count_available: Nat = 0;
 
+  // Anvil object has various functions and provides anvil.conf and anvil.oracle
   private let anvil = Anvil.Anvil();
 
+  // Pseudo random which can be shuffled with IC Random to become real random
   var rand = PseudoRandom.PseudoRandom();
 
   system func preupgrade() {
       _tmpUsed := Iter.toArray(_used.serialize());
       _tmpAccount := Iter.toArray(_account.serialize());
-
   };
 
   system func postupgrade() {
@@ -43,23 +48,29 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
       _tmpAccount := [];
   };
 
+  // Tokens are added to the contract. The added tokens need to be owned by the contract, or it wont be able to transfer them.
   public shared({caller}) func add(nft_id: Nft.TokenIdentifier) : async () {
+    assert(caller == _installer);
+
     label lo loop {
       let rnd_slot = Nat32.toNat(rand.get(8)) % 100000;
       if (_tokens[rnd_slot] == null) {
         _tokens[rnd_slot] := ?nft_id;
+        count_available += 1;
         break lo;
         };
     };
   };
 
-  public query func ownedTokens(aid : Nft.AccountIdentifier) : async Result.Result<IF.AccountRecordSerialized, Text> {
+  // Query all internally owned nfts by a certain AccountIdentifier
+  public query func owned(aid : Nft.AccountIdentifier) : async Result.Result<IF.AccountRecordSerialized, Text> {
      switch(_account.get(aid)) {
        case (?a) #ok(IF.AccountRecordSerialize(a));
        case (_) return #err("Not existing address");
      };
   };
 
+  // Marks a transaction as used, if its already used - returns error
   private func use(tx_id: Nft.TransactionId) :  Result.Result<(), Text> {
       switch(_used.get(tx_id)) {
         case (?a) {
@@ -71,7 +82,13 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
         }
       }
   };
+  // Claim your nfts from internal memory
+  public shared({caller}) func claim(aid:Nft.AccountIdentifier, subaccount:Nft.SubAccount, tid:Nft.TokenIdentifier) : async Result.Result<(), Text> {
+    #err("Not implemented");
+  };
 
+  // We move nfts from _tokens to _account internally. Later their new owner can claim them
+  // where they get finally transfered
   private func give(aid: Nft.AccountIdentifier, count: Nat) : Result.Result<(), Text> {
     if (count_available < count) {
       return #err("Not enough nfts left in contract");
@@ -81,36 +98,41 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     for (j in Iter.range(0, count - 1)) {
       label lo loop {
         
-            switch(_tokens[nft_idx]) {
-              case (?tid) {
-                let r = switch(_account.get(aid)) {
-                        case (?ac) ac;
-                        case (_) {
-                            let blank = IF.AccountRecordBlank();
-                            _account.put(aid, blank);  
-                            blank;
-                        };
+          switch(_tokens[nft_idx]) {
+            case (?tid) {
+              let r = switch(_account.get(aid)) {
+                    case (?ac) ac;
+                    case (_) {
+                        let blank = IF.AccountRecordBlank();
+                        _account.put(aid, blank);  
+                        blank;
                     };
+                };
 
-                    r.tokens.add(tid);
+                r.tokens.add(tid);
 
-                    _tokens[nft_idx] := null;
-                    break lo;
-          
-              };
-              case (null) {
-
-              };
+                _tokens[nft_idx] := null;
+                count_available -= 1;
+                break lo;
+        
             };
-          
-            nft_idx := nft_idx +1;
-      }
+            case (null) {
+
+            };
+          };
+        
+          nft_idx := nft_idx +1;
+      };
 
     };
 
     #ok();
   };
 
+  // Takes anvil transaction and checks if its going to the right place
+  // Dependent on the amount sent, we give different amount of nfts
+  // Transactions get stored so they can't be used for second time
+  // If there are not enough nfts in contract, we will refund
   public shared({caller}) func check_tx(tx_id:  Nft.TransactionId) : async Result.Result<(), Text> {
     let scriptAccount = Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), null);
 
