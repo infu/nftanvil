@@ -5,7 +5,7 @@ let Package =
 let additions = [
   { name = "anvil"
   , repo = "https://github.com/infu/anvil.mo"
-  , version = "v0.1.4"
+  , version = "v0.1.5"
   , dependencies = ["array", "base", "hash", "encoding", "sha"]
   },
   { name = "sha"

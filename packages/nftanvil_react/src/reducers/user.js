@@ -275,6 +275,43 @@ export const user_refresh_pwr_balance = () => async (dispatch, getState) => {
     });
 };
 
+export const user_pwr_transfer =
+  ({ to, amount, memo = [] }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let s = getState();
+
+    let address = s.user.address;
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
+
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        s.user.map.space,
+        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+      ),
+      {
+        agentOptions: authentication.getAgentOptions(),
+      }
+    );
+
+    let trez = await pwr.pwr_transfer({
+      amount,
+      from: { address: AccountIdentifier.TextToArray(address) },
+      to: { address: AccountIdentifier.TextToArray(to) },
+      subaccount: subaccount,
+      memo,
+    });
+
+    if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
+
+    dispatch(user_refresh_balances());
+
+    return trez;
+  };
+
 export const user_transfer_icp =
   ({ to, amount }) =>
   async (dispatch, getState) => {
@@ -297,19 +334,16 @@ export const user_transfer_icp =
       }
     );
 
-    let trez;
-    try {
-      trez = await pwr.pwr_withdraw({
-        amount,
-        from: { address: AccountIdentifier.TextToArray(address) },
-        to: { address: AccountIdentifier.TextToArray(to) },
-        subaccount: subaccount,
-      });
+    let trez = await pwr.pwr_withdraw({
+      amount,
+      from: { address: AccountIdentifier.TextToArray(address) },
+      to: { address: AccountIdentifier.TextToArray(to) },
+      subaccount: subaccount,
+    });
 
-      if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
+    if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
 
-      dispatch(user_refresh_balances());
-    } catch (e) {}
+    dispatch(user_refresh_balances());
 
     return trez;
   };

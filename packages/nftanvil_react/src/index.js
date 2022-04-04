@@ -7,6 +7,7 @@ import userReducer, {
   user_refresh_balances,
   user_refresh_config,
   user_transfer_icp,
+  user_pwr_transfer,
   window_focus,
   window_blur,
 } from "./reducers/user";
@@ -35,6 +36,7 @@ export {
   user_refresh_balances,
   user_refresh_config,
   user_transfer_icp,
+  user_pwr_transfer,
 };
 
 export {

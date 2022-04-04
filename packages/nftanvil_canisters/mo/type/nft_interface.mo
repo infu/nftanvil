@@ -77,7 +77,7 @@ module {
                 if (flags[0] != 1 or flags[1] != 1) return null;
                 let start = space[0][0];
                 let end = space[0][1];
-                if (idx < start and idx > end) return null;
+                if (idx < start or idx > end) return null;
                 return ?(idx - start);
             };
 
