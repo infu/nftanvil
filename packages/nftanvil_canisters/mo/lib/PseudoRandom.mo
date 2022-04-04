@@ -31,6 +31,10 @@ module {
             rez;
         };
 
+        // public func shuffle(b: Blob) : () { //32 bytes
+
+        // };
+
         public func newEntropy() {
             consumedIdx := 0;
         };
