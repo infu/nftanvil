@@ -12,6 +12,11 @@ import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cj
 import { Principal } from "@dfinity/principal";
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import { createSlice } from "@reduxjs/toolkit";
+import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
+import { produce } from "immer";
+import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
+import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 export const buy = (amount) => async (dispatch, getState) => {
   const s = getState();
@@ -45,6 +50,7 @@ export const buy = (amount) => async (dispatch, getState) => {
   console.log("buy_tx", brez);
 
   dispatch(user_refresh_balances());
+  dispatch(claim());
 };
 
 export const claim = () => async (dispatch, getState) => {
@@ -62,7 +68,6 @@ export const claim = () => async (dispatch, getState) => {
 
   let owned = await collection.owned(address);
   if (owned.err) throw new Error(owned.err);
-  console.log(owned);
 
   let tokens = owned.ok.tokens.filter(Boolean);
 
@@ -73,6 +78,41 @@ export const claim = () => async (dispatch, getState) => {
   );
 
   console.log(tokens, claimed);
+};
+
+export const get_mine = () => async (dispatch, getState) => {
+  let s = getState();
+  if (!s.user.map.account?.length) return null;
+  let address = s.user.address;
+
+  let can = PrincipalFromSlot(
+    s.user.map.space,
+    AccountIdentifier.TextToSlot(address, s.user.map.account)
+  );
+
+  let acc = accountCanister(can, {
+    agentOptions: authentication.getAgentOptions(),
+  });
+
+  let pageIdx = 0;
+  let max = 100;
+  let final = [];
+  do {
+    let list = await acc.list(
+      AccountIdentifier.TextToArray(address),
+      pageIdx * max,
+      (pageIdx + 1) * max
+    );
+
+    list = list.filter((x) => x !== 0n).map((x) => Number(x));
+
+    if (list.length === 0) break;
+
+    final.push(...list);
+    pageIdx++;
+  } while (true);
+
+  return final;
 };
 
 const delay = (ms) => new Promise((resolve, reject) => setTimeout(resolve, ms));

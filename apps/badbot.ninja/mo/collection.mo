@@ -233,7 +233,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
               case (80000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 4)) {
+                    switch(give(from, 5)) {
                       case (#ok()) {
                         #ok();
                       };
@@ -249,7 +249,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
               case (120000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 7)) { 
+                    switch(give(from, 20)) { 
                       case (#ok()) {
                         #ok();
                       };

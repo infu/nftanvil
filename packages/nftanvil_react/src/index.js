@@ -1,5 +1,11 @@
 import React from "react";
 import { configureStore } from "@reduxjs/toolkit";
+
+import inventoryReducer, {
+  load_inventory,
+  verify_domain,
+} from "./reducers/inventory";
+
 import userReducer, {
   user_auth,
   user_login,
@@ -11,6 +17,7 @@ import userReducer, {
   window_focus,
   window_blur,
 } from "./reducers/user";
+
 import nftReducer, {
   nft_fetch,
   nft_media_get,
@@ -28,6 +35,8 @@ import nftReducer, {
   nft_enter_code,
   nft_recharge_quote,
 } from "./reducers/nft";
+
+export { load_inventory, verify_domain };
 
 export {
   user_auth,
@@ -79,6 +88,7 @@ const myStore = configureStore({
   reducer: {
     user: userReducer,
     nft: nftReducer,
+    inventory: inventoryReducer,
   },
 });
 

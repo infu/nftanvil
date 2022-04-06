@@ -26,7 +26,7 @@ import { Principal } from "@dfinity/principal";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 
-import { buy, claim } from "./actions/purchase";
+import { buy, claim, get_mine } from "./actions/purchase";
 
 import logo from "./logo.svg";
 import nfts from "./nfts.json";
@@ -63,9 +63,22 @@ function PriceOptions() {
 }
 
 function App() {
-  const dispatch = useAnvilDispatch();
-
   const loaded = useAnvilSelector((state) => state.user.map.history);
+
+  const dispatch = useAnvilDispatch();
+  const [mine, setMine] = React.useState([]);
+
+  const load = async () => {
+    setMine(await dispatch(get_mine()));
+  };
+
+  useEffect(() => {
+    if (loaded) {
+      dispatch(claim()); // in case something went wrong, on refresh this will claim purchased nfts
+      load();
+    }
+  }, [loaded, dispatch]);
+
   if (!loaded) return null;
 
   return (
@@ -75,17 +88,11 @@ function App() {
 
       <User />
       <PriceOptions />
-      <button
-        onClick={() => {
-          dispatch(claim());
-        }}
-      >
-        Claim
-      </button>
+
       <br />
       <br />
       <br />
-      <Collection nfts={nfts} />
+      <Collection nfts={nfts} mine={mine} />
     </div>
   );
 }

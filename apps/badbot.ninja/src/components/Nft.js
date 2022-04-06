@@ -26,9 +26,19 @@ export function NftSingle({ id }) {
   if (!meta) return null;
 
   console.log("META", meta);
+
+  let nft = [
+    tokenFromText(id),
+    meta.quality,
+    meta.name,
+    meta.lore,
+    meta.attributes,
+    meta.tags,
+  ];
+
   return (
     <div>
-      {id} - {meta.name}
+      <NftThumb nft={nft} />
     </div>
   );
 }

@@ -15,6 +15,7 @@
     "web-vitals": "^1.0.1"
   },
   "scripts": {
+    "nfts.json": "node ./helpers/nfts.json.generate.js",
     "typecheck": "./helpers/monitor_and_typecheck.sh",
     "generate": "dfx generate",
     "start": "node ./helpers/dfx.env.js && react-scripts start",

@@ -38,11 +38,13 @@ body {
   color: #626a7a;
 }
 .nft-img {
-  width: 256px;
-  height: auto;
+  width: 140px;
+  height: 140px;
 }
+
 .nft-img img {
-  width: 100%;
+  width: 140px;
+  height: 140px;
 }
 
 .nft-info {
