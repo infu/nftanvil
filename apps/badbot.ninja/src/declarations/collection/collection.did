@@ -1,11 +1,23 @@
 type TransactionId = blob;
-type Result = 
+type TokenIdentifier = nat64;
+type SubAccount = blob;
+type Result_1 = 
  variant {
    err: text;
    ok;
  };
+type Result = 
+ variant {
+   err: text;
+   ok: AccountRecordSerialized;
+ };
 type Class = 
  service {
-   check_tx: (TransactionId) -> (Result);
+   add: (TokenIdentifier) -> ();
+   buy_tx: (TransactionId, opt SubAccount) -> (Result_1);
+   claim: (AccountIdentifier, opt SubAccount, TokenIdentifier) -> (Result_1);
+   owned: (AccountIdentifier) -> (Result) query;
  };
+type AccountRecordSerialized = record {tokens: vec TokenIdentifier;};
+type AccountIdentifier = blob;
 service : () -> Class

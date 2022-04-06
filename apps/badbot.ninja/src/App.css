@@ -119,3 +119,8 @@ select {
   border-radius: 4px;
   font-weight: bold;
 }
+
+.priceOptions {
+  text-align: center;
+  margin-top: 20px;
+}

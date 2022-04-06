@@ -16,10 +16,12 @@ import {
   AccountIdentifier,
   getMap,
   PrincipalFromSlot,
-  claimBalance
+  claimBalance,
+  can,
 } from "./internal.js";
 
 export {
+  can,
   routerCanister,
   slotcan,
   nftCanister,
@@ -36,5 +38,5 @@ export {
   AccountIdentifier,
   getMap,
   PrincipalFromSlot,
-  claimBalance
+  claimBalance,
 };

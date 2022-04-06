@@ -26,65 +26,62 @@ import { Principal } from "@dfinity/principal";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 
-import { createCollectionActor } from "./declarations/collection.js";
+import { buy, claim } from "./actions/purchase";
 
 import logo from "./logo.svg";
 import nfts from "./nfts.json";
 import "./App.css";
 
-function App() {
-  const loaded = useAnvilSelector((state) => state.user.map.history);
+function PriceOptions() {
   const dispatch = useAnvilDispatch();
+
+  return (
+    <div className="priceOptions">
+      <button
+        onClick={async () => {
+          dispatch(buy(40000));
+        }}
+      >
+        Buy 1
+      </button>
+      <button
+        onClick={async () => {
+          dispatch(buy(80000));
+        }}
+      >
+        Buy 5 (10% discount)
+      </button>
+      <button
+        onClick={async () => {
+          dispatch(buy(120000));
+        }}
+      >
+        Buy 20 (20% discount)
+      </button>
+    </div>
+  );
+}
+
+function App() {
+  const dispatch = useAnvilDispatch();
+
+  const loaded = useAnvilSelector((state) => state.user.map.history);
   if (!loaded) return null;
 
   return (
     <div className="App">
       <div className="Title">Bad Bot Ninja</div>
       <div className="Subtitle">gear for post-apocalyptic overlords</div>
+
+      <User />
+      <PriceOptions />
       <button
-        onClick={async () => {
-          // make pwr transfer and get tx
-
-          // let cp = Principal.fromText();
-          let destination = principalToAccountIdentifier(
-            process.env.REACT_APP_COLLECTION_CANISTER_ID
-          );
-          // let p = Principal.fromText(
-          //   process.env.REACT_APP_COLLECTION_CANISTER_ID
-          // );
-          // console.log(p, PrincipalToIdx(p));
-          // return;
-          let dres = await dispatch(
-            user_pwr_transfer({ to: destination, amount: 40000, memo: [] })
-          );
-          if ("err" in dres) throw dres.err;
-          let txid = dres.ok.transactionId;
-          //TransactionId.fromText("TX888888DA1D4MZOQ");
-
-          let collection = createCollectionActor({
-            agentOptions: authentication.getAgentOptions(),
-          });
-
-          const withDelay = async (txid, ms) => {
-            await delay(ms);
-            return await collection.check_tx(txid);
-          };
-
-          let pr = [
-            withDelay(txid, 1),
-            withDelay(txid, 2),
-            withDelay(txid, 3),
-            withDelay(txid, 4),
-            withDelay(txid, 5),
-          ];
-
-          console.log(await Promise.all(pr));
-          dispatch(user_refresh_balances());
+        onClick={() => {
+          dispatch(claim());
         }}
       >
-        Test
+        Claim
       </button>
-      <User />
       <br />
       <br />
       <br />
@@ -94,8 +91,6 @@ function App() {
 }
 
 export default App;
-
-const delay = (ms) => new Promise((resolve, reject) => setTimeout(resolve, ms));
 
 // const [nfts, setNfts] = React.useState(false);
 // const load = async () => {

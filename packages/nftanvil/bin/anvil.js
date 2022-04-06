@@ -10,8 +10,8 @@ import {
   PrincipalFromSlot,
   anvilCanister,
   claimBalance,
+  can,
 } from "@vvv-interactive/nftanvil";
-
 import {
   encodeTokenId,
   decodeTokenId,
@@ -30,6 +30,8 @@ import {
   generateKeyHashPair,
   uploadFile,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import { Actor, HttpAgent } from "@dfinity/agent";
+import { Principal } from "@dfinity/principal";
 
 import fs from "fs";
 import mime from "mime";
@@ -38,6 +40,8 @@ import figlet from "figlet";
 import path from "path";
 import pLimit from "p-limit";
 import getRandomValues from "get-random-values";
+import { execSync } from "child_process";
+
 const limit = pLimit(
   process.env.MINT_CONCURRENCY ? parseInt(process.env.MINT_CONCURRENCY, 10) : 20
 ); // Number of concurrent async requests. Don't get it too high or network may block you
@@ -111,6 +115,120 @@ const balanceAndAddress = async () => {
     "ICP",
     "(" + balance.pwr + " e8s)"
   );
+};
+
+//
+const collectionIdlFactory = ({ IDL }) => {
+  const Class = IDL.Service({
+    add: IDL.Func([IDL.Nat64], [], []),
+  });
+  return Class;
+};
+
+const collectionCreateActor = (canisterId, options) => {
+  const agent = new HttpAgent({ ...options?.agentOptions });
+
+  return Actor.createActor(collectionIdlFactory, {
+    agent,
+    canisterId,
+    ...options?.actorOptions,
+  });
+};
+
+const saleAdd = async (NFT_FROM, NFT_TO) => {
+  let { principal, address, subaccount } = await routerCanister();
+  let SALES_PRINCIPAL = execSync(`dfx canister --network ic id collection`, {
+    encoding: "UTF-8",
+  }).trim();
+
+  try {
+    let chk = Principal.fromText(SALES_PRINCIPAL);
+  } catch (e) {
+    throw new Error(
+      "Can't find collection contract principal. Make sure you are in the right directory with dfx.json and it has ic network deployment"
+    );
+  }
+
+  // console.log(
+  //   "Executing: ",
+  //   `dfx canister --wallet=$(dfx identity --network ic get-wallet) --network ic call collection set_admin 'principal "${principal}"'`
+  // );
+
+  execSync(
+    `dfx canister --wallet=$(dfx identity --network ic get-wallet) --network ic call collection set_admin 'principal "${principal}"'`,
+    {
+      encoding: "UTF-8",
+    }
+  );
+
+  let TO_ADDRESS = principalToAccountIdentifier(SALES_PRINCIPAL);
+  let collectionContract = can(collectionCreateActor, SALES_PRINCIPAL);
+  let map = await getMap();
+  let minted;
+  try {
+    minted = JSON.parse(fs.readFileSync("./minted.json"));
+  } catch (e) {
+    console.log("minted.json not found");
+    return;
+  }
+
+  let tokens = [];
+  for (let i = NFT_FROM; i < NFT_TO; i++) {
+    tokens.push(i);
+  }
+
+  let results = await Promise.all(
+    tokens.map((i) =>
+      limit(async () => {
+        let tid = minted[i];
+        if (!tid) {
+          console.log("index", i, "missing from minted.json");
+          return false;
+        }
+
+        try {
+          let { index, slot } = decodeTokenId(tid);
+
+          let canister = PrincipalFromSlot(map.space, slot).toText();
+
+          let nft = nftCanister(canister);
+
+          let rez = await nft.transfer({
+            subaccount: [AccountIdentifier.TextToArray(subaccount)],
+            token: tid,
+            from: { address: AccountIdentifier.TextToArray(address) },
+            to: { address: AccountIdentifier.TextToArray(TO_ADDRESS) },
+            memo: [],
+          });
+
+          if ("err" in rez) {
+            console.log("Couldn't transfer nft", tid);
+          }
+
+          let srez = await collectionContract.add(tid);
+
+          return true;
+        } catch (e) {
+          console.log(e);
+          console.log("Failed adding to sale token", tid);
+          return false;
+        }
+      })
+    )
+  );
+
+  let ok = 0;
+  let fail = 0;
+  for (let [idx, re] of results.entries()) {
+    let ridx = idx + NFT_FROM;
+    if (re) ok++;
+    else {
+      fail++;
+      console.log(ridx, "transfer failed");
+    }
+  }
+
+  console.log(`DONE. ${fail} failed. ${ok} ok. `);
 };
 
 const transferMain = async (NFT_FROM, NFT_TO, TO_ADDRESS) => {
@@ -464,6 +582,16 @@ program
   .action((from, to, address, options) => {
     console.log(`Transferring nfts from ${from} - ${to} to ${address}`);
     transferMain(parseInt(from, 10), parseInt(to, 10), address);
+  });
+
+program
+  .command("sale-add")
+  .description("Transfer nfts to sales contract")
+  .argument("<number>", "from index")
+  .argument("<number>", "to index")
+  .action((from, to, principal, options) => {
+    console.log(`Adding to sale nfts from ${from} - ${to}`);
+    saleAdd(parseInt(from, 10), parseInt(to, 10));
   });
 
 program.parse();

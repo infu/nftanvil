@@ -1101,8 +1101,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                     SNFT_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
                                     await ACC_move(Nft.User.toAccountIdentifier(request.user), to, tokenIndex);
 
-
-
                                     let transactionId = await Cluster.history(_conf).add(#nft(#socket({user=Nft.User.toAccountIdentifier(request.user); created=Time.now();plug = request.plug; socket=request.socket; memo=request.memo})));
                                     addTransaction(vars, transactionId);
 

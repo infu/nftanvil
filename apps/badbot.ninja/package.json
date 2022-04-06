@@ -15,8 +15,10 @@
     "web-vitals": "^1.0.1"
   },
   "scripts": {
-    "start": "node dfx.env.js && react-scripts start",
-    "build": "node dfx.env.js && react-scripts build",
+    "typecheck": "./helpers/monitor_and_typecheck.sh",
+    "generate": "dfx generate",
+    "start": "node ./helpers/dfx.env.js && react-scripts start",
+    "build": "node ./helpers/dfx.env.js && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
