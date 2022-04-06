@@ -61,7 +61,7 @@ export const claim = () => async (dispatch, getState) => {
   });
 
   let owned = await collection.owned(address);
-
+  if (owned.err) throw new Error(owned.err);
   console.log(owned);
 
   let tokens = owned.ok.tokens.filter(Boolean);
