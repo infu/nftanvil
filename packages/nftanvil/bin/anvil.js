@@ -345,6 +345,7 @@ const checkUploads = async (NFT_FROM, NFT_TO) => {
       limit(async () => {
         let tid = minted[i];
         if (!tid) {
+          console.log("Not minted");
           return false;
         }
 
@@ -365,6 +366,7 @@ const checkUploads = async (NFT_FROM, NFT_TO) => {
           let found = rez[0];
 
           if (data[i].content) {
+            ``;
             let rez2 = await nft.fetch_chunk({
               tokenIndex: index,
               position: { content: null },
@@ -708,7 +710,7 @@ program
   .argument("<number>", "from index")
   .argument("<number>", "to index")
   .action((from, to, principal, options) => {
-    console.log(`Adding to sale nfts from ${from} - ${to}`);
+    console.log(`Checking uploads ${from} - ${to}`);
     checkUploads(parseInt(from, 10), parseInt(to, 10));
   });
 
