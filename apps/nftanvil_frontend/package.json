@@ -1,6 +1,6 @@
 {
   "name": "nftanvil_frontend",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
@@ -20,9 +20,9 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
-    "@vvv-interactive/nftanvil-canisters": "^0.22.0",
-    "@vvv-interactive/nftanvil-react": "^0.22.0",
-    "@vvv-interactive/nftanvil-tools": "^0.22.0",
+    "@vvv-interactive/nftanvil-canisters": "^0.23.0",
+    "@vvv-interactive/nftanvil-react": "^0.23.0",
+    "@vvv-interactive/nftanvil-tools": "^0.23.0",
     "base-x": "^3.0.9",
     "connected-react-router": "^6.9.1",
     "formik": "^2.2.9",
