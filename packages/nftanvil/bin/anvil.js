@@ -91,6 +91,8 @@ const burnEverything = async () => {
       })
     );
   }
+
+  fs.writeFileSync("./minted.json", JSON.stringify({}));
 };
 
 const balanceAndAddress = async () => {
@@ -306,6 +308,112 @@ const transferMain = async (NFT_FROM, NFT_TO, TO_ADDRESS) => {
       console.log(ridx, "transfer failed");
     }
   }
+
+  console.log(`DONE. ${fail} failed. ${ok} ok. `);
+};
+
+const checkUploads = async (NFT_FROM, NFT_TO) => {
+  let { address, subaccount } = await routerCanister();
+
+  let map = await getMap();
+  let minted;
+  try {
+    minted = JSON.parse(fs.readFileSync("./minted.json"));
+  } catch (e) {
+    console.log("minted.json not found");
+    return;
+  }
+
+  let data = await new Promise((resolve, reject) => {
+    import(path.resolve(process.cwd(), "./input.js")).then((importedModule) => {
+      resolve(importedModule.default);
+    });
+  });
+
+  if (!data) {
+    console.log("No input.js invalid");
+    return;
+  }
+
+  let tokens = [];
+  for (let i = NFT_FROM; i < NFT_TO; i++) {
+    tokens.push(i);
+  }
+
+  let results = await Promise.all(
+    tokens.map((i) =>
+      limit(async () => {
+        let tid = minted[i];
+        if (!tid) {
+          return false;
+        }
+
+        try {
+          let { index, slot } = decodeTokenId(tid);
+
+          let canister = PrincipalFromSlot(map.space, slot).toText();
+
+          let nft = nftCanister(canister);
+
+          let rez = await nft.fetch_chunk({
+            tokenIndex: index,
+            position: { thumb: null },
+            chunkIdx: 0,
+            subaccount: [AccountIdentifier.TextToArray(subaccount)],
+          });
+
+          let found = rez[0];
+
+          if (data[i].content) {
+            let rez2 = await nft.fetch_chunk({
+              tokenIndex: index,
+              position: { content: null },
+              chunkIdx: 0,
+              subaccount: [AccountIdentifier.TextToArray(subaccount)],
+            });
+
+            found = found && rez2[0];
+          }
+
+          if (!found) {
+            await nft.burn({
+              memo: [],
+              subaccount: [AccountIdentifier.TextToArray(subaccount)],
+              token: tid,
+              user: { address: AccountIdentifier.TextToArray(address) },
+            });
+
+            delete minted[i];
+
+            console.log(
+              "Not found image data for token",
+              tid,
+              " burning and deleting"
+            );
+          }
+
+          return true;
+        } catch (e) {
+          console.log(e);
+          console.log("Failed checking uploads for token", tid);
+          return false;
+        }
+      })
+    )
+  );
+
+  let ok = 0;
+  let fail = 0;
+  for (let [idx, re] of results.entries()) {
+    let ridx = idx + NFT_FROM;
+    if (re) ok++;
+    else {
+      fail++;
+      console.log(ridx, "checking upload failed");
+    }
+  }
+
+  fs.writeFileSync("./minted.json", JSON.stringify(minted));
 
   console.log(`DONE. ${fail} failed. ${ok} ok. `);
 };
@@ -592,6 +700,16 @@ program
   .action((from, to, principal, options) => {
     console.log(`Adding to sale nfts from ${from} - ${to}`);
     saleAdd(parseInt(from, 10), parseInt(to, 10));
+  });
+
+program
+  .command("check-uploads")
+  .description("Checks if everything was uploaded and burns nft if not")
+  .argument("<number>", "from index")
+  .argument("<number>", "to index")
+  .action((from, to, principal, options) => {
+    console.log(`Adding to sale nfts from ${from} - ${to}`);
+    checkUploads(parseInt(from, 10), parseInt(to, 10));
   });
 
 program.parse();

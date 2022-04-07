@@ -124,6 +124,8 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
     switch(r.tokens.indexOf(tid)) {
       case (?idx) {
+        
+          // recharge here
 
           switch(await Cluster.nftFromTid(anvil.conf, tid).transfer({
             from = #address(getScriptAccount());

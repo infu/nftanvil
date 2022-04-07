@@ -9,6 +9,7 @@ for (let i = 0; i < 100; i++) {
     attributes: { attack: i, defence: 0, airdrops: 0, harvest: 0, luck: 1 },
     authorShare: 100,
     thumb: "./thumb.jpg",
+    content: i === 3 ? "./thumb.jpg" : null,
   });
 }
 
