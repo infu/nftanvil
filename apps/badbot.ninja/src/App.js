@@ -29,6 +29,8 @@ import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 import { buy, claim, get_mine } from "./actions/purchase";
 
 import logo from "./logo.svg";
+import bbn_logo from "./assets/bbn_logo.png";
+
 import nfts from "./nfts.json";
 import "./App.css";
 
@@ -83,7 +85,8 @@ function App() {
 
   return (
     <div className="App">
-      <div className="Title">Bad Bot Ninja</div>
+      <img src={bbn_logo} className="bbn-logo" alt="Bad Bot Ninja" />
+      <h1 className="Title">Bad Bot Ninja</h1>
       <div className="Subtitle">gear for post-apocalyptic overlords</div>
 
       <User />

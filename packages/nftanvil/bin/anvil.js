@@ -1,4 +1,4 @@
-#!/usr/bin/env NODE_OPTIONS=--no-warnings node
+#!/usr/bin/env node
 import {
   easyMint,
   routerCanister,
@@ -695,7 +695,7 @@ program
   });
 
 program
-  .command("sale-add")
+  .command("sell")
   .description("Transfer nfts to sales contract")
   .argument("<number>", "from index")
   .argument("<number>", "to index")
@@ -705,7 +705,7 @@ program
   });
 
 program
-  .command("check-uploads")
+  .command("check")
   .description("Checks if everything was uploaded and burns nft if not")
   .argument("<number>", "from index")
   .argument("<number>", "to index")

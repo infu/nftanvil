@@ -7,6 +7,7 @@ body {
 .Title {
   text-align: center;
   font-size: 45px;
+  display: none;
 }
 .Subtitle {
   font-size: 23px;
@@ -125,4 +126,9 @@ select {
 .priceOptions {
   text-align: center;
   margin-top: 20px;
+}
+
+.bbn-logo {
+  margin: auto;
+  display: block;
 }
