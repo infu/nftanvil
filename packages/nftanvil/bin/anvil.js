@@ -93,7 +93,7 @@ const recover = async () => {
   let good = 0;
   let emptyPages = 0;
 
-  for (let page = 0; page < 100; page++) {
+  for (let page = 0; page < 1000; page++) {
     let res = await acc.list(
       AccountIdentifier.TextToArray(address),
       page * 100,
@@ -116,7 +116,7 @@ const recover = async () => {
     }
 
     if (res.length === 0) emptyPages++;
-    if (emptyPages > 10) break;
+    if (emptyPages > 20) break;
   }
 
   forMatching = [...new Set(forMatching)]; // unique ids
@@ -203,7 +203,7 @@ const burnGarbage = async () => {
   let forBurning = [];
   let good = 0;
   let emptyPages = 0;
-  for (let page = 0; page < 100; page++) {
+  for (let page = 0; page < 1000; page++) {
     let res = await acc.list(
       AccountIdentifier.TextToArray(address),
       page * 100,
@@ -221,7 +221,7 @@ const burnGarbage = async () => {
     }
 
     if (res.length === 0) emptyPages++;
-    if (emptyPages > 3) break;
+    if (emptyPages > 20) break;
   }
 
   forBurning = [...new Set(forBurning)]; // unique ids
