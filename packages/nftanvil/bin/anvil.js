@@ -41,6 +41,9 @@ import path from "path";
 import pLimit from "p-limit";
 import getRandomValues from "get-random-values";
 import { execSync } from "child_process";
+import prompts from "prompts";
+
+import colors from "colors";
 
 const limit = pLimit(
   process.env.MINT_CONCURRENCY ? parseInt(process.env.MINT_CONCURRENCY, 10) : 20
@@ -51,13 +54,22 @@ console.log(
     font: "Graffiti",
     horizontalLayout: "default",
     verticalLayout: "default",
-  })
+  }).magenta
 );
 
-const burnEverything = async () => {
+const burnGarbage = async () => {
   let { address, subaccount } = await routerCanister();
 
   let map = await getMap();
+
+  let minted;
+  try {
+    minted = JSON.parse(fs.readFileSync("./minted.json"));
+  } catch (e) {
+    console.log("minted.json not found");
+  }
+
+  let minted_ids = (minted ? Object.values(minted) : []).map((x) => BigInt(x));
 
   let acc = accountCanister(
     PrincipalFromSlot(
@@ -66,33 +78,68 @@ const burnEverything = async () => {
     )
   );
 
+  let forBurning = [];
+  let good = 0;
+  let emptyPages = 0;
   for (let page = 0; page < 100; page++) {
-    let res = await acc.list(AccountIdentifier.TextToArray(address), 0, 100);
-    if (!res.length) return;
-
-    await Promise.all(
-      res.map((tid) => {
-        return limit(async () => {
-          if (tid == 0n) return;
-
-          let { index, slot } = decodeTokenId(tid);
-
-          let canister = PrincipalFromSlot(map.space, slot).toText();
-
-          let nft = nftCanister(canister);
-
-          await nft.burn({
-            memo: [],
-            subaccount: [AccountIdentifier.TextToArray(subaccount)],
-            token: tid,
-            user: { address: AccountIdentifier.TextToArray(address) },
-          });
-        });
-      })
+    let res = await acc.list(
+      AccountIdentifier.TextToArray(address),
+      page * 100,
+      (page + 1) * 100
     );
+
+    res = res.filter((x) => x != 0n);
+
+    for (let nft_id of res) {
+      if (minted_ids.indexOf(nft_id) !== -1) {
+        good++;
+      } else {
+        forBurning.push(nft_id);
+      }
+    }
+
+    if (res.length === 0) emptyPages++;
+    if (emptyPages > 3) break;
   }
 
-  fs.writeFileSync("./minted.json", JSON.stringify({}));
+  forBurning = [...new Set(forBurning)]; // unique ids
+
+  console.log(
+    `We have found ${good} ok nfts with id in minted.json and ${forBurning.length} nfts without id in minted.json`
+      .cyan
+  );
+  if (forBurning.length === 0) return;
+
+  let confirm = await prompts({
+    type: "confirm",
+    name: "value",
+    message: `Do you really want to burn ${forBurning.length} nfts ?`,
+    initial: false,
+  });
+
+  if (!confirm.value) return;
+  console.log("Burning...");
+
+  await Promise.all(
+    forBurning.map((tid) => {
+      return limit(async () => {
+        if (tid == 0n) return;
+
+        let { index, slot } = decodeTokenId(tid);
+
+        let canister = PrincipalFromSlot(map.space, slot).toText();
+
+        let nft = nftCanister(canister);
+
+        await nft.burn({
+          memo: [],
+          subaccount: [AccountIdentifier.TextToArray(subaccount)],
+          token: tid,
+          user: { address: AccountIdentifier.TextToArray(address) },
+        });
+      });
+    })
+  );
 };
 
 const balanceAndAddress = async () => {
@@ -656,11 +703,11 @@ program
   });
 
 program
-  .command("burn-everything")
-  .description("Burn everything your address owns")
+  .command("burn-garbage")
+  .description("Burn everything your address owns except nfts from minted.json")
   .action((options) => {
-    console.log("Burning...");
-    burnEverything();
+    console.log("Searching...");
+    burnGarbage();
   });
 
 program

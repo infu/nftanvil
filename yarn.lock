@@ -4554,31 +4554,6 @@
     "@typescript-eslint/types" "4.33.0"
     eslint-visitor-keys "^2.0.0"
 
-"@vvv-interactive/nftanvil-canisters@^0.13.0":
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/@vvv-interactive/nftanvil-canisters/-/nftanvil-canisters-0.13.0.tgz#aa05c24513da37ffd70c25c54bd0083d63eaabd6"
-  integrity sha512-w+hYmKqjuv7FE77IAucr0hzIc6wdu1gsk6peb2es8XjAIkE71vYaj7iKZhXA0Gfq4EGhZyBYEsuXeLVWImmUqQ==
-  dependencies:
-    "@dfinity/agent" "^0.10.1"
-    "@dfinity/auth-client" "^0.10.1"
-    "@dfinity/authentication" "^0.10.1"
-    "@dfinity/candid" "^0.10.1"
-    "@dfinity/identity" "^0.10.1"
-    "@dfinity/principal" "^0.10.1"
-
-"@vvv-interactive/nftanvil-tools@^0.13.0":
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/@vvv-interactive/nftanvil-tools/-/nftanvil-tools-0.13.0.tgz#436cf26403a41f71b1611ec834c1291c1e0bf345"
-  integrity sha512-R1xj42Sv5jq3M+zJ1leq6gBV7GbDDqk+8v7DpN5HxOzwJSBEDMw0uEhysllZwPCdB4n7IEk4WCERvEO+J7DeHA==
-  dependencies:
-    "@dfinity/agent" "^0.10.1"
-    "@dfinity/auth-client" "^0.10.1"
-    "@dfinity/authentication" "^0.10.1"
-    "@dfinity/candid" "^0.10.1"
-    "@dfinity/identity" "^0.10.1"
-    "@dfinity/principal" "^0.10.1"
-    base-x "^3.0.9"
-
 "@web-std/blob@^3.0.0", "@web-std/blob@^3.0.1", "@web-std/blob@^3.0.3":
   version "3.0.4"
   resolved "https://registry.npmjs.org/@web-std/blob/-/blob-3.0.4.tgz"
@@ -6410,6 +6385,11 @@ colors@1.0.3:
 colors@1.4.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/colors/-/colors-1.4.0.tgz"
+  integrity sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
+
+colors@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/colors/-/colors-1.4.0.tgz#c50491479d4c1bdaed2c9ced32cf7c7dc2360f78"
   integrity sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
 
 columnify@^1.5.4:
@@ -13997,9 +13977,9 @@ prompts@2.4.0:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-prompts@^2.0.1:
+prompts@^2.0.1, prompts@^2.4.2:
   version "2.4.2"
-  resolved "https://registry.yarnpkg.com/prompts/-/prompts-2.4.2.tgz"
+  resolved "https://registry.yarnpkg.com/prompts/-/prompts-2.4.2.tgz#7b57e73b3a48029ad10ebd44f74b01722a4cb069"
   integrity sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==
   dependencies:
     kleur "^3.0.3"
