@@ -46,7 +46,7 @@ import prompts from "prompts";
 import colors from "colors";
 
 const limit = pLimit(
-  process.env.MINT_CONCURRENCY ? parseInt(process.env.MINT_CONCURRENCY, 10) : 20
+  process.env.MINT_CONCURRENCY ? parseInt(process.env.MINT_CONCURRENCY, 10) : 40
 ); // Number of concurrent async requests. Don't get it too high or network may block you
 
 console.log(
@@ -476,7 +476,8 @@ const transferMain = async (NFT_FROM, NFT_TO, TO_ADDRESS) => {
   console.log(`DONE. ${fail} failed. ${ok} ok. `);
 };
 
-const checkUploads = async (NFT_FROM, NFT_TO) => {
+const checkUploads = async (NFT_FROM, NFT_TO, options) => {
+  if (options.quick) console.log("Quick check");
   let { address, subaccount } = await routerCanister();
 
   let map = await getMap();
@@ -509,7 +510,7 @@ const checkUploads = async (NFT_FROM, NFT_TO) => {
       limit(async () => {
         let tid = minted[i];
         if (!tid) {
-          console.log("Not minted");
+          console.log("Not minted ", i);
           return false;
         }
 
@@ -519,25 +520,31 @@ const checkUploads = async (NFT_FROM, NFT_TO) => {
           let canister = PrincipalFromSlot(map.space, slot).toText();
 
           let nft = nftCanister(canister);
+          let found = false;
 
-          let rez = await nft.fetch_chunk({
-            tokenIndex: index,
-            position: { thumb: null },
-            chunkIdx: 0,
-            subaccount: [AccountIdentifier.TextToArray(subaccount)],
-          });
-
-          let found = rez[0];
-
-          if (data[i].content) {
-            let rez2 = await nft.fetch_chunk({
+          if (!options.quick) {
+            let rez = await nft.fetch_chunk({
               tokenIndex: index,
-              position: { content: null },
+              position: { thumb: null },
               chunkIdx: 0,
               subaccount: [AccountIdentifier.TextToArray(subaccount)],
             });
 
-            found = found && rez2[0];
+            found = rez[0];
+
+            if (data[i].content) {
+              let rez2 = await nft.fetch_chunk({
+                tokenIndex: index,
+                position: { content: null },
+                chunkIdx: 0,
+                subaccount: [AccountIdentifier.TextToArray(subaccount)],
+              });
+
+              found = found && rez2[0];
+            }
+          } else {
+            let rez = await nft.metadata(tid);
+            if (rez?.ok?.data) found = true;
           }
 
           if (!found) {
@@ -809,18 +816,18 @@ program
   .description(
     "CLI to mint with NFTAnvil.\nDon't run it multiple times asynchroneously"
   )
-  .version("0.1.0");
+  .version("0.2.0");
 
 program
   .command("address")
-  .description("Check your address & balance")
+  .description("check your address & balance")
   .action((options) => {
     balanceAndAddress();
   });
 
 program
   .command("burn-garbage")
-  .description("Burn everything your address owns except nfts from minted.json")
+  .description("burn everything your address owns except nfts from minted.json")
   .action((options) => {
     console.log("Searching...");
     burnGarbage();
@@ -828,7 +835,7 @@ program
 
 program
   .command("mint")
-  .description("Mint nfts from index to index")
+  .description("mint nfts from index to index")
   .argument("<number>", "from index")
   .argument("<number>", "to index")
   .action((from, to, options) => {
@@ -838,7 +845,7 @@ program
 
 program
   .command("gift")
-  .description("Creates gift links for nfts from index to index")
+  .description("creates gift links for nfts from index to index")
   .argument("<number>", "from index")
   .argument("<number>", "to index")
   .action((from, to, options) => {
@@ -848,7 +855,7 @@ program
 
 program
   .command("transfer")
-  .description("Transfer nfts from index to index to another address")
+  .description("transfer nfts from index to index to another address")
   .argument("<number>", "from index")
   .argument("<number>", "to index")
   .argument("<string>", "address")
@@ -859,7 +866,7 @@ program
 
 program
   .command("sell")
-  .description("Transfer nfts to sales contract")
+  .description("transfer nfts to sales contract")
   .argument("<number>", "from index")
   .argument("<number>", "to index")
   .action((from, to, principal, options) => {
@@ -869,18 +876,19 @@ program
 
 program
   .command("check")
-  .description("Checks if everything was uploaded and burns nft if not")
+  .description("checks if everything was uploaded and burns nft if not")
   .argument("<number>", "from index")
   .argument("<number>", "to index")
-  .action((from, to, principal, options) => {
+  .option("-q, --quick")
+  .action((from, to, options) => {
     console.log(`Checking uploads ${from} - ${to}`);
-    checkUploads(parseInt(from, 10), parseInt(to, 10));
+    checkUploads(parseInt(from, 10), parseInt(to, 10), options);
   });
 
 program
   .command("recover")
   .description(
-    "Searches inventory and adds nfts to minted.json if they are missing"
+    "searches inventory and adds nfts to minted.json if they are missing"
   )
   .action((from, to, principal, options) => {
     console.log(`Searching...`);
