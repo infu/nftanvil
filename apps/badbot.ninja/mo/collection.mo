@@ -246,7 +246,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
             };
           };
         
-          nft_idx := nft_idx +1;
+          nft_idx := nft_idx + 1;
       };
 
     };
