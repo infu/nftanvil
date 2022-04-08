@@ -57,6 +57,123 @@ console.log(
   }).magenta
 );
 
+const recover = async () => {
+  let { address, subaccount } = await routerCanister();
+
+  let map = await getMap();
+
+  let minted;
+  try {
+    minted = JSON.parse(fs.readFileSync("./minted.json"));
+  } catch (e) {
+    minted = {};
+    console.log("minted.json not found");
+  }
+
+  let minted_ids = Object.values(minted).map((x) => BigInt(x));
+
+  let data = (
+    await new Promise((resolve, reject) => {
+      import(path.resolve(process.cwd(), "./input.js")).then(
+        (importedModule) => {
+          resolve(importedModule.default);
+        }
+      );
+    })
+  ).map(inputToMeta);
+
+  let acc = accountCanister(
+    PrincipalFromSlot(
+      map.space,
+      AccountIdentifier.TextToSlot(address, map.account)
+    )
+  );
+
+  let forMatching = [];
+  let good = 0;
+  let emptyPages = 0;
+
+  for (let page = 0; page < 100; page++) {
+    let res = await acc.list(
+      AccountIdentifier.TextToArray(address),
+      page * 100,
+      (page + 1) * 100
+    );
+
+    res = res.filter((x) => x != 0n);
+
+    for (let nft_id of res) {
+      if (minted_ids.indexOf(nft_id) !== -1) {
+        good++;
+      } else {
+        forMatching.push(nft_id);
+      }
+    }
+
+    if (res.length === 0) emptyPages++;
+    if (emptyPages > 3) break;
+  }
+
+  forMatching = [...new Set(forMatching)]; // unique ids
+
+  console.log(
+    `We have found ${good} ok nfts with id in minted.json and ${forMatching.length} nfts without id in minted.json`
+      .cyan
+  );
+  if (forMatching.length === 0) return;
+
+  let confirm = await prompts({
+    type: "confirm",
+    name: "value",
+    message: `Do you want to try to recover ${forMatching.length} nfts ?`,
+    initial: false,
+  });
+
+  if (!confirm.value) return;
+  console.log("Recovering...");
+
+  let recovered = 0;
+  await Promise.all(
+    forMatching.map((tid) => {
+      return limit(async () => {
+        if (tid == 0n) return;
+
+        let { index, slot } = decodeTokenId(tid);
+
+        let canister = PrincipalFromSlot(map.space, slot).toText();
+
+        let nft = nftCanister(canister);
+
+        try {
+          let meta = await nft.metadata(tid);
+          let name = meta.ok.data.name[0];
+          let lore = meta.ok.data.lore[0];
+          let quality = meta.ok.data.quality;
+
+          for (let [idx, v] of data.entries()) {
+            if (
+              !minted[idx] &&
+              v.name[0] === name &&
+              (lore ? v.lore[0] === lore : true) &&
+              v.quality === quality
+            ) {
+              console.log("found match", idx, tokenToText(tid));
+              minted[idx] = Number(tid);
+              recovered++;
+              break;
+            }
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      });
+    })
+  );
+
+  fs.writeFileSync("./minted.json", JSON.stringify(minted));
+  console.log(`DONE. ${recovered} recovered nfts.`);
+};
+
 const burnGarbage = async () => {
   let { address, subaccount } = await routerCanister();
 
@@ -413,7 +530,6 @@ const checkUploads = async (NFT_FROM, NFT_TO) => {
           let found = rez[0];
 
           if (data[i].content) {
-            ``;
             let rez2 = await nft.fetch_chunk({
               tokenIndex: index,
               position: { content: null },
@@ -624,50 +740,7 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
     let request = {
       user: { address: AccountIdentifier.TextToArray(address) },
       subaccount: [AccountIdentifier.TextToArray(subaccount)],
-      metadata: {
-        domain: "domain" in s ? [s.domain] : [],
-        name: "name" in s ? [s.name] : [],
-        lore: "lore" in s ? [s.lore] : [],
-        quality: "quality" in s ? s.quality : 1,
-        secret: "secret" in s ? s.secret : false,
-        transfer: "transfer" in s ? s.transfer : { unrestricted: null },
-        ttl: ["ttl" in s ? s.ttl : 1036800],
-        content:
-          "content" in s
-            ? [
-                {
-                  internal: {
-                    contentType: mime.getType(s.content),
-                    path: s.content,
-                  },
-                },
-              ]
-            : [],
-        thumb:
-          "thumb" in s
-            ? {
-                internal: { contentType: mime.getType(s.thumb), path: s.thumb },
-              }
-            : null,
-        attributes:
-          "attributes" in s
-            ? Object.keys(s.attributes)
-                .map((x) => {
-                  if (s.attributes[x] == 0) return false;
-                  return [x, s.attributes[x]];
-                })
-                .filter(Boolean)
-            : [],
-        tags: "tags" in s ? s.tags : [],
-        custom: "custom" in s ? s.custom : [],
-        customVar: "customVar" in s ? s.customVar : [],
-        authorShare: "authorShare" in s ? s.authorShare : 50,
-        price:
-          "price" in s
-            ? s.price
-            : { amount: 0, marketplace: [], affiliate: [] },
-        rechargeable: "rechargeable" in s ? s.rechargeable : true,
-      },
+      metadata: inputToMeta(s),
     };
 
     items.push(request);
@@ -685,7 +758,50 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
     console.log(e);
   }
 };
-
+const inputToMeta = (s) => {
+  return {
+    domain: "domain" in s ? [s.domain] : [],
+    name: "name" in s ? [s.name] : [],
+    lore: "lore" in s ? [s.lore] : [],
+    quality: "quality" in s ? s.quality : 1,
+    secret: "secret" in s ? s.secret : false,
+    transfer: "transfer" in s ? s.transfer : { unrestricted: null },
+    ttl: ["ttl" in s ? s.ttl : 1036800],
+    content:
+      "content" in s
+        ? [
+            {
+              internal: {
+                contentType: mime.getType(s.content),
+                path: s.content,
+              },
+            },
+          ]
+        : [],
+    thumb:
+      "thumb" in s
+        ? {
+            internal: { contentType: mime.getType(s.thumb), path: s.thumb },
+          }
+        : null,
+    attributes:
+      "attributes" in s
+        ? Object.keys(s.attributes)
+            .map((x) => {
+              if (s.attributes[x] == 0) return false;
+              return [x, s.attributes[x]];
+            })
+            .filter(Boolean)
+        : [],
+    tags: "tags" in s ? s.tags : [],
+    custom: "custom" in s ? s.custom : [],
+    customVar: "customVar" in s ? s.customVar : [],
+    authorShare: "authorShare" in s ? s.authorShare : 50,
+    price:
+      "price" in s ? s.price : { amount: 0, marketplace: [], affiliate: [] },
+    rechargeable: "rechargeable" in s ? s.rechargeable : true,
+  };
+};
 const program = new Command();
 
 program
@@ -759,6 +875,16 @@ program
   .action((from, to, principal, options) => {
     console.log(`Checking uploads ${from} - ${to}`);
     checkUploads(parseInt(from, 10), parseInt(to, 10));
+  });
+
+program
+  .command("recover")
+  .description(
+    "Searches inventory and adds nfts to minted.json if they are missing"
+  )
+  .action((from, to, principal, options) => {
+    console.log(`Searching...`);
+    recover();
   });
 
 program.parse();
