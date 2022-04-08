@@ -106,12 +106,17 @@ const recover = async () => {
       if (minted_ids.indexOf(nft_id) !== -1) {
         good++;
       } else {
+        console.log(
+          "Not found in minted.json",
+          nft_id,
+          "https://nftanvil.com/" + tokenToText(nft_id)
+        );
         forMatching.push(nft_id);
       }
     }
 
     if (res.length === 0) emptyPages++;
-    if (emptyPages > 3) break;
+    if (emptyPages > 10) break;
   }
 
   forMatching = [...new Set(forMatching)]; // unique ids
