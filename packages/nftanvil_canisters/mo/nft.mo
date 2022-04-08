@@ -216,7 +216,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
                 let keyHash = Blob.fromArray(SHA224.sha224(Blob.toArray(request.key)));
  
-                if (keyHash != t.link) return #err(#Rejected);   
+                if (keyHash != t.link) return #err(#Rejected);
 
                     let curOwner = t.owner;
                     SNFT_move(curOwner, Nft.User.toAccountIdentifier(request.to), tokenIndex);

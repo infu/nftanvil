@@ -7,6 +7,7 @@ import Nat32 "mo:base/Nat32";
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Cluster  "mo:anvil/type/Cluster";
+import SHA224 "mo:anvil/lib/SHA224";
 
 import IF "./if";
 import Anvil "mo:anvil/base/Anvil";
@@ -29,6 +30,9 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   // list of tokens for sale or airdrop
   private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(100000, null);
 
+  private stable var _codes : [var ?Blob] = Array.init<?Blob>(10000, null);
+
+
   private stable var _tmpUsed: [(Nft.TransactionId, Bool)] = [];
 
   // memory with used transactions - to avoid double spending attack
@@ -38,9 +42,14 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   // temporary memory with account - purchased tokens. We can't send all purchased tokens in one call, so we need to store them
   private var _account: TrieRecord.TrieRecord<Nft.AccountIdentifier, IF.AccountRecord, IF.AccountRecordSerialized> = TrieRecord.TrieRecord<Nft.AccountIdentifier, IF.AccountRecord, IF.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, IF.AccountRecordSerialize, IF.AccountRecordUnserialize);
-
+  private var airdrop_codes: Nat = 0;
   // Count of available nfts
   private var count_available: Nat = 0;
+  private var count_total: Nat = 0;
+  private var last_given_idx: Nat = 0;
+
+  private var left_for_airdrop : Nat = 3000;
+  private var left_for_purchase : Nat = 6000;
 
   // Anvil object has various functions and provides anvil.conf and anvil.oracle
   private let anvil = Anvil.Anvil();
@@ -60,6 +69,19 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
       _tmpAccount := [];
   };
 
+  public query func stats() : async {
+    available: Nat;
+    total: Nat;
+    airdrop: Nat;
+    purchase: Nat;
+  } {
+    return {
+      available = count_available;
+      total = count_total;
+      airdrop = left_for_airdrop;
+      purchase = left_for_purchase;
+    }
+  };
 
   // installer sets an admin, which can add nfts
   public shared({caller}) func set_admin(x: Principal) : () {
@@ -76,16 +98,45 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
       if (_tokens[rnd_slot] == null) {
         _tokens[rnd_slot] := ?nft_id;
         count_available += 1;
+        count_total += 1;
         break lo;
         };
     };
   };
 
+  public shared({caller}) func airdrop_use(aid : Nft.AccountIdentifier, key: Blob) : async Result.Result<(), Text> {
+    assert(key.size() == 32);
+    let keyHash = Blob.fromArray(SHA224.sha224(Blob.toArray(key)));
+    var idx: Nat = 0;
+    label lo loop {
+      if (_codes[idx] == ?keyHash) {
+        switch(give(aid, 1, #airdrop)) {
+          case (#ok()) {
+            _codes[idx] := null; // deleting code
+            return #ok();
+          };
+          case (#err(e)) {
+            return #err("Couldn't give drop");
+          }
+        };
+
+        break lo;
+      };
+
+      idx += 1;
+      if (idx >= 10000) break lo;
+    };
+
+    #err("Not found")
+  };
 
   // We are adding hash from two pieces.
-  public shared({caller}) func gift_code_add(hash: Blob) : async Result.Result<(), Text> {
+  public shared({caller}) func airdrop_add(hash: Blob) : async Result.Result<(), Text> {
     assert(caller == admin);
-    return #err("Not implemented");
+     assert(hash.size() <= 32);
+    _codes[airdrop_codes] := ?hash;
+    airdrop_codes += 1;
+    #ok();
   };
 
   // Query all internally owned nfts by a certain AccountIdentifier
@@ -154,12 +205,19 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   // We move nfts from _tokens to _account internally. Later their new owner can claim them
   // where they get finally transfered
-  private func give(aid: Nft.AccountIdentifier, count: Nat) : Result.Result<(), Text> {
+  private func give(aid: Nft.AccountIdentifier, count: Nat, pool : {#buy; #airdrop}) : Result.Result<(), Text> {
     if (count_available < count) {
       return #err("Not enough nfts left in contract");
     };
 
-    var nft_idx = 0;
+    if ((pool == #buy) and (left_for_purchase < count)) {
+      return #err("Not enough left for purchase");
+    };
+      if ((pool == #airdrop) and (left_for_airdrop < count)) {
+      return #err("Not enough left for airdrop");
+    };
+
+    var nft_idx = last_given_idx;
     for (j in Iter.range(0, count - 1)) {
       label lo loop {
         
@@ -178,6 +236,8 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
                 _tokens[nft_idx] := null;
                 count_available -= 1;
+                if (pool == #buy) left_for_purchase -= 1;
+                if (pool == #airdrop) left_for_airdrop -= 1;
                 break lo;
         
             };
@@ -191,12 +251,15 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
     };
 
+    last_given_idx := nft_idx;
+
     #ok();
   };
 
   private func getScriptAccount() : Nft.AccountIdentifier {
     Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), null)
   };
+
 
 
   // Takes anvil transaction and checks if its going to the right place
@@ -219,7 +282,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
               case (40000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 1)) { //send 2 nfts to user
+                    switch(give(from, 1, #buy)) { //send 2 nfts to user
                       case (#ok()) {
                         #ok();
                       };
@@ -235,7 +298,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
               case (80000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 5)) {
+                    switch(give(from, 5, #buy)) {
                       case (#ok()) {
                         #ok();
                       };
@@ -251,7 +314,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
               case (120000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 20)) { 
+                    switch(give(from, 20, #buy)) { 
                       case (#ok()) {
                         #ok();
                       };
