@@ -66,6 +66,9 @@ export const bytesToBase58 = (bytes) => {
   return bs58.encode(new Uint8Array([...bytes]));
 };
 
+export const base58ToBytes = (x) => {
+  return [...bs58.decode(x)];
+};
 export const encodeArrayBuffer = (file) => Array.from(new Uint8Array(file));
 
 export const jsonToNat8 = async (json) => {

@@ -1,10 +1,20 @@
 type TransactionId = blob;
 type TokenIdentifier = nat64;
 type SubAccount = blob;
-type Result_1 = 
+type Result_3 = 
  variant {
    err: text;
    ok;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: Balance;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: blob;
  };
 type Result = 
  variant {
@@ -13,11 +23,24 @@ type Result =
  };
 type Class = 
  service {
-   add: (TokenIdentifier) -> ();
-   buy_tx: (TransactionId, opt SubAccount) -> (Result_1);
-   claim: (AccountIdentifier, opt SubAccount, TokenIdentifier) -> (Result_1);
+   add: (TokenIdentifier) -> (Result_3);
+   airdrop_add: (blob) -> (Result_3);
+   airdrop_use: (AccountIdentifier, blob) -> (Result_3);
+   buy_tx: (TransactionId, opt SubAccount) -> (Result_3);
+   claim: (AccountIdentifier, opt SubAccount, TokenIdentifier) -> (Result_3);
+   icp_balance: () -> (Result_2);
+   icp_transfer: (AccountIdentifier, Balance) -> (Result_1);
    owned: (AccountIdentifier) -> (Result) query;
+   set_admin: (principal) -> () oneway;
+   stats: () ->
+    (record {
+       airdrop: nat;
+       available: nat;
+       purchase: nat;
+       total: nat;
+     }) query;
  };
+type Balance = nat64;
 type AccountRecordSerialized = record {tokens: vec TokenIdentifier;};
 type AccountIdentifier = blob;
 service : () -> Class

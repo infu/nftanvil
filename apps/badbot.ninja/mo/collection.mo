@@ -28,28 +28,30 @@ import PseudoRandom "mo:anvil/lib/PseudoRandom";
 shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   // list of tokens for sale or airdrop
-  private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(100000, null);
+  private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(100000, null); // keep this 10 times bigger than max nft count
 
   private stable var _codes : [var ?Blob] = Array.init<?Blob>(10000, null);
 
 
-  private stable var _tmpUsed: [(Nft.TransactionId, Bool)] = [];
 
   // memory with used transactions - to avoid double spending attack
+  private stable var _tmpUsed: [(Nft.TransactionId, Bool)] = [];
   private var _used: TrieRecord.TrieRecord<Nft.TransactionId, Bool, Bool> = TrieRecord.TrieRecord<Nft.TransactionId, Bool, Bool>( _tmpUsed.vals(),  Blob.equal, Blob.hash, func (x) {x}, func (x) {x});
 
-  private stable var _tmpAccount: [(Nft.AccountIdentifier, IF.AccountRecordSerialized)] = [];
 
   // temporary memory with account - purchased tokens. We can't send all purchased tokens in one call, so we need to store them
+  private stable var _tmpAccount: [(Nft.AccountIdentifier, IF.AccountRecordSerialized)] = [];
   private var _account: TrieRecord.TrieRecord<Nft.AccountIdentifier, IF.AccountRecord, IF.AccountRecordSerialized> = TrieRecord.TrieRecord<Nft.AccountIdentifier, IF.AccountRecord, IF.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, IF.AccountRecordSerialize, IF.AccountRecordUnserialize);
-  private var airdrop_codes: Nat = 0;
-  // Count of available nfts
-  private var count_available: Nat = 0;
-  private var count_total: Nat = 0;
-  private var last_given_idx: Nat = 0;
 
-  private var left_for_airdrop : Nat = 3000;
-  private var left_for_purchase : Nat = 6000;
+  private stable var airdrop_codes: Nat = 0;
+
+  // Count of available nfts
+  private stable var count_available: Nat = 0;
+  private stable var count_total: Nat = 0;
+  private stable var last_given_idx: Nat = 0;
+
+  private stable var left_for_airdrop : Nat = 3000;
+  private stable var left_for_purchase : Nat = 6000;
 
   // Anvil object has various functions and provides anvil.conf and anvil.oracle
   private let anvil = Anvil.Anvil();
@@ -57,7 +59,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   private stable var admin : Principal = Principal.fromText("aaaaa-aa");
 
   // Pseudo random which can be shuffled with IC Random to become real random
-  var rand = PseudoRandom.PseudoRandom();
+  private let rand = PseudoRandom.PseudoRandom();
 
   system func preupgrade() {
       _tmpUsed := Iter.toArray(_used.serialize());
@@ -89,9 +91,24 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     admin := x;
   };
 
+  private func findToken(nft_id: Nft.TokenIdentifier) : Result.Result<Nat, ()> {
+    var idx: Nat = 0;
+
+    label lo loop {
+      if (_tokens[idx] == ?nft_id) {
+        return #ok(idx);
+      };
+      idx += 1;
+    };
+
+    #err();
+  };
+
   // NFTs are minted at NFTAnvil then added to this contract. The added tokens need to be owned by the contract, or it wont be able to transfer them.
-  public shared({caller}) func add(nft_id: Nft.TokenIdentifier) : async () {
+  public shared({caller}) func add(nft_id: Nft.TokenIdentifier) : async Result.Result<(), Text> {
     assert(caller == admin);
+
+    if (findToken(nft_id) != #err()) return #err("Token already added");
 
     label lo loop {
       let rnd_slot = (count_available + Nat32.toNat(rand.get(8))) % 100000;
@@ -102,10 +119,13 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
         break lo;
         };
     };
+
+    #ok();
+
   };
 
   public shared({caller}) func airdrop_use(aid : Nft.AccountIdentifier, key: Blob) : async Result.Result<(), Text> {
-    assert(key.size() == 32);
+    assert(key.size() == 20);
     let keyHash = Blob.fromArray(SHA224.sha224(Blob.toArray(key)));
     var idx: Nat = 0;
     label lo loop {
@@ -116,7 +136,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
             return #ok();
           };
           case (#err(e)) {
-            return #err("Couldn't give drop");
+            return #err("Couldn't give drop " # debug_show(e));
           }
         };
 
@@ -127,7 +147,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
       if (idx >= 10000) break lo;
     };
 
-    #err("Not found")
+    #err("Code not found or already used")
   };
 
   // We are adding hash from two pieces.
@@ -260,6 +280,35 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), null)
   };
 
+  public shared({caller}) func icp_balance() : async Result.Result<Nft.Balance, Text> {
+
+    assert((caller == admin) or (caller == _installer));
+    if (anvil.needsUpdate()) await anvil.update();
+
+    let scriptAccount = getScriptAccount();
+
+    let res = await Cluster.pwrFromAid(anvil.conf, scriptAccount).balance({user = #address(scriptAccount)});
+
+    #ok(res.pwr)
+  };
+
+
+  public shared({caller}) func icp_transfer(to: Nft.AccountIdentifier, amount: Nft.Balance) : async Result.Result<Blob, Text> {
+    
+    assert((caller == admin) or (caller == _installer));
+    if (anvil.needsUpdate()) await anvil.update();
+    
+    let scriptAccount = getScriptAccount();
+
+    switch(await Cluster.pwrFromAid(anvil.conf, scriptAccount).pwr_transfer({from = #address(scriptAccount); to=#address(to); amount = amount - anvil.oracle.pwrFee; memo=Blob.fromArray([]); subaccount=null})) {
+          case (#ok({transactionId})) {
+            #ok(transactionId)
+          };
+          case (#err(e)) {
+            return #err(debug_show(e))
+          }
+        };
+  };
 
 
   // Takes anvil transaction and checks if its going to the right place

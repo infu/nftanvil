@@ -29,6 +29,7 @@ import {
   decodeLink,
   generateKeyHashPair,
   uploadFile,
+  bytesToBase58,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
@@ -290,8 +291,16 @@ const balanceAndAddress = async () => {
 
 //
 const collectionIdlFactory = ({ IDL }) => {
+  const Balance = IDL.Nat64;
+  const Result_1 = IDL.Variant({ ok: IDL.Null, err: IDL.Text });
+  const Result_2 = IDL.Variant({ ok: Balance, err: IDL.Text });
+  const AccountIdentifier = IDL.Vec(IDL.Nat8);
+
   const Class = IDL.Service({
     add: IDL.Func([IDL.Nat64], [], []),
+    airdrop_add: IDL.Func([IDL.Vec(IDL.Nat8)], [Result_1], []),
+    icp_balance: IDL.Func([], [Result_2], []),
+    icp_transfer: IDL.Func([AccountIdentifier, Balance], [Result_1], []),
   });
   return Class;
 };
@@ -306,24 +315,55 @@ const collectionCreateActor = (canisterId, options) => {
   });
 };
 
-const saleAdd = async (NFT_FROM, NFT_TO) => {
+const contractBalance = async (COUNT) => {
   let { principal, address, subaccount } = await routerCanister();
-  let SALES_PRINCIPAL = execSync(`dfx canister --network ic id collection`, {
-    encoding: "UTF-8",
-  }).trim();
+  let cfg = JSON.parse(fs.readFileSync("./canister_ids.json"));
+  let ITO_PRINCIPAL = cfg.collection.ic;
 
+  let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
+
+  let res = await collectionContract.icp_balance();
+  console.log(AccountIdentifier.e8sToIcp(res.ok), "ICP");
+};
+
+const airdropAdd = async (COUNT) => {
+  let { principal, address, subaccount } = await routerCanister();
+  let cfg = JSON.parse(fs.readFileSync("./canister_ids.json"));
+  let ITO_PRINCIPAL = cfg.collection.ic;
+
+  let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
+
+  let made = (
+    await Promise.all(
+      Array(COUNT)
+        .fill(0)
+        .map((x) =>
+          limit(async () => {
+            let { key, hash } = generateKeyHashPair(getRandomValues);
+            let resp = await collectionContract.airdrop_add(Array.from(hash));
+            return "ok" in resp ? key : false;
+          })
+        )
+    )
+  ).filter(Boolean);
+
+  console.log("Codes created ", made.length);
+
+  let re = made.map((x) => bytesToBase58(x));
+
+  let old;
   try {
-    let chk = Principal.fromText(SALES_PRINCIPAL);
+    old = JSON.parse(fs.readFileSync("./ito_giftcodes.json"));
   } catch (e) {
-    throw new Error(
-      "Can't find collection contract principal. Make sure you are in the right directory with dfx.json and it has ic network deployment"
-    );
+    old = [];
   }
+  re = [...old, ...re];
 
-  // console.log(
-  //   "Executing: ",
-  //   `dfx canister --wallet=$(dfx identity --network ic get-wallet) --network ic call collection set_admin 'principal "${principal}"'`
-  // );
+  fs.writeFileSync("./ito_giftcodes.json", JSON.stringify(re));
+};
+
+const itoAuthorize = async () => {
+  let { principal, address, subaccount } = await routerCanister();
 
   execSync(
     `dfx canister --wallet=$(dfx identity --network ic get-wallet) --network ic call collection set_admin 'principal "${principal}"'`,
@@ -331,9 +371,23 @@ const saleAdd = async (NFT_FROM, NFT_TO) => {
       encoding: "UTF-8",
     }
   );
+};
 
-  let TO_ADDRESS = principalToAccountIdentifier(SALES_PRINCIPAL);
-  let collectionContract = can(collectionCreateActor, SALES_PRINCIPAL);
+const saleAdd = async (NFT_FROM, NFT_TO) => {
+  let { principal, address, subaccount } = await routerCanister();
+  let cfg = JSON.parse(fs.readFileSync("./canister_ids.json"));
+  let ITO_PRINCIPAL = cfg.collection.ic;
+
+  try {
+    let chk = Principal.fromText(ITO_PRINCIPAL);
+  } catch (e) {
+    throw new Error(
+      "Can't find collection contract principal. Make sure you are in the right directory with dfx.json and it has ic network deployment"
+    );
+  }
+
+  let TO_ADDRESS = principalToAccountIdentifier(ITO_PRINCIPAL);
+  let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
   let map = await getMap();
   let minted;
   try {
@@ -377,6 +431,11 @@ const saleAdd = async (NFT_FROM, NFT_TO) => {
           }
 
           let srez = await collectionContract.add(tid);
+
+          if ("err" in srez) {
+            console.log(srez.err);
+            return false;
+          }
 
           return true;
         } catch (e) {
@@ -870,16 +929,6 @@ program
   });
 
 program
-  .command("sell")
-  .description("transfer nfts to sales contract")
-  .argument("<number>", "from index")
-  .argument("<number>", "to index")
-  .action((from, to, principal, options) => {
-    console.log(`Adding to sale nfts from ${from} - ${to}`);
-    saleAdd(parseInt(from, 10), parseInt(to, 10));
-  });
-
-program
   .command("check")
   .description("checks if everything was uploaded and burns nft if not")
   .argument("<number>", "from index")
@@ -899,5 +948,47 @@ program
     console.log(`Searching...`);
     recover();
   });
+
+const ito = new Command("ito");
+ito.description("ITO - Initial Token Offering");
+
+ito
+  .command("authorize")
+  .description("authorize your principal in ITO contract")
+  .action((options) => {
+    console.log(
+      `Authorize your principal in ITO contract. You must be in a repo where dfx.json and collection.mo are`
+    );
+    itoAuthorize();
+  });
+
+ito
+  .command("add")
+  .description("transfer nfts to ITO contract")
+  .argument("<number>", "from index")
+  .argument("<number>", "to index")
+  .action((from, to, principal, options) => {
+    console.log(`Adding to ITO nfts from ${from} - ${to}`);
+    saleAdd(parseInt(from, 10), parseInt(to, 10));
+  });
+
+ito
+  .command("balance")
+  .description("gets icp balance of ITO contract")
+  .action((options) => {
+    console.log(`Checking ITO balance`);
+    contractBalance();
+  });
+
+ito
+  .command("airdrop")
+  .description("Creates gift codes and adds them to ITO contract")
+  .argument("<number>", "count")
+  .action((count, options) => {
+    console.log(`Creating codes ${count}`);
+    airdropAdd(parseInt(count, 10));
+  });
+
+program.addCommand(ito);
 
 program.parse();

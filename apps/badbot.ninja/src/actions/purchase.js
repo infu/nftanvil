@@ -8,6 +8,9 @@ import {
   user_pwr_transfer,
   user_refresh_balances,
 } from "@vvv-interactive/nftanvil-react";
+
+import { base58ToBytes } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+
 import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import { Principal } from "@dfinity/principal";
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
@@ -17,6 +20,27 @@ import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account
 import { produce } from "immer";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+
+export const airdrop_use = (key) => async (dispatch, getState) => {
+  const s = getState();
+
+  let address = AccountIdentifier.TextToArray(s.user.address);
+
+  let subaccount = [
+    AccountIdentifier.TextToArray(s.user.subaccount) || null,
+  ].filter(Boolean);
+
+  let collection = createCollectionActor({
+    agentOptions: authentication.getAgentOptions(),
+  });
+
+  let brez = await collection.airdrop_use(address, base58ToBytes(key));
+
+  console.log("airdrop_use", brez);
+
+  dispatch(user_refresh_balances());
+  dispatch(claim());
+};
 
 export const buy = (amount) => async (dispatch, getState) => {
   const s = getState();
@@ -37,6 +61,7 @@ export const buy = (amount) => async (dispatch, getState) => {
   );
 
   console.log("user_pwr_transfer", dres);
+
   if ("err" in dres) throw dres.err;
 
   let txid = dres.ok.transactionId;
@@ -47,6 +72,7 @@ export const buy = (amount) => async (dispatch, getState) => {
 
   // send tx_id to our custom collection.mo contract
   let brez = await collection.buy_tx(txid, subaccount);
+
   console.log("buy_tx", brez);
 
   dispatch(user_refresh_balances());
@@ -70,6 +96,8 @@ export const claim = () => async (dispatch, getState) => {
   if (owned.err) throw new Error(owned.err);
 
   let tokens = owned.ok.tokens.filter(Boolean);
+
+  console.log("Claiming", tokens);
 
   let claimed = await Promise.all(
     tokens.map((tid) => {

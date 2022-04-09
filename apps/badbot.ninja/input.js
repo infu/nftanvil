@@ -4,7 +4,7 @@ for (let i = 0; i < 100; i++) {
   x.push({
     // quality: 0,
     // tags: ["helmet " + i],
-    name: "Leather of Lambskin #" + i,
+    name: "TTTest #" + i,
     lore:
       "This leathery armor for the head provides protection to the head, but also reduces your ability to see #" +
       i,

@@ -26,7 +26,7 @@ import { Principal } from "@dfinity/principal";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 
-import { buy, claim, get_mine } from "./actions/purchase";
+import { buy, claim, get_mine, airdrop_use } from "./actions/purchase";
 
 import logo from "./logo.svg";
 import bbn_logo from "./assets/bbn_logo.png";
@@ -66,6 +66,7 @@ function PriceOptions() {
 
 function App() {
   const loaded = useAnvilSelector((state) => state.user.map.history);
+  const logged = useAnvilSelector((state) => state.user.address);
 
   const dispatch = useAnvilDispatch();
   const [mine, setMine] = React.useState([]);
@@ -75,11 +76,11 @@ function App() {
   };
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && logged) {
       dispatch(claim()); // in case something went wrong, on refresh this will claim purchased nfts
       load();
     }
-  }, [loaded, dispatch]);
+  }, [loaded, logged, dispatch]);
 
   if (!loaded) return null;
 
@@ -88,7 +89,15 @@ function App() {
       <img src={bbn_logo} className="bbn-logo" alt="Bad Bot Ninja" />
       <h1 className="Title">Bad Bot Ninja</h1>
       <div className="Subtitle">gear for post-apocalyptic overlords</div>
-
+      <button
+        onClick={() => {
+          let code = prompt("Enter secret code");
+          if (!code) return;
+          dispatch(airdrop_use(code));
+        }}
+      >
+        Code
+      </button>
       <User />
       <PriceOptions />
 

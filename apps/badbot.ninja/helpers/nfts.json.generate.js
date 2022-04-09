@@ -14,13 +14,15 @@ let re = x
 
     return [
       id,
-      a.quality,
+      a.quality || 1,
       a.name,
       a.lore,
-      Object.keys(a.attributes).map((att) => {
-        return [att, a.attributes[att]];
-      }),
-      a.tags,
+      a.attributes
+        ? Object.keys(a.attributes).map((att) => {
+            return [att, a.attributes[att]];
+          })
+        : [],
+      a.tags || [],
     ];
   })
   .filter(Boolean);
