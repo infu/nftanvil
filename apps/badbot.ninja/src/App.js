@@ -26,7 +26,7 @@ import { Principal } from "@dfinity/principal";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 
-import { buy, claim, get_mine, airdrop_use } from "./actions/purchase";
+import { buy, claim, get_mine, airdrop_use, stats } from "./actions/purchase";
 
 import logo from "./logo.svg";
 import bbn_logo from "./assets/bbn_logo.png";
@@ -38,28 +38,41 @@ function PriceOptions() {
   const dispatch = useAnvilDispatch();
 
   return (
-    <div className="priceOptions">
-      <button
-        onClick={async () => {
-          dispatch(buy(40000));
-        }}
-      >
-        Buy 1
-      </button>
-      <button
-        onClick={async () => {
-          dispatch(buy(80000));
-        }}
-      >
-        Buy 5 (10% discount)
-      </button>
-      <button
-        onClick={async () => {
-          dispatch(buy(120000));
-        }}
-      >
-        Buy 20 (20% discount)
-      </button>
+    <div>
+      <div className="priceOptions">
+        <button
+          onClick={async () => {
+            dispatch(buy(40000));
+          }}
+        >
+          Buy 1
+        </button>
+        <button
+          onClick={async () => {
+            dispatch(buy(80000));
+          }}
+        >
+          Buy 5 (10% discount)
+        </button>
+        <button
+          onClick={async () => {
+            dispatch(buy(120000));
+          }}
+        >
+          Buy 20 (20% discount)
+        </button>
+      </div>
+      <div className="airdropOptions">
+        <button
+          onClick={() => {
+            let code = prompt("Enter secret code");
+            if (!code) return;
+            dispatch(airdrop_use(code));
+          }}
+        >
+          Use airdrop code
+        </button>
+      </div>
     </div>
   );
 }
@@ -79,6 +92,7 @@ function App() {
     if (loaded && logged) {
       dispatch(claim()); // in case something went wrong, on refresh this will claim purchased nfts
       load();
+      dispatch(stats());
     }
   }, [loaded, logged, dispatch]);
 
@@ -89,15 +103,7 @@ function App() {
       <img src={bbn_logo} className="bbn-logo" alt="Bad Bot Ninja" />
       <h1 className="Title">Bad Bot Ninja</h1>
       <div className="Subtitle">gear for post-apocalyptic overlords</div>
-      <button
-        onClick={() => {
-          let code = prompt("Enter secret code");
-          if (!code) return;
-          dispatch(airdrop_use(code));
-        }}
-      >
-        Code
-      </button>
+
       <User />
       <PriceOptions />
 

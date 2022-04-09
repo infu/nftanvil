@@ -21,6 +21,16 @@ import { produce } from "immer";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
+export const stats = () => async (dispatch, getState) => {
+  let collection = createCollectionActor({
+    agentOptions: authentication.getAgentOptions(),
+  });
+
+  let stats = await collection.stats();
+  console.log(stats);
+  return stats;
+};
+
 export const airdrop_use = (key) => async (dispatch, getState) => {
   const s = getState();
 

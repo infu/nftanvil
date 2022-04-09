@@ -28,11 +28,13 @@ import PseudoRandom "mo:anvil/lib/PseudoRandom";
 shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   // list of tokens for sale or airdrop
-  private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(100000, null); // keep this 10 times bigger than max nft count
+  private let MAX_TOKENS = 10000;
+  private let MAX_CODES = 10000;
+  private let MAX_TOKEN_SPACE = MAX_TOKENS * 10;
 
-  private stable var _codes : [var ?Blob] = Array.init<?Blob>(10000, null);
+  private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(MAX_TOKEN_SPACE, null); // keep this 10 times bigger than max nft count
 
-
+  private stable var _codes : [var ?Blob] = Array.init<?Blob>(MAX_CODES, null);
 
   // memory with used transactions - to avoid double spending attack
   private stable var _tmpUsed: [(Nft.TransactionId, Bool)] = [];
@@ -85,11 +87,6 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     }
   };
 
-  // installer sets an admin, which can add nfts
-  public shared({caller}) func set_admin(x: Principal) : () {
-    assert(caller == _installer);
-    admin := x;
-  };
 
   private func findToken(nft_id: Nft.TokenIdentifier) : Result.Result<Nat, ()> {
     var idx: Nat = 0;
@@ -104,25 +101,6 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     #err();
   };
 
-  // NFTs are minted at NFTAnvil then added to this contract. The added tokens need to be owned by the contract, or it wont be able to transfer them.
-  public shared({caller}) func add(nft_id: Nft.TokenIdentifier) : async Result.Result<(), Text> {
-    assert(caller == admin);
-
-    if (findToken(nft_id) != #err()) return #err("Token already added");
-
-    label lo loop {
-      let rnd_slot = (count_available + Nat32.toNat(rand.get(8))) % 100000;
-      if (_tokens[rnd_slot] == null) {
-        _tokens[rnd_slot] := ?nft_id;
-        count_available += 1;
-        count_total += 1;
-        break lo;
-        };
-    };
-
-    #ok();
-
-  };
 
   public shared({caller}) func airdrop_use(aid : Nft.AccountIdentifier, key: Blob) : async Result.Result<(), Text> {
     assert(key.size() == 20);
@@ -144,20 +122,13 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
       };
 
       idx += 1;
-      if (idx >= 10000) break lo;
+      if (idx >= MAX_CODES) break lo;
     };
 
     #err("Code not found or already used")
   };
 
-  // We are adding hash from two pieces.
-  public shared({caller}) func airdrop_add(hash: Blob) : async Result.Result<(), Text> {
-    assert(caller == admin);
-     assert(hash.size() <= 32);
-    _codes[airdrop_codes] := ?hash;
-    airdrop_codes += 1;
-    #ok();
-  };
+
 
   // Query all internally owned nfts by a certain AccountIdentifier
   public query func owned(aid : Nft.AccountIdentifier) : async Result.Result<IF.AccountRecordSerialized, Text> {
@@ -233,14 +204,15 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     if ((pool == #buy) and (left_for_purchase < count)) {
       return #err("Not enough left for purchase");
     };
-      if ((pool == #airdrop) and (left_for_airdrop < count)) {
+    
+    if ((pool == #airdrop) and (left_for_airdrop < count)) {
       return #err("Not enough left for airdrop");
     };
 
     var nft_idx = last_given_idx;
     for (j in Iter.range(0, count - 1)) {
       label lo loop {
-        
+          if (nft_idx >= MAX_TOKEN_SPACE) return #err("Integrity error. No more tokens left in contract");
           switch(_tokens[nft_idx]) {
             case (?tid) {
                 let r = switch(_account.get(aid)) {
@@ -267,6 +239,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
           };
         
           nft_idx := nft_idx + 1;
+          
       };
 
     };
@@ -278,36 +251,6 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   private func getScriptAccount() : Nft.AccountIdentifier {
     Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), null)
-  };
-
-  public shared({caller}) func icp_balance() : async Result.Result<Nft.Balance, Text> {
-
-    assert((caller == admin) or (caller == _installer));
-    if (anvil.needsUpdate()) await anvil.update();
-
-    let scriptAccount = getScriptAccount();
-
-    let res = await Cluster.pwrFromAid(anvil.conf, scriptAccount).balance({user = #address(scriptAccount)});
-
-    #ok(res.pwr)
-  };
-
-
-  public shared({caller}) func icp_transfer(to: Nft.AccountIdentifier, amount: Nft.Balance) : async Result.Result<Blob, Text> {
-    
-    assert((caller == admin) or (caller == _installer));
-    if (anvil.needsUpdate()) await anvil.update();
-    
-    let scriptAccount = getScriptAccount();
-
-    switch(await Cluster.pwrFromAid(anvil.conf, scriptAccount).pwr_transfer({from = #address(scriptAccount); to=#address(to); amount = amount - anvil.oracle.pwrFee; memo=Blob.fromArray([]); subaccount=null})) {
-          case (#ok({transactionId})) {
-            #ok(transactionId)
-          };
-          case (#err(e)) {
-            return #err(debug_show(e))
-          }
-        };
   };
 
 
@@ -327,7 +270,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
             if (to != scriptAccount) return #err("Wrong destination address");
             if (caller_aid != from) return #err("Unauthorized");
             switch(switch(amount) {
-              // pricing option one
+              // pricing option one (its written verbose because different packages may give more things differently)
               case (40000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
@@ -402,6 +345,77 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     }; 
  
   };
+
+
+  // --------- ADMIN FUNCTIONS -----------
+
+  // installer sets an admin, which can add nfts (admin only)
+  public shared({caller}) func set_admin(x: Principal) : () {
+    assert(caller == _installer);
+    admin := x;
+  };
+
+  // NFTs are minted at NFTAnvil then added to this contract. The added tokens need to be owned by the contract, or it wont be able to transfer them. (admin only)
+  public shared({caller}) func add(nft_id: Nft.TokenIdentifier) : async Result.Result<(), Text> {
+    assert(caller == admin);
+
+    if (findToken(nft_id) != #err()) return #err("Token already added");
+
+    label lo loop {
+      let rnd_slot = (count_available + Nat32.toNat(rand.get(8))) % MAX_TOKEN_SPACE;
+      if (_tokens[rnd_slot] == null) {
+        _tokens[rnd_slot] := ?nft_id;
+        count_available += 1;
+        count_total += 1;
+        break lo;
+        };
+    };
+
+    #ok();
+
+  };
+
+
+  // We are adding hash from two pieces. (admin only)
+  public shared({caller}) func airdrop_add(hash: Blob) : async Result.Result<(), Text> {
+    assert(caller == admin);
+     assert(hash.size() <= 32);
+    _codes[airdrop_codes] := ?hash;
+    airdrop_codes += 1;
+    #ok();
+  };
+  
+  // check the icp balance of script address  (admin only)
+  public shared({caller}) func icp_balance() : async Result.Result<Nft.Balance, Text> {
+
+    assert((caller == admin) or (caller == _installer));
+    if (anvil.needsUpdate()) await anvil.update();
+
+    let scriptAccount = getScriptAccount();
+
+    let res = await Cluster.pwrFromAid(anvil.conf, scriptAccount).balance({user = #address(scriptAccount)});
+
+    #ok(res.pwr)
+  };
+
+  // transfer icp from script address to destination (admin only)
+  public shared({caller}) func icp_transfer(to: Nft.AccountIdentifier, amount: Nft.Balance) : async Result.Result<Blob, Text> {
+    
+    assert((caller == admin) or (caller == _installer));
+    if (anvil.needsUpdate()) await anvil.update();
+    
+    let scriptAccount = getScriptAccount();
+
+    switch(await Cluster.pwrFromAid(anvil.conf, scriptAccount).pwr_transfer({from = #address(scriptAccount); to=#address(to); amount = amount - anvil.oracle.pwrFee; memo=Blob.fromArray([]); subaccount=null})) {
+          case (#ok({transactionId})) {
+            #ok(transactionId)
+          };
+          case (#err(e)) {
+            return #err(debug_show(e))
+          }
+        };
+  };
+
 
 };
 

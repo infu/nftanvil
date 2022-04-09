@@ -132,3 +132,8 @@ select {
   margin: auto;
   display: block;
 }
+
+.airdropOptions {
+  margin-top: 8px;
+  text-align: center;
+}
