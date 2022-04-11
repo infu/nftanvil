@@ -1,6 +1,6 @@
 {
   "name": "@vvv-interactive/nftanvil-canisters",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "scripts": {
     "publish-vessel": "./scripts/publish_vessel.sh",
     "watch": "babel -d cjs src --copy-files --watch",
