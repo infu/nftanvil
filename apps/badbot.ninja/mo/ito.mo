@@ -4,34 +4,56 @@ import Text "mo:base/Text";
 import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Nat32 "mo:base/Nat32";
+import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Cluster  "mo:anvil/type/Cluster";
 import SHA224 "mo:anvil/lib/SHA224";
+import Time "mo:base/Time";
 
-import IF "./if";
+import IF "./ito_interface";
 import Anvil "mo:anvil/base/Anvil";
 import TrieRecord "mo:anvil/lib/TrieRecord";
 import PseudoRandom "mo:anvil/lib/PseudoRandom";
 
-// The way it works:
+// Contract #1
+// Initial Token Offering contract using Anvil protocol
 //
+// SETUP: Use `npx anvil ito` to set it up
+// 0) Edit this contract initial parameters. Scroll down to "EDITABLE" and then deploy it on the IC network
+// 1) `npx anvil authorize` will set admin principal
+// 2) `npx anvil add 0 1000 will add minted nfts to this contract
+// 3) `npx anvil airdrop 500` will generate 500 airdrop codes
+
+// ITO: The way it works for end users:
+// purchase and airdrop functions are available once ITO starts (after START_TIMESTAMP)
+// 
 // Option 1) purchase a package
 // Frontend makes wrapped icp (pwr) transfer to this contract and sends it the "tx"
 // tx is checked and nfts given internally
 // frontend claims each nft
 //
-// Option 2) airdrops
+// Option 2) airdrop code
 // Users have a code which they send to this contract instead of paying icp
 // The rest is the same
+//
+// END:
+// 1) use `npx anvil ito balance` to get contract icp balance
+// 2) use `npx anvil ito transfer-icp` to send icp
+// 
 
 shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
-  // list of tokens for sale or airdrop
+  // EDITABLE
   private let MAX_TOKENS = 10000;
   private let MAX_CODES = 10000;
-  private let MAX_TOKEN_SPACE = MAX_TOKENS * 10;
+  private stable var LEFT_AIRDROP : Nat = 3000;
+  private stable var LEFT_PURCHASE : Nat = 6000;
+  private let START_TIMESTAMP : Nat32 = 1654951047;
 
+  // Edit whats bellow only if you know what you are doing
+  private let MAX_TOKEN_SPACE = MAX_TOKENS * 10;
+  
   private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(MAX_TOKEN_SPACE, null); // keep this 10 times bigger than max nft count
 
   private stable var _codes : [var ?Blob] = Array.init<?Blob>(MAX_CODES, null);
@@ -39,7 +61,6 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   // memory with used transactions - to avoid double spending attack
   private stable var _tmpUsed: [(Nft.TransactionId, Bool)] = [];
   private var _used: TrieRecord.TrieRecord<Nft.TransactionId, Bool, Bool> = TrieRecord.TrieRecord<Nft.TransactionId, Bool, Bool>( _tmpUsed.vals(),  Blob.equal, Blob.hash, func (x) {x}, func (x) {x});
-
 
   // temporary memory with account - purchased tokens. We can't send all purchased tokens in one call, so we need to store them
   private stable var _tmpAccount: [(Nft.AccountIdentifier, IF.AccountRecordSerialized)] = [];
@@ -49,11 +70,8 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   // Count of available nfts
   private stable var count_available: Nat = 0;
-  private stable var count_total: Nat = 0;
+  private stable var count_total_added: Nat = 0;
   private stable var last_given_idx: Nat = 0;
-
-  private stable var left_for_airdrop : Nat = 3000;
-  private stable var left_for_purchase : Nat = 6000;
 
   // Anvil object has various functions and provides anvil.conf and anvil.oracle
   private let anvil = Anvil.Anvil();
@@ -63,6 +81,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   // Pseudo random which can be shuffled with IC Random to become real random
   private let rand = PseudoRandom.PseudoRandom();
 
+  // preupgrade & postupgrade functions are called during canister upgrade
   system func preupgrade() {
       _tmpUsed := Iter.toArray(_used.serialize());
       _tmpAccount := Iter.toArray(_account.serialize());
@@ -76,14 +95,16 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   public query func stats() : async {
     available: Nat;
     total: Nat;
+    added: Nat;
     airdrop: Nat;
     purchase: Nat;
   } {
     return {
+      total = MAX_TOKENS;
       available = count_available;
-      total = count_total;
-      airdrop = left_for_airdrop;
-      purchase = left_for_purchase;
+      added = count_total_added;
+      airdrop = LEFT_AIRDROP;
+      purchase = LEFT_PURCHASE;
     }
   };
 
@@ -92,6 +113,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     var idx: Nat = 0;
 
     label lo loop {
+      if (idx >= MAX_TOKEN_SPACE) return #err();
       if (_tokens[idx] == ?nft_id) {
         return #ok(idx);
       };
@@ -103,6 +125,9 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
 
   public shared({caller}) func airdrop_use(aid : Nft.AccountIdentifier, key: Blob) : async Result.Result<(), Text> {
+
+    if (now() < START_TIMESTAMP) return #err("hasn't started yet");
+
     assert(key.size() == 20);
     let keyHash = Blob.fromArray(SHA224.sha224(Blob.toArray(key)));
     var idx: Nat = 0;
@@ -116,7 +141,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
           case (#err(e)) {
             return #err("Couldn't give drop " # debug_show(e));
           }
-        };
+        }; 
 
         break lo;
       };
@@ -201,11 +226,11 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
       return #err("Not enough nfts left in contract");
     };
 
-    if ((pool == #buy) and (left_for_purchase < count)) {
+    if ((pool == #buy) and (LEFT_PURCHASE < count)) {
       return #err("Not enough left for purchase");
     };
     
-    if ((pool == #airdrop) and (left_for_airdrop < count)) {
+    if ((pool == #airdrop) and (LEFT_AIRDROP < count)) {
       return #err("Not enough left for airdrop");
     };
 
@@ -228,8 +253,8 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
                 _tokens[nft_idx] := null;
                 count_available -= 1;
-                if (pool == #buy) left_for_purchase -= 1;
-                if (pool == #airdrop) left_for_airdrop -= 1;
+                if (pool == #buy) LEFT_PURCHASE -= 1;
+                if (pool == #airdrop) LEFT_AIRDROP -= 1;
                 break lo;
         
             };
@@ -253,12 +278,17 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), null)
   };
 
-
-  // Takes anvil transaction and checks if its going to the right place
+  private func now() : Nat32 {
+      return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)); // unix timestamp in seconds
+  };
+      // Takes anvil transaction and checks if its going to the right place
   // Dependent on the amount sent, we give different amount of nfts
   // Transactions get stored so they can't be used for second time
   // If there are not enough nfts in contract, we will refund
   public shared({caller}) func buy_tx(tx_id:  Nft.TransactionId, subaccount: ?Nft.SubAccount) : async Result.Result<(), Text> {
+
+    if (now() < START_TIMESTAMP) return #err("hasn't started yet");
+
     let scriptAccount = getScriptAccount();
     let caller_aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
 
@@ -349,6 +379,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   // --------- ADMIN FUNCTIONS -----------
 
+
   // installer sets an admin, which can add nfts (admin only)
   public shared({caller}) func set_admin(x: Principal) : () {
     assert(caller == _installer);
@@ -366,7 +397,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
       if (_tokens[rnd_slot] == null) {
         _tokens[rnd_slot] := ?nft_id;
         count_available += 1;
-        count_total += 1;
+        count_total_added += 1;
         break lo;
         };
     };
@@ -379,7 +410,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   // We are adding hash from two pieces. (admin only)
   public shared({caller}) func airdrop_add(hash: Blob) : async Result.Result<(), Text> {
     assert(caller == admin);
-     assert(hash.size() <= 32);
+    assert(hash.size() <= 32);
     _codes[airdrop_codes] := ?hash;
     airdrop_codes += 1;
     #ok();

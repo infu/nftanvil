@@ -1,2 +1,2 @@
-import IF "../mo/if";
-import Collection "../mo/collection";
+import IF "../mo/ito_interface";
+import Collection "../mo/ito";

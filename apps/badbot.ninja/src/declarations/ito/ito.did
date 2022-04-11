@@ -34,6 +34,7 @@ type Class =
    set_admin: (principal) -> () oneway;
    stats: () ->
     (record {
+       added: nat;
        airdrop: nat;
        available: nat;
        purchase: nat;

@@ -137,3 +137,25 @@ select {
   margin-top: 8px;
   text-align: center;
 }
+
+.pbar-shell {
+  width: 100%;
+  max-width: 400px;
+  margin: 8px auto;
+  height: 20px;
+  background-color: #626a7a;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.pbar-inner {
+  height: 20px;
+  background-color: #0f940a;
+}
+
+.pbar-info {
+  width: 100%;
+  max-width: 400px;
+  margin: 8px auto;
+  text-align: center;
+}

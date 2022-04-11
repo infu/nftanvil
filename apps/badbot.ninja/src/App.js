@@ -77,6 +77,39 @@ function PriceOptions() {
   );
 }
 
+function ProgressBar() {
+  const [st, setStats] = React.useState(false);
+
+  const dispatch = useAnvilDispatch();
+  const load = async () => {
+    setStats(await dispatch(stats()));
+  };
+
+  useEffect(() => {
+    load();
+  }, [dispatch]);
+
+  if (!st) return null;
+
+  let available = Math.min(Number(st.available), Number(st.purchase));
+  let total = Number(st.total);
+
+  let airdrop = Number(st.airdrop);
+  // let purchase = Number(st.purchase);
+  const perc = ((total - available) / total) * 100;
+  //console.log(perc);
+  return (
+    <>
+      <div className="pbar-shell">
+        <div className="pbar-inner" style={{ width: perc + "%" }}></div>
+      </div>
+      <div className="pbar-info">
+        {total} total | {available} left
+      </div>
+    </>
+  );
+}
+
 function App() {
   const loaded = useAnvilSelector((state) => state.user.map.history);
   const logged = useAnvilSelector((state) => state.user.address);
@@ -106,7 +139,7 @@ function App() {
 
       <User />
       <PriceOptions />
-
+      <ProgressBar />
       <br />
       <br />
       <br />

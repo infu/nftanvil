@@ -25,6 +25,7 @@ export interface Class {
   'stats' : () => Promise<
       {
         'total' : bigint,
+        'added' : bigint,
         'available' : bigint,
         'airdrop' : bigint,
         'purchase' : bigint,

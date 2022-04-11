@@ -237,37 +237,37 @@ export const nft_purchase =
     console.log("purchase result", prez);
   };
 
-export const nft_purchase_intent =
-  ({ id }) =>
-  async (dispatch, getState) => {
-    let s = getState();
+// export const nft_purchase_intent =
+//   ({ id }) =>
+//   async (dispatch, getState) => {
+//     let s = getState();
 
-    let identity = authentication.client.getIdentity();
+//     let identity = authentication.client.getIdentity();
 
-    let tid = tokenFromText(id);
-    let { slot } = decodeTokenId(tid);
-    //console.log("t", id, slot, tokenFromText(id));
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+//     let tid = tokenFromText(id);
+//     let { slot } = decodeTokenId(tid);
+//     //console.log("t", id, slot, tokenFromText(id));
+//     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
-    });
+//     let nftcan = nftCanister(canister, {
+//       agentOptions: authentication.getAgentOptions(),
+//     });
 
-    let address = s.user.address;
-    let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
-    ].filter(Boolean);
+//     let address = s.user.address;
+//     let subaccount = [
+//       AccountIdentifier.TextToArray(s.user.subaccount) || null,
+//     ].filter(Boolean);
 
-    let t = await nftcan.purchase_intent({
-      user: { address: AccountIdentifier.TextToArray(address) },
-      token: tokenFromText(id),
-      subaccount,
-    });
+//     let t = await nftcan.purchase_intent({
+//       user: { address: AccountIdentifier.TextToArray(address) },
+//       token: tokenFromText(id),
+//       subaccount,
+//     });
 
-    if (!("ok" in t)) throw t;
+//     if (!("ok" in t)) throw t;
 
-    return t.ok;
-  };
+//     return t.ok;
+//   };
 
 export const nft_set_price =
   ({ id, price }) =>

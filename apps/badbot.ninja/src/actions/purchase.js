@@ -1,4 +1,4 @@
-import { createCollectionActor } from "../declarations/collection.js";
+import { createItoActor } from "../declarations/ito.js";
 import {
   useAnvilDispatch,
   useAnvilSelector,
@@ -22,11 +22,11 @@ import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 export const stats = () => async (dispatch, getState) => {
-  let collection = createCollectionActor({
+  let ito = createItoActor({
     agentOptions: authentication.getAgentOptions(),
   });
 
-  let stats = await collection.stats();
+  let stats = await ito.stats();
   console.log(stats);
   return stats;
 };
@@ -40,11 +40,11 @@ export const airdrop_use = (key) => async (dispatch, getState) => {
     AccountIdentifier.TextToArray(s.user.subaccount) || null,
   ].filter(Boolean);
 
-  let collection = createCollectionActor({
+  let ito = createItoActor({
     agentOptions: authentication.getAgentOptions(),
   });
 
-  let brez = await collection.airdrop_use(address, base58ToBytes(key));
+  let brez = await ito.airdrop_use(address, base58ToBytes(key));
 
   console.log("airdrop_use", brez);
 
@@ -62,7 +62,7 @@ export const buy = (amount) => async (dispatch, getState) => {
   ].filter(Boolean);
 
   let destination = principalToAccountIdentifier(
-    process.env.REACT_APP_COLLECTION_CANISTER_ID
+    process.env.REACT_APP_ITO_CANISTER_ID
   );
 
   // make pwr transfer and get tx
@@ -76,12 +76,12 @@ export const buy = (amount) => async (dispatch, getState) => {
 
   let txid = dres.ok.transactionId;
 
-  let collection = createCollectionActor({
+  let ito = createItoActor({
     agentOptions: authentication.getAgentOptions(),
   });
 
-  // send tx_id to our custom collection.mo contract
-  let brez = await collection.buy_tx(txid, subaccount);
+  // send tx_id to our custom ito.mo contract
+  let brez = await ito.buy_tx(txid, subaccount);
 
   console.log("buy_tx", brez);
 
@@ -98,11 +98,11 @@ export const claim = () => async (dispatch, getState) => {
     AccountIdentifier.TextToArray(s.user.subaccount) || null,
   ].filter(Boolean);
 
-  let collection = createCollectionActor({
+  let ito = createItoActor({
     agentOptions: authentication.getAgentOptions(),
   });
 
-  let owned = await collection.owned(address);
+  let owned = await ito.owned(address);
   if (owned.err) throw new Error(owned.err);
 
   let tokens = owned.ok.tokens.filter(Boolean);
@@ -111,7 +111,7 @@ export const claim = () => async (dispatch, getState) => {
 
   let claimed = await Promise.all(
     tokens.map((tid) => {
-      return collection.claim(address, subaccount, tid);
+      return ito.claim(address, subaccount, tid);
     })
   );
 

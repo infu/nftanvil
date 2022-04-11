@@ -7,8 +7,8 @@
       "source": ["build/"],
       "type": "assets"
     },
-    "collection": {
-      "main": "mo/collection.mo",
+    "ito": {
+      "main": "mo/ito.mo",
       "type": "motoko"
     }
   },

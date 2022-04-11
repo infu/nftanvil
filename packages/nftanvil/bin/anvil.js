@@ -33,6 +33,7 @@ import {
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
+import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 
 import fs from "fs";
 import mime from "mime";
@@ -291,16 +292,63 @@ const balanceAndAddress = async () => {
 
 //
 const collectionIdlFactory = ({ IDL }) => {
-  const Balance = IDL.Nat64;
-  const Result_1 = IDL.Variant({ ok: IDL.Null, err: IDL.Text });
-  const Result_2 = IDL.Variant({ ok: Balance, err: IDL.Text });
+  const TokenIdentifier = IDL.Nat64;
+  const Result_3 = IDL.Variant({ ok: IDL.Null, err: IDL.Text });
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
-
+  const TransactionId = IDL.Vec(IDL.Nat8);
+  const SubAccount = IDL.Vec(IDL.Nat8);
+  const Balance = IDL.Nat64;
+  const Result_2 = IDL.Variant({ ok: Balance, err: IDL.Text });
+  const Result_1 = IDL.Variant({ ok: IDL.Vec(IDL.Nat8), err: IDL.Text });
+  const AccountRecordSerialized = IDL.Record({
+    tokens: IDL.Vec(TokenIdentifier),
+  });
+  const Result = IDL.Variant({
+    ok: AccountRecordSerialized,
+    err: IDL.Text,
+  });
   const Class = IDL.Service({
-    add: IDL.Func([IDL.Nat64], [], []),
-    airdrop_add: IDL.Func([IDL.Vec(IDL.Nat8)], [Result_1], []),
+    add: IDL.Func([TokenIdentifier], [Result_3], []),
+    airdrop_add: IDL.Func([IDL.Vec(IDL.Nat8)], [Result_3], []),
+    airdrop_use: IDL.Func(
+      [AccountIdentifier, IDL.Vec(IDL.Nat8)],
+      [Result_3],
+      []
+    ),
+    buy_tx: IDL.Func([TransactionId, IDL.Opt(SubAccount)], [Result_3], []),
+    claim: IDL.Func(
+      [AccountIdentifier, IDL.Opt(SubAccount), TokenIdentifier],
+      [Result_3],
+      []
+    ),
+    config: IDL.Func(
+      [
+        IDL.Record({
+          time: IDL.Nat32,
+          airdrop: IDL.Nat,
+          purchase: IDL.Nat,
+        }),
+      ],
+      [],
+      ["oneway"]
+    ),
     icp_balance: IDL.Func([], [Result_2], []),
     icp_transfer: IDL.Func([AccountIdentifier, Balance], [Result_1], []),
+    owned: IDL.Func([AccountIdentifier], [Result], ["query"]),
+    set_admin: IDL.Func([IDL.Principal], [], ["oneway"]),
+    stats: IDL.Func(
+      [],
+      [
+        IDL.Record({
+          total: IDL.Nat,
+          added: IDL.Nat,
+          available: IDL.Nat,
+          airdrop: IDL.Nat,
+          purchase: IDL.Nat,
+        }),
+      ],
+      ["query"]
+    ),
   });
   return Class;
 };
@@ -323,7 +371,19 @@ const contractBalance = async (COUNT) => {
   let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
 
   let res = await collectionContract.icp_balance();
-  console.log(AccountIdentifier.e8sToIcp(res.ok), "ICP");
+  console.log(res.ok, "E8S ", AccountIdentifier.e8sToIcp(res.ok), "ICP");
+};
+
+const contractTransfer = async (to, amount) => {
+  let { principal, address, subaccount } = await routerCanister();
+  let cfg = JSON.parse(fs.readFileSync("./canister_ids.json"));
+  let ITO_PRINCIPAL = cfg.collection.ic;
+
+  let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
+
+  let res = await collectionContract.icp_transfer(to, amount);
+  if (res.ok) console.log("DONE. Transaction:", TransactionId.toText(res.ok));
+  else console.log(res.err);
 };
 
 const airdropAdd = async (COUNT) => {
@@ -431,7 +491,6 @@ const saleAdd = async (NFT_FROM, NFT_TO) => {
           }
 
           let srez = await collectionContract.add(tid);
-
           if ("err" in srez) {
             console.log(srez.err);
             return false;

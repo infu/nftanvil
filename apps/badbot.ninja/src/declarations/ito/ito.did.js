@@ -37,6 +37,7 @@ export const idlFactory = ({ IDL }) => {
         [
           IDL.Record({
             'total' : IDL.Nat,
+            'added' : IDL.Nat,
             'available' : IDL.Nat,
             'airdrop' : IDL.Nat,
             'purchase' : IDL.Nat,
