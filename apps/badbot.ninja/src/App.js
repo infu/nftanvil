@@ -123,7 +123,8 @@ function App() {
 
   useEffect(() => {
     if (loaded && logged) {
-      dispatch(claim()); // in case something went wrong, on refresh this will claim purchased nfts
+      dispatch(claim()).catch((e) => {});
+      // in case something went wrong, on refresh this will claim purchased nfts
       load();
       dispatch(stats());
     }

@@ -397,8 +397,9 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   // For local test purposes. Comment out in production contract
   public shared({caller}) func set_anvil_config(conf : Cluster.Config) : async () {
-    assert(caller == _installer);
+    assert(caller == admin);
     anvil.conf := conf;
+    await anvil.update();
   };
 
   // NFTs are minted at NFTAnvil then added to this contract. The added tokens need to be owned by the contract, or it wont be able to transfer them. (admin only)

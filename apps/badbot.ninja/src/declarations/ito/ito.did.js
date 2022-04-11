@@ -14,6 +14,20 @@ export const idlFactory = ({ IDL }) => {
     'ok' : AccountRecordSerialized,
     'err' : IDL.Text,
   });
+  const CanisterSlot = IDL.Nat64;
+  const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
+  const Config = IDL.Record({
+    'nft' : CanisterRange,
+    'pwr' : CanisterRange,
+    'anvil' : CanisterSlot,
+    'history' : CanisterSlot,
+    'nft_avail' : IDL.Vec(CanisterSlot),
+    'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
+    'account' : CanisterRange,
+    'history_range' : CanisterRange,
+    'router' : IDL.Principal,
+    'treasury' : CanisterSlot,
+  });
   const Class = IDL.Service({
     'add' : IDL.Func([TokenIdentifier], [Result_3], []),
     'airdrop_add' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result_3], []),
@@ -32,6 +46,7 @@ export const idlFactory = ({ IDL }) => {
     'icp_transfer' : IDL.Func([AccountIdentifier, Balance], [Result_1], []),
     'owned' : IDL.Func([AccountIdentifier], [Result], ['query']),
     'set_admin' : IDL.Func([IDL.Principal], [], ['oneway']),
+    'set_anvil_config' : IDL.Func([Config], [], []),
     'stats' : IDL.Func(
         [],
         [

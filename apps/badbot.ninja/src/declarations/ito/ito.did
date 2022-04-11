@@ -21,6 +21,19 @@ type Result =
    err: text;
    ok: AccountRecordSerialized;
  };
+type Config = 
+ record {
+   account: CanisterRange;
+   anvil: CanisterSlot;
+   history: CanisterSlot;
+   history_range: CanisterRange;
+   nft: CanisterRange;
+   nft_avail: vec CanisterSlot;
+   pwr: CanisterRange;
+   router: principal;
+   space: vec vec nat64;
+   treasury: CanisterSlot;
+ };
 type Class = 
  service {
    add: (TokenIdentifier) -> (Result_3);
@@ -32,6 +45,7 @@ type Class =
    icp_transfer: (AccountIdentifier, Balance) -> (Result_1);
    owned: (AccountIdentifier) -> (Result) query;
    set_admin: (principal) -> () oneway;
+   set_anvil_config: (Config) -> ();
    stats: () ->
     (record {
        added: nat;
@@ -40,6 +54,12 @@ type Class =
        purchase: nat;
        total: nat;
      }) query;
+ };
+type CanisterSlot = nat64;
+type CanisterRange = 
+ record {
+   CanisterSlot;
+   CanisterSlot;
  };
 type Balance = nat64;
 type AccountRecordSerialized = record {tokens: vec TokenIdentifier;};

@@ -309,6 +309,20 @@ const itoIdlFactory = ({ IDL }) => {
     ok: AccountRecordSerialized,
     err: IDL.Text,
   });
+  const CanisterSlot = IDL.Nat64;
+  const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
+  const Config = IDL.Record({
+    nft: CanisterRange,
+    pwr: CanisterRange,
+    anvil: CanisterSlot,
+    history: CanisterSlot,
+    nft_avail: IDL.Vec(CanisterSlot),
+    space: IDL.Vec(IDL.Vec(IDL.Nat64)),
+    account: CanisterRange,
+    history_range: CanisterRange,
+    router: IDL.Principal,
+    treasury: CanisterSlot,
+  });
   const Class = IDL.Service({
     add: IDL.Func([TokenIdentifier], [Result_3], []),
     airdrop_add: IDL.Func([IDL.Vec(IDL.Nat8)], [Result_3], []),
@@ -323,21 +337,11 @@ const itoIdlFactory = ({ IDL }) => {
       [Result_3],
       []
     ),
-    config: IDL.Func(
-      [
-        IDL.Record({
-          time: IDL.Nat32,
-          airdrop: IDL.Nat,
-          purchase: IDL.Nat,
-        }),
-      ],
-      [],
-      ["oneway"]
-    ),
     icp_balance: IDL.Func([], [Result_2], []),
     icp_transfer: IDL.Func([AccountIdentifier, Balance], [Result_1], []),
     owned: IDL.Func([AccountIdentifier], [Result], ["query"]),
     set_admin: IDL.Func([IDL.Principal], [], ["oneway"]),
+    set_anvil_config: IDL.Func([Config], [], []),
     stats: IDL.Func(
       [],
       [
@@ -357,6 +361,15 @@ const itoIdlFactory = ({ IDL }) => {
 
 const itoCreateActor = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
+  console.log("CANID", canisterId.toText());
+  if (process.env.REACT_APP_LOCAL_BACKEND) {
+    agent.fetchRootKey().catch((err) => {
+      console.warn(
+        "Unable to fetch root key. Check to ensure that your local replica is running"
+      );
+      console.error(err);
+    });
+  }
 
   return Actor.createActor(itoIdlFactory, {
     agent,
@@ -390,6 +403,7 @@ const userTransfer = async (to, amount) => {
     to: { address: AccountIdentifier.TextToArray(to) },
     amount,
   });
+
   if (res.ok)
     console.log(
       "DONE. Transaction:",
@@ -415,7 +429,7 @@ const contractTransfer = async (to, amount) => {
 const getCanisterId = (name) => {
   let cfg = JSON.parse(
     fs.readFileSync(
-      IS_LOCAL() ? "./dfx/local/canister_ids.json" : "./canister_ids.json"
+      IS_LOCAL() ? "./.dfx/local/canister_ids.json" : "./canister_ids.json"
     )
   );
 
@@ -471,6 +485,20 @@ const itoAuthorize = async () => {
       encoding: "UTF-8",
     }
   );
+
+  let itoContract = can(itoCreateActor, getCanisterId("ito"));
+  itoContract.set_anvil_config({
+    router: Principal.fromText(process.env.ROUTER_CANISTER),
+    nft: [0, 0],
+    nft_avail: [],
+    account: [0, 0],
+    pwr: [0, 0],
+    anvil: 0,
+    treasury: 0,
+    history: 0,
+    history_range: [0, 0],
+    space: [[0, 0]],
+  });
 };
 
 const saleAdd = async (NFT_FROM, NFT_TO) => {
@@ -997,10 +1025,9 @@ program
           "specify LOCAL_ROUTER_CANISTER in .env pointing to your local Anvil deployment"
         );
         process.exit();
-      } else {
-        process.env.ROUTER_CANISTER = process.env.LOCAL_ROUTER_CANISTER;
       }
 
+      process.env.ROUTER_CANISTER = process.env.LOCAL_ROUTER_CANISTER;
       process.env.REACT_APP_LOCAL_BACKEND = true;
     }
   });
@@ -1086,11 +1113,13 @@ const ito = new Command("ito");
 ito.description("ITO - Initial Token Offering");
 
 ito
-  .command("authorize")
-  .description("authorize your principal in ITO contract")
+  .command("init")
+  .description(
+    "authorize your principal in ITO contract and set it in local or production mode"
+  )
   .action((options) => {
     console.log(
-      `Authorize your principal in ITO contract. You must be in a repo where dfx.json and ito.mo are`
+      `Authorize your principal in ITO contract and set it local or production. You must be in a repo where dfx.json and ito.mo are`
     );
     itoAuthorize();
   });
