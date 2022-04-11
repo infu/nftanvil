@@ -375,6 +375,29 @@ const contractBalance = async (COUNT) => {
   console.log(res.ok, "E8S ", AccountIdentifier.e8sToIcp(res.ok), "ICP");
 };
 
+const userTransfer = async (to, amount) => {
+  let { address, subaccount } = await routerCanister();
+
+  let map = await getMap();
+
+  let pwr = pwrCanister(
+    PrincipalFromSlot(map.space, AccountIdentifier.TextToSlot(address, map.pwr))
+  );
+
+  let res = await pwr.pwr_withdraw({
+    from: { address: AccountIdentifier.TextToArray(address) },
+    subaccount: [AccountIdentifier.TextToArray(subaccount)],
+    to: { address: AccountIdentifier.TextToArray(to) },
+    amount,
+  });
+  if (res.ok)
+    console.log(
+      "DONE. Transaction:",
+      TransactionId.toText(res.ok.transactionId)
+    );
+  else console.log(res.err);
+};
+
 const contractTransfer = async (to, amount) => {
   let { principal, address, subaccount } = await routerCanister();
   let ITO_PRINCIPAL = getCanisterId("ito");
@@ -1000,8 +1023,8 @@ program
 program
   .command("mint")
   .description("mint nfts from index to index")
-  .argument("<number>", "from index")
-  .argument("<number>", "to index")
+  .argument("<from>", "from index")
+  .argument("<to>", "to index")
   .action((from, to, options) => {
     console.log(`Minting from ${from} to ${to}`);
     mintMain(parseInt(from, 10), parseInt(to, 10), options);
@@ -1010,8 +1033,8 @@ program
 program
   .command("gift")
   .description("creates gift links for nfts from index to index")
-  .argument("<number>", "from index")
-  .argument("<number>", "to index")
+  .argument("<from>", "from index")
+  .argument("<to>", "to index")
   .action((from, to, options) => {
     console.log(`Creating gift links from ${from} to ${to}`);
     giftMain(parseInt(from, 10), parseInt(to, 10));
@@ -1020,19 +1043,29 @@ program
 program
   .command("transfer")
   .description("transfer nfts from index to index to another address")
-  .argument("<number>", "from index")
-  .argument("<number>", "to index")
-  .argument("<string>", "address")
+  .argument("<from>", "from index")
+  .argument("<to>", "to index")
+  .argument("<address>", "address")
   .action((from, to, address, options) => {
     console.log(`Transferring nfts from ${from} - ${to} to ${address}`);
     transferMain(parseInt(from, 10), parseInt(to, 10), address);
   });
 
 program
+  .command("transfer-icp")
+  .argument("<address>", "to address")
+  .argument("<e8s>", "amount")
+  .description("Sends ICP from contract balance to target address")
+  .action((to, amount, options) => {
+    console.log(`Sending ICP...`);
+    userTransfer(to, parseInt(amount, 10));
+  });
+
+program
   .command("check")
   .description("checks if everything was uploaded and burns nft if not")
-  .argument("<number>", "from index")
-  .argument("<number>", "to index")
+  .argument("<from>", "from index")
+  .argument("<to>", "to index")
   .option("-q, --quick")
   .action((from, to, options) => {
     console.log(`Checking uploads ${from} - ${to}`);
@@ -1065,8 +1098,8 @@ ito
 ito
   .command("add")
   .description("transfer nfts to ITO contract")
-  .argument("<number>", "from index")
-  .argument("<number>", "to index")
+  .argument("<from>", "from index")
+  .argument("<to>", "to index")
   .action((from, to, principal, options) => {
     console.log(`Adding to ITO nfts from ${from} - ${to}`);
     saleAdd(parseInt(from, 10), parseInt(to, 10));
@@ -1081,9 +1114,9 @@ ito
   });
 
 ito
-  .command("transfer")
-  .argument("<string>", "to address")
-  .argument("<number>", "amount")
+  .command("transfer-icp")
+  .argument("<address>", "to address")
+  .argument("<e8s>", "amount")
   .description("Sends ICP from contract balance to target address")
   .action((to, amount, options) => {
     console.log(`Sending ICP...`);
@@ -1093,7 +1126,7 @@ ito
 ito
   .command("airdrop")
   .description("Creates gift codes and adds them to ITO contract")
-  .argument("<number>", "count")
+  .argument("<number>", "number of codes to generate")
   .action((count, options) => {
     console.log(`Creating codes ${count}`);
     airdropAdd(parseInt(count, 10));
