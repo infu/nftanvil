@@ -27,26 +27,31 @@ import {
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
-let host =
-  process.env.NETWORK == "local" ? "http://localhost:8000" : "https://ic0.app";
+const getHost = () => {
+  return process.env.NETWORK == "local"
+    ? "http://localhost:8000"
+    : "https://ic0.app";
+};
 
 export const slotcan = (fn, slot) => {
   let canister = PrincipalFromSlot(map.space, slot).toText();
 
-  let can = fn(canister, { agentOptions: { fetch, identity, host } });
+  let can = fn(canister, {
+    agentOptions: { fetch, identity, host: getHost() },
+  });
   return can;
 };
 
 export const can = (fn, canister) => {
   canister = Principal.fromText(canister);
-  let c = fn(canister, { agentOptions: { fetch, identity, host } });
+  let c = fn(canister, { agentOptions: { fetch, identity, host: getHost() } });
   return c;
 };
 
 export const routerCanister = async () => {
   let id = process.env.ROUTER_CANISTER || "kbzti-laaaa-aaaai-qe2ma-cai";
   let { router, agent } = cRouter.routerCanister(id, {
-    agentOptions: { fetch, identity, host },
+    agentOptions: { fetch, identity, host: getHost() },
   });
 
   let principal = await agent.getPrincipal();
@@ -88,12 +93,12 @@ export const claimBalance = async (address, subaccount) => {
       AccountIdentifier.TextToSlot(address, map.pwr)
     ),
     {
-      agentOptions: { fetch, identity, host },
+      agentOptions: { fetch, identity, host: getHost() },
     }
   );
   //
   let ledger = ledgerCanister({
-    agentOptions: { fetch, identity, host },
+    agentOptions: { fetch, identity, host: getHost() },
   });
 
   let amount = await ledger
@@ -149,36 +154,44 @@ export const claimBalance = async (address, subaccount) => {
 };
 
 export const nftCanister = (id) => {
-  return cNft.nftCanister(id, { agentOptions: { fetch, identity, host } });
+  return cNft.nftCanister(id, {
+    agentOptions: { fetch, identity, host: getHost() },
+  });
 };
 
 export const anvilCanister = (id) => {
-  return cAnvil.anvilCanister(id, { agentOptions: { fetch, identity, host } });
+  return cAnvil.anvilCanister(id, {
+    agentOptions: { fetch, identity, host: getHost() },
+  });
 };
 
 export const pwrCanister = (id) => {
-  return cPwr.pwrCanister(id, { agentOptions: { fetch, identity, host } });
+  return cPwr.pwrCanister(id, {
+    agentOptions: { fetch, identity, host: getHost() },
+  });
 };
 
 export const historyCanister = (id) => {
   return cHistory.historyCanister(id, {
-    agentOptions: { fetch, identity, host },
+    agentOptions: { fetch, identity, host: getHost() },
   });
 };
 
 export const ledgerCanister = () => {
-  return cLedger.ledgerCanister({ agentOptions: { fetch, identity, host } });
+  return cLedger.ledgerCanister({
+    agentOptions: { fetch, identity, host: getHost() },
+  });
 };
 
 export const treasuryCanister = () => {
   return cTreasury.treasuryCanister({
-    agentOptions: { fetch, identity, host },
+    agentOptions: { fetch, identity, host: getHost() },
   });
 };
 
 export const accountCanister = (id) => {
   return cAccount.accountCanister(id, {
-    agentOptions: { fetch, identity, host },
+    agentOptions: { fetch, identity, host: getHost() },
   });
 };
 

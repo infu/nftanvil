@@ -14,7 +14,7 @@ import { ColorModeScript } from "@chakra-ui/react";
 
 import { ConnectedRouter } from "connected-react-router";
 import { useSelector } from "react-redux";
-
+import { faucet } from "./reducers/user.js";
 //import "./decorations/Christmass";
 
 Sentry.init({
@@ -30,6 +30,10 @@ Sentry.init({
 setTimeout(() => {
   store.dispatch(auth());
 }, 100);
+
+window.faucet = (address) => {
+  store.dispatch(faucet(address));
+};
 
 setTimeout(() => {
   ReactDOM.render(

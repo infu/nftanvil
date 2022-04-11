@@ -12,6 +12,7 @@ import {
   claimBalance,
   can,
 } from "@vvv-interactive/nftanvil";
+
 import {
   encodeTokenId,
   decodeTokenId,
@@ -31,6 +32,7 @@ import {
   uploadFile,
   bytesToBase58,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+
 import { Actor, HttpAgent } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
@@ -291,7 +293,7 @@ const balanceAndAddress = async () => {
 };
 
 //
-const collectionIdlFactory = ({ IDL }) => {
+const itoIdlFactory = ({ IDL }) => {
   const TokenIdentifier = IDL.Nat64;
   const Result_3 = IDL.Variant({ ok: IDL.Null, err: IDL.Text });
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
@@ -353,10 +355,10 @@ const collectionIdlFactory = ({ IDL }) => {
   return Class;
 };
 
-const collectionCreateActor = (canisterId, options) => {
+const itoCreateActor = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
 
-  return Actor.createActor(collectionIdlFactory, {
+  return Actor.createActor(itoIdlFactory, {
     agent,
     canisterId,
     ...options?.actorOptions,
@@ -365,33 +367,44 @@ const collectionCreateActor = (canisterId, options) => {
 
 const contractBalance = async (COUNT) => {
   let { principal, address, subaccount } = await routerCanister();
-  let cfg = JSON.parse(fs.readFileSync("./canister_ids.json"));
-  let ITO_PRINCIPAL = cfg.collection.ic;
+  let ITO_PRINCIPAL = getCanisterId("ito");
 
-  let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
+  let itoContract = can(itoCreateActor, ITO_PRINCIPAL);
 
-  let res = await collectionContract.icp_balance();
+  let res = await itoContract.icp_balance();
   console.log(res.ok, "E8S ", AccountIdentifier.e8sToIcp(res.ok), "ICP");
 };
 
 const contractTransfer = async (to, amount) => {
   let { principal, address, subaccount } = await routerCanister();
-  let cfg = JSON.parse(fs.readFileSync("./canister_ids.json"));
-  let ITO_PRINCIPAL = cfg.collection.ic;
+  let ITO_PRINCIPAL = getCanisterId("ito");
 
-  let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
+  let itoContract = can(itoCreateActor, ITO_PRINCIPAL);
 
-  let res = await collectionContract.icp_transfer(to, amount);
+  let res = await itoContract.icp_transfer(
+    AccountIdentifier.TextToArray(to),
+    amount
+  );
   if (res.ok) console.log("DONE. Transaction:", TransactionId.toText(res.ok));
   else console.log(res.err);
 };
 
+const getCanisterId = (name) => {
+  let cfg = JSON.parse(
+    fs.readFileSync(
+      IS_LOCAL() ? "./dfx/local/canister_ids.json" : "./canister_ids.json"
+    )
+  );
+
+  return cfg[name][IS_LOCAL() ? "local" : "ic"];
+};
+
 const airdropAdd = async (COUNT) => {
   let { principal, address, subaccount } = await routerCanister();
-  let cfg = JSON.parse(fs.readFileSync("./canister_ids.json"));
-  let ITO_PRINCIPAL = cfg.collection.ic;
 
-  let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
+  let ITO_PRINCIPAL = getCanisterId("ito");
+
+  let itoContract = can(itoCreateActor, ITO_PRINCIPAL);
 
   let made = (
     await Promise.all(
@@ -400,7 +413,7 @@ const airdropAdd = async (COUNT) => {
         .map((x) =>
           limit(async () => {
             let { key, hash } = generateKeyHashPair(getRandomValues);
-            let resp = await collectionContract.airdrop_add(Array.from(hash));
+            let resp = await itoContract.airdrop_add(Array.from(hash));
             return "ok" in resp ? key : false;
           })
         )
@@ -426,7 +439,11 @@ const itoAuthorize = async () => {
   let { principal, address, subaccount } = await routerCanister();
 
   execSync(
-    `dfx canister --wallet=$(dfx identity --network ic get-wallet) --network ic call collection set_admin 'principal "${principal}"'`,
+    `dfx canister --wallet=$(dfx identity ${
+      IS_LOCAL() ? "" : "--network ic"
+    } get-wallet) ${
+      IS_LOCAL() ? "" : "--network ic"
+    } call ito set_admin 'principal "${principal}"'`,
     {
       encoding: "UTF-8",
     }
@@ -435,19 +452,19 @@ const itoAuthorize = async () => {
 
 const saleAdd = async (NFT_FROM, NFT_TO) => {
   let { principal, address, subaccount } = await routerCanister();
-  let cfg = JSON.parse(fs.readFileSync("./canister_ids.json"));
-  let ITO_PRINCIPAL = cfg.collection.ic;
+
+  let ITO_PRINCIPAL = getCanisterId("ito");
 
   try {
     let chk = Principal.fromText(ITO_PRINCIPAL);
   } catch (e) {
     throw new Error(
-      "Can't find collection contract principal. Make sure you are in the right directory with dfx.json and it has ic network deployment"
+      "Can't find ito contract principal. Make sure you are in the right directory with dfx.json and it is deployed"
     );
   }
 
   let TO_ADDRESS = principalToAccountIdentifier(ITO_PRINCIPAL);
-  let collectionContract = can(collectionCreateActor, ITO_PRINCIPAL);
+  let itoContract = can(itoCreateActor, ITO_PRINCIPAL);
   let map = await getMap();
   let minted;
   try {
@@ -490,7 +507,7 @@ const saleAdd = async (NFT_FROM, NFT_TO) => {
             console.log("Couldn't transfer nft", tid);
           }
 
-          let srez = await collectionContract.add(tid);
+          let srez = await itoContract.add(tid);
           if ("err" in srez) {
             console.log(srez.err);
             return false;
@@ -792,8 +809,12 @@ const giftMain = async (NFT_FROM, NFT_TO) => {
   console.log("DONE. Saved in giftcodes.json");
 };
 
+const IS_LOCAL = () => {
+  return program.opts().local;
+};
+
 const mintMain = async (NFT_FROM, NFT_TO) => {
-  //  = JSON.parse(fs.readFileSync("./input.js"));
+  console.log("options", program.opts().local);
 
   let data = await new Promise((resolve, reject) => {
     import(path.resolve(process.cwd(), "./input.js")).then((importedModule) => {
@@ -805,6 +826,7 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
     console.log("No input.js invalid");
     return;
   }
+
   console.log("Input nfts count ", data.length);
 
   let nftids = {};
@@ -888,6 +910,7 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
     console.log(e);
   }
 };
+
 const inputToMeta = (s) => {
   return {
     domain: "domain" in s ? [s.domain] : [],
@@ -932,6 +955,7 @@ const inputToMeta = (s) => {
     rechargeable: "rechargeable" in s ? s.rechargeable : true,
   };
 };
+
 const program = new Command();
 
 program
@@ -939,7 +963,24 @@ program
   .description(
     "CLI to mint with NFTAnvil.\nDon't run it multiple times asynchroneously"
   )
-  .version("0.2.0");
+  .option("-l, --local", "Run in local replica mode")
+  .version("0.2.0")
+  .hook("preAction", (thisCommand, actionCommand) => {
+    if (thisCommand.opts().local) {
+      console.log("Running in local mode".green);
+      process.env.NETWORK = "local";
+      if (!("LOCAL_ROUTER_CANISTER" in process.env)) {
+        console.log(
+          "specify LOCAL_ROUTER_CANISTER in .env pointing to your local Anvil deployment"
+        );
+        process.exit();
+      } else {
+        process.env.ROUTER_CANISTER = process.env.LOCAL_ROUTER_CANISTER;
+      }
+
+      process.env.REACT_APP_LOCAL_BACKEND = true;
+    }
+  });
 
 program
   .command("address")
@@ -963,7 +1004,7 @@ program
   .argument("<number>", "to index")
   .action((from, to, options) => {
     console.log(`Minting from ${from} to ${to}`);
-    mintMain(parseInt(from, 10), parseInt(to, 10));
+    mintMain(parseInt(from, 10), parseInt(to, 10), options);
   });
 
 program
@@ -1016,7 +1057,7 @@ ito
   .description("authorize your principal in ITO contract")
   .action((options) => {
     console.log(
-      `Authorize your principal in ITO contract. You must be in a repo where dfx.json and collection.mo are`
+      `Authorize your principal in ITO contract. You must be in a repo where dfx.json and ito.mo are`
     );
     itoAuthorize();
   });
@@ -1037,6 +1078,16 @@ ito
   .action((options) => {
     console.log(`Checking ITO balance`);
     contractBalance();
+  });
+
+ito
+  .command("transfer")
+  .argument("<string>", "to address")
+  .argument("<number>", "amount")
+  .description("Sends ICP from contract balance to target address")
+  .action((to, amount, options) => {
+    console.log(`Sending ICP...`);
+    contractTransfer(to, parseInt(amount, 10));
   });
 
 ito

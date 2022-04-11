@@ -1,6 +1,6 @@
 let x = [];
 
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 10000; i++) {
   x.push({
     // quality: 0,
     // tags: ["helmet " + i],

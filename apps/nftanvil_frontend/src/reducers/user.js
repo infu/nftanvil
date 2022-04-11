@@ -307,6 +307,26 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
     });
 };
 
+// for local testing
+export const faucet = (address) => async (dispatch, getState) => {
+  let s = getState();
+
+  let pwrcan = pwrCanister(
+    PrincipalFromSlot(
+      s.user.map.space,
+      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+    ),
+    { agentOptions: authentication.getAgentOptions() }
+  );
+
+  let resp = await pwrcan.faucet({
+    aid: AccountIdentifier.TextToArray(address),
+    amount: 800000000n,
+  });
+
+  console.log(resp);
+};
+
 export const refresh_pwr_balance = () => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
 

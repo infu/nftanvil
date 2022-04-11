@@ -10,6 +10,7 @@ import Array "mo:base/Array";
 import Cluster  "mo:anvil/type/Cluster";
 import SHA224 "mo:anvil/lib/SHA224";
 import Time "mo:base/Time";
+import Nat64 "mo:base/Nat64";
 
 import IF "./ito_interface";
 import Anvil "mo:anvil/base/Anvil";
@@ -50,6 +51,15 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   private stable var LEFT_AIRDROP : Nat = 3000;
   private stable var LEFT_PURCHASE : Nat = 6000;
   private let START_TIMESTAMP : Nat32 = 1654951047;
+  
+  private let BOX1_PRICE : Nat64 = 60000; // Prices are in e8s.  1 ICP = 1 0000 0000 e8s. ICP transfer fee is 10000
+  private let BOX1_NFTS : Nat = 1;  // Number of nfts given in this package.
+
+  private let BOX2_PRICE : Nat64 = 70000;
+  private let BOX2_NFTS : Nat = 5;
+
+  private let BOX3_PRICE : Nat64 = 80000;
+  private let BOX3_NFTS : Nat = 20;
 
   // Edit whats bellow only if you know what you are doing
   private let MAX_TOKEN_SPACE = MAX_TOKENS * 10;
@@ -73,7 +83,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   private stable var count_total_added: Nat = 0;
   private stable var last_given_idx: Nat = 0;
 
-  // Anvil object has various functions and provides anvil.conf and anvil.oracle
+  // Anvil object has various functions and provides anvil.conf and anvil.oracle. Without them communication with Anvil protocol wont be meaningful
   private let anvil = Anvil.Anvil();
 
   private stable var admin : Principal = Principal.fromText("aaaaa-aa");
@@ -108,22 +118,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     }
   };
 
-
-  private func findToken(nft_id: Nft.TokenIdentifier) : Result.Result<Nat, ()> {
-    var idx: Nat = 0;
-
-    label lo loop {
-      if (idx >= MAX_TOKEN_SPACE) return #err();
-      if (_tokens[idx] == ?nft_id) {
-        return #ok(idx);
-      };
-      idx += 1;
-    };
-
-    #err();
-  };
-
-
+  // Users can get their airdrop by providing a code
   public shared({caller}) func airdrop_use(aid : Nft.AccountIdentifier, key: Blob) : async Result.Result<(), Text> {
 
     if (now() < START_TIMESTAMP) return #err("hasn't started yet");
@@ -152,7 +147,6 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
     #err("Code not found or already used")
   };
-
 
 
   // Query all internally owned nfts by a certain AccountIdentifier
@@ -191,9 +185,6 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
     switch(r.tokens.indexOf(tid)) {
       case (?idx) {
-        
-          // recharge here
-
           switch(await Cluster.nftFromTid(anvil.conf, tid).transfer({
             from = #address(getScriptAccount());
             to = #address(aid);
@@ -274,14 +265,18 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     #ok();
   };
 
+
+  // Returns the address of this script. Can hold ICP, wrapped ICP and Anvil NFTs
   private func getScriptAccount() : Nft.AccountIdentifier {
     Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), null)
   };
 
+  // Returns unix timestamp in seconds
   private func now() : Nat32 {
-      return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)); // unix timestamp in seconds
+      return  Nat32.fromIntWrap(Int.div(Time.now(), 1000000000)); 
   };
-      // Takes anvil transaction and checks if its going to the right place
+
+  // Takes anvil transaction and checks if its going to the right place
   // Dependent on the amount sent, we give different amount of nfts
   // Transactions get stored so they can't be used for second time
   // If there are not enough nfts in contract, we will refund
@@ -301,10 +296,10 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
             if (caller_aid != from) return #err("Unauthorized");
             switch(switch(amount) {
               // pricing option one (its written verbose because different packages may give more things differently)
-              case (40000) {
+              case (BOX1_PRICE) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 1, #buy)) { //send 2 nfts to user
+                    switch(give(from, BOX1_NFTS, #buy)) { //send 2 nfts to user
                       case (#ok()) {
                         #ok();
                       };
@@ -317,10 +312,10 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
               };
               // pricing option two
-              case (80000) {
+              case (BOX2_PRICE) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 5, #buy)) {
+                    switch(give(from, BOX2_NFTS, #buy)) {
                       case (#ok()) {
                         #ok();
                       };
@@ -333,10 +328,10 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
               };
               // pricing option three
-              case (120000) {
+              case (BOX3_PRICE) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 20, #buy)) { 
+                    switch(give(from, BOX3_NFTS, #buy)) { 
                       case (#ok()) {
                         #ok();
                       };
@@ -376,14 +371,34 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
  
   };
 
+  // Finds the location of a certain nft_id inside our internal memory
+  private func findToken(nft_id: Nft.TokenIdentifier) : Result.Result<Nat, ()> {
+    var idx: Nat = 0;
+
+    label lo loop {
+      if (idx >= MAX_TOKEN_SPACE) return #err();
+      if (_tokens[idx] == ?nft_id) {
+        return #ok(idx);
+      };
+      idx += 1;
+    };
+
+    #err();
+  };
 
   // --------- ADMIN FUNCTIONS -----------
 
 
-  // installer sets an admin, which can add nfts (admin only)
+  // Installer sets an admin, which can add nfts (admin only)
   public shared({caller}) func set_admin(x: Principal) : () {
     assert(caller == _installer);
     admin := x;
+  };
+
+  // For local test purposes. Comment out in production contract
+  public shared({caller}) func set_anvil_config(conf : Cluster.Config) : async () {
+    assert(caller == _installer);
+    anvil.conf := conf;
   };
 
   // NFTs are minted at NFTAnvil then added to this contract. The added tokens need to be owned by the contract, or it wont be able to transfer them. (admin only)
@@ -391,6 +406,17 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     assert(caller == admin);
 
     if (findToken(nft_id) != #err()) return #err("Token already added");
+
+    let scriptAccount = getScriptAccount();
+
+    // make sure contract owns the nft before adding it to internal memory
+    switch(await Cluster.nftFromTid(anvil.conf, nft_id).bearer(nft_id)) {
+      case (#ok(bearer)) {
+        if (bearer != scriptAccount) return #err("You can't add a token which is not owned by this contract");
+      };
+      case (#err(e)) return #err("Token error " # debug_show(e));
+    };
+    
 
     label lo loop {
       let rnd_slot = (count_available + Nat32.toNat(rand.get(8))) % MAX_TOKEN_SPACE;
@@ -437,7 +463,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     
     let scriptAccount = getScriptAccount();
 
-    switch(await Cluster.pwrFromAid(anvil.conf, scriptAccount).pwr_transfer({from = #address(scriptAccount); to=#address(to); amount = amount - anvil.oracle.pwrFee; memo=Blob.fromArray([]); subaccount=null})) {
+    switch(await Cluster.pwrFromAid(anvil.conf, scriptAccount).pwr_withdraw({from = #address(scriptAccount); to=#address(to); amount = amount - anvil.oracle.pwrFee; subaccount=null})) {
           case (#ok({transactionId})) {
             #ok(transactionId)
           };

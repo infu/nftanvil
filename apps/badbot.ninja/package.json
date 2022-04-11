@@ -18,7 +18,8 @@
     "nfts.json": "node ./helpers/nfts.json.generate.js",
     "typecheck": "./helpers/monitor_and_typecheck.sh",
     "generate": "dfx generate",
-    "start": "node ./helpers/dfx.env.js && react-scripts start",
+    "start": "node ./helpers/dfx.env.js && PORT=3022 react-scripts start",
+    "start:local": "NETWORK=local node ./helpers/dfx.env.js && PORT=3022 react-scripts start",
     "build": "node ./helpers/dfx.env.js && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
