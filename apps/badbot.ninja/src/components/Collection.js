@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   encodeTokenId,
   decodeTokenId,
@@ -19,7 +19,9 @@ import { itemQuality } from "@vvv-interactive/nftanvil-tools/cjs/items.js";
 
 const ATTR = ["luck", "attack", "defense", "airdrops", "harvest"];
 
-export function Collection({ nfts, mine }) {
+export function Collection({ nfts, mine, only }) {
+  const actionsRef = useRef(null);
+
   const [page, setPage] = React.useState(0);
   const [filterQuality, setFilterQuality] = React.useState(-1);
   const [sortBy, setSortBy] = React.useState(false);
@@ -51,6 +53,7 @@ export function Collection({ nfts, mine }) {
         disabled={page == 0}
         onClick={() => {
           setPage(page - 1);
+          actionsRef.current.scrollIntoView();
         }}
       >
         Prev
@@ -59,6 +62,7 @@ export function Collection({ nfts, mine }) {
         disabled={slice.length == 0}
         onClick={() => {
           setPage(page + 1);
+          actionsRef.current.scrollIntoView();
         }}
       >
         Next
@@ -67,7 +71,7 @@ export function Collection({ nfts, mine }) {
   );
 
   const filters = (
-    <div className="filters">
+    <div className="filters" ref={actionsRef}>
       <select
         onChange={(e) => {
           setFilterQuality(e.target.value);
@@ -76,7 +80,7 @@ export function Collection({ nfts, mine }) {
       >
         {itemQuality.dark.map(({ label, color }, idx) => (
           <option key={label} value={idx}>
-            >= {label}
+            {label == "Poor" ? "all" : ">=" + label}
           </option>
         ))}
       </select>
@@ -86,7 +90,7 @@ export function Collection({ nfts, mine }) {
           setPage(0);
         }}
       >
-        <option value={false}>---</option>
+        <option value={false}>all</option>
         {ATTR.map((att, idx) => (
           <option key={idx} value={att}>
             with {att}

@@ -361,7 +361,7 @@ const itoIdlFactory = ({ IDL }) => {
 
 const itoCreateActor = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
-  console.log("CANID", canisterId.toText());
+
   if (process.env.REACT_APP_LOCAL_BACKEND) {
     agent.fetchRootKey().catch((err) => {
       console.warn(

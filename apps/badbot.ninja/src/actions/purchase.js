@@ -70,6 +70,8 @@ export const buy = (amount) => async (dispatch, getState) => {
     user_pwr_transfer({ to: destination, amount, memo: [] })
   );
 
+  // TODO: put it inside memory in case user closes window
+
   console.log("user_pwr_transfer", dres);
 
   if ("err" in dres) throw dres.err;
@@ -80,13 +82,34 @@ export const buy = (amount) => async (dispatch, getState) => {
     agentOptions: authentication.getAgentOptions(),
   });
 
-  // send tx_id to our custom ito.mo contract
-  let brez = await ito.buy_tx(txid, subaccount);
+  const attempt = async () => {
+    // send tx_id to our custom ito.mo contract
+    let brez = await ito.buy_tx(txid, subaccount);
 
-  console.log("buy_tx", brez);
+    console.log("buy_tx", brez);
 
-  dispatch(user_refresh_balances());
-  dispatch(claim());
+    setTimeout(() => {
+      dispatch(user_refresh_balances());
+      dispatch(claim());
+    }, 100);
+
+    if ("err" in brez) throw new Error(brez.err);
+
+    return brez.ok.map((x) => Number(x));
+  };
+
+  for (let i = 0; i < 10; i++) {
+    try {
+      return await attempt();
+    } catch (e) {
+      await delay(i * 1000);
+      console.log(e);
+    }
+  }
+
+  throw new Error(
+    "Attempted numerous times with no result. Are you sure you are connected?"
+  );
 };
 
 export const claim = () => async (dispatch, getState) => {

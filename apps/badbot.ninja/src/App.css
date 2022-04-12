@@ -21,7 +21,7 @@ body {
   justify-content: center;
 }
 .c-actions {
-  width: 500px;
+  max-width: 500px;
   text-align: center;
   margin: 0px auto 32px auto;
 }
@@ -46,6 +46,7 @@ body {
 .nft-img img {
   width: 140px;
   height: 140px;
+  border-radius: 4px;
 }
 
 .nft-info {
@@ -81,6 +82,58 @@ body {
   text-align: right;
 }
 
+.about {
+  max-width: 600px;
+  margin: auto;
+  padding: 32px;
+  font-size: 17px;
+}
+.buybutton {
+  position: absolute;
+  bottom: 16px;
+  left: 0px;
+  width: 100%;
+  box-sizing: content-box;
+
+  text-align: center;
+}
+/* Portrait and Landscape */
+@media only screen and (max-device-width: 900px) {
+  .collection {
+    width: 300px;
+    margin: auto;
+    box-sizing: border-box;
+  }
+  .nft-sm {
+    text-align: center;
+    display: block;
+
+    margin: auto;
+    padding-bottom: 32px;
+    border-bottom: 3px dotted #3e3f44;
+    margin-bottom: 32px;
+  }
+  .nft-img {
+    display: block;
+    margin: auto;
+    width: 216px;
+    height: 216px;
+  }
+  .nft-img img {
+    width: 216px;
+    height: 216px;
+  }
+  .nft-info {
+    width: 100%;
+    padding-top: 16px;
+    padding-left: 0px;
+  }
+  .nft-attr-box {
+    margin-top: 8px;
+    margin-left: 90px;
+  }
+}
+
 .user {
   margin: auto;
   max-width: 600px;
@@ -89,6 +142,14 @@ body {
 .user .address {
   font-size: 13px;
   text-align: center;
+  word-break: break-all;
+  padding: 0px 16px;
+}
+.user .address .title {
+  color: #7e8fb3;
+}
+.user .address .val {
+  color: #1be274;
 }
 .user .icp {
   margin-top: 8px;
@@ -102,16 +163,56 @@ body {
 
 .filters {
   text-align: center;
+  margin-top: 46px;
   margin-bottom: 8px;
 }
+
 button {
   background-color: #444a57;
   color: white;
-  border: 1px solid #2d3950;
-  padding: 5px 10px;
+  border: 1px solid #5c566b;
+  border-bottom: 2px solid #1a1436;
+  border-right: 2px solid #211849;
+
+  padding: 10px 20px;
   border-radius: 4px;
   font-weight: bold;
   cursor: pointer;
+  margin-left: 8px;
+  position: relative;
+  transition-duration: 0.4s;
+  overflow: hidden;
+}
+.c-actions button {
+  padding: 3px 12px;
+}
+button:after {
+  content: "";
+  background: #90ee90;
+  display: block;
+  position: absolute;
+  padding-top: 300%;
+  padding-left: 350%;
+  margin-left: -20px !important;
+  margin-top: -120%;
+  border-radius: 10px;
+  opacity: 0;
+  transition: all 0.8s;
+}
+
+button:active:after {
+  padding: 0;
+  margin: 0;
+  opacity: 1;
+  transition: 0s;
+}
+
+button.attention {
+  background-color: #3d5849;
+  color: white;
+  border: 1px solid #378337;
+  border-bottom: 2px solid #164616;
+  border-right: 2px solid #184918;
 }
 
 select {
@@ -124,13 +225,66 @@ select {
 }
 
 .priceOptions {
+  margin: auto;
+  max-width: 600px;
   text-align: center;
   margin-top: 20px;
+  display: flex;
+  position: relative;
+  margin-bottom: 20px;
+}
+.priceBox {
+  flex-grow: 1;
+  vertical-align: top;
+  border: 2px solid #1be274;
+  border-radius: 8px;
+  margin: 16px 8px;
+  padding: 16px 16px 65px 16px;
+  position: relative;
+}
+.feature {
+  font-size: 16px;
+  margin-top: 4px;
+}
+.priceBox .title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #608571;
+  margin-bottom: 12px;
+}
+.priceBox.attention {
+  flex-grow: 2;
+  margin-bottom: -6px;
+  margin-top: -6px;
+}
+.priceBox .price {
+  font-size: 33px;
+}
+.priceBox .price b {
+  font-size: 18px;
+  font-weight: normal;
+  position: relative;
+  top: -10px;
+  margin-left: 2px;
+}
+.priceBox.attention .ftrs {
+  height: 100px;
 }
 
+.ftrs {
+  padding-top: 12px;
+  height: 200px;
+  font-size: 14px;
+  height: 70px;
+}
+.priceBox button {
+  margin: 0px;
+}
 .bbn-logo {
   margin: auto;
   display: block;
+  max-width: 100%;
+  margin-bottom: -64px;
 }
 
 .airdropOptions {
@@ -150,7 +304,7 @@ select {
 
 .pbar-inner {
   height: 20px;
-  background-color: #0f940a;
+  background-color: #1be274;
 }
 
 .pbar-info {
@@ -158,4 +312,92 @@ select {
   max-width: 400px;
   margin: 8px auto;
   text-align: center;
+}
+
+.modal {
+  background-color: #1b202be7;
+  max-width: 600px;
+  margin: 16px auto;
+  border-radius: 8px;
+}
+
+.modal-body {
+  padding: 32px;
+}
+
+.modal-transfer-icp {
+  min-width: 300px;
+  text-align: left;
+  max-width: 100%;
+}
+.modal-transfer-icp input {
+  box-sizing: border-box;
+  width: 100%;
+  background-color: #787d86;
+  border: 0px solid;
+  padding: 6px 12px;
+  margin-top: 8px;
+}
+
+.modal-airdrop-code {
+  min-width: 300px;
+  text-align: left;
+  max-width: 100%;
+}
+.modal-airdrop-code input {
+  box-sizing: border-box;
+  width: 100%;
+  background-color: #787d86;
+  border: 0px solid;
+  padding: 6px 12px;
+  margin-top: 8px;
+}
+
+.modal-title {
+  font-size: 25px;
+  margin-bottom: 12px;
+}
+
+label {
+  font-size: 12px;
+}
+
+.modal-actions {
+  margin-top: 12px;
+  text-align: right;
+}
+
+.basket {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: 20;
+  background-color: #16171b;
+  overflow: scroll;
+  overscroll-behavior: contain;
+}
+.basket .inner {
+  max-width: 600px;
+  margin: auto;
+  padding-top: 128px;
+  padding-bottom: 256px;
+}
+
+.basket .title {
+  font-size: 30px;
+  text-align: center;
+  padding-top: 32px;
+}
+.basket .subtitle {
+  font-size: 15px;
+  text-align: center;
+  padding-top: 16px;
+  padding-bottom: 32px;
+}
+
+.basket .actions {
+  text-align: center;
+  padding-bottom: 16px;
 }

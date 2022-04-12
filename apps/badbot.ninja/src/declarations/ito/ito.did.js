@@ -2,6 +2,8 @@ export const idlFactory = ({ IDL }) => {
   const TokenIdentifier = IDL.Nat64;
   const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
+  const Basket = IDL.Vec(IDL.Opt(TokenIdentifier));
+  const Result_4 = IDL.Variant({ 'ok' : Basket, 'err' : IDL.Text });
   const TransactionId = IDL.Vec(IDL.Nat8);
   const SubAccount = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
@@ -33,10 +35,10 @@ export const idlFactory = ({ IDL }) => {
     'airdrop_add' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result_3], []),
     'airdrop_use' : IDL.Func(
         [AccountIdentifier, IDL.Vec(IDL.Nat8)],
-        [Result_3],
+        [Result_4],
         [],
       ),
-    'buy_tx' : IDL.Func([TransactionId, IDL.Opt(SubAccount)], [Result_3], []),
+    'buy_tx' : IDL.Func([TransactionId, IDL.Opt(SubAccount)], [Result_4], []),
     'claim' : IDL.Func(
         [AccountIdentifier, IDL.Opt(SubAccount), TokenIdentifier],
         [Result_3],

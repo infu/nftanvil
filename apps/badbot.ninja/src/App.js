@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   encodeTokenId,
   decodeTokenId,
@@ -27,86 +27,70 @@ import { Principal } from "@dfinity/principal";
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 
 import { buy, claim, get_mine, airdrop_use, stats } from "./actions/purchase";
-
+import { ButtonModal } from "./components/Tools.js";
+import { PriceOptions, ProgressBar } from "./components/Ito.js";
 import logo from "./logo.svg";
 import bbn_logo from "./assets/bbn_logo.png";
 
 import nfts from "./nfts.json";
 import "./App.css";
 
-function PriceOptions() {
-  const dispatch = useAnvilDispatch();
-
+function About() {
   return (
-    <div>
-      <div className="priceOptions">
-        <button
-          onClick={async () => {
-            dispatch(buy(40000));
-          }}
-        >
-          Buy 1
-        </button>
-        <button
-          onClick={async () => {
-            dispatch(buy(80000));
-          }}
-        >
-          Buy 5 (10% discount)
-        </button>
-        <button
-          onClick={async () => {
-            dispatch(buy(120000));
-          }}
-        >
-          Buy 20 (20% discount)
-        </button>
-      </div>
-      <div className="airdropOptions">
-        <button
-          onClick={() => {
-            let code = prompt("Enter secret code");
-            if (!code) return;
-            dispatch(airdrop_use(code));
-          }}
-        >
-          Use airdrop code
-        </button>
-      </div>
+    <div className="about">
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
+        sagittis egestas orci ut accumsan. Aliquam facilisis libero in lacus
+        elementum maximus. Nulla facilisi. Ut tristique, elit non hendrerit
+        venenatis, orci turpis volutpat nunc, ac laoreet nulla metus mollis
+        ligula. Vestibulum pulvinar enim sit amet ex dignissim convallis. Ut
+        tincidunt sapien felis, eu auctor mauris tempus ac. In magna purus,
+        varius id iaculis ut, vehicula nec dui. Aenean vehicula varius accumsan.
+        Donec interdum, orci a accumsan egestas, mauris velit pharetra felis,
+        vel rutrum ligula dui non mauris. Ut a ornare dolor. Duis cursus
+        pellentesque convallis. Quisque sit amet justo non elit fermentum
+        hendrerit quis sit amet dui. Vivamus ac odio at metus ullamcorper
+        finibus. Quisque efficitur, ante sit amet finibus dapibus, sapien erat
+        imperdiet augue, ac varius leo sem et enim. Nam fringilla nisl id purus
+        aliquam, quis mollis ligula viverra. Donec a arcu laoreet, venenatis
+        velit vitae, hendrerit dui.
+      </p>
+
+      <p>
+        Vivamus libero nisi, venenatis id lobortis quis, aliquam quis ipsum.
+        Vestibulum ultrices luctus diam, nec varius lorem ultricies sed. Donec
+        sollicitudin et sapien in gravida. Curabitur et finibus odio. Vivamus
+        accumsan luctus tortor id pharetra. Maecenas ornare dui libero, non
+        sagittis arcu sodales sit amet. Nulla nec dui quis metus fermentum
+        dapibus.
+      </p>
+
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi non lorem
+        a elit sodales consequat. Donec id urna ut justo feugiat pulvinar.
+        Maecenas vehicula odio ut accumsan lacinia. Quisque sit amet fermentum
+        neque. Nunc nec congue odio. Vestibulum efficitur, urna quis iaculis
+        varius, velit nisi ullamcorper tellus, vitae semper urna sapien id ante.
+        Etiam bibendum ultrices porta. Curabitur condimentum nibh vel laoreet
+        vestibulum. Nunc finibus quis nisl in condimentum. Etiam lectus ipsum,
+        facilisis ac rutrum in, volutpat rhoncus tortor. Proin eget sollicitudin
+        nisl. Mauris sodales, neque posuere sagittis rutrum, risus tellus congue
+        nulla, nec pulvinar nulla nisi nec tellus.
+      </p>
+
+      <p>
+        Maecenas interdum neque ut sem ultricies sollicitudin. Nunc nisi turpis,
+        rhoncus eget nisi id, egestas vehicula metus. Praesent id lectus urna.
+        Aliquam viverra cursus sem dictum facilisis. Pellentesque pellentesque
+        pretium vestibulum. Duis eget placerat ex. Mauris aliquet euismod
+        aliquet. Proin feugiat consectetur sapien, eget ultricies velit
+        facilisis vel. Proin velit arcu, sagittis eget augue pretium, tincidunt
+        scelerisque lectus. Aliquam venenatis justo quis velit feugiat
+        dignissim. Nulla odio sapien, convallis eu lectus eget, imperdiet
+        maximus urna. Proin semper ex eget diam mattis tristique. Donec posuere
+        aliquet suscipit.
+      </p>
     </div>
-  );
-}
-
-function ProgressBar() {
-  const [st, setStats] = React.useState(false);
-
-  const dispatch = useAnvilDispatch();
-  const load = async () => {
-    setStats(await dispatch(stats()));
-  };
-
-  useEffect(() => {
-    load();
-  }, [dispatch]);
-
-  if (!st) return null;
-
-  let available = Math.min(Number(st.available), Number(st.purchase));
-  let total = Number(st.total);
-
-  let airdrop = Number(st.airdrop);
-  // let purchase = Number(st.purchase);
-  const perc = ((total - available) / total) * 100;
-  //console.log(perc);
-  return (
-    <>
-      <div className="pbar-shell">
-        <div className="pbar-inner" style={{ width: perc + "%" }}></div>
-      </div>
-      <div className="pbar-info">
-        {total} total | {available} left
-      </div>
-    </>
   );
 }
 
@@ -130,14 +114,13 @@ function App() {
     }
   }, [loaded, logged, dispatch]);
 
-  if (!loaded) return null;
+  // if (!loaded) return null;
 
   return (
     <div className="App">
       <img src={bbn_logo} className="bbn-logo" alt="Bad Bot Ninja" />
       <h1 className="Title">Bad Bot Ninja</h1>
-      <div className="Subtitle">gear for post-apocalyptic overlords</div>
-
+      <About />
       <User />
       <PriceOptions />
       <ProgressBar />
@@ -150,15 +133,3 @@ function App() {
 }
 
 export default App;
-
-// const [nfts, setNfts] = React.useState(false);
-// const load = async () => {
-//   let url =
-//     "https://nftpkg.com/api/v1/author/a004f41ea1a46f5b7e9e9639fbed84e037d9ce66b75d392d2c1640bb7a559cda";
-//   const resp = await fetch(url).then((x) => x.json());
-//   setNfts(resp);
-// };
-
-// useEffect(() => {
-//   load();
-// }, []);

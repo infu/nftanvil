@@ -32,4 +32,5 @@ module {
                 }
         };
 
+        public type Basket = [?Nft.TokenIdentifier];
 }

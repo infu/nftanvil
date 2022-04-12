@@ -4,6 +4,7 @@ import Text "mo:base/Text";
 import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Nat32 "mo:base/Nat32";
+import Random "mo:base/Random";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
@@ -50,19 +51,15 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   private let MAX_CODES = 10000;
   private stable var LEFT_AIRDROP : Nat = 3000;
   private stable var LEFT_PURCHASE : Nat = 6000;
-  private let START_TIMESTAMP : Nat32 = 1654951047;
+  private let START_TIMESTAMP : Nat32 = 0; //1654951047
   
-  private let BOX1_PRICE : Nat64 = 60000; // Prices are in e8s.  1 ICP = 1 0000 0000 e8s. ICP transfer fee is 10000
-  private let BOX1_NFTS : Nat = 1;  // Number of nfts given in this package.
-
-  private let BOX2_PRICE : Nat64 = 70000;
-  private let BOX2_NFTS : Nat = 5;
-
-  private let BOX3_PRICE : Nat64 = 80000;
-  private let BOX3_NFTS : Nat = 20;
 
   // Edit whats bellow only if you know what you are doing
   private let MAX_TOKEN_SPACE = MAX_TOKENS * 10;
+  
+  public type Basket = IF.Basket;
+
+  private stable var randomNumber : Nat = 0; // unknown to the public. While the pseudo random sequence is known, this number isn't. Along with the complexity of asyncroneous calls & unknown internal nft memory, this will make sure nobody can cherry-pick nfts.
   
   private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(MAX_TOKEN_SPACE, null); // keep this 10 times bigger than max nft count
 
@@ -119,7 +116,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   };
 
   // Users can get their airdrop by providing a code
-  public shared({caller}) func airdrop_use(aid : Nft.AccountIdentifier, key: Blob) : async Result.Result<(), Text> {
+  public shared({caller}) func airdrop_use(aid : Nft.AccountIdentifier, key: Blob) : async Result.Result<Basket, Text> {
 
     if (now() < START_TIMESTAMP) return #err("hasn't started yet");
 
@@ -129,9 +126,9 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     label lo loop {
       if (_codes[idx] == ?keyHash) {
         switch(give(aid, 1, #airdrop)) {
-          case (#ok()) {
+          case (#ok(basket)) {
             _codes[idx] := null; // deleting code
-            return #ok();
+            return #ok(basket);
           };
           case (#err(e)) {
             return #err("Couldn't give drop " # debug_show(e));
@@ -212,7 +209,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
   // We move nfts from _tokens to _account internally. Later their new owner can claim them
   // where they get finally transfered
-  private func give(aid: Nft.AccountIdentifier, count: Nat, pool : {#buy; #airdrop}) : Result.Result<(), Text> {
+  private func give(aid: Nft.AccountIdentifier, count: Nat, pool : {#buy; #airdrop}) : Result.Result<Basket, Text> {
     if (count_available < count) {
       return #err("Not enough nfts left in contract");
     };
@@ -224,6 +221,8 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     if ((pool == #airdrop) and (LEFT_AIRDROP < count)) {
       return #err("Not enough left for airdrop");
     };
+
+    var basket : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(count, null); 
 
     var nft_idx = last_given_idx;
     for (j in Iter.range(0, count - 1)) {
@@ -241,6 +240,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
 
                 r.tokens.add(tid);
+                basket[j] := ?tid;
 
                 _tokens[nft_idx] := null;
                 count_available -= 1;
@@ -262,7 +262,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
     last_given_idx := nft_idx;
 
-    #ok();
+    #ok(Array.freeze(basket));
   };
 
 
@@ -280,7 +280,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   // Dependent on the amount sent, we give different amount of nfts
   // Transactions get stored so they can't be used for second time
   // If there are not enough nfts in contract, we will refund
-  public shared({caller}) func buy_tx(tx_id:  Nft.TransactionId, subaccount: ?Nft.SubAccount) : async Result.Result<(), Text> {
+  public shared({caller}) func buy_tx(tx_id:  Nft.TransactionId, subaccount: ?Nft.SubAccount) : async Result.Result<Basket, Text> {
 
     if (now() < START_TIMESTAMP) return #err("hasn't started yet");
 
@@ -296,12 +296,12 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
             if (caller_aid != from) return #err("Unauthorized");
             switch(switch(amount) {
               // pricing option one (its written verbose because different packages may give more things differently)
-              case (BOX1_PRICE) {
+              case (60000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, BOX1_NFTS, #buy)) { //send 2 nfts to user
-                      case (#ok()) {
-                        #ok();
+                    switch(give(from, 1, #buy)) { //send 2 nfts to user
+                      case (#ok(basket)) {
+                        #ok(basket);
                       };
                       case (#err(e)) { // refund
                         #refund(e);
@@ -312,12 +312,12 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
               };
               // pricing option two
-              case (BOX2_PRICE) {
+              case (70000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, BOX2_NFTS, #buy)) {
-                      case (#ok()) {
-                        #ok();
+                    switch(give(from, 5, #buy)) {
+                      case (#ok(basket)) {
+                        #ok(basket);
                       };
                       case (#err(e)) { 
                         #refund(e);
@@ -328,12 +328,12 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
               };
               // pricing option three
-              case (BOX3_PRICE) {
+              case (80000) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, BOX3_NFTS, #buy)) { 
-                      case (#ok()) {
-                        #ok();
+                    switch(give(from, 20, #buy)) { 
+                      case (#ok(basket)) {
+                        #ok(basket);
                       };
                       case (#err(e)) { 
                         #refund(e);
@@ -347,7 +347,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 return #err("Amount is wrong");
               };
             }) {
-              case (#ok()) #ok();
+              case (#ok(basket)) #ok(basket);
               case (#refund(e)) {
                 switch(await Cluster.pwrFromAid(anvil.conf, scriptAccount).pwr_transfer({from = #address(scriptAccount); to=#address(from); amount = amount - anvil.oracle.pwrFee; memo=Blob.fromArray([]); subaccount=null})) {
                     case (#ok({transactionId})) {
@@ -400,6 +400,14 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     assert(caller == admin);
     anvil.conf := conf;
     await anvil.update();
+
+    // get a random number
+    let rnn = Random.Finite(await Random.blob());
+    switch(rnn.range(64)) {
+      case(?n) randomNumber := n;
+      case(null) {assert(false)} // shouldn't happen
+    }
+    
   };
 
   // NFTs are minted at NFTAnvil then added to this contract. The added tokens need to be owned by the contract, or it wont be able to transfer them. (admin only)
@@ -420,7 +428,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
     
 
     label lo loop {
-      let rnd_slot = (count_available + Nat32.toNat(rand.get(8))) % MAX_TOKEN_SPACE;
+      let rnd_slot = (randomNumber + count_available + Nat32.toNat(rand.get(32))) % MAX_TOKEN_SPACE;
       if (_tokens[rnd_slot] == null) {
         _tokens[rnd_slot] := ?nft_id;
         count_available += 1;

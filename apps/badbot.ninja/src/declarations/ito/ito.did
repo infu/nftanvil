@@ -1,6 +1,11 @@
 type TransactionId = blob;
 type TokenIdentifier = nat64;
 type SubAccount = blob;
+type Result_4 = 
+ variant {
+   err: text;
+   ok: Basket;
+ };
 type Result_3 = 
  variant {
    err: text;
@@ -38,8 +43,8 @@ type Class =
  service {
    add: (TokenIdentifier) -> (Result_3);
    airdrop_add: (blob) -> (Result_3);
-   airdrop_use: (AccountIdentifier, blob) -> (Result_3);
-   buy_tx: (TransactionId, opt SubAccount) -> (Result_3);
+   airdrop_use: (AccountIdentifier, blob) -> (Result_4);
+   buy_tx: (TransactionId, opt SubAccount) -> (Result_4);
    claim: (AccountIdentifier, opt SubAccount, TokenIdentifier) -> (Result_3);
    icp_balance: () -> (Result_2);
    icp_transfer: (AccountIdentifier, Balance) -> (Result_1);
@@ -61,6 +66,7 @@ type CanisterRange =
    CanisterSlot;
    CanisterSlot;
  };
+type Basket = vec opt TokenIdentifier;
 type Balance = nat64;
 type AccountRecordSerialized = record {tokens: vec TokenIdentifier;};
 type AccountIdentifier = blob;

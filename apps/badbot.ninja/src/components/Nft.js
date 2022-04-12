@@ -45,6 +45,12 @@ export function NftSingle({ id }) {
 
 export function NftThumb({ nft }) {
   let [id, quality, name, lore, attributes, tags] = nft;
+  attributes = [
+    ["attack", 30],
+    ["defence", 100],
+    ["harvest", 40],
+    ["airdrops", 40],
+  ];
   const map = useAnvilSelector((state) => state.user.map);
   if (!map.history) return null;
   let url = tokenUrl(map.space, id, "thumb");
