@@ -1,9 +1,22 @@
 import React, { useEffect, useState, useRef } from "react";
 import ReactDOM from "react-dom";
-import { useAnvilDispatch } from "@vvv-interactive/nftanvil-react";
+import {
+  useAnvilDispatch,
+  user_refresh_balances,
+} from "@vvv-interactive/nftanvil-react";
 import { NftThumb } from "./Nft";
 
-import { buy, claim, get_mine, airdrop_use, stats } from "../actions/purchase";
+import {
+  buy,
+  claim,
+  get_mine,
+  airdrop_use,
+  stats,
+  provide_tx,
+  msg,
+} from "../actions/purchase";
+import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import Confetti from "./Confetti.js";
 import { ButtonModal } from "./Tools.js";
 import nfts from "../nfts.json";
 
@@ -17,6 +30,7 @@ function Basket({ ids, onClose }) {
   return (
     <div className="basket">
       <div className="inner">
+        <Confetti />
         <div className="title">Congratulations!</div>
         <div className="subtitle">You just got {ids.length} NFTs</div>
         <div className="actions">
@@ -35,7 +49,7 @@ function Basket({ ids, onClose }) {
   );
 }
 
-function BuyButton({ price, className }) {
+function BuyButton({ price, className, refreshMine }) {
   const [confirm, setConfirm] = React.useState(false);
   const dispatch = useAnvilDispatch();
   const [working, setWorking] = React.useState(false);
@@ -55,12 +69,26 @@ function BuyButton({ price, className }) {
           if (!confirm) setConfirm(true);
           else {
             setWorking(true);
-
-            let basket = await dispatch(buy(price));
+            let basket = false;
+            try {
+              basket = await dispatch(buy(price));
+            } catch (e) {
+              dispatch(msg(e.message));
+              setWorking(false);
+              setConfirm(false);
+              return;
+            }
 
             setBasket(basket);
             setWorking(false);
             setConfirm(false);
+
+            // we don't need these immediately
+
+            dispatch(user_refresh_balances());
+
+            await dispatch(claim());
+            refreshMine();
           }
         }}
       >
@@ -90,47 +118,70 @@ function BuyButton({ price, className }) {
   );
 }
 
-export function PriceOptions() {
+export function PriceOptions({ refreshMine }) {
   const dispatch = useAnvilDispatch();
   const codeInput = useRef(null);
+
+  const price_1 = 29940120;
+  const price_2 = 479041916;
+  const price_3 = 134730539;
+
+  const showPrice = (x) => {
+    let p = (Math.round(AccountIdentifier.e8sToIcp(x) * 100) / 100)
+      .toString()
+      .split(/[\.\,]/);
+
+    return (
+      <span>
+        {p[0]}
+        <b>.{p[1]} ICP</b>
+      </span>
+    );
+  };
 
   return (
     <div>
       <div className="priceOptions">
         <div className="priceBox">
           <div className="title">Shot</div>
-          <div className="price">
-            0<b>,27 ICP</b>
-          </div>
+          <div className="price">{showPrice(price_1)}</div>
           <div className="ftrs">
             <div className="feature">1 NFT</div>
           </div>
-          <BuyButton className="attention" price={60000} />
+          <BuyButton
+            className="attention"
+            price={29940120}
+            refreshMine={refreshMine}
+          />
         </div>
 
         <div className="priceBox attention">
           <div className="title">BFF</div>
-          <div className="price">
-            3<b>,37 ICP</b>
-          </div>
+          <div className="price">{showPrice(price_2)}</div>
           <div className="ftrs">
             <div className="feature">20 NFTs</div>
             <div className="feature">20% discount</div>
           </div>
 
-          <BuyButton className="attention" price={80000} />
+          <BuyButton
+            className="attention"
+            price={479041916}
+            refreshMine={refreshMine}
+          />
         </div>
 
         <div className="priceBox">
           <div className="title">Splash</div>
-          <div className="price">
-            1<b>,17 ICP</b>
-          </div>
+          <div className="price">{showPrice(price_3)}</div>
           <div className="ftrs">
             <div className="feature">5 NFTs</div>
             <div className="feature">10% discount</div>
           </div>
-          <BuyButton className="attention" price={70000} />
+          <BuyButton
+            className="attention"
+            price={134730539}
+            refreshMine={refreshMine}
+          />
         </div>
       </div>
       <div className="airdropOptions">

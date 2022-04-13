@@ -296,7 +296,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
             if (caller_aid != from) return #err("Unauthorized");
             switch(switch(amount) {
               // pricing option one (its written verbose because different packages may give more things differently)
-              case (60000) {
+              case (29940120) {
                 switch(use(tx_id)) {
                   case (#ok()) {
                     switch(give(from, 1, #buy)) { //send 2 nfts to user
@@ -312,7 +312,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
               };
               // pricing option two
-              case (70000) {
+              case (134730539) {
                 switch(use(tx_id)) {
                   case (#ok()) {
                     switch(give(from, 5, #buy)) {
@@ -328,7 +328,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
               };
               // pricing option three
-              case (80000) {
+              case (479041916) {
                 switch(use(tx_id)) {
                   case (#ok()) {
                     switch(give(from, 20, #buy)) { 
@@ -461,7 +461,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
     let res = await Cluster.pwrFromAid(anvil.conf, scriptAccount).balance({user = #address(scriptAccount)});
 
-    #ok(res.pwr)
+    #ok(res.pwr);
   };
 
   // transfer icp from script address to destination (admin only)

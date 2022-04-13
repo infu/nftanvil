@@ -26,9 +26,19 @@ import { Principal } from "@dfinity/principal";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 
-import { buy, claim, get_mine, airdrop_use, stats } from "./actions/purchase";
+import {
+  buy,
+  claim,
+  get_mine,
+  airdrop_use,
+  stats,
+  unprocessed_tx,
+} from "./actions/purchase";
 import { ButtonModal } from "./components/Tools.js";
 import { PriceOptions, ProgressBar } from "./components/Ito.js";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import logo from "./logo.svg";
 import bbn_logo from "./assets/bbn_logo.png";
 
@@ -105,12 +115,25 @@ function App() {
     setMine(await dispatch(get_mine()));
   };
 
+  const unprocessed = async () => {
+    // Unprocessed transactions are stored and this will try to use them in case user quit in the middle of it
+    for (let j = 0; j < 10; j++) {
+      let re = await dispatch(unprocessed_tx());
+
+      if (re === false) break;
+    }
+    load();
+  };
+
   useEffect(() => {
     if (loaded && logged) {
       dispatch(claim()).catch((e) => {});
+
       // in case something went wrong, on refresh this will claim purchased nfts
       load();
       dispatch(stats());
+
+      unprocessed();
     }
   }, [loaded, logged, dispatch]);
 
@@ -122,12 +145,17 @@ function App() {
       <h1 className="Title">Bad Bot Ninja</h1>
       <About />
       <User />
-      <PriceOptions />
+      <PriceOptions
+        refreshMine={() => {
+          load();
+        }}
+      />
       <ProgressBar />
       <br />
       <br />
       <br />
       <Collection nfts={nfts} mine={mine} />
+      <ToastContainer theme="dark" />
     </div>
   );
 }

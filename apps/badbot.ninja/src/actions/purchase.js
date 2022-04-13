@@ -14,12 +14,31 @@ import { base58ToBytes } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import { Principal } from "@dfinity/principal";
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
+
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
+import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
+
 import { createSlice } from "@reduxjs/toolkit";
 import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
 import { produce } from "immer";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+import { toast } from "react-toastify";
+
+export const msg =
+  (msg, type = toast.TYPE.INFO) =>
+  async (dispatch, getState) => {
+    let toastId = toast(msg, {
+      type,
+      position: "bottom-center",
+      isLoading: false,
+      autoClose: true,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+  };
 
 export const stats = () => async (dispatch, getState) => {
   let ito = createItoActor({
@@ -27,7 +46,7 @@ export const stats = () => async (dispatch, getState) => {
   });
 
   let stats = await ito.stats();
-  console.log(stats);
+  //console.log(stats);
   return stats;
 };
 
@@ -52,15 +71,33 @@ export const airdrop_use = (key) => async (dispatch, getState) => {
   dispatch(claim());
 };
 
+const getStoredTx = () => {
+  let rez;
+  try {
+    rez = JSON.parse(window.localStorage.getItem("unprocessed-tx")) || [];
+  } catch (e) {
+    rez = [];
+  }
+
+  return rez;
+};
+
+const saveStoredTx = (s) =>
+  window.localStorage.setItem("unprocessed-tx", JSON.stringify(s));
+
+const addStoredTx = (tx) => saveStoredTx([...getStoredTx(), tx]);
+
+const remStoredTx = (tx) => saveStoredTx(getStoredTx().filter((a) => a !== tx));
+
+export const unprocessed_tx = () => async (dispatch, getState) => {
+  let ids = getStoredTx();
+  if (!ids.length) return false;
+
+  dispatch(msg("Processing interrupted transaction"));
+  return dispatch(provide_tx(TransactionId.fromText(ids[0])));
+};
+
 export const buy = (amount) => async (dispatch, getState) => {
-  const s = getState();
-
-  let address = AccountIdentifier.TextToArray(s.user.address);
-
-  let subaccount = [
-    AccountIdentifier.TextToArray(s.user.subaccount) || null,
-  ].filter(Boolean);
-
   let destination = principalToAccountIdentifier(
     process.env.REACT_APP_ITO_CANISTER_ID
   );
@@ -70,13 +107,22 @@ export const buy = (amount) => async (dispatch, getState) => {
     user_pwr_transfer({ to: destination, amount, memo: [] })
   );
 
-  // TODO: put it inside memory in case user closes window
-
-  console.log("user_pwr_transfer", dres);
-
-  if ("err" in dres) throw dres.err;
+  if ("err" in dres) throw new Error(dres.err);
 
   let txid = dres.ok.transactionId;
+
+  addStoredTx(TransactionId.toText(txid));
+  return dispatch(provide_tx(txid));
+};
+
+export const provide_tx = (txid) => async (dispatch, getState) => {
+  const s = getState();
+
+  let address = AccountIdentifier.TextToArray(s.user.address);
+
+  let subaccount = [
+    AccountIdentifier.TextToArray(s.user.subaccount) || null,
+  ].filter(Boolean);
 
   let ito = createItoActor({
     agentOptions: authentication.getAgentOptions(),
@@ -86,14 +132,14 @@ export const buy = (amount) => async (dispatch, getState) => {
     // send tx_id to our custom ito.mo contract
     let brez = await ito.buy_tx(txid, subaccount);
 
-    console.log("buy_tx", brez);
+    if ("err" in brez) {
+      if (brez.err.match("already used")) {
+        remStoredTx(TransactionId.toText(txid));
+      }
+      throw new Error(brez.err);
+    }
 
-    setTimeout(() => {
-      dispatch(user_refresh_balances());
-      dispatch(claim());
-    }, 100);
-
-    if ("err" in brez) throw new Error(brez.err);
+    remStoredTx(TransactionId.toText(txid));
 
     return brez.ok.map((x) => Number(x));
   };
@@ -130,15 +176,13 @@ export const claim = () => async (dispatch, getState) => {
 
   let tokens = owned.ok.tokens.filter(Boolean);
 
-  console.log("Claiming", tokens);
+  if (tokens.length > 0) dispatch(msg("Claiming " + tokens.length + " nfts"));
 
   let claimed = await Promise.all(
     tokens.map((tid) => {
       return ito.claim(address, subaccount, tid);
     })
   );
-
-  console.log(tokens, claimed);
 };
 
 export const get_mine = () => async (dispatch, getState) => {
