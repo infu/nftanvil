@@ -55,10 +55,6 @@ export const airdrop_use = (key) => async (dispatch, getState) => {
 
   let address = AccountIdentifier.TextToArray(s.user.address);
 
-  let subaccount = [
-    AccountIdentifier.TextToArray(s.user.subaccount) || null,
-  ].filter(Boolean);
-
   let ito = createItoActor({
     agentOptions: authentication.getAgentOptions(),
   });
@@ -66,9 +62,9 @@ export const airdrop_use = (key) => async (dispatch, getState) => {
   let brez = await ito.airdrop_use(address, base58ToBytes(key));
 
   console.log("airdrop_use", brez);
+  if ("err" in brez) throw new Error(brez.err);
 
-  dispatch(user_refresh_balances());
-  dispatch(claim());
+  return brez.ok.map((x) => Number(x));
 };
 
 const getStoredTx = () => {

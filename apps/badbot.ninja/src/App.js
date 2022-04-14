@@ -131,13 +131,11 @@ function App() {
 
       // in case something went wrong, on refresh this will claim purchased nfts
       load();
-      dispatch(stats());
-
       unprocessed();
     }
   }, [loaded, logged, dispatch]);
 
-  // if (!loaded) return null;
+  if (!loaded) return null;
 
   return (
     <div className="App">

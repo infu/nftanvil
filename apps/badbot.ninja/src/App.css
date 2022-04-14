@@ -178,7 +178,8 @@ button {
   border-radius: 4px;
   font-weight: bold;
   cursor: pointer;
-  margin-left: 8px;
+  margin-left: 4px;
+  margin-right: 4px;
   position: relative;
   transition-duration: 0.4s;
   overflow: hidden;
@@ -234,6 +235,7 @@ select {
   margin-bottom: 20px;
 }
 .priceBox {
+  width: 15%;
   flex-grow: 1;
   vertical-align: top;
   border: 2px solid #1be274;
@@ -242,6 +244,12 @@ select {
   padding: 16px 16px 65px 16px;
   position: relative;
 }
+.priceBox.working {
+  pointer-events: none;
+  opacity: 0.5;
+  background-color: #3c414a;
+}
+
 .feature {
   font-size: 16px;
   margin-top: 4px;
@@ -400,4 +408,84 @@ label {
 .basket .actions {
   text-align: center;
   padding-bottom: 16px;
+}
+
+.lds-ellipsis {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.spin-center {
+  position: absolute;
+  zoom: 3;
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+  width: 100%;
+  height: 100%;
+}
+.spin-center .lds-ellipsis {
+  left: 50%;
+  top: 50%;
+  display: block;
+  margin-left: -40px;
+  margin-top: -40px;
+}
+
+.lds-ellipsis div {
+  position: absolute;
+  top: 33px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+.lds-ellipsis div:nth-child(1) {
+  left: 8px;
+  animation: lds-ellipsis1 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(2) {
+  left: 8px;
+  animation: lds-ellipsis2 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(3) {
+  left: 32px;
+  animation: lds-ellipsis2 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(4) {
+  left: 56px;
+  animation: lds-ellipsis3 0.6s infinite;
+}
+@keyframes lds-ellipsis1 {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes lds-ellipsis3 {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+@keyframes lds-ellipsis2 {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(24px, 0);
+  }
+}
+
+.requiresLogin {
+  opacity: 0.4;
+  pointer-events: none;
 }

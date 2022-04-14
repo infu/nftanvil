@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import ReactDOM from "react-dom";
 import {
+  useAnvilSelector,
   useAnvilDispatch,
   user_refresh_balances,
 } from "@vvv-interactive/nftanvil-react";
@@ -49,13 +50,10 @@ function Basket({ ids, onClose }) {
   );
 }
 
-function BuyButton({ price, className, refreshMine }) {
+function BuyButton({ price, className, refreshMine, onBuy }) {
   const [confirm, setConfirm] = React.useState(false);
   const dispatch = useAnvilDispatch();
-  const [working, setWorking] = React.useState(false);
-  const [basket, setBasket] = React.useState(false);
 
-  if (working) return <div className="buybutton">Purchasing...</div>;
   return (
     <div className="buybutton">
       {confirm ? (
@@ -68,27 +66,8 @@ function BuyButton({ price, className, refreshMine }) {
         onClick={async () => {
           if (!confirm) setConfirm(true);
           else {
-            setWorking(true);
-            let basket = false;
-            try {
-              basket = await dispatch(buy(price));
-            } catch (e) {
-              dispatch(msg(e.message));
-              setWorking(false);
-              setConfirm(false);
-              return;
-            }
-
-            setBasket(basket);
-            setWorking(false);
             setConfirm(false);
-
-            // we don't need these immediately
-
-            dispatch(user_refresh_balances());
-
-            await dispatch(claim());
-            refreshMine();
+            await onBuy(price);
           }
         }}
       >
@@ -103,24 +82,16 @@ function BuyButton({ price, className, refreshMine }) {
           No
         </button>
       ) : null}
-      {basket
-        ? ReactDOM.createPortal(
-            <Basket
-              ids={basket}
-              onClose={() => {
-                setBasket(false);
-              }}
-            />,
-            document.body
-          )
-        : null}
     </div>
   );
 }
 
 export function PriceOptions({ refreshMine }) {
   const dispatch = useAnvilDispatch();
+  const [working, setWorking] = React.useState(false);
+  const [basket, setBasket] = React.useState(false);
   const codeInput = useRef(null);
+  const logged = useAnvilSelector((state) => state.user.address);
 
   const price_1 = 29940120;
   const price_2 = 479041916;
@@ -139,23 +110,63 @@ export function PriceOptions({ refreshMine }) {
     );
   };
 
+  const onBuy = async (price) => {
+    setWorking(true);
+    let basket = false;
+    try {
+      basket = await dispatch(buy(price));
+    } catch (e) {
+      dispatch(msg(e.message));
+      setWorking(false);
+      return;
+    }
+
+    setBasket(basket);
+    setWorking(false);
+
+    dispatch(user_refresh_balances());
+    await dispatch(claim());
+    refreshMine();
+  };
+
+  const onAirdrop = async (code) => {
+    setWorking(true);
+    let basket = false;
+    try {
+      basket = await dispatch(airdrop_use(code));
+    } catch (e) {
+      dispatch(msg(e.message));
+      setWorking(false);
+      return;
+    }
+
+    setBasket(basket);
+    setWorking(false);
+
+    dispatch(user_refresh_balances());
+    await dispatch(claim());
+    refreshMine();
+  };
+
   return (
-    <div>
+    <div className={!logged ? "requiresLogin" : ""}>
       <div className="priceOptions">
-        <div className="priceBox">
+        <div className={"priceBox " + (working ? "working" : "")}>
           <div className="title">Shot</div>
           <div className="price">{showPrice(price_1)}</div>
           <div className="ftrs">
             <div className="feature">1 NFT</div>
           </div>
           <BuyButton
+            onBuy={onBuy}
             className="attention"
             price={29940120}
             refreshMine={refreshMine}
           />
         </div>
 
-        <div className="priceBox attention">
+        <div className={"priceBox attention " + (working ? "working" : "")}>
+          {working ? <CenterSpinner /> : null}
           <div className="title">BFF</div>
           <div className="price">{showPrice(price_2)}</div>
           <div className="ftrs">
@@ -164,13 +175,14 @@ export function PriceOptions({ refreshMine }) {
           </div>
 
           <BuyButton
+            onBuy={onBuy}
             className="attention"
             price={479041916}
             refreshMine={refreshMine}
           />
         </div>
 
-        <div className="priceBox">
+        <div className={"priceBox " + (working ? "working" : "")}>
           <div className="title">Splash</div>
           <div className="price">{showPrice(price_3)}</div>
           <div className="ftrs">
@@ -178,6 +190,7 @@ export function PriceOptions({ refreshMine }) {
             <div className="feature">10% discount</div>
           </div>
           <BuyButton
+            onBuy={onBuy}
             className="attention"
             price={134730539}
             refreshMine={refreshMine}
@@ -199,7 +212,9 @@ export function PriceOptions({ refreshMine }) {
                 <button
                   className="attention"
                   onClick={() => {
-                    dispatch(airdrop_use(codeInput.current.value));
+                    setVisibility(false);
+                    onAirdrop(codeInput.current.value.trim());
+                    codeInput.current.value = "";
                   }}
                 >
                   Use
@@ -209,6 +224,35 @@ export function PriceOptions({ refreshMine }) {
           )}
         </ButtonModal>
       </div>
+      {basket
+        ? ReactDOM.createPortal(
+            <Basket
+              ids={basket}
+              onClose={() => {
+                setBasket(false);
+              }}
+            />,
+            document.body
+          )
+        : null}
+    </div>
+  );
+}
+
+export function CenterSpinner() {
+  return (
+    <div className="spin-center">
+      <Spinner />
+    </div>
+  );
+}
+export function Spinner() {
+  return (
+    <div className="lds-ellipsis">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
     </div>
   );
 }
@@ -223,6 +267,7 @@ export function ProgressBar() {
   };
 
   useEffect(() => {
+    load();
     const interval = setInterval(() => {
       load();
       setCount(count + 1);

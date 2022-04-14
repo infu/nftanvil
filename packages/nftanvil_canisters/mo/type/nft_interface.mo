@@ -266,7 +266,6 @@ module {
 
     public type Config = {
         router: Principal;
-
         nft: CanisterRange;
         nft_avail: [CanisterSlot];
         account: CanisterRange;
@@ -851,16 +850,7 @@ module {
                 address : AccountIdentifier;
                 share : Share 
                 };
-                
-        // affiliate : ?{  //TODO: this shouldn't be in set price
-        //         address : AccountIdentifier;
-        //         share : Share
-        //         };
-
-        // idx : Nat32;
-        // rechargeStorage : Nat32;
-        // rechargeOps : Nat32;
-    };
+     };
 
     public module Price = {
         public func NotForSale() : Price {
