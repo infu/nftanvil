@@ -21,7 +21,10 @@ src/declarations
 /coverage
 tmp/
 
+# Anvil files
 identity.json
+ito_giftcodes.json
+
 
 # misc
 .DS_Store
