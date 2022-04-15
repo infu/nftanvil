@@ -1,22 +1,8 @@
+//@name=aaa
 module {
-      public type canister_id = Principal;
 
-      public type canister_settings = {
-          freezing_threshold : ?Nat;
-          controllers : ?[Principal];
-          memory_allocation : ?Nat;
-          compute_allocation : ?Nat;
-      };
 
-      public type definite_canister_settings = {
-          freezing_threshold : Nat;
-          controllers : [Principal];
-          memory_allocation : Nat;
-          compute_allocation : Nat;
-      };
-
-      public type wasm_module = [Nat8];
-      
+      //(0🔶 Interface
       public type Interface = actor {
 
           canister_status : shared { canister_id : canister_id } -> async {
@@ -62,5 +48,25 @@ module {
               canister_id : Principal;
               settings : canister_settings;
             } -> async ();
-      }
+      };
+      
+      public type canister_id = Principal;
+
+      public type canister_settings = {
+          freezing_threshold : ?Nat;
+          controllers : ?[Principal];
+          memory_allocation : ?Nat;
+          compute_allocation : ?Nat;
+      };
+
+      public type definite_canister_settings = {
+          freezing_threshold : Nat;
+          controllers : [Principal];
+          memory_allocation : Nat;
+          compute_allocation : Nat;
+      };
+
+      public type wasm_module = [Nat8];
+      
+      //)
 }

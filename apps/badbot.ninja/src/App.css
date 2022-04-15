@@ -489,3 +489,7 @@ label {
   opacity: 0.4;
   pointer-events: none;
 }
+
+.nft-sm .actions {
+  margin-top: 8px;
+}

@@ -1,3 +1,4 @@
+//@name=history
 import Array "mo:base/Array";
 import Base32 "mo:encoding/Base32";
 import Binary "mo:encoding/Binary";
@@ -20,6 +21,7 @@ import Nft "./nft_interface";
 
 module {
 
+    //(0🔶 Interface
     public type Interface = actor {
         // each canister gathers info in a buffer and then sends it to the history canister
         add          : shared AddRequest        -> async AddResponse;
@@ -30,6 +32,23 @@ module {
         // when history canister is full, another one is created
     }; 
 
+    public type ListRequest = {
+        from: EventIndex;
+        to: EventIndex;
+    };
+
+    public type ListResponse = [?Event];
+
+    public type AddRequest = EventInfo;
+    
+
+    public type AddResponse = TransactionId;
+    
+    public type InfoResponse = {
+        total: EventIndex;
+        previous: ?Principal       
+    };
+
     public type AccountIdentifier = Nft.AccountIdentifier;
 
     public type Balance = Nft.Balance;
@@ -37,7 +56,6 @@ module {
     public type ItemUse = Nft.ItemUse;
     public type TokenIdentifier = Nft.TokenIdentifier;
 
-    // moved to nft_interface
     public type Timestamp = Nft.Timestamp;
     public type EventIndex = Nft.EventIndex;
 
@@ -53,23 +71,10 @@ module {
     public type EventInfo = Nft.EventInfo;
     public type Transaction = Nft.Transaction;
     public type Event = Nft.Event;
-    //
-
-    public type ListRequest = {
-        from: EventIndex;
-        to: EventIndex;
-    };
+    //)
 
 
-    public type ListResponse = [?Event];
+   
 
-    public type AddRequest = EventInfo;
-    
-
-    public type AddResponse = TransactionId;
-    
-    public type InfoResponse = {
-        total: EventIndex;
-        previous: ?Principal       
-    }
+   
 }

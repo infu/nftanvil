@@ -1,4 +1,5 @@
 //Ratoko is the better toko
+//@name=nft
 import Array "mo:base/Array";
 import Array_ "mo:array/Array";
 import _Array "../lib/Array";
@@ -29,23 +30,9 @@ import Blob_ "../lib/Blob";
 
 module {
 
-        public type ClaimLink = Blob;
+   
 
-        public type TokenRecord = {
-            var owner : AccountIdentifier;
-            meta : Metadata;
-            vars : Metavars;
-            var link : ?ClaimLink;
-            content : [var ?Blob];
-            var thumb : ?Blob;
-        };
-
-        public type AccountIdentifier = Blob; //32 bytes
-        public type AccountIdentifierShort = Blob; //28bytes
-
-        public type CanisterSlot = Nat64;
-        public type CanisterRange = (CanisterSlot, CanisterSlot);
-
+        //(APrincipal
         public module APrincipal = {
 
             public func fromSlot(space:[[Nat64]], slot: CanisterSlot) : Principal {
@@ -88,6 +75,11 @@ module {
                 return ?idx;
             };
         };
+        //)
+
+        //(AccountIdentifier
+        public type AccountIdentifier = Blob; //32 bytes
+        public type AccountIdentifierShort = Blob; //28bytes
 
         public module AccountIdentifier = {
             private let prefix : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
@@ -180,6 +172,9 @@ module {
                 (fromPrincipal(can, ?subaccount), subaccount);
             };
         };
+        //)
+
+        //(SubAccount
         public type SubAccount = Blob; //32 bytes
 
         public module SubAccount = {
@@ -190,20 +185,21 @@ module {
                     ));
                 };
         };
+        //)
 
-        // Balance refers to an amount of a particular token.
-        public type Balance = Nat64;
 
-        public type Memo = Blob;
+        //(Memo
+        public type Memo = Blob; // 32 bytes max
         public module Memo = {
             public func validate(m : Memo) : Bool {
                  (m.size() <= 32)
             };
         };
+        //)
 
+        //(TokenIdentifier
         public type TokenIdentifier = Nat64;
-        // public type TokenIdentifierBlob = Blob;
-
+    
         public module TokenIdentifier = {
         
             public func encode(slot : CanisterSlot, tokenIndex : TokenIndex) : TokenIdentifier {
@@ -224,9 +220,10 @@ module {
                  return Nat32.fromNat(Nat64.toNat( (x << 32) >> 32 ));
             };
 
-    
         };
+        //)
 
+        //(User
         public type User = {
             #address   : AccountIdentifier;
             #principal : Principal;
@@ -261,8 +258,11 @@ module {
                 };
             };
         };
-    
+    //)
 
+    //(Config
+    public type CanisterSlot = Nat64;
+    public type CanisterRange = (CanisterSlot, CanisterSlot);
 
     public type Config = {
         router: Principal;
@@ -277,6 +277,15 @@ module {
         space:[[Nat64]];
     };
 
+    public type Oracle = {
+        icpCycles : Nat64;
+        icpFee : Nat64; // ICP transfer fee
+        pwrFee : Nat64; 
+        anvFee : Nat64; 
+    };
+    //)
+
+    //(0🔶 Interface
     public type Interface = actor {
 
         // Returns the balance of account.
@@ -300,9 +309,6 @@ module {
         // (PWR proxy call) recharge nft
         recharge : shared (request :  RechargeRequest) -> async  RechargeResponse;
 
-        // get minting price
-        // mint_quote : shared (request : MetadataInput) -> async MintQuoteResponse;
-
         // Returns the amount which the given spender is allowed to withdraw from the given owner.
         allowance : query (request : Allowance.Request) -> async Allowance.Response;
 
@@ -317,9 +323,6 @@ module {
 
         // (iPWR) The hash of two inputs must match the hash stored, then claiming is legitimate
         claim_link  : shared (request: ClaimLinkRequest) -> async ClaimLinkResponse;
-
-        // (no updates) Returns the AccountIdentifier we have to pay ICP to. 
-        // purchase_intent : shared (request:  PurchaseIntentRequest) -> async PurchaseIntentResponse;
 
         // (PWR proxy call) When you buy NFT part of the deal is to refill its PWR to max.
         purchase : shared (request: PurchaseRequest) -> async PurchaseResponse;
@@ -348,55 +351,21 @@ module {
         // (iPWR, internal) Can be called only by another NFT canister trying to unplug NFT
         unplug      : shared (request: UnsocketRequest) -> async UnplugResponse;
     };
+    // Balance refers to an amount of a particular token.
+    public type Balance = Nat64;
 
-    public func OptPrice<A>(v:?A, f: (A) -> Nat64) : Nat64 {
-        switch(v) { case (?z) f(z); case(null) 0 }
-    };
+    public type CustomId = Nat64;
 
-    public func OptValid<A>(v:?A, f: (A) -> Bool) : Bool {
-        switch(v) { case (?z) f(z); case(null) true }
-    };
+    public type ClaimLink = Blob;
 
-    public type CommonError = {
-        #InvalidToken;
-        #Other        : Text;
-    };
-
-
-    // A unique id for a particular token and reflects the canister where the 
-    // token resides as well as the index within the tokens container.
-   
-
-    // Represents an individual token's index within a given canister.
-    public type TokenIndex = Nat16;
-
-    public module TokenIndex = {
-        public func equal(a : TokenIndex, b : TokenIndex) : Bool { a == b; };
-
-        public func hash(a : TokenIndex) : Hash.Hash { Nat32.fromNat(Nat16.toNat(a)); };
-    };
-
-    public type TransactionId = Blob;
-    public type EventIndex = Nat32;
-
-    public module TransactionId = { 
-        public func encode(history_slot: CanisterSlot, idx: EventIndex) : TransactionId { 
-                let raw = Array.flatten<Nat8>([
-                    Blob_.nat64ToBytes(history_slot),
-                    Binary.BigEndian.fromNat32(idx),
-                ]);
-                
-                Blob.fromArray(raw)
+    public type TokenRecord = {
+            var owner : AccountIdentifier;
+            meta : Metadata;
+            vars : Metavars;
+            var link : ?ClaimLink;
+            content : [var ?Blob];
+            var thumb : ?Blob;
         };
-
-        public func decode(tx: TransactionId) : {history_slot: CanisterSlot; idx: EventIndex} { 
-                let (slotArr, idxArr) = Array_.split<Nat8>(Blob.toArray(tx), 8);
-                {
-                    history_slot = Blob_.bytesToNat64(slotArr);
-                    idx = Blob_.bytesToNat32(idxArr);
-                }
-        };
-    };
 
     public type BalanceRequest = {
         user  : User; 
@@ -407,13 +376,6 @@ module {
         Balance,
         CommonError
     >;
-
-    public type Oracle = {
-        icpCycles : Nat64;
-        icpFee : Nat64; // ICP transfer fee
-        pwrFee : Nat64; 
-        anvFee : Nat64; 
-    };
 
     public type BurnRequest = {
         user       : User;
@@ -497,9 +459,298 @@ module {
         }>;
 
 
-    public type CustomId = Nat64;
+
+    public type MetadataResponse = Result.Result<
+        {bearer: AccountIdentifier; data: Metadata; vars:MetavarsFrozen},
+        CommonError
+    >;
+
+    public type SupplyResponse = Result.Result<
+        Balance,
+        CommonError
+    >;
+  
+    public type PlugRequest = {
+        user       : User;
+        subaccount : ?SubAccount;
+        socket : TokenIdentifier;
+        plug   : TokenIdentifier;
+        memo   : Memo;
+    };
+
+    public type PlugResponse = Result.Result<
+        { transactionId: TransactionId}, {
+        #Rejected;
+        #InsufficientBalance;
+        #InvalidToken ;
+        #Unauthorized :AccountIdentifier;
+        #Other : Text;
+        #SocketError: SocketError;
+        #OutOfPower;
+        }
+    >;
+
+    public type SocketRequest = {
+        user       : User;
+        subaccount : ?SubAccount;
+        socket : TokenIdentifier;
+        plug   : TokenIdentifier;
+    };
+
+    public type SocketError = {
+        #Rejected;
+        #InsufficientBalance;
+        #Other : Text;
+        #NotLegitimateCaller;
+        #ClassError : Text;
+        #SocketsFull;
+        #InvalidToken ;
+        #Unauthorized :AccountIdentifier;
+        };
+
+    public type SocketResponse = Result.Result<
+        (), SocketError
+    >;
+
+    public type UnsocketRequest = {
+        user       : User;
+        subaccount : ?SubAccount;
+        socket : TokenIdentifier;
+        plug   : TokenIdentifier;
+        memo   : Memo;
+    };
+
+    public type UnsocketResponse = Result.Result<
+        { transactionId: TransactionId }, {
+        #Rejected;
+        #InsufficientBalance;
+        #InvalidToken ;
+        #Unauthorized :AccountIdentifier;
+        #Other : Text;
+        #UnplugError: UnplugError;
+        #OutOfPower
+        }
+    >;
 
 
+    public type UnplugError = {
+        #Rejected;
+        #InsufficientBalance;
+        #InvalidToken ;
+        #Unauthorized :AccountIdentifier;
+        #Other : Text;
+        #NotLegitimateCaller;
+        };
+
+    public type UnplugResponse = Result.Result<
+        (), UnplugError
+    >;
+
+    public type PurchaseRequest = {
+        token : TokenIdentifier;
+        user : User;
+        subaccount: ?SubAccount;
+        amount: Balance;
+        affiliate : ?{
+                    address : AccountIdentifier;
+                    amount: Balance;
+                    };
+    };
+
+    public type SetPriceRequest = {
+        token : TokenIdentifier;
+        user : User;
+        subaccount: ?SubAccount;
+        price : Price;
+    };
+
+    public type MintQuoteResponse = {
+        transfer : Nat64;
+        ops : Nat64;
+        storage : Nat64;
+    };
+
+    public type SetPriceResponse = Result.Result<
+        {transactionId: TransactionId}, {
+            #InvalidToken ;
+            #TooHigh;
+            #TooLow;
+            #NotTransferable;
+            #InsufficientBalance;
+            #Unauthorized : AccountIdentifier;
+            #Other        : Text;
+            #OutOfPower;
+            #ICE: Text;
+        }
+    >;
+
+
+    public type PurchaseResponse = Result.Result<
+        { transactionId: TransactionId; purchase: NFTPurchase }, {
+            #Refunded;
+            #Rejected;
+            #ErrorWhileRefunding;
+            #NotEnoughToRefund;
+            #InvalidToken;
+            #Unauthorized;
+            #NotForSale;
+            #TreasuryNotifyFailed;
+            #InsufficientBalance;
+            #InsufficientPayment : Balance;
+            #ICE: Text;
+        }
+    >;
+
+    public type BearerResponse = Result.Result<
+        AccountIdentifier, 
+        CommonError
+    >;
+
+    public type UploadChunkRequest =  {
+        subaccount : ?SubAccount;
+        tokenIndex: TokenIndex;
+        position : {#content; #thumb};
+        chunkIdx : Nat32;
+        data : Blob;
+    };
+
+    public type FetchChunkRequest =  {
+        tokenIndex: TokenIndex;
+        position : {#content; #thumb};
+        chunkIdx : Nat32;
+        subaccount : ?SubAccount;
+    };
+
+    public type MintRequest = {
+        user         : User;
+        subaccount : ?SubAccount;
+        metadata : MetadataInput;
+    };
+
+    public type MintResponse = Result.Result<
+        {tokenIndex: TokenIndex; transactionId: TransactionId}, {
+        #Rejected;
+        #InsufficientBalance;
+        #ClassError: Text;
+        #Invalid: Text;
+        #OutOfMemory;
+        #Unauthorized;
+        #ICE: Text;
+        #Pwr: TransferResponseError
+        }
+    >;
+
+    public type MintBatchResponse = Result.Result<
+        [TokenIndex],
+        CommonError
+    >;
+
+    public type RechargeRequest = {
+        token : TokenIdentifier;
+        user : User;
+        subaccount: ?SubAccount;
+        amount: Balance;
+    };
+
+    public type RechargeResponse = Result.Result<
+        (), {
+            #Rejected;
+            #InvalidToken ;
+            #InsufficientBalance;
+            #RechargeUnnecessary;
+            #Unauthorized;
+            #InsufficientPayment : Balance;
+        }
+    >;
+
+    public type PWRConsumeResponse = Bool;
+
+
+    public type NFTPurchase = {
+                created : Time.Time;
+                amount : Balance;
+
+                token: TokenIdentifier;
+                
+                buyer : AccountIdentifier;
+                seller : AccountIdentifier;
+                recharge : Balance;
+                author : {
+                    address : AccountIdentifier;
+                    share : Share
+                    };
+
+                marketplace : ?{
+                    address : AccountIdentifier;
+                    share : Share
+                    }; 
+
+                affiliate : ?{
+                    address : AccountIdentifier;
+                    amount : Balance
+                    };
+        };
+        
+    public module Allowance = {
+        public type Request = {
+            owner   : User;
+            spender : Principal;
+            token   : TokenIdentifier;
+        };
+
+        public type Response = Result.Result<
+            Balance,
+            CommonError
+        >;
+
+        public type ApproveRequest = {
+            subaccount : ?SubAccount;
+            spender    : Principal;
+            allowance  : Balance;
+            token      : TokenIdentifier;
+        };
+
+        public type ApproveResponse = Result.Result<
+            {transactionId: TransactionId},
+            {
+            #Other        : Text;
+            #InvalidToken;
+            #Unauthorized : AccountIdentifier;
+            #InsufficientBalance;
+            #OutOfPower;
+            #ICE : Text;
+            }
+        >;
+
+    };
+
+    public type CommonError = {
+        #InvalidToken;
+        #Other        : Text;
+    };
+
+    //)
+
+
+
+  
+
+
+   
+    //(TokenIndex
+    // Represents an individual token's index within a given canister.
+    public type TokenIndex = Nat16;
+
+    public module TokenIndex = {
+        public func equal(a : TokenIndex, b : TokenIndex) : Bool { a == b; };
+
+        public func hash(a : TokenIndex) : Hash.Hash { Nat32.fromNat(Nat16.toNat(a)); };
+    };
+    //)
+
+   
+
+    //(Content
     public type Chunks = [Nat32];
     public module Chunks = {
         public let MAX_CONTENT_CHUNKS:Nat32 = 2;
@@ -516,7 +767,7 @@ module {
                 case (?x) true;
                 case (null) false;
             }
-        } 
+        }
     };
 
     public type IPFS_CID = Text;
@@ -567,6 +818,137 @@ module {
                        0
                 };
             }
+        };
+    };
+    //)
+
+    
+
+    //(Metadata
+    public type Metadata = {
+
+        domain: ?DomainName;
+        name: ?ItemName;
+        lore: ?ItemLore;
+        quality: Quality;
+        transfer: ItemTransfer;
+        author: AccountIdentifier;
+        authorShare: Share; // min 0 ; max 10000 - which is 100%
+        content: ?Content;
+        thumb: Content; // may overwrite class
+        entropy: Blob;
+        created: Nat32; // in minutes
+        attributes: Attributes;
+        tags:Tags;
+        custom: ?CustomData;
+        secret: Bool;
+        rechargeable: Bool;
+
+        // Idea: Have maturity rating
+    };
+
+
+    public type CustomData = Blob;
+    public module CustomData = {
+        public func validate(t : CustomData) : Bool {
+            t.size() <= 1024 * 50 // 50 kb 
+        };
+        public func price (t: CustomData) : Nat64 {
+            (Nat64.fromNat(t.size()) / 1024) * Pricing.STORAGE_KB_PER_MIN 
+        };
+    };
+
+    public type CustomVar = Blob; // 32bytes / 256bit
+
+    public type MetadataInput = {
+        domain: ?DomainName;
+        name: ?Text;
+        lore: ?Text;
+        quality: Quality;
+        secret: Bool; // maybe bitmap instead
+        transfer: ItemTransfer;
+        ttl: ?Nat32;
+        content: ?Content;
+        thumb: Content;
+        attributes: Attributes;
+        tags: Tags;
+        custom: ?CustomData;
+        customVar: ?CustomVar;
+        authorShare: Share;
+        price: Price;
+        rechargeable: Bool;
+    };
+
+    public module MetadataInput = {
+        public func validate(m : MetadataInput) : Bool {
+            OptValid(m.name, ItemName.validate)
+            and OptValid(m.lore, ItemLore.validate)
+            and OptValid(m.content, Content.validate)
+            and Content.validate(m.thumb)
+            and Attributes.validate(m.attributes)
+            and Quality.validate(m.quality)
+            and Tags.validate(m.tags)
+            and OptValid(m.custom, CustomData.validate)
+        };
+        
+        public func priceStorage({custom;content;thumb;quality;ttl}: MetadataInput) : Nat64 {
+          Pricing.priceStorage({custom;content;thumb;quality;ttl})
+           
+        };
+
+        public func priceOps({ttl}: MetadataInput) : Nat64 {
+          Pricing.priceOps({ttl})
+        };
+    };
+
+    public type Metavars = {
+        var boundUntil: ?Nat32; // in minutes
+        var cooldownUntil: ?Nat32; // in minutes
+        var sockets: Sockets;
+        var price: Price;
+        var pwrStorage : Nat64;
+        var pwrOps : Nat64;
+        var ttl : ?Nat32; // time to live
+        var history : [Blob];
+        var allowance : ?Principal;
+        var customVar : ?CustomVar; //256bit / 32bytes
+        var lastTransfer : Nat32; // in minutes 
+    };
+
+    public type MetavarsFrozen = {
+            boundUntil: ?Nat32; 
+            cooldownUntil: ?Nat32; 
+            sockets: Sockets;
+            price: Price;
+            pwrStorage: Nat64;
+            pwrOps: Nat64;
+            ttl: ?Nat32;
+            history : [Blob];
+            allowance: ?Principal;
+    };
+
+    public func MetavarsFreeze(a:Metavars) : MetavarsFrozen {
+        {
+            boundUntil= a.boundUntil; 
+            cooldownUntil= a.cooldownUntil; 
+            sockets= a.sockets; 
+            price = a.price;
+            pwrStorage = a.pwrStorage;
+            pwrOps = a.pwrOps;
+            ttl = a.ttl;
+            history = a.history;
+            allowance = a.allowance;
+        }
+    };
+    public type Quality = Nat8;
+    public module Quality = {
+
+        public func validate(t : Quality) : Bool {
+            t <= 6; // Poor, Common, Uncommon, Rare, Epic, Legendary, Artifact
+        };
+
+        public func price(t: Quality) : Nat64 {
+            Nat64.fromNat(Nat.pow(Nat8.toNat(t), 3)) * Pricing.QUALITY_PRICE
         };
     };
 
@@ -699,6 +1081,7 @@ module {
             t.size() <= 256 
         }
     };
+
     public type Share = Nat16;
     public module Share = {
         public let NFTAnvilShare:Nat = 50; // 0.5%
@@ -726,62 +1109,10 @@ module {
             t.size() < 255;
         };
     };
-
-    public type Metadata = {
-
-        domain: ?DomainName;
-        name: ?ItemName;
-        lore: ?ItemLore;
-        quality: Quality;
-        transfer: ItemTransfer;
-        author: AccountIdentifier;
-        authorShare: Share; // min 0 ; max 10000 - which is 100%
-        content: ?Content;
-        thumb: Content; // may overwrite class
-        entropy: Blob;
-        created: Nat32; // in minutes
-        attributes: Attributes;
-        tags:Tags;
-        custom: ?CustomData;
-        secret: Bool;
-        rechargeable: Bool;
-
-        // Idea: Have maturity rating
-    };
+    //)
 
 
-    public type CustomData = Blob;
-    public module CustomData = {
-        public func validate(t : CustomData) : Bool {
-            t.size() <= 1024 * 50 // 50 kb 
-        };
-        public func price (t: CustomData) : Nat64 {
-            (Nat64.fromNat(t.size()) / 1024) * Pricing.STORAGE_KB_PER_MIN 
-        };
-    };
-
-    public type CustomVar = Blob; // 32bytes / 256bit
-
-    public type MetadataInput = {
-        // collectionId: ?CollectionId;
-        domain: ?DomainName;
-        name: ?Text;
-        lore: ?Text;
-        quality: Quality;
-        secret: Bool; // maybe bitmap instead
-        transfer: ItemTransfer;
-        ttl: ?Nat32;
-        content: ?Content;
-        thumb: Content;
-        attributes: Attributes;
-        tags: Tags;
-        custom: ?CustomData;
-        customVar: ?CustomVar;
-        authorShare: Share;
-        price: Price;
-        rechargeable: Bool;
-    };
-
+    //(Pricing
     public module Pricing = {
         // WARNING: Has to mirror calculations in pricing.js
         public let QUALITY_PRICE : Nat64 = 1000; // max quality price per min
@@ -831,19 +1162,14 @@ module {
 
     };
 
-    public type Quality = Nat8;
-    public module Quality = {
-
-        public func validate(t : Quality) : Bool {
-            t <= 6; // Poor, Common, Uncommon, Rare, Epic, Legendary, Artifact
-        };
-
-        public func price(t: Quality) : Nat64 {
-            Nat64.fromNat(Nat.pow(Nat8.toNat(t), 3)) * Pricing.QUALITY_PRICE
-        };
+    public func OptPrice<A>(v:?A, f: (A) -> Nat64) : Nat64 {
+        switch(v) { case (?z) f(z); case(null) 0 }
     };
 
- 
+    public func OptValid<A>(v:?A, f: (A) -> Bool) : Bool {
+        switch(v) { case (?z) f(z); case(null) true }
+    };
+
     public type Price = {
         amount : Nat64;
         marketplace : ?{
@@ -878,337 +1204,34 @@ module {
                 )
         };
     };
- 
-    public module MetadataInput = {
-        public func validate(m : MetadataInput) : Bool {
-            OptValid(m.name, ItemName.validate)
-            and OptValid(m.lore, ItemLore.validate)
-            and OptValid(m.content, Content.validate)
-            and Content.validate(m.thumb)
-            and Attributes.validate(m.attributes)
-            and Quality.validate(m.quality)
-            and Tags.validate(m.tags)
-            and OptValid(m.custom, CustomData.validate)
-        };
-        
-        public func priceStorage({custom;content;thumb;quality;ttl}: MetadataInput) : Nat64 {
-          Pricing.priceStorage({custom;content;thumb;quality;ttl})
-           
-        };
-
-        public func priceOps({ttl}: MetadataInput) : Nat64 {
-          Pricing.priceOps({ttl})
-        };
-    };
-
-    public type Metavars = {
-        var boundUntil: ?Nat32; // in minutes
-        var cooldownUntil: ?Nat32; // in minutes
-        var sockets: Sockets;
-        var price: Price;
-        var pwrStorage : Nat64;
-        var pwrOps : Nat64;
-        var ttl : ?Nat32; // time to live
-        var history : [Blob];
-        var allowance : ?Principal;
-        var customVar : ?CustomVar; //256bit / 32bytes
-        var lastTransfer : Nat32; // in minutes 
-    };
-
-    public type MetavarsFrozen = {
-            boundUntil: ?Nat32; 
-            cooldownUntil: ?Nat32; 
-            sockets: Sockets;
-            price: Price;
-            pwrStorage: Nat64;
-            pwrOps: Nat64;
-            ttl: ?Nat32;
-            history : [Blob];
-            allowance: ?Principal;
-    };
-
-    public func MetavarsFreeze(a:Metavars) : MetavarsFrozen {
-        {
-            boundUntil= a.boundUntil; 
-            cooldownUntil= a.cooldownUntil; 
-            sockets= a.sockets; 
-            price = a.price;
-            pwrStorage = a.pwrStorage;
-            pwrOps = a.pwrOps;
-            ttl = a.ttl;
-            history = a.history;
-            allowance = a.allowance;
-        }
-    };
-
-    public type MetadataResponse = Result.Result<
-        {bearer: AccountIdentifier; data: Metadata; vars:MetavarsFrozen},
-        CommonError
-    >;
-
-    public type SupplyResponse = Result.Result<
-        Balance,
-        CommonError
-    >;
-  
-   public type PlugRequest = {
-        user       : User;
-        subaccount : ?SubAccount;
-        socket : TokenIdentifier;
-        plug   : TokenIdentifier;
-        memo   : Memo;
-    };
-
-    public type PlugResponse = Result.Result<
-        { transactionId: TransactionId}, {
-        #Rejected;
-        #InsufficientBalance;
-        #InvalidToken ;
-        #Unauthorized :AccountIdentifier;
-        #Other : Text;
-        #SocketError: SocketError;
-        #OutOfPower;
-        }
-    >;
-
-    public type SocketRequest = {
-        user       : User;
-        subaccount : ?SubAccount;
-        socket : TokenIdentifier;
-        plug   : TokenIdentifier;
-    };
-
-    public type SocketError = {
-        #Rejected;
-        #InsufficientBalance;
-        #Other : Text;
-        #NotLegitimateCaller;
-        #ClassError : Text;
-        #SocketsFull;
-        #InvalidToken ;
-        #Unauthorized :AccountIdentifier;
-        };
-
-    public type SocketResponse = Result.Result<
-        (), SocketError
-    >;
-
-    public type UnsocketRequest = {
-        user       : User;
-        subaccount : ?SubAccount;
-        socket : TokenIdentifier;
-        plug   : TokenIdentifier;
-        memo   : Memo;
-    };
-
-    public type UnsocketResponse = Result.Result<
-        { transactionId: TransactionId }, {
-        #Rejected;
-        #InsufficientBalance;
-        #InvalidToken ;
-        #Unauthorized :AccountIdentifier;
-        #Other : Text;
-        #UnplugError: UnplugError;
-        #OutOfPower
-        }
-    >;
+    //)
 
 
-    public type UnplugError = {
-        #Rejected;
-        #InsufficientBalance;
-        #InvalidToken ;
-        #Unauthorized :AccountIdentifier;
-        #Other : Text;
-        #NotLegitimateCaller;
-        };
+    //(History
 
-    public type UnplugResponse = Result.Result<
-        (), UnplugError
-    >;
+    public type TransactionId = Blob;
+    public type EventIndex = Nat32;
 
-    public type PurchaseRequest = {
-        token : TokenIdentifier;
-        user : User;
-        subaccount: ?SubAccount;
-        amount: Balance;
-        affiliate : ?{
-                    address : AccountIdentifier;
-                    amount: Balance;
-                    };
-    };
-
-    public type SetPriceRequest = {
-        token : TokenIdentifier;
-        user : User;
-        subaccount: ?SubAccount;
-        price : Price;
-    };
-
-    public type MintQuoteResponse = {
-        transfer : Nat64;
-        ops : Nat64;
-        storage : Nat64;
-    };
-
-    public type SetPriceResponse = Result.Result<
-        {transactionId: TransactionId}, {
-            #InvalidToken ;
-            #TooHigh;
-            #TooLow;
-            #NotTransferable;
-            #InsufficientBalance;
-            #Unauthorized : AccountIdentifier;
-            #Other        : Text;
-            #OutOfPower;
-            #ICE: Text;
-        }
-    >;
-
-
-    public type PurchaseResponse = Result.Result<
-        { transactionId: TransactionId; purchase: NFTPurchase }, {
-            #Refunded;
-            #Rejected;
-            #ErrorWhileRefunding;
-            #NotEnoughToRefund;
-            #InvalidToken;
-            #Unauthorized;
-            #NotForSale;
-            #TreasuryNotifyFailed;
-            #InsufficientBalance;
-            #InsufficientPayment : Balance;
-            #ICE: Text;
-        }
-    >;
-
-  
-
-    public type BearerResponse = Result.Result<
-        AccountIdentifier, 
-        CommonError
-    >;
-
-    public type UploadChunkRequest =  {
-        subaccount : ?SubAccount;
-        tokenIndex: TokenIndex;
-        position : {#content; #thumb};
-        chunkIdx : Nat32;
-        data : Blob;
-    };
-
-    public type FetchChunkRequest =  {
-        tokenIndex: TokenIndex;
-        position : {#content; #thumb};
-        chunkIdx : Nat32;
-        subaccount : ?SubAccount;
-    };
-
-    public type MintRequest = {
-        user         : User;
-        subaccount : ?SubAccount;
-        metadata : MetadataInput;
-    };
-
-    public type MintResponse = Result.Result<
-        {tokenIndex: TokenIndex; transactionId: TransactionId}, {
-        #Rejected;
-        #InsufficientBalance;
-        #ClassError: Text;
-        #Invalid: Text;
-        #OutOfMemory;
-        #Unauthorized;
-        #ICE: Text;
-        #Pwr: TransferResponseError
-        }
-    >;
-
-    public type MintBatchResponse = Result.Result<
-        [TokenIndex],
-        CommonError
-    >;
-
-    public type RechargeRequest = {
-        token : TokenIdentifier;
-        user : User;
-        subaccount: ?SubAccount;
-        amount: Balance;
-    };
-
-    public type RechargeResponse = Result.Result<
-        (), {
-            #Rejected;
-            #InvalidToken ;
-            #InsufficientBalance;
-            #RechargeUnnecessary;
-            #Unauthorized;
-            #InsufficientPayment : Balance;
-        }
-    >;
-
-    public type PWRConsumeResponse = Bool;
-
-
-    public type NFTPurchase = {
-                created : Time.Time;
-                amount : Balance;
-
-                token: TokenIdentifier;
+    public module TransactionId = { 
+        public func encode(history_slot: CanisterSlot, idx: EventIndex) : TransactionId { 
+                let raw = Array.flatten<Nat8>([
+                    Blob_.nat64ToBytes(history_slot),
+                    Binary.BigEndian.fromNat32(idx),
+                ]);
                 
-                buyer : AccountIdentifier;
-                seller : AccountIdentifier;
-                recharge : Balance;
-                author : {
-                    address : AccountIdentifier;
-                    share : Share
-                    };
-
-                marketplace : ?{
-                    address : AccountIdentifier;
-                    share : Share
-                    }; 
-
-                affiliate : ?{
-                    address : AccountIdentifier;
-                    amount : Balance
-                    };
-        };
-        
-    public module Allowance = {
-        public type Request = {
-            owner   : User;
-            spender : Principal;
-            token   : TokenIdentifier;
+                Blob.fromArray(raw)
         };
 
-        public type Response = Result.Result<
-            Balance,
-            CommonError
-        >;
-
-        public type ApproveRequest = {
-            subaccount : ?SubAccount;
-            spender    : Principal;
-            allowance  : Balance;
-            token      : TokenIdentifier;
+        public func decode(tx: TransactionId) : {history_slot: CanisterSlot; idx: EventIndex} { 
+                let (slotArr, idxArr) = Array_.split<Nat8>(Blob.toArray(tx), 8);
+                {
+                    history_slot = Blob_.bytesToNat64(slotArr);
+                    idx = Blob_.bytesToNat32(idxArr);
+                }
         };
-
-        public type ApproveResponse = Result.Result<
-            {transactionId: TransactionId},
-            {
-            #Other        : Text;
-            #InvalidToken;
-            #Unauthorized : AccountIdentifier;
-            #InsufficientBalance;
-            #OutOfPower;
-            #ICE : Text;
-            }
-        >;
-
     };
+  
 
-
-    // from History
     public type Timestamp = Time.Time;
 
     public module EventIndex = {
@@ -1219,8 +1242,6 @@ module {
             return a;
         };
     };
-
-
 
     public type Event = {
         info : EventInfo;
@@ -1256,8 +1277,6 @@ module {
         #withdraw : PwrWithdraw;
         #mint : EventFungibleMint;
     };
-
- 
 
     public type NftEvent = {
   
@@ -1322,7 +1341,6 @@ module {
             plug   : TokenIdentifier;
             memo: Memo;
         };
-
     };
 
 
@@ -1468,7 +1486,7 @@ module {
     };
 
 
-        public module NFTPurchase {
+    public module NFTPurchase {
             public func hash (e : NFTPurchase) : [Nat8] {
                 Array.flatten<Nat8>([
                             [9:Nat8],
@@ -1524,6 +1542,8 @@ module {
         events: [Event]
     };
 
+
+    //)
 
 
 

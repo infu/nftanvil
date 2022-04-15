@@ -43,7 +43,7 @@ export function NftSingle({ id }) {
   );
 }
 
-export function NftThumb({ nft }) {
+export function NftThumb({ nft, owner = false }) {
   let [id, quality, name, lore, attributes, tags] = nft;
   attributes = [
     ["attack", 30],
@@ -59,7 +59,7 @@ export function NftThumb({ nft }) {
   return (
     <div className="nft-sm">
       <div className="nft-img">
-        <img src={url} />
+        <img src={url} alt="nft" />
       </div>
       <div className="nft-info">
         <div className="nft-name" style={{ color: qa.color }}>
@@ -67,6 +67,12 @@ export function NftThumb({ nft }) {
         </div>
         <div className="nft-quality">{qa.label}</div>
         <div className="nft-lore">{lore}</div>
+        {owner ? (
+          <div className="actions">
+            <button>Transfer</button>
+            <button>Sell</button>
+          </div>
+        ) : null}
       </div>
       <div className="nft-attr-box">
         {attributes.map((attr, idx) => (

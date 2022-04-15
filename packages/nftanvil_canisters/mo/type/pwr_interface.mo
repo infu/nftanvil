@@ -1,3 +1,4 @@
+//@name=pwr
 import Array "mo:base/Array";
 import Array_ "mo:array/Array";
 import Base32 "mo:encoding/Base32";
@@ -20,6 +21,8 @@ import Ledger "./ledger_interface";
 import Treasury "./treasury_interface";
 
 module {
+
+    //(0🔶 Interface
     public type Interface = actor {
         balance              : query BalanceRequest         -> async BalanceResponse;
         pwr_transfer         : shared TransferRequest       -> async TransferResponse;
@@ -29,51 +32,6 @@ module {
         pwr_purchase_claim   : shared PurchaseClaimRequest  -> async PurchaseClaimResponse;
         nft_mint             : shared (slot: Nft.CanisterSlot, request: Nft.MintRequest) -> async Nft.MintResponse;
     };
-
-    public type AccountIdentifier = Nft.AccountIdentifier;
-    public type Balance = Nft.Balance;
-    public type User = Nft.User;
-    public type SubAccount = Nft.SubAccount;
-    public type Memo = Nft.Memo;
-
-
-
-    public type AccountRecord = {
-        var pwr : Nat64;
-        var anv : Nat64;
-        };
-
-    public type AccountRecordSerialized = {
-        pwr : Nat64;
-        anv : Nat64;
-    };
-
-    public type AccountResult = {
-        pwr : Nat64;
-        anv : Nat64;
-    };
-
-    public func AccountRecordSerialize(x : AccountRecord) : AccountRecordSerialized {
-        {
-            pwr = x.pwr;
-            anv = x.anv;
-        }
-    };
-
-    public func AccountRecordUnserialize(x:AccountRecordSerialized) : AccountRecord {
-        {
-            var pwr = x.pwr;
-            var anv = x.anv;
-        }
-    };
-
-    public func AccountRecordBlank() : AccountRecord {
-        {
-            var pwr = 0;
-            var anv = 0;
-        }
-    };
-     
 
 
     public type BalanceRequest = {
@@ -123,6 +81,55 @@ module {
 
     public type WithdrawRequest = Treasury.WithdrawRequest;
     public type WithdrawResponse = Treasury.WithdrawResponse;
+
+    public type AccountIdentifier = Nft.AccountIdentifier;
+    public type Balance = Nft.Balance;
+    public type User = Nft.User;
+    public type SubAccount = Nft.SubAccount;
+    public type Memo = Nft.Memo;
+    //)
+
+    
+   
+    public type AccountRecord = {
+        var pwr : Nat64;
+        var anv : Nat64;
+        };
+
+    public type AccountRecordSerialized = {
+        pwr : Nat64;
+        anv : Nat64;
+    };
+
+    public type AccountResult = {
+        pwr : Nat64;
+        anv : Nat64;
+    };
+
+    public func AccountRecordSerialize(x : AccountRecord) : AccountRecordSerialized {
+        {
+            pwr = x.pwr;
+            anv = x.anv;
+        }
+    };
+
+    public func AccountRecordUnserialize(x:AccountRecordSerialized) : AccountRecord {
+        {
+            var pwr = x.pwr;
+            var anv = x.anv;
+        }
+    };
+
+    public func AccountRecordBlank() : AccountRecord {
+        {
+            var pwr = 0;
+            var anv = 0;
+        }
+    };
+    
+     
+
+
 
 
 }   

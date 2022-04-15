@@ -116,7 +116,9 @@ export function Collection({ nfts, mine, only }) {
       {pagination}
       <div className="collection">
         {slice.map((nft, idx) => {
-          return <NftThumb nft={nft} key={nft[0]} />;
+          return (
+            <NftThumb nft={nft} key={nft[0]} owner={showMine ? true : false} />
+          );
         })}
       </div>
       {pagination}

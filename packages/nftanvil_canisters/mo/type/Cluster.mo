@@ -1,3 +1,4 @@
+//@name=cluster
 import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Router "./router_interface";
@@ -63,13 +64,10 @@ module {
         };
     };
 
+    //(Factory
     public func router(conf : Config) : Router.Interface {
         actor(Principal.toText(conf.router)) : Router.Interface;
     };
-
-    // public func collection(conf : Config) : Collection.Interface {
-    //     actor(Principal.toText(conf.collection)) : Collection.Interface;
-    // };
    
     public func profits_address(conf : Config) : Nft.AccountIdentifier {
         Nft.AccountIdentifier.fromPrincipal(Nft.APrincipal.fromSlot(conf.space, conf.anvil), null);
@@ -116,6 +114,15 @@ module {
         pwr(conf, pwr2slot(conf, aid));
     };
 
+   
+    public func ledger(conf: Config): Ledger.Interface {
+        actor("ryjl3-tyaaa-aaaaa-aaaba-cai") : Ledger.Interface;
+    };
+
+    //)
+
+
+    //(Slots
     public func aid2slot(conf: Config, aid : Nft.AccountIdentifier) : CanisterSlot {
         let (start, end) = conf.account;
         let max = end - start;
@@ -127,10 +134,7 @@ module {
         let max = end - start;
         start + Nft.AccountIdentifier.slot(aid, max);
     };
-    
-    public func ledger(conf: Config): Ledger.Interface {
-        actor("ryjl3-tyaaa-aaaaa-aaaba-cai") : Ledger.Interface;
-    };
+    //)
 
     public type LogEvent = {
         time : Nat32;
@@ -202,8 +206,6 @@ module {
             ignore installed_pwr<()>(conf, func (slot: CanisterSlot) {
                  fn(slot);
             });
-
-       
 
         };
 

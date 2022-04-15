@@ -1,3 +1,4 @@
+//@name=ledger
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Binary "mo:encoding/Binary";
@@ -6,10 +7,12 @@ import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 
 module {
+    //(0🔶 Interface
     public type Interface = actor {
         transfer        : TransferArgs       -> async TransferResult;
         account_balance : AccountBalanceArgs -> async ICP;
     };
+    
 
     // Amount of ICP tokens, measured in 10^-8 of a token.
     public type ICP = {
@@ -85,7 +88,7 @@ module {
     public type AccountBalanceArgs = {
         account : AccountIdentifier;
     };
-
+    //)
  
 
  
