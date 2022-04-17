@@ -93,7 +93,11 @@ const config = {
             title: "Docs",
             items: [
               {
-                label: "Tutorial",
+                label: "Mint",
+                to: "https://nftanvil.com/mint",
+              },
+              {
+                label: "Intro",
                 to: "/docs/intro",
               },
             ],
@@ -102,16 +106,12 @@ const config = {
             title: "Community",
             items: [
               {
-                label: "Stack Overflow",
-                href: "https://stackoverflow.com/questions/tagged/docusaurus",
-              },
-              {
                 label: "Discord",
-                href: "https://discordapp.com/invite/docusaurus",
+                href: "https://discord.gg/apPegYBhBC",
               },
               {
                 label: "Twitter",
-                href: "https://twitter.com/docusaurus",
+                href: "https://twitter.com/nftanvil",
               },
             ],
           },
@@ -119,17 +119,21 @@ const config = {
             title: "More",
             items: [
               {
-                label: "Blog",
-                to: "/blog",
+                label: "Dashboard",
+                to: "https://nftanvil.com/dashboard",
+              },
+              {
+                label: "History",
+                to: "https://nftanvil.com/history",
               },
               {
                 label: "GitHub",
-                href: "https://github.com/facebook/docusaurus",
+                href: "https://github.com/infu/nftanvil",
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} VVV DAO`,
       },
       prism: {
         // theme: lightCodeTheme,
