@@ -29,7 +29,7 @@ You can install it globally (You will be able to run commands everywhere)
 The npm packages are open source since the beginning of the project - October 2021 https://github.com/infu/nftanvil/tree/main/packages
 
 ```
-sudo npm -g @vvv-interactive/nftanvil
+sudo npm i -g @vvv-interactive/nftanvil
 ```
 
 Or in a local project (You need to be in the project folder to run commands)
@@ -41,11 +41,19 @@ npm init
 npm i @vvv-interactive/nftanvil
 ```
 
+When you need to update it to the latest version run
+
+```
+npm i @vvv-interactive/nftanvil@latest
+```
+
 ### 📙 Show help
 
 ```
 npx anvil
 ```
+
+Should display short help if successfully installed
 
 ### Show address & balance
 
@@ -192,7 +200,7 @@ You may want to move your freshly minted NFTs to another address
 npx anvil transfer 0 1 a00c26536f73f0add51dddd5ef3220bb1842b2783e8ba1c4dd4a2da172b1727a
 ```
 
-### 🎫 Gift codes
+### 🎁 Gift codes
 
 You may want to send NFTs to someone without knowing their address (email, text message)
 

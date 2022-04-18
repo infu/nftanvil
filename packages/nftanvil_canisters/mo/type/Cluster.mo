@@ -114,7 +114,6 @@ module {
         pwr(conf, pwr2slot(conf, aid));
     };
 
-   
     public func ledger(conf: Config): Ledger.Interface {
         actor("ryjl3-tyaaa-aaaaa-aaaba-cai") : Ledger.Interface;
     };

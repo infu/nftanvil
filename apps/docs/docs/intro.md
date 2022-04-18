@@ -13,7 +13,7 @@ Usually companies which build platforms/ games/ worlds take real profits, while 
 We believe that crypto technologies will flip the script. Companies involved will take whatever terms users decide to give them.
 
 The metaverse corporations of today will be decentralised and transform from giant monolithic dictatorship constructs, to small & healthy organisations.
-Crypto makes that possible. Independent inventors, developers & creatives can get crowdfunded and can create small profitable and reusable protocols, services & components.
+Crypto makes that possible. Independent inventors, developers & creatives can get crowdfunded, collaborate without trust and can create small profitable and reusable protocols, services & components.
 These protocols will be to games and worlds as HTTP, SMTP, FTP are to the web.
 
 As it is unthinkable today to create a website that is not accessible through HTTP, in the future, it will be unthinkable to create a game/dapp, which will have items, achievements & tokens, without protocol like Anvil. A protocol built and owned by the community, that makes users masters of their inventories and liberates them to freely trade and move their digital property.
@@ -34,7 +34,7 @@ Moving items freely from one game/ world to another should be an article of huma
 
 ### Polylithic design
 
-Our philosophy encourages polylithic design, because it results in small tools where each one does one thing well and can be combined in many ways. Thats how the UNIX community works. Eric Raymond summarizes these in part as:
+Our philosophy encourages polylithic design, because it results in small tools where each one does one thing well and can be combined in many ways. Thats how the UNIX gets developed. Eric Raymond summarizes these in part as:
 
 #### Rule of Modularity
 

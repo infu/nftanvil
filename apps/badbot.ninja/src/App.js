@@ -141,7 +141,7 @@ function App() {
     <div className="App">
       <img src={bbn_logo} className="bbn-logo" alt="Bad Bot Ninja" />
       <h1 className="Title">Bad Bot Ninja</h1>
-      <About />
+      {/* <About /> */}
       <User />
       <PriceOptions
         refreshMine={() => {
