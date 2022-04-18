@@ -1489,6 +1489,7 @@ const MetaDomain = ({ meta, showLink }) => {
     </Box>
   );
 };
+const capitalize = (x) => x.charAt(0).toUpperCase() + x.slice(1);
 
 export const NFTInfo = ({ id, meta }) => {
   const mode = useColorModeValue("light", "dark");
@@ -1503,7 +1504,7 @@ export const NFTInfo = ({ id, meta }) => {
   let things = [
     meta.name ? (
       <Text key={"name"} color={qcolor} fontSize="16px">
-        {meta.name.capitalize()}
+        {capitalize(meta.name)}
       </Text>
     ) : null,
     meta.tags && meta.tags.length ? (
@@ -1537,7 +1538,7 @@ export const NFTInfo = ({ id, meta }) => {
     ) : null,
     meta?.use?.consumable?.desc ? (
       <Text key="consumable" fontSize="14px" color={"green"} as="i">
-        Use: {meta.use.consumable.desc.capitalize()} (Consumed in the process)
+        Use: {capitalize(meta.use.consumable.desc)} (Consumed in the process)
       </Text>
     ) : null,
     meta.cooldownUntil > nowMinutes ? (
@@ -1549,7 +1550,7 @@ export const NFTInfo = ({ id, meta }) => {
     ) : null,
     meta?.use?.cooldown?.desc ? (
       <Text key="cooldownDesc" fontSize="14px" color={"green.300"}>
-        Use: {meta.use.cooldown.desc.capitalize()} (
+        Use: {capitalize(meta.use.cooldown.desc)} (
         {moment.duration(meta.use.cooldown.duration, "minutes").humanize()}{" "}
         cooldown)
       </Text>
@@ -1561,20 +1562,20 @@ export const NFTInfo = ({ id, meta }) => {
     ) : null,
     meta.hold?.external?.desc ? (
       <Text key="hold" fontSize="14px" color={"green.300"}>
-        Hold: {meta.hold.external.desc.capitalize()}
+        Hold: {capitalize(meta.hold.external.desc)}
       </Text>
     ) : null,
     meta.attributes && meta.attributes.length
       ? meta.attributes.map((a, idx) => (
           <Text key={"attr" + idx} fontSize="14px">
             {a[1] >= 0 ? "+" : ""}
-            {a[1]} {a[0].capitalize()}
+            {a[1]} {capitalize(a[0])}
           </Text>
         ))
       : null,
     meta.lore ? (
       <Text key="lore" fontSize="14px" pt="14px" color={"yellow"}>
-        "{meta.lore.capitalize()}"
+        "{capitalize(meta.lore)}"
       </Text>
     ) : null,
     meta.rechargeable && meta.ttl && meta.ttl > 0 ? (

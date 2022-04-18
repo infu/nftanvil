@@ -87,7 +87,7 @@ export const HistoryRedirect = () => {
 const KeyVal = ({ k, v }) => {
   return (
     <Flex>
-      <Key>{k.capitalize()}</Key>
+      <Key>{k}</Key>
       <Val>{v}</Val>
     </Flex>
   );
