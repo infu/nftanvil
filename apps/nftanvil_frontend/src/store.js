@@ -17,6 +17,7 @@ export default configureStore({
     history: historyReducer,
     inventory: inventoryReducer,
   },
+  devTools: process.env.NODE_ENV !== "production",
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(routerMiddleware(history)),
 });

@@ -21,7 +21,7 @@ export const pwr_stats =
     let identity = authentication.client.getIdentity();
 
     let pwr = pwrCanister(canisterId, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
     let stats = await pwr.stats();
     return stats;
@@ -32,7 +32,7 @@ export const router_stats = () => async (dispatch, getState) => {
   let canisterId = s.user.map.router;
   let identity = authentication.client.getIdentity();
   let { router } = routerCanister(canisterId, {
-    agentOptions: authentication.getAgentOptions(),
+    agentOptions: await authentication.getAgentOptions(),
   });
 
   let stats = await router.stats();
@@ -48,7 +48,7 @@ export const nft_stats =
     let identity = authentication.client.getIdentity();
 
     let nft = nftCanister(canisterId, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
     let stats = await nft.stats();
     stats.canister = canisterId.toText();
@@ -64,7 +64,7 @@ export const account_stats =
     let identity = authentication.client.getIdentity();
 
     let can = accountCanister(canisterId, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
     let stats = await can.stats();
     stats.canister = canisterId.toText();
@@ -80,7 +80,7 @@ export const history_stats =
     let identity = authentication.client.getIdentity();
 
     let can = historyCanister(canisterId, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
     let stats = await can.stats();
     stats.canister = canisterId.toText();

@@ -14,6 +14,8 @@
     "@dfinity/principal": "^0.10.2",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
+    "@ledgerhq/hw-transport-node-hid-noevents": "^6.27.1",
+    "@ledgerhq/hw-transport-webhid": "^6.27.1",
     "@reduxjs/toolkit": "^1.6.2",
     "@sentry/react": "^6.17.9",
     "@sentry/tracing": "^6.17.9",
@@ -23,6 +25,7 @@
     "@vvv-interactive/nftanvil-canisters": "^0.32.0",
     "@vvv-interactive/nftanvil-react": "^0.32.0",
     "@vvv-interactive/nftanvil-tools": "^0.32.0",
+    "@zondax/ledger-icp": "^0.6.0",
     "base-x": "^3.0.9",
     "connected-react-router": "^6.9.1",
     "formik": "^2.2.9",
@@ -45,11 +48,13 @@
     "react-use": "^17.3.1",
     "redux": "^4.1.1",
     "set-value": ">=4.0.1",
+    "typescript": "^4.6.3",
     "web-vitals": "^1.0.1"
   },
   "proxy": "http://localhost:8000",
   "scripts": {
     "start": "node dfx.env.js && react-scripts start",
+    "start:prod": "react-scripts start",
     "build": "node dfx.env.js && react-scripts build",
     "deploy": "dfx deploy --network ic frontend"
   },

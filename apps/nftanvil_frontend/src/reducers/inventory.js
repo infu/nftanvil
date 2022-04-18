@@ -43,7 +43,7 @@ export const loadInventory =
       AccountIdentifier.TextToSlot(aid, s.user.map.account)
     );
     let acc = accountCanister(can, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let meta = await acc.meta(AccountIdentifier.TextToArray(aid));

@@ -1,4 +1,5 @@
 import { AuthClient } from "@dfinity/auth-client";
+import { LedgerIdentity } from "./ledger/identity";
 
 let client = null;
 
@@ -11,11 +12,16 @@ auth.create = async () => {
   auth.client = await AuthClient.create({ storage });
 };
 
-auth.getAgentOptions = () => {
-  let identity = auth.client.getIdentity();
+auth.requestHardwareAuth = async () => {
+  auth.hw_identity = await LedgerIdentity.create();
+  console.log("PUBKEY", auth.hw_identity.getPublicKey());
+};
+
+auth.getAgentOptions = async () => {
+  let identity = auth.hw_identity || auth.client.getIdentity();
 
   return {
-    identity,
+    identity: identity,
     host: process.env.REACT_APP_IC_GATEWAY || "https://ic0.app",
   };
 };

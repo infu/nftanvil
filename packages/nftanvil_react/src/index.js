@@ -90,6 +90,7 @@ const myStore = configureStore({
     nft: nftReducer,
     inventory: inventoryReducer,
   },
+  devTools: process.env.NODE_ENV !== "production",
 });
 
 export function AnvilProvider({ children }) {

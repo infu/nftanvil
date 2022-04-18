@@ -147,7 +147,6 @@ export const auth =
             ? { identityProvider: process.env.REACT_APP_IDENTITY_PROVIDER }
             : {}),
           onSuccess: async (e) => {
-            console.log(authClient);
             resolve();
           },
           onError: reject,
@@ -185,7 +184,7 @@ export const auth =
     if (pro) dispatch(proSet(true));
 
     router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let map = await router.config_get();
@@ -268,7 +267,7 @@ export const logout = () => async (dispatch, getState) => {
 
   const identity = await authClient.getIdentity();
   router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
-    agentOptions: authentication.getAgentOptions(),
+    agentOptions: await authentication.getAgentOptions(),
   });
 
   let principal = identity.getPrincipal().toString();
@@ -287,7 +286,7 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
   if (!address) return;
 
   let ledger = ledgerCanister({
-    agentOptions: authentication.getAgentOptions(),
+    agentOptions: await authentication.getAgentOptions(),
   });
 
   await ledger
@@ -316,7 +315,7 @@ export const faucet = (address) => async (dispatch, getState) => {
       s.user.map.space,
       AccountIdentifier.TextToSlot(address, s.user.map.pwr)
     ),
-    { agentOptions: authentication.getAgentOptions() }
+    { agentOptions: await authentication.getAgentOptions() }
   );
 
   let resp = await pwrcan.faucet({
@@ -340,7 +339,7 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
       s.user.map.space,
       AccountIdentifier.TextToSlot(address, s.user.map.pwr)
     ),
-    { agentOptions: authentication.getAgentOptions() }
+    { agentOptions: await authentication.getAgentOptions() }
   );
 
   await pwrcan
@@ -387,7 +386,7 @@ export const transfer_icp =
         AccountIdentifier.TextToSlot(address, s.user.map.pwr)
       ),
       {
-        agentOptions: authentication.getAgentOptions(),
+        agentOptions: await authentication.getAgentOptions(),
       }
     );
 
@@ -458,7 +457,7 @@ export const pwr_buy =
         AccountIdentifier.TextToSlot(address, s.user.map.pwr)
       ),
       {
-        agentOptions: authentication.getAgentOptions(),
+        agentOptions: await authentication.getAgentOptions(),
       }
     );
 
@@ -486,7 +485,7 @@ export const pwr_buy =
     let paymentAddress = intent.ok;
 
     let ledger = ledgerCanister({
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let ledger_result = await ledger.transfer({

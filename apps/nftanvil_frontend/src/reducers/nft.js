@@ -68,7 +68,7 @@ export const nftFetch = (id) => async (dispatch, getState) => {
 
   let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
   let nftcan = nftCanister(canister, {
-    agentOptions: authentication.getAgentOptions(),
+    agentOptions: await authentication.getAgentOptions(),
   });
 
   let resp = await nftcan.metadata(tid);
@@ -157,7 +157,7 @@ export const nftMediaGet = async (
   let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
   let nftcan = nftCanister(canister, {
-    agentOptions: authentication.getAgentOptions(),
+    agentOptions: await authentication.getAgentOptions(),
   });
 
   let src = await fetchFile(
@@ -217,7 +217,7 @@ export const nft_purchase =
     let { slot } = decodeTokenId(tid);
     //let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
-    // let nftcan = nftCanister(canister, { agentOptions: authentication.getAgentOptions() });
+    // let nftcan = nftCanister(canister, { agentOptions: await authentication.getAgentOptions() });
 
     let address = s.user.address;
     let subaccount = [
@@ -232,7 +232,7 @@ export const nft_purchase =
         AccountIdentifier.TextToSlot(address, s.user.map.pwr)
       ),
       {
-        agentOptions: authentication.getAgentOptions(),
+        agentOptions: await authentication.getAgentOptions(),
       }
     );
 
@@ -297,7 +297,7 @@ export const purchase_intent =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -330,7 +330,7 @@ export const set_price =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -361,7 +361,7 @@ export const transfer =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -435,7 +435,7 @@ export const plug =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -467,7 +467,7 @@ export const unsocket =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -500,14 +500,14 @@ export const recharge =
     // let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
     let address = s.user.address;
 
-    // let nftcan = nftCanister(canister, { agentOptions: authentication.getAgentOptions() });
+    // let nftcan = nftCanister(canister, { agentOptions: await authentication.getAgentOptions() });
     let pwr = pwrCanister(
       PrincipalFromSlot(
         s.user.map.space,
         AccountIdentifier.TextToSlot(address, s.user.map.pwr)
       ),
       {
-        agentOptions: authentication.getAgentOptions(),
+        agentOptions: await authentication.getAgentOptions(),
       }
     );
 
@@ -582,7 +582,7 @@ export const burn =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -617,7 +617,7 @@ export const approve =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -649,7 +649,7 @@ export const use =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -685,7 +685,7 @@ export const transfer_link =
     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -759,7 +759,7 @@ export const claim_link =
     let identity = authentication.client.getIdentity();
 
     let nftcan = nftCanister(canister, {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     });
 
     let address = s.user.address;
@@ -892,7 +892,7 @@ export const mint = (vals) => async (dispatch, getState) => {
   let address = s.user.address;
 
   let nft = nftCanister(canisterId, {
-    agentOptions: authentication.getAgentOptions(),
+    agentOptions: await authentication.getAgentOptions(),
   });
 
   let pwr = pwrCanister(
@@ -901,7 +901,7 @@ export const mint = (vals) => async (dispatch, getState) => {
       AccountIdentifier.TextToSlot(address, s.user.map.pwr)
     ),
     {
-      agentOptions: authentication.getAgentOptions(),
+      agentOptions: await authentication.getAgentOptions(),
     }
   );
 
