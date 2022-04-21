@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { Principal } from "@dfinity/principal";
-
+import { useTheme } from "@chakra-ui/react";
 import { NFT } from "./NFT";
 import itemgrid from "../assets/itemgrid.png";
 import itemgrid_light from "../assets/itemgrid_light.png";
@@ -85,9 +85,10 @@ export const HistoryRedirect = () => {
 };
 
 const KeyVal = ({ k, v }) => {
+  const dark = useColorModeValue(true, false);
   return (
     <Flex>
-      <Key>{k}</Key>
+      <Key dark={dark}>{k}</Key>
       <Val>{v}</Val>
     </Flex>
   );
@@ -95,7 +96,7 @@ const KeyVal = ({ k, v }) => {
 
 const Key = styled.div`
   text-transform: capitalize;
-  color: rgb(170, 200, 222);
+  color: ${(p) => (p.dark ? "gray.200" : "gray.900")};
   width: 130px;
   font-size: 12px;
   font-family: Greycliff;
@@ -314,13 +315,17 @@ export const History = (p) => {
             to={`/history/${canister}/${from - SHOW}/${from}`}
             onClick={() => setTailing(false)}
           >
-            <Button disabled={from <= 0}>Prev</Button>
+            <Button disabled={from <= 0} variant="solid">
+              Prev
+            </Button>
           </Link>
           <Link
             to={`/history/${canister}/${from + SHOW}/${from + SHOW * 2}`}
             onClick={() => setTailing(false)}
           >
-            <Button disabled={total <= to}>Next</Button>
+            <Button disabled={total <= to} variant="solid">
+              Next
+            </Button>
           </Link>
         </ButtonGroup>
         <Spacer />
@@ -371,7 +376,7 @@ export const HistoryTx = (p) => {
     <Box mt={8}>
       <ButtonGroup mb="2" variant="outline" size="sm" spacing="3">
         <Link to={`/history`}>
-          <Button>Back to history</Button>
+          <Button variant="solid">Back to history</Button>
         </Link>
       </ButtonGroup>
       {events.map((ev, idx) => (

@@ -8,6 +8,7 @@ export const theme = extendTheme({
       100: "#eeeeee",
     },
   },
+
   config: {
     initialColorMode: "dark",
     useSystemColorMode: false,
@@ -22,7 +23,7 @@ export const theme = extendTheme({
           lineHeight: "base",
           // bg: "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(40, 23, 32, 1) 100%)",
           bg: mode(
-            "linear-gradient(153deg, rgba(220,224,233,1) 0%, rgba(236,225,231,1) 100%)",
+            "linear-gradient(153deg, #d5d1cd 0%, #b2b3ba 100%)",
             "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(40, 23, 32, 1) 100%)"
           )(props),
           backgroundAttachment: "fixed",

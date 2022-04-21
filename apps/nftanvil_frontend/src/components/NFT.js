@@ -35,7 +35,7 @@ import {
   NumberDecrementStepper,
 } from "@chakra-ui/react";
 
-import { verifyDomain } from "../reducers/inventory";
+import { verifyDomain, verifyDomainTwitter } from "../reducers/inventory";
 import { setDominantColor } from "../reducers/user";
 import { NftHistory } from "./History";
 import { Spinner } from "@chakra-ui/react";
@@ -1174,10 +1174,17 @@ export const NFTLarge = ({ id }) => {
 
         <div className="info">
           {meta.domain ? (
+            meta.domain.indexOf("twitter.com/") !== -1 ? (
+              <MetaDomainTwitter key={"domain"} meta={meta} showLink={false} />
+            ) : (
+              <MetaDomain key={"domain"} meta={meta} showLink={false} />
+            )
+          ) : null}
+          {/* {meta.domain ? (
             <div className="collection">
               <MetaDomain meta={meta} showLink={false} />
             </div>
-          ) : null}
+          ) : null} */}
 
           <div className="author">
             <div className="label">AUTHOR</div>
@@ -1424,6 +1431,7 @@ export const NFTThumb = (p) => {
 };
 
 export const NFTThumbLarge = (p) => {
+  const mode = useColorModeValue("light", "dark");
   if (p.meta?.thumb?.external) return null;
 
   const c =
@@ -1432,9 +1440,87 @@ export const NFTThumbLarge = (p) => {
   if (!c) return null;
 
   return (
-    <ThumbLarge {...p}>
+    <ThumbLarge {...p} style={{ marginLeft: "6px" }} mode={mode}>
       {c.url ? <img className="custom" alt="" src={c.url} /> : ""}
+      <div className="info">
+        {p.meta.domain ? (
+          <div className="collection">
+            {p.meta.domain ? (
+              p.meta.domain.indexOf("twitter.com/") !== -1 ? (
+                <MetaDomainTwitter
+                  key={"domain"}
+                  meta={p.meta}
+                  showLink={false}
+                />
+              ) : (
+                <MetaDomain key={"domain"} meta={p.meta} showLink={false} />
+              )
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="author">
+          <div className="label">AUTHOR</div>
+          <div>
+            <ACC short={true}>{p.meta.author}</ACC>
+          </div>
+        </div>
+        {p.meta.price.amount && p.meta.price.amount !== "0" ? (
+          <div className="price">
+            <div className="label">PRICE</div>
+            <ICP digits={2}>{p.meta.price.amount}</ICP>
+          </div>
+        ) : null}
+      </div>
     </ThumbLarge>
+  );
+};
+
+const MetaDomainTwitter = ({ meta, showLink }) => {
+  let url = new URL("https://" + meta.domain);
+  let surl = url.href.replace(/^https?:\/\//, "");
+  const dispatch = useDispatch();
+  const domainInfo = useSelector((state) => state.inventory[surl + "_domain"]);
+  const isLoading = domainInfo === -1 ? true : false;
+  let verified = false;
+  try {
+    if (!isLoading && domainInfo === meta.author) verified = true;
+  } catch (e) {
+    console.log(e);
+  }
+
+  useEffect(() => {
+    dispatch(verifyDomainTwitter(surl));
+  }, [surl, dispatch]);
+
+  let urlSafe = verified ? "https://" + surl : null;
+
+  const [a, b, c, d] = meta.domain.split("/");
+
+  let content = (
+    <>
+      {a}/{b}{" "}
+      {isLoading ? (
+        <Spinner size="xs" />
+      ) : verified ? (
+        <VerifiedIcon w={"16px"} h={"16px"} />
+      ) : null}
+    </>
+  );
+
+  return (
+    <Box
+      color={verified ? "green.300" : isLoading ? null : "red.300"}
+      as={verified ? null : isLoading ? null : "s"}
+    >
+      {showLink && urlSafe ? (
+        <a href={urlSafe} rel="noreferrer" target="_blank">
+          {content}
+        </a>
+      ) : (
+        content
+      )}
+    </Box>
   );
 };
 
@@ -1489,6 +1575,7 @@ const MetaDomain = ({ meta, showLink }) => {
     </Box>
   );
 };
+
 const capitalize = (x) => x.charAt(0).toUpperCase() + x.slice(1);
 
 export const NFTInfo = ({ id, meta }) => {
@@ -1496,7 +1583,7 @@ export const NFTInfo = ({ id, meta }) => {
 
   const bg = useColorModeValue("gray.100", "gray.700");
   const textColor = useColorModeValue("gray.900", "gray.100");
-
+  const isDark = mode === "dark";
   if (!meta || !("quality" in meta)) return null;
   const qcolor = itemQuality[mode][meta.quality].color;
   let nowMinutes = Math.floor(Date.now() / 1000 / 60);
@@ -1510,14 +1597,18 @@ export const NFTInfo = ({ id, meta }) => {
     meta.tags && meta.tags.length ? (
       <Wrap key={"tags"} spacing={1}>
         {meta.tags.map((a, idx) => (
-          <Tag key={idx} size="sm">
+          <Tag key={idx} size="sm" bg={isDark ? "gray.600" : "gray.300"}>
             {a}
           </Tag>
         ))}
       </Wrap>
     ) : null,
     meta.domain ? (
-      <MetaDomain key={"domain"} meta={meta} showLink={true} />
+      meta.domain.indexOf("twitter.com/") !== -1 ? (
+        <MetaDomainTwitter key={"domain"} meta={meta} showLink={true} />
+      ) : (
+        <MetaDomain key={"domain"} meta={meta} showLink={true} />
+      )
     ) : null,
     "bindsForever" in meta.transfer ? (
       <Text key={"bindsForever"} fontSize="14px">
@@ -1531,37 +1622,63 @@ export const NFTInfo = ({ id, meta }) => {
       </Text>
     ) : null,
     meta.boundUntil > nowMinutes ? (
-      <Text key="boundUntil" fontSize="14px" color={"green"} as="i">
+      <Text
+        key="boundUntil"
+        fontSize="14px"
+        color={isDark ? "green.400" : "green.800"}
+        as="i"
+      >
         {"bound for " +
           moment.duration(meta.boundUntil - nowMinutes, "minutes").humanize()}
       </Text>
     ) : null,
     meta?.use?.consumable?.desc ? (
-      <Text key="consumable" fontSize="14px" color={"green"} as="i">
+      <Text
+        key="consumable"
+        fontSize="14px"
+        color={isDark ? "green.400" : "green.800"}
+        as="i"
+      >
         Use: {capitalize(meta.use.consumable.desc)} (Consumed in the process)
       </Text>
     ) : null,
     meta.cooldownUntil > nowMinutes ? (
-      <Text key="cooldownUntil" fontSize="14px" color={"green.300"}>
+      <Text
+        key="cooldownUntil"
+        fontSize="14px"
+        color={isDark ? "green.400" : "green.800"}
+      >
         {moment
           .duration(meta.cooldownUntil - nowMinutes, "minutes")
           .humanize() + " cooldown left"}
       </Text>
     ) : null,
     meta?.use?.cooldown?.desc ? (
-      <Text key="cooldownDesc" fontSize="14px" color={"green.300"}>
+      <Text
+        key="cooldownDesc"
+        fontSize="14px"
+        color={isDark ? "green.400" : "green.800"}
+      >
         Use: {capitalize(meta.use.cooldown.desc)} (
         {moment.duration(meta.use.cooldown.duration, "minutes").humanize()}{" "}
         cooldown)
       </Text>
     ) : null,
     meta?.secret ? (
-      <Text key="secret" fontSize="14px" color={"purple.300"}>
+      <Text
+        key="secret"
+        fontSize="14px"
+        color={isDark ? "purple.400" : "purple.800"}
+      >
         Secret
       </Text>
     ) : null,
     meta.hold?.external?.desc ? (
-      <Text key="hold" fontSize="14px" color={"green.300"}>
+      <Text
+        key="hold"
+        fontSize="14px"
+        color={isDark ? "green.400" : "green.800"}
+      >
         Hold: {capitalize(meta.hold.external.desc)}
       </Text>
     ) : null,
@@ -1574,17 +1691,32 @@ export const NFTInfo = ({ id, meta }) => {
         ))
       : null,
     meta.lore ? (
-      <Text key="lore" fontSize="14px" pt="14px" color={"yellow"}>
+      <Text
+        key="lore"
+        fontSize="14px"
+        pt="14px"
+        color={isDark ? "yellow" : "yellow.600"}
+      >
         "{capitalize(meta.lore)}"
       </Text>
     ) : null,
     meta.rechargeable && meta.ttl && meta.ttl > 0 ? (
-      <Text key="ttl" fontSize="14px" pt="14px" color={"gray.400"}>
+      <Text
+        key="ttl"
+        fontSize="14px"
+        pt="14px"
+        color={isDark ? "gray.400" : "gray.800"}
+      >
         Recharge in {moment.duration(meta.ttl, "minutes").humanize()}
       </Text>
     ) : null,
     !meta.rechargeable && meta.ttl && meta.ttl > 0 ? (
-      <Text key="ttl" fontSize="14px" pt="14px" color={"gray.400"}>
+      <Text
+        key="ttl"
+        fontSize="14px"
+        pt="14px"
+        color={isDark ? "gray.400" : "gray.800"}
+      >
         Expires in {moment.duration(meta.ttl, "minutes").humanize()}
       </Text>
     ) : null,
@@ -1678,7 +1810,7 @@ export const NFTBattery = ({ meta }) => {
 };
 
 export const NFTProInfo = ({ id, meta }) => {
-  const bg = useColorModeValue("gray.300", "gray.900");
+  const bg = useColorModeValue("gray.200", "gray.900");
   if (!meta || !("quality" in meta)) return null;
 
   let nowMinutes = Math.floor(Date.now() / 1000 / 60);

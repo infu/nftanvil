@@ -339,6 +339,9 @@ module {
         // (no updates) This function is only way to fetch NFTs with secret storage. The rest will use http, because it can be cached.
         fetch_chunk : shared (request: FetchChunkRequest) -> async ?Blob;
 
+        // Plug & socket functionality should be reworked so each NFT has its own wallet and can hold
+        // unlimited amounts of fungible and non-fungible tokens in all blockchains
+        //
         // (iPWR) Plugs NFT into socket. Socket func of the recipient NFT is called
         plug       : shared (request: PlugRequest) -> async PlugResponse;
 

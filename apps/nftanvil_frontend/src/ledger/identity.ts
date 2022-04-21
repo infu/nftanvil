@@ -29,6 +29,7 @@ import {
   function _prepareCborForLedger(
     request: ReadRequest | CallRequest
   ): ArrayBuffer {
+      console.log("XXXX", request)
     return Cbor.encode({ content: request });
   }
   
@@ -166,14 +167,19 @@ import {
       return this._publicKey;
     }
   
-    public async sign(blob: ArrayBuffer): Promise<Signature> {
+      public async sign(blob: ArrayBuffer): Promise<Signature> {
+      
+      console.log("BLOB", blob)
+      
       return await this._executeWithApp(async (app: LedgerApp) => {
         const resp: ResponseSign = await app.sign(
           this.derivePath,
           Buffer.from(blob),
           this._neuronStakeFlag ? 1 : 0
         );
-  
+        
+          console.log("RESP", resp)
+          
         // Remove the "neuron stake" flag, since we already signed the transaction.
         this._neuronStakeFlag = false;
   

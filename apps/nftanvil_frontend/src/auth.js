@@ -1,5 +1,6 @@
 import { AuthClient } from "@dfinity/auth-client";
-import { LedgerIdentity } from "./ledger/identity";
+// import { LedgerIdentity } from "./ledger/identity";
+import { LedgerIdentity } from "@dfinity/identity-ledgerhq";
 
 let client = null;
 
@@ -14,7 +15,7 @@ auth.create = async () => {
 
 auth.requestHardwareAuth = async () => {
   auth.hw_identity = await LedgerIdentity.create();
-  console.log("PUBKEY", auth.hw_identity.getPublicKey());
+  //console.log("PUBKEY", auth.hw_identity.getPublicKey());
 };
 
 auth.getAgentOptions = async () => {

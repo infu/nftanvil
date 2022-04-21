@@ -193,12 +193,7 @@ const Pagination = ({ address, pageIdx, end, lg = false }) => {
   return (
     <Text fontSize="11px" textAlign="center">
       <Link to={"/" + address + "/" + (lg ? "" : "lg/")}>
-        <IconButton
-          mr="2"
-          size="xs"
-          icon={<HamburgerIcon />}
-          variant="outline"
-        />
+        <IconButton mr="2" size="xs" icon={<HamburgerIcon />} variant="solid" />
       </Link>
       <ACC short={true}>{address}</ACC>
 
@@ -208,7 +203,7 @@ const Pagination = ({ address, pageIdx, end, lg = false }) => {
             ml="2"
             size="xs"
             icon={<ChevronLeftIcon />}
-            variant="outline"
+            variant="solid"
           />
         </Link>
       ) : null}

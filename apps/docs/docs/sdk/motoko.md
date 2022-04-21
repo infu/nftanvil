@@ -4,13 +4,12 @@ sidebar_position: 2
 
 # Motoko
 
-We believe Motoko is the way to go when creating smart contracts. The alternative - Rust was never made for smart contracts and is way too powerful. What we mean is that in Motoko you can include third party scripts and be secure, because they can't break out of their shell and do any harm. Because of its simplicity Motoko is also easier to read and that is a crucial characteristic contracts need to have.
+We believe Motoko is the way to go when creating smart contracts. The alternative - Rust was never made for smart contracts and is way too powerful. What we mean is that in Motoko you can include third-party scripts and be secure, because they can't break out of their shell and do any harm. Because of its simplicity, Motoko is also easier to read and that is crucial characteristic contracts need to have.
 
 We use Vessel package manager.
 https://github.com/dfinity/vessel
 
-In order to install Anvil motoko package, you need to create a file called `package-set.dhall` which specifies package sources.
-This will get greatly simplified in the future. For now just make sure the line with anvils version is updated with latest one `version = "v0.1.7"` from https://github.com/infu/anvil.mo releases page
+In order to install Anvil motoko package, you need to create a file called package-set.dhall which specifies package sources. This will get greatly simplified in the future. For now, just make sure the line with anvils version is updated with the latest one `version = "v0.1.7"` from https://github.com/infu/anvil.mo releases page
 
 ```js
 let upstream = https://github.com/dfinity/vessel-package-set/releases/download/mo-0.6.20-20220131/package-set.dhall
@@ -118,7 +117,7 @@ public shared({caller}) func test(token_id: Nft.TokenIdentifier) : async () {
 
     let response = await nftcan.transfer({
                 from = ...
-                to = ..
+                to = ...
                 token = token_id
                 memo = ...
                 subaccount = ...;

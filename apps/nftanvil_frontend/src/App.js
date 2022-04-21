@@ -19,7 +19,12 @@ import {
   logout,
   transfer_icp,
   pwr_buy,
+  hw_auth,
+  hw_test,
 } from "./reducers/user";
+
+import { use } from "./reducers/nft";
+
 import {
   ButtonGroup,
   Button,
@@ -215,7 +220,7 @@ function ICPBOX({ mobile }) {
           <ICP>{icp}</ICP>
         </MenuItem>
       ) : (
-        <Button onClick={onOpen}>
+        <Button onClick={onOpen} variant="solid">
           <ICP>{icp}</ICP>
         </Button>
       )}
@@ -428,9 +433,16 @@ function LoginBox() {
             as={IconButton}
             aria-label="Options"
             icon={<HamburgerIcon />}
-            variant="outline"
+            variant="solid"
           />
           <MenuList>
+            <a
+              href={"https://docs.nftanvil.com"}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MenuItem icon={<ExternalLinkIcon />}>Documentation</MenuItem>
+            </a>
             <a
               href={"https://github.com/infu/nftanvil"}
               target="_blank"
@@ -499,6 +511,8 @@ export const ProToggle = () => {
 // size="xl"
 // />
 function Logo(props) {
+  const theme = useColorModeValue("light", "dark");
+
   return (
     <Box {...props}>
       <Stack direction="horizontal" ml="6px" sx={{ position: "relative" }}>
@@ -511,6 +525,7 @@ function Logo(props) {
             position: "absolute",
             top: "-5px",
             left: "30px",
+            color: theme === "dark" ? "gray.300" : "gray.800",
           }}
         >
           NFT<b>ANVIL</b>
@@ -525,6 +540,7 @@ function Logo(props) {
             top: "12px",
             width: "85px",
             fontFamily: "Greycliff",
+            color: theme === "dark" ? "gray.300" : "gray.800",
           }}
         >
           mint a promise
@@ -600,7 +616,7 @@ function MobileMenu() {
       <Flex>
         <IconButton
           icon={<ArrowBackIcon />}
-          variant="outline"
+          variant="solid"
           disabled={!address || myroot === pathname}
           onClick={() => {
             dispatch(push(myroot));
@@ -613,7 +629,7 @@ function MobileMenu() {
             as={IconButton}
             aria-label="Options"
             icon={<HamburgerIcon />}
-            variant="outline"
+            variant="solid"
           />
           <MenuList>
             {address ? (
@@ -711,6 +727,7 @@ function MainMenu() {
 }
 function App() {
   const mapLoaded = useSelector((state) => state.user.map.history);
+  const dispatch = useDispatch();
 
   const theme = useColorModeValue("light", "dark");
   if (!mapLoaded) return null;
@@ -734,10 +751,29 @@ function App() {
             pointerEvents: "none",
           }}
         />
-
         <Disclaimer />
         <MainMenu />
         {/* <AlertTestNet /> */}
+        {/* <Button
+          onClick={() => {
+            dispatch(hw_auth());
+          }}
+        >
+          HW AUTH
+        </Button>{" "}
+        <Button
+          onClick={async () => {
+            dispatch(hw_test());
+            // let useData = { cooldown: 5111111 };
+            // let memo = [12, 11, 5, 0, 0, 1, 7];
+            // let { transactionId } = await dispatch(
+            //   use({ id: "nftaafa74tu6jky7g9zb", use: useData, memo })
+            // );
+            // console.log({ transactionId });
+          }}
+        >
+          HW TEST
+        </Button> */}
         <Center>
           <RouterSwitch>
             <Route path="/mint" component={Mint} />

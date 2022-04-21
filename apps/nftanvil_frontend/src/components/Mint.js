@@ -102,10 +102,10 @@ export const ProToggle = () => {
   );
 };
 
-const form2record = (v) => {
+const form2record = (v, { address } = {}) => {
   let a = {
-    domain: v.domain,
-    author: [], // not sent to minting, temporary here for the preview
+    domain: v.domain.replace(/^http[s]*?:\/\//, ""),
+    author: address, // not sent to minting, temporary here for the preview
     price: {
       amount: AccountIdentifier.icpToE8s(v.price),
       marketplace: [],
@@ -235,7 +235,7 @@ export const MintForm = () => {
       }}
     >
       {(props) => {
-        let record = form2record(props.values);
+        let record = form2record(props.values, { address });
         return (
           <>
             <Stack mt="80px" direction={isDesktop ? "row" : "column"}>

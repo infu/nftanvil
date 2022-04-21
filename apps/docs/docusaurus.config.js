@@ -7,12 +7,12 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Anvil Protocol",
-  tagline: "Blacksmiths are cool",
-  url: "https://your-docusaurus-test-site.com",
+  tagline: "Mint a promise",
+  url: "https://docs.nftanvil.com",
   baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
-  favicon: "img/favicon.ico",
+  favicon: "img/anvillogo.svg",
   organizationName: "VVV DAO", // Usually your GitHub org/user name.
   projectName: "anvildocs", // Usually your repo name.
 

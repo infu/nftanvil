@@ -133,6 +133,10 @@ export const login = () => (dispatch) => {
   dispatch(auth(false));
 };
 
+export const hw_auth = () => async (dispatch, getState) => {
+  authentication.requestHardwareAuth();
+};
+
 export const auth =
   (allowAnonymous = true) =>
   async (dispatch, getState) => {
@@ -442,6 +446,25 @@ export const transfer_icp =
 
     return trez;
   };
+
+export const hw_test = () => async (dispatch, getState) => {
+  let ledger = ledgerCanister({
+    agentOptions: await authentication.getAgentOptions(),
+  });
+
+  let ledger_result = await ledger.transfer({
+    memo: 0,
+    amount: { e8s: 1000000 },
+    fee: { e8s: 10000n },
+    from_subaccount: [],
+    to: AccountIdentifier.TextToArray(
+      "a00c26536f73f0add51dddd5ef3220bb1842b2783e8ba1c4dd4a2da172b1727a"
+    ),
+    created_at_time: [],
+  });
+
+  console.log("ledger_result", ledger_result);
+};
 
 export const pwr_buy =
   ({ amount }) =>
