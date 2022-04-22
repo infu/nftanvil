@@ -7,6 +7,8 @@
 
 # testing
 /coverage
+/content
+/thumb
 
 # production
 /build
