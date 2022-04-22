@@ -1,14 +1,14 @@
 {
   "name": "badbot.ninja",
-  "version": "0.33.0",
+  "version": "0.34.0",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
-    "@vvv-interactive/nftanvil-canisters": "^0.33.0",
-    "@vvv-interactive/nftanvil-react": "^0.33.0",
-    "@vvv-interactive/nftanvil-tools": "^0.33.0",
+    "@vvv-interactive/nftanvil-canisters": "^0.34.0",
+    "@vvv-interactive/nftanvil-react": "^0.34.0",
+    "@vvv-interactive/nftanvil-tools": "^0.34.0",
     "react": "^17.0.2",
     "react-confetti": "^6.0.1",
     "react-dom": "^17.0.2",
