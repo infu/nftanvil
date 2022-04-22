@@ -26,7 +26,6 @@ actor class WHOWHO() {
 };
 let whoiswho = await WHOWHO();
 
-// we have to initialize, because the object doesn't know its cannisterId when instantiated with a test script
 let user_john_principal:Principal = await whoiswho.whoAmI();
 
 
