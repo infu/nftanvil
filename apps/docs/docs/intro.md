@@ -11,7 +11,7 @@ The **Anvil protocol** defines the rules, syntax, and semantics of communication
 
 We believe Anvil protocol and alike will be to games, worlds, and dapps as HTTP, SMTP, and FTP are to the web.
 
-As it is unthinkable today to create a website that is not accessible through HTTP, in the future, it will be unthinkable to create a game/dapp, which will have items, achievements & tokens, without protocol like Anvil. A protocol built and owned by the community, that makes users masters of their inventories and liberates them to freely trade and move their digital property.
+As it is unthinkable today to create a website that is not accessible through HTTP, in the future, it will be unthinkable to create a game/app, which will have items, achievements & tokens, without protocol like Anvil. A protocol built and owned by the community, that makes users masters of their inventories and liberates them to freely trade and move their digital property.
 
 ### Sought properties
 

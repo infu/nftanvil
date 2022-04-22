@@ -60,7 +60,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   public type Basket = IF.Basket;
 
   private stable var randomNumber : Nat = 0; // unknown to the public. While the pseudo random sequence is known, this number isn't. Along with the complexity of asyncroneous calls & unknown internal nft memory, this will make sure nobody can cherry-pick nfts.
-  
+
   private stable var _tokens : [var ?Nft.TokenIdentifier] = Array.init<?Nft.TokenIdentifier>(MAX_TOKEN_SPACE, null); // keep this 10 times bigger than max nft count
 
   private stable var _codes : [var ?Blob] = Array.init<?Blob>(MAX_CODES, null);
