@@ -485,20 +485,21 @@ const itoAuthorize = async () => {
       encoding: "UTF-8",
     }
   );
-
-  let itoContract = can(itoCreateActor, getCanisterId("ito"));
-  itoContract.set_anvil_config({
-    router: Principal.fromText(process.env.ROUTER_CANISTER),
-    nft: [0, 0],
-    nft_avail: [],
-    account: [0, 0],
-    pwr: [0, 0],
-    anvil: 0,
-    treasury: 0,
-    history: 0,
-    history_range: [0, 0],
-    space: [[0, 0]],
-  });
+  if (IS_LOCAL()) {
+    let itoContract = can(itoCreateActor, getCanisterId("ito"));
+    itoContract.set_anvil_config({
+      router: Principal.fromText(process.env.ROUTER_CANISTER),
+      nft: [0, 0],
+      nft_avail: [],
+      account: [0, 0],
+      pwr: [0, 0],
+      anvil: 0,
+      treasury: 0,
+      history: 0,
+      history_range: [0, 0],
+      space: [[0, 0]],
+    });
+  }
 };
 
 const saleAdd = async (NFT_FROM, NFT_TO) => {
