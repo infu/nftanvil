@@ -1168,6 +1168,8 @@ export const NFTLarge = ({ id }) => {
           <img alt="" className="custom" src={meta.thumb.ipfs.url} />
         ) : meta.thumb?.internal?.url ? (
           <img alt="" className="custom" src={meta.thumb.internal.url} />
+        ) : meta.thumb?.external ? (
+          <img alt="" className="custom" src={meta.thumb?.external} />
         ) : (
           ""
         )}
@@ -1230,6 +1232,8 @@ export const NFT = ({ id, thumbSize }) => {
           <img alt="" className="custom" src={meta.thumb.ipfs.url} />
         ) : meta?.thumb?.internal?.url ? (
           <img alt="" className="custom" src={meta.thumb.internal.url} />
+        ) : meta?.thumb?.external ? (
+          <img alt="" className="custom" src={meta.thumb.external} />
         ) : (
           ""
         )}
@@ -1373,30 +1377,35 @@ export const NFTPage = (p) => {
 export const NFTContent = (p) => {
   const dispatch = useDispatch();
 
-  if (p.meta?.content?.external) return null;
+  //if (p.meta?.content?.external) return null;
 
   const c =
     p.meta?.content?.internal ||
     p.meta?.content?.ipfs ||
     p.meta?.content?.external;
+
   if (!c) return null;
-  const ctype =
-    c.contentType.indexOf("image/") !== -1
+
+  const ctype = c.contentType
+    ? c.contentType.indexOf("image/") !== -1
       ? "image"
       : c.contentType.indexOf("video/") !== -1
       ? "video"
-      : "unknown";
+      : "unknown"
+    : "image";
 
   if (ctype === "unknown") return null;
 
+  const url = c.url || c;
+
   return (
     <ContentBox>
-      {ctype === "image" && c.url ? (
-        <img crossOrigin="true" src={c.url} alt="" width="100%" />
+      {ctype === "image" && url ? (
+        <img crossOrigin="true" src={url} alt="" width="100%" />
       ) : null}
-      {ctype === "video" && c.url ? (
+      {ctype === "video" && url ? (
         <video controls loop muted autoPlay>
-          <source src={c.url} type={c.contentType} />
+          <source src={url} type={c.contentType} />
         </video>
       ) : null}
     </ContentBox>

@@ -69,12 +69,12 @@ export function NftThumb({ nft, owner = false }) {
         </div>
         <div className="nft-quality">{qa.label}</div>
         <div className="nft-lore">{lore}</div>
-        {owner ? (
+        {/* {owner ? (
           <div className="actions">
             <button>Transfer</button>
             <button>Sell</button>
           </div>
-        ) : null}
+        ) : null} */}
       </div>
       <div className="nft-attr-box">
         {attributes.map((attr, idx) => (

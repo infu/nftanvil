@@ -281,7 +281,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   // If there are not enough nfts in contract, we will refund
   public shared({caller}) func buy_tx(tx_id:  Nft.TransactionId, subaccount: ?Nft.SubAccount) : async Result.Result<Basket, Text> {
 
-    if (now() < START_TIMESTAMP) return #err("hasn't started yet");
+    
 
     let scriptAccount = getScriptAccount();
     let caller_aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
@@ -298,7 +298,8 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
               case (29940120) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 1, #buy)) { //send 2 nfts to user
+                    if (now() < START_TIMESTAMP) { #refund("Hasn't started yet"); }
+                    else switch(give(from, 1, #buy)) { //send 2 nfts to user
                       case (#ok(basket)) {
                         #ok(basket);
                       };
@@ -314,7 +315,8 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
               case (134730539) {
                 switch(use(tx_id)) {
                   case (#ok()) {
-                    switch(give(from, 5, #buy)) {
+                    if (now() < START_TIMESTAMP) { #refund("Hasn't started yet"); }
+                    else switch(give(from, 5, #buy)) {
                       case (#ok(basket)) {
                         #ok(basket);
                       };
@@ -329,8 +331,9 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
               // pricing option three
               case (479041916) {
                 switch(use(tx_id)) {
-                  case (#ok()) {
-                    switch(give(from, 20, #buy)) { 
+                   case (#ok()) {
+                    if (now() < START_TIMESTAMP) { #refund("Hasn't started yet"); }
+                    else switch(give(from, 20, #buy)) { 
                       case (#ok(basket)) {
                         #ok(basket);
                       };
@@ -391,7 +394,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   // Installer sets an admin, which can add nfts (admin only)
   public shared({caller}) func set_params({purchase:Nat; airdrop: Nat}) : () {
     assert((caller == admin) or (caller == _installer));
-        
+
     LEFT_PURCHASE := purchase;
     LEFT_AIRDROP := airdrop;
   };

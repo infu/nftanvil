@@ -901,7 +901,11 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
         console.log("missing " + i + " data ");
         continue;
       }
-      if (s?.content && !fs.existsSync(s.content)) {
+      if (
+        s?.content &&
+        s?.content.indexOf("https://") === -1 &&
+        !fs.existsSync(s.content)
+      ) {
         error = true;
         console.log("missing " + i + " content file ");
       }
@@ -910,7 +914,7 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
 
         console.log("missing " + i + " thumb in meta");
       }
-      if (!fs.existsSync(s.thumb)) {
+      if (s?.thumb.indexOf("https://") === -1 && !fs.existsSync(s.thumb)) {
         error = true;
         console.log(s);
         console.log("missing " + i + " thumb file ");
@@ -963,6 +967,20 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
   }
 };
 
+const contentPath = (path) => {
+  if (path.indexOf("https://") !== -1)
+    return {
+      external: path,
+    };
+
+  return {
+    internal: {
+      contentType: mime.getType(path),
+      path,
+    },
+  };
+};
+
 const inputToMeta = (s) => {
   return {
     domain: "domain" in s ? [s.domain] : [],
@@ -972,23 +990,8 @@ const inputToMeta = (s) => {
     secret: "secret" in s ? s.secret : false,
     transfer: "transfer" in s ? s.transfer : { unrestricted: null },
     ttl: ["ttl" in s ? s.ttl : 1036800],
-    content:
-      "content" in s
-        ? [
-            {
-              internal: {
-                contentType: mime.getType(s.content),
-                path: s.content,
-              },
-            },
-          ]
-        : [],
-    thumb:
-      "thumb" in s
-        ? {
-            internal: { contentType: mime.getType(s.thumb), path: s.thumb },
-          }
-        : null,
+    content: "content" in s ? [contentPath(s.content)] : [],
+    thumb: "thumb" in s ? contentPath(s.thumb) : null,
     attributes:
       "attributes" in s
         ? Object.keys(s.attributes)
