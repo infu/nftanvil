@@ -62,29 +62,25 @@ function About() {
   return (
     <div className="about">
       <p>
-        Welcome to badbot.ninja – The first open-source ICP dapp demonstrating
-        how easy it is for developers to build their own NFT use cases with the
-        Anvil protocol powered by ICP. This white-label dapp is a simple
-        frontend application that takes advantage of some of the tools the Anvil
-        Protocol has to offer.
+        Welcome to badbot.ninja – Open-source Internet Computer web3 dapp
+        demonstrating how easy it is for developers to build their own NFT use
+        cases with the Anvil protocol.
       </p>
       <p>
         Badbot Ninja metaverse apparel is a collection of NFTs made to be
-        inexpensive and accessible for people to experience the NFT Anvil
-        protocol and have some fun with their NFTs. We are starting with 10k NFT
-        helmets and later we will be adding NFTs for other character slots like
-        chest, legs, hands, etc. In the future we’re going to be working on
-        crafting, enchanting, avatar customization, and trading. And in the long
-        term, these will be used in Zraham City which is the metaverse that we
-        are building, it too will be powered by the Anvil Protocol.
+        inexpensive and accessible. We are starting with 10k NFT helmets and
+        later we will be adding NFTs for other character slots like chest, legs,
+        hands, etc. In the future we’re going to be working on crafting,
+        enchanting, avatar customization and our own blockchain game engine. In
+        the long term, these will be used in Zraham City which is our city in
+        the metaverse.
       </p>
       <p>
         What you see here is 10K AI-generated helmet NFTs – each one unique with
-        its own name, tags, description, and attributes (also some are rarer
-        than others so hold onto your Legendary NFTs). 5k NFTs are available for
-        purchase, 4k are allocated for airdrops, and 1k is left for us. This is
-        all set up securely with smart contracts running on ICP, everyone gets
-        random NFTs – even us!
+        its own name, description, and attributes (also some are rarer than
+        others). 5k NFTs are available for purchase, 4k are allocated for
+        airdrops, and 1k is left for us. This is all set up securely with smart
+        contracts running on ICP, everyone gets random NFTs – even us!
       </p>
       <p>
         Because AIs are strange and nobody knows how they work - some NFTs may
