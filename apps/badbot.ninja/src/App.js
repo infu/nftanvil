@@ -44,49 +44,60 @@ import bbn_logo from "./assets/bbn_logo.png";
 
 import nfts from "./nfts.json";
 import "./App.css";
+
 const START = 1651089600; //Date.now() / 1000 + 30;
+
+const getShuffledArr = (arr) => {
+  const newArr = arr.slice();
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const rand = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[rand]] = [newArr[rand], newArr[i]];
+  }
+  return newArr;
+};
+
+let r_nfts = getShuffledArr(nfts);
 
 function About() {
   return (
     <div className="about">
       <p>
-        Heya, welcome to badbot.ninja metaverse apparel. This is a simple web3
-        open-source dapp anyone can clone. It showcases the open-source Anvil
-        protocol and NFTA standard in a simplified frontend aiming to be easily
-        understood by developers.
-      </p>
-
-      <p>
-        We made this collection so everyone can have inexpensive NFTs to play
-        with. We are airdropping 4k and will leave 5k to sell here, while we
-        keep the 1k that remains in the end.
-      </p>
-
-      <p>
-        In the future, we are planning on experimenting with different smart
-        contracts (transformation, enchanting, crafting) and these NFT items
-        will be part of that. They will also be used in a character
-        customization system part of Zraham city - our metaverse city - a
-        long-term project. What you see here are 10k helmets and we will be
-        adding more items for different slots (legs, chest, hands, etc.) in the
-        following months.
-      </p>
-
-      <p>
-        Badbot.ninja helmets were created by AI and originally intended to be
-        icon-sized. Their graphics and texts are AI created, so some may be
-        faulty, but worry not, you will be able to disintegrate them into raw
-        materials - crystals, metals, etc. You will also be able to remix them
-        and create one NFT with parts from 3 different ones. Ex: take graphics
-        from one, texts from another, quality and attributes from a third one.
+        Welcome to badbot.ninja – The first open-source ICP dapp demonstrating
+        how easy it is for developers to build their own NFT use cases with the
+        Anvil protocol powered by ICP. This white-label dapp is a simple
+        frontend application that takes advantage of some of the tools the Anvil
+        Protocol has to offer.
       </p>
       <p>
-        This open-source smart contract holds all 10k NFTs and everyone gets
-        provably random ones, even us.
+        Badbot Ninja metaverse apparel is a collection of NFTs made to be
+        inexpensive and accessible for people to experience the NFT Anvil
+        protocol and have some fun with their NFTs. We are starting with 10k NFT
+        helmets and later we will be adding NFTs for other character slots like
+        chest, legs, hands, etc. In the future we’re going to be working on
+        crafting, enchanting, avatar customization, and trading. And in the long
+        term, these will be used in Zraham City which is the metaverse that we
+        are building, it too will be powered by the Anvil Protocol.
       </p>
-      <p>Secondary market will open a week after launch. Have fun!</p>
       <p>
-        Useful links: <br />
+        What you see here is 10K AI-generated helmet NFTs – each one unique with
+        its own name, tags, description, and attributes (also some are rarer
+        than others so hold onto your Legendary NFTs). 5k NFTs are available for
+        purchase, 4k are allocated for airdrops, and 1k is left for us. This is
+        all set up securely with smart contracts running on ICP, everyone gets
+        random NFTs – even us!
+      </p>
+      <p>
+        Because AIs are strange and nobody knows how they work - some NFTs may
+        be weird – but don’t worry in the future we’ll add the ability to
+        disenchant your NFT into raw materials such as crystals, metals and
+        other supplies to be used in Zraham City.
+      </p>
+      <p>
+        We appreciate you guys trying out our dapp and we hope you have fun!
+      </p>
+      <p>
+        Some useful links:
+        <br />
         <a href="https://nftanvil.com" target="_blank">
           NFT Anvil
         </a>{" "}
@@ -102,6 +113,7 @@ function About() {
           Github link to this dapp and smart contract
         </a>
       </p>
+      <p>P.S Secondary Market will open 1 week after launch</p>
     </div>
   );
 }
@@ -208,7 +220,7 @@ function App() {
       <br />
       <br />
       <br />
-      <Collection nfts={nfts} mine={mine} />
+      <Collection nfts={r_nfts} mine={mine} />
       <ToastContainer theme="dark" />
     </div>
   );
