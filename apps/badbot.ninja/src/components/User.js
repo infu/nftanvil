@@ -18,21 +18,35 @@ import {
 } from "@vvv-interactive/nftanvil-react";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { ButtonModal } from "./Tools.js";
+import { msg } from "../actions/purchase.js";
+import { toast } from "react-toastify";
+
 export function User() {
   const dispatch = useAnvilDispatch();
   const addressInput = useRef(null);
   const amountInput = useRef(null);
-  const address = useAnvilSelector((state) => state.user.address);
-  const icp = AccountIdentifier.e8sToIcp(
-    useAnvilSelector((state) => state.user.icp)
-  );
+  const [working, setWorking] = useState(false);
 
-  const sendIcp = () => {
+  const address = useAnvilSelector((state) => state.user.address);
+  const e8s = useAnvilSelector((state) => state.user.icp);
+  const icp = AccountIdentifier.e8sToIcp(e8s);
+
+  const sendIcp = async () => {
     let to = addressInput.current.value;
     let amount = Math.floor(amountInput.current.value * 100000000) - 10000;
-    dispatch(user_transfer_icp({ to, amount }));
+    setWorking(true);
+    try {
+      await dispatch(user_transfer_icp({ to, amount }));
+      dispatch(msg("Transfer complete"));
+    } catch (e) {
+      dispatch(msg(e.message, toast.TYPE.ERROR));
+    }
+    setWorking(false);
+
+    amountInput.current.value = "";
     console.log({ to, amount });
   };
+
   return (
     <div className="user">
       {address ? (
@@ -41,7 +55,9 @@ export function User() {
             <div className="title">your address</div>
             <div className="val">{address}</div>
           </div>{" "}
-          <div className="icp">{icp} ICP</div>
+          <div className="icp">
+            {icp} ICP <span className="e8s">({e8s} e8s)</span>
+          </div>
         </>
       ) : null}
       <div className="actions">
@@ -56,8 +72,14 @@ export function User() {
             </button>
             <ButtonModal name="Transfer">
               {({ setVisibility }) => (
-                <div className="modal-transfer-icp">
+                <div
+                  className={"modal-transfer-icp " + (working ? "working" : "")}
+                >
                   <div className="modal-title">Transfer ICP</div>
+                  {working ? (
+                    <div style={{ textAlign: "center" }}>Transferring...</div>
+                  ) : null}
+
                   <div>
                     <label htmlFor="address">To Address</label>
                     <input ref={addressInput} type="text" id="address"></input>
@@ -71,6 +93,10 @@ export function User() {
                     <button className="attention" onClick={() => sendIcp()}>
                       Send
                     </button>
+                  </div>
+                  <div className="smalltxt">
+                    ICP transfer fee 0.0001{" "}
+                    <span className="e8s">(10000 e8s)</span>
                   </div>
                 </div>
               )}

@@ -44,62 +44,115 @@ import bbn_logo from "./assets/bbn_logo.png";
 
 import nfts from "./nfts.json";
 import "./App.css";
+const START = 1651089600; //Date.now() / 1000 + 30;
 
 function About() {
   return (
     <div className="about">
       <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas
-        sagittis egestas orci ut accumsan. Aliquam facilisis libero in lacus
-        elementum maximus. Nulla facilisi. Ut tristique, elit non hendrerit
-        venenatis, orci turpis volutpat nunc, ac laoreet nulla metus mollis
-        ligula. Vestibulum pulvinar enim sit amet ex dignissim convallis. Ut
-        tincidunt sapien felis, eu auctor mauris tempus ac. In magna purus,
-        varius id iaculis ut, vehicula nec dui. Aenean vehicula varius accumsan.
-        Donec interdum, orci a accumsan egestas, mauris velit pharetra felis,
-        vel rutrum ligula dui non mauris. Ut a ornare dolor. Duis cursus
-        pellentesque convallis. Quisque sit amet justo non elit fermentum
-        hendrerit quis sit amet dui. Vivamus ac odio at metus ullamcorper
-        finibus. Quisque efficitur, ante sit amet finibus dapibus, sapien erat
-        imperdiet augue, ac varius leo sem et enim. Nam fringilla nisl id purus
-        aliquam, quis mollis ligula viverra. Donec a arcu laoreet, venenatis
-        velit vitae, hendrerit dui.
+        Heya, welcome to badbot.ninja metaverse apparel. This is a simple web3
+        open-source dapp anyone can clone. It showcases the open-source Anvil
+        protocol and NFTA standard in a simplified frontend aiming to be easily
+        understood by developers.
       </p>
 
       <p>
-        Vivamus libero nisi, venenatis id lobortis quis, aliquam quis ipsum.
-        Vestibulum ultrices luctus diam, nec varius lorem ultricies sed. Donec
-        sollicitudin et sapien in gravida. Curabitur et finibus odio. Vivamus
-        accumsan luctus tortor id pharetra. Maecenas ornare dui libero, non
-        sagittis arcu sodales sit amet. Nulla nec dui quis metus fermentum
-        dapibus.
+        We made this collection so everyone can have inexpensive NFTs to play
+        with. We are airdropping 4k and will leave 5k to sell here, while we
+        keep the 1k that remains in the end.
       </p>
 
       <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi non lorem
-        a elit sodales consequat. Donec id urna ut justo feugiat pulvinar.
-        Maecenas vehicula odio ut accumsan lacinia. Quisque sit amet fermentum
-        neque. Nunc nec congue odio. Vestibulum efficitur, urna quis iaculis
-        varius, velit nisi ullamcorper tellus, vitae semper urna sapien id ante.
-        Etiam bibendum ultrices porta. Curabitur condimentum nibh vel laoreet
-        vestibulum. Nunc finibus quis nisl in condimentum. Etiam lectus ipsum,
-        facilisis ac rutrum in, volutpat rhoncus tortor. Proin eget sollicitudin
-        nisl. Mauris sodales, neque posuere sagittis rutrum, risus tellus congue
-        nulla, nec pulvinar nulla nisi nec tellus.
+        In the future, we are planning on experimenting with different smart
+        contracts (transformation, enchanting, crafting) and these NFT items
+        will be part of that. They will also be used in a character
+        customization system part of Zraham city - our metaverse city - a
+        long-term project. What you see here are 10k helmets and we will be
+        adding more items for different slots (legs, chest, hands, etc.) in the
+        following months.
       </p>
 
       <p>
-        Maecenas interdum neque ut sem ultricies sollicitudin. Nunc nisi turpis,
-        rhoncus eget nisi id, egestas vehicula metus. Praesent id lectus urna.
-        Aliquam viverra cursus sem dictum facilisis. Pellentesque pellentesque
-        pretium vestibulum. Duis eget placerat ex. Mauris aliquet euismod
-        aliquet. Proin feugiat consectetur sapien, eget ultricies velit
-        facilisis vel. Proin velit arcu, sagittis eget augue pretium, tincidunt
-        scelerisque lectus. Aliquam venenatis justo quis velit feugiat
-        dignissim. Nulla odio sapien, convallis eu lectus eget, imperdiet
-        maximus urna. Proin semper ex eget diam mattis tristique. Donec posuere
-        aliquet suscipit.
+        Badbot.ninja helmets were created by AI and originally intended to be
+        icon-sized. Their graphics and texts are AI created, so some may be
+        faulty, but worry not, you will be able to disintegrate them into raw
+        materials - crystals, metals, etc. You will also be able to remix them
+        and create one NFT with parts from 3 different ones. Ex: take graphics
+        from one, texts from another, quality and attributes from a third one.
       </p>
+      <p>
+        This open-source smart contract holds all 10k NFTs and everyone gets
+        provably random ones, even us.
+      </p>
+      <p>Secondary market will open a week after launch. Have fun!</p>
+      <p>
+        Useful links: <br />
+        <a href="https://nftanvil.com" target="_blank">
+          NFT Anvil
+        </a>{" "}
+        <br />
+        <a href="https://docs.nftanvil.com/docs/intro" target="_blank">
+          Anvil protocol docs
+        </a>
+        <br />
+        <a
+          href="https://github.com/infu/nftanvil/tree/main/apps/badbot.ninja"
+          target="_blank"
+        >
+          Github link to this dapp and smart contract
+        </a>
+      </p>
+    </div>
+  );
+}
+
+function Timer({ children }) {
+  const [count, setCount] = useState(0);
+  const [time, setTime] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const dispatch = useAnvilDispatch();
+
+  const load = async () => {
+    let duration = START - Math.round(Date.now() / 1000);
+    let days = Math.floor(duration / (60 * 60 * 24));
+    let hours = Math.floor((duration - days * (60 * 60 * 24)) / (60 * 60));
+    let min = Math.floor(
+      (duration - days * (60 * 60 * 24) - hours * (60 * 60)) / 60
+    );
+    let sec = Math.floor(
+      duration - days * (60 * 60 * 24) - hours * (60 * 60) - min * 60
+    );
+
+    if (duration <= 0) {
+      setOpen(true);
+      setTime("");
+    } else
+      setTime(
+        days +
+          " days " +
+          hours +
+          " hours " +
+          min +
+          " minutes " +
+          sec +
+          "seconds until start"
+      );
+  };
+
+  useEffect(() => {
+    load();
+    const interval = setInterval(() => {
+      load();
+      setCount(count + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [count, dispatch]);
+
+  return (
+    <div style={{ textAlign: "center", marginTop: "8px" }}>
+      {time}
+      <div className={open ? "ito-open" : "ito-waiting"}>{children}</div>
     </div>
   );
 }
@@ -141,13 +194,16 @@ function App() {
     <div className="App">
       <img src={bbn_logo} className="bbn-logo" alt="Bad Bot Ninja" />
       <h1 className="Title">Bad Bot Ninja</h1>
-      {/* <About /> */}
+      <About />
+
       <User />
-      <PriceOptions
-        refreshMine={() => {
-          load();
-        }}
-      />
+      <Timer>
+        <PriceOptions
+          refreshMine={() => {
+            load();
+          }}
+        />
+      </Timer>
       <ProgressBar />
       <br />
       <br />

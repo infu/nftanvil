@@ -51,6 +51,10 @@ type Class =
    owned: (AccountIdentifier) -> (Result) query;
    set_admin: (principal) -> () oneway;
    set_anvil_config: (Config) -> ();
+   set_params: (record {
+                  airdrop: nat;
+                  purchase: nat;
+                }) -> () oneway;
    stats: () ->
     (record {
        added: nat;

@@ -40,9 +40,9 @@ export const numberToBytesArray = (n, size) => {
 };
 
 export const generateKeyHashPair = (getRandomValues = false) => {
-  var key = new Uint8Array(20);
-  if (!getRandomValues) getRandomValues = window.crypto.getRandomValues;
-  getRandomValues(key);
+  let key = getRandomValues
+    ? getRandomValues(new Uint8Array(20))
+    : window.crypto.getRandomValues(new Uint8Array(20));
   var hash = sha224(key);
   return { key, hash };
 };

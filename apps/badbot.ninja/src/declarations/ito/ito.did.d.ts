@@ -26,6 +26,9 @@ export interface Class {
   'owned' : (arg_0: AccountIdentifier) => Promise<Result>,
   'set_admin' : (arg_0: Principal) => Promise<undefined>,
   'set_anvil_config' : (arg_0: Config) => Promise<undefined>,
+  'set_params' : (
+      arg_0: { 'airdrop' : bigint, 'purchase' : bigint },
+    ) => Promise<undefined>,
   'stats' : () => Promise<
       {
         'total' : bigint,

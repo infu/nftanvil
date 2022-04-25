@@ -13,13 +13,22 @@ body {
   font-size: 23px;
   text-align: center;
 }
-
+.ito-waiting {pointer-events: none;opacity:0.5}
+.working {
+  pointer-events: none;
+  opacity:0.5;
+}
+.smalltxt {
+  font-size:11px;
+}
+.about a {color:#1be274!important}
 .collection {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
+.e8s {color:#656d7e; font-size:12px;}
 .c-actions {
   max-width: 500px;
   text-align: center;

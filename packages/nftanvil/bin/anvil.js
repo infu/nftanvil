@@ -297,6 +297,8 @@ const itoIdlFactory = ({ IDL }) => {
   const TokenIdentifier = IDL.Nat64;
   const Result_3 = IDL.Variant({ ok: IDL.Null, err: IDL.Text });
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
+  const Basket = IDL.Vec(IDL.Opt(TokenIdentifier));
+  const Result_4 = IDL.Variant({ ok: Basket, err: IDL.Text });
   const TransactionId = IDL.Vec(IDL.Nat8);
   const SubAccount = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
@@ -328,10 +330,10 @@ const itoIdlFactory = ({ IDL }) => {
     airdrop_add: IDL.Func([IDL.Vec(IDL.Nat8)], [Result_3], []),
     airdrop_use: IDL.Func(
       [AccountIdentifier, IDL.Vec(IDL.Nat8)],
-      [Result_3],
+      [Result_4],
       []
     ),
-    buy_tx: IDL.Func([TransactionId, IDL.Opt(SubAccount)], [Result_3], []),
+    buy_tx: IDL.Func([TransactionId, IDL.Opt(SubAccount)], [Result_4], []),
     claim: IDL.Func(
       [AccountIdentifier, IDL.Opt(SubAccount), TokenIdentifier],
       [Result_3],
@@ -342,6 +344,11 @@ const itoIdlFactory = ({ IDL }) => {
     owned: IDL.Func([AccountIdentifier], [Result], ["query"]),
     set_admin: IDL.Func([IDL.Principal], [], ["oneway"]),
     set_anvil_config: IDL.Func([Config], [], []),
+    set_params: IDL.Func(
+      [IDL.Record({ airdrop: IDL.Nat, purchase: IDL.Nat })],
+      [],
+      ["oneway"]
+    ),
     stats: IDL.Func(
       [],
       [
@@ -386,6 +393,18 @@ const contractBalance = async (COUNT) => {
 
   let res = await itoContract.icp_balance();
   console.log(res.ok, "E8S ", AccountIdentifier.e8sToIcp(res.ok), "ICP");
+};
+
+const itoChangeParams = async (purchase, airdrop) => {
+  let { principal, address, subaccount } = await routerCanister();
+  let ITO_PRINCIPAL = getCanisterId("ito");
+
+  let itoContract = can(itoCreateActor, ITO_PRINCIPAL);
+
+  let res = await itoContract.set_params({
+    purchase,
+    airdrop,
+  });
 };
 
 const userTransfer = async (to, amount) => {
@@ -1163,6 +1182,16 @@ ito
   .action((count, options) => {
     console.log(`Creating codes ${count}`);
     airdropAdd(parseInt(count, 10));
+  });
+
+ito
+  .command("change-parameters")
+  .argument("<purchase>", "amount")
+  .argument("<airdrop>", "amount")
+  .description("Sets left for purchase and left for airdrop paramethers")
+  .action((a, b, options) => {
+    console.log(`Changing parameters`);
+    itoChangeParams(parseInt(a, 10), parseInt(b, 10));
   });
 
 program.addCommand(ito);

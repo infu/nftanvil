@@ -256,7 +256,6 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   };
 
-
   public shared({caller}) func nft_mint(slot: Nft.CanisterSlot, request: Nft.MintRequest) : async Nft.MintResponse {
     assert(Nft.APrincipal.isLegitimateSlot(_conf.space, slot));
     let aid = Nft.User.toAccountIdentifier(request.user);
@@ -559,8 +558,6 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         };
         
   };
-
-
 
 
   private func balanceAdd(target : {#anv; #pwr}, aid:AccountIdentifier, amount: Balance) : () {

@@ -49,6 +49,11 @@ export const idlFactory = ({ IDL }) => {
     'owned' : IDL.Func([AccountIdentifier], [Result], ['query']),
     'set_admin' : IDL.Func([IDL.Principal], [], ['oneway']),
     'set_anvil_config' : IDL.Func([Config], [], []),
+    'set_params' : IDL.Func(
+        [IDL.Record({ 'airdrop' : IDL.Nat, 'purchase' : IDL.Nat })],
+        [],
+        ['oneway'],
+      ),
     'stats' : IDL.Func(
         [],
         [

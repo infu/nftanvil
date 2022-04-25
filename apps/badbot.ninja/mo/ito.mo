@@ -51,7 +51,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   private let MAX_CODES = 10000;
   private stable var LEFT_AIRDROP : Nat = 3000;
   private stable var LEFT_PURCHASE : Nat = 6000;
-  private let START_TIMESTAMP : Nat32 = 1651078800; //1654951047
+  private let START_TIMESTAMP : Nat32 = 1651089600; //1654951047
 
   // Edit whats bellow only if you know what you are doing
   private let MAX_TOKEN_SPACE = MAX_TOKENS * 10;
