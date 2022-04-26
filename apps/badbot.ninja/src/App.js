@@ -61,36 +61,40 @@ let r_nfts = getShuffledArr(nfts);
 function About() {
   return (
     <div className="about">
+      <p>Welcome to badbot.ninja!</p>
       <p>
-        Welcome to badbot.ninja – Open-source Internet Computer web3 dapp
+        Badbot Ninja is an open-source web3 dapp on the Internet Computer
         demonstrating how easy it is for developers to build their own NFT use
         cases with the Anvil protocol.
       </p>
       <p>
-        Badbot Ninja metaverse apparel is a collection of NFTs made to be
-        inexpensive and accessible. We are starting with 10k NFT helmets and
-        later we will be adding NFTs for other character slots like chest, legs,
-        hands, etc. In the future we’re going to be working on crafting,
-        enchanting, avatar customization and our own blockchain game engine. In
-        the long term, these will be used in Zraham City which is our city in
-        the metaverse.
+        Badbot Ninja metaverse apparel is our first showcase project, an NFT
+        series with collectibility and accessibility in mind. We are starting
+        with a 10k collection of helmets and will expand to include wearable
+        NFTs for other character slots like chest, legs, hands, etc. In the
+        future, we will be working on adding the functionality for crafting and
+        enchanting items, along with avatar customization, to be applied in our
+        metaverse space, Zraham City. We will be developing our own
+        blockchain-based game engine so that Zraham City and its impeccably
+        attired citizens can congregate and explore a dynamic digital arena.
       </p>
       <p>
-        What you see here is 10K AI-generated helmet NFTs – each one unique with
-        its own name, description, and attributes (also some are rarer than
-        others). 5k NFTs are available for purchase, 4k are allocated for
-        airdrops, and 1k is left for us. This is all set up securely with smart
-        contracts running on ICP, everyone gets random NFTs – even us!
+        What you see here is a collection of 10k AI-generated helmet NFTs—each
+        one is unique with its own name, description, and attributes, some are
+        rarer than others. 5k of our inaugural set is available for purchase, 4k
+        are allocated for airdrops, and 1k out of the NFT collection is left for
+        the developer team. Every asset here is set up securely with smart
+        contracts running on the ICP blockchain, meaning everyone has a fair
+        chance of receiving truly randomized NFTs, even us!
       </p>
       <p>
-        Because AIs are strange and nobody knows how they work - some NFTs may
-        be weird – but don’t worry in the future we’ll add the ability to
-        disenchant your NFT into raw materials such as crystals, metals and
-        other supplies to be used in Zraham City.
+        Because AIs are mysterious and no one knows exactly how they think, some
+        NFTs might be strange. However, don’t worry if the AI selects a strange
+        helmet for you! In the future, we will add the ability to disenchant
+        your NFT into raw materials such as crystals, metals, and other supplies
+        that you can use to craft new items in Zraham City.
       </p>
-      <p>
-        We appreciate you guys trying out our dapp and we hope you have fun!
-      </p>
+      <p>Try out our Dapp and have fun!</p>
       <p>
         Some useful links:
         <br />

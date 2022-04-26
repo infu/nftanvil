@@ -182,6 +182,7 @@ export const user_refresh_balances = () => async (dispatch, getState) => {
   await dispatch(user_refresh_icp_balance());
   if (!(await authentication.client.isAuthenticated())) return;
   dispatch(user_refresh_pwr_balance());
+  dispatch(user_restore_purchase());
 };
 
 export const user_logout = () => async (dispatch, getState) => {
@@ -410,6 +411,41 @@ export const user_pwr_buy =
 
     dispatch(user_refresh_balances());
   };
+
+export const user_restore_purchase = () => async (dispatch, getState) => {
+  let s = getState();
+
+  let identity = authentication.client.getIdentity();
+
+  let address = s.user.address;
+
+  let pwr = pwrCanister(
+    PrincipalFromSlot(
+      s.user.map.space,
+      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+    ),
+    {
+      agentOptions: authentication.getAgentOptions(),
+    }
+  );
+
+  let subaccount = [
+    AccountIdentifier.TextToArray(s.user.subaccount) || null,
+  ].filter(Boolean);
+
+  try {
+    let claim = await pwr.pwr_purchase_claim({
+      user: { address: AccountIdentifier.TextToArray(address) },
+      subaccount,
+    });
+
+    if (claim.err) throw claim.err;
+
+    let { transactionId } = claim.ok;
+
+    dispatch(user_refresh_pwr_balance());
+  } catch (e) {}
+};
 
 export const window_focus = () => async (dispatch, getState) => {
   dispatch(focusSet(true));
