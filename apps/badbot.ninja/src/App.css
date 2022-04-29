@@ -14,6 +14,8 @@ body {
   text-align: center;
 }
 .ito-waiting {pointer-events: none;opacity:0.5}
+.unavailable {pointer-events: none;opacity:0.5}
+.soldout {font-size:22px;}
 .working {
   pointer-events: none;
   opacity:0.5;

@@ -2,13 +2,20 @@ import { AuthClient } from "@dfinity/auth-client";
 
 let client = null;
 
+const defaultOptions = { cookie: false };
+
 const auth = {
   client,
+  options: defaultOptions,
+};
+
+auth.setOptions = (opt) => {
+  auth.options = { ...defaultOptions, ...opt };
 };
 
 auth.create = async () => {
   const storage = new MyStorage();
-  auth.client = await AuthClient.create({ storage });
+  auth.client = await AuthClient.create(auth.options.cookie ? {} : { storage });
 };
 
 auth.getAgentOptions = () => {

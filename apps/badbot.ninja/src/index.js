@@ -5,6 +5,10 @@ import App from "./App";
 //import reportWebVitals from "./reportWebVitals";
 import { AnvilProvider } from "@vvv-interactive/nftanvil-react";
 
+import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
+
+authentication.setOptions({ cookie: true });
+
 window.lockdown({
   //comes from lockdown.umd.min.js
   consoleTaming: "unsafe", // Leave original start console in place

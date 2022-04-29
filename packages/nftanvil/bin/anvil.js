@@ -504,6 +504,7 @@ const itoAuthorize = async () => {
       encoding: "UTF-8",
     }
   );
+
   if (IS_LOCAL()) {
     let itoContract = can(itoCreateActor, getCanisterId("ito"));
     itoContract.set_anvil_config({

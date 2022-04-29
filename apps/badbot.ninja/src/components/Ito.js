@@ -21,6 +21,9 @@ import Confetti from "./Confetti.js";
 import { ButtonModal } from "./Tools.js";
 import nfts from "../nfts.json";
 
+const UNAVAILABLE = true;
+const SOLDOUT = true;
+
 function Basket({ ids, onClose }) {
   let nftcut = nfts
     ? nfts.filter((x) => {
@@ -150,8 +153,15 @@ export function PriceOptions({ refreshMine }) {
 
   return (
     <div className={!logged ? "requiresLogin" : ""}>
+      {SOLDOUT ? <div className="soldout">Sold out!</div> : null}
       <div className="priceOptions">
-        <div className={"priceBox " + (working ? "working" : "")}>
+        <div
+          className={
+            "priceBox " +
+            (working ? "working" : "") +
+            (UNAVAILABLE ? " unavailable " : "")
+          }
+        >
           <div className="title">Shot</div>
           <div className="price">{showPrice(price_1)}</div>
           <div className="ftrs">
@@ -165,7 +175,13 @@ export function PriceOptions({ refreshMine }) {
           />
         </div>
 
-        <div className={"priceBox attention " + (working ? "working" : "")}>
+        <div
+          className={
+            "priceBox attention " +
+            (working ? "working" : "") +
+            (UNAVAILABLE ? " unavailable " : "")
+          }
+        >
           {working ? <CenterSpinner /> : null}
           <div className="title">BFF</div>
           <div className="price">{showPrice(price_2)}</div>
@@ -182,7 +198,13 @@ export function PriceOptions({ refreshMine }) {
           />
         </div>
 
-        <div className={"priceBox " + (working ? "working" : "")}>
+        <div
+          className={
+            "priceBox " +
+            (working ? "working" : "") +
+            (UNAVAILABLE ? " unavailable " : "")
+          }
+        >
           <div className="title">Splash</div>
           <div className="price">{showPrice(price_3)}</div>
           <div className="ftrs">
