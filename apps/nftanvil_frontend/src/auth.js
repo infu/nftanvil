@@ -10,7 +10,7 @@ const auth = {
 
 auth.create = async () => {
   const storage = new MyStorage();
-  auth.client = await AuthClient.create({ storage });
+  auth.client = await AuthClient.create(); //{ storage }
 };
 
 auth.requestHardwareAuth = async () => {
