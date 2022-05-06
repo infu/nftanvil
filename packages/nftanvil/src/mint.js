@@ -138,26 +138,26 @@ export const easyMintOne = async (xx, proxy_canister) => {
         if (err) throw Error("Couldn't pin to IPFS");
       }
 
-      if (metadata?.content[0]?.internal?.path)
-        await uploadFile(
-          nft,
-          tokenIndex,
-          "content",
-          await chunkBlob(
-            await blobFrom(metadata.content[0].internal.path),
-            fetch
-          ),
-          subaccount
-        );
+      // if (metadata?.content[0]?.internal?.path)
+      //   await uploadFile(
+      //     nft,
+      //     tokenIndex,
+      //     "content",
+      //     await chunkBlob(
+      //       await blobFrom(metadata.content[0].internal.path),
+      //       fetch
+      //     ),
+      //     subaccount
+      //   );
 
-      if (metadata?.thumb?.internal?.path)
-        await uploadFile(
-          nft,
-          tokenIndex,
-          "thumb",
-          await chunkBlob(await blobFrom(metadata.thumb.internal.path), fetch),
-          subaccount
-        );
+      // if (metadata?.thumb?.internal?.path)
+      //   await uploadFile(
+      //     nft,
+      //     tokenIndex,
+      //     "thumb",
+      //     await chunkBlob(await blobFrom(metadata.thumb.internal.path), fetch),
+      //     subaccount
+      //   );
 
       console.log("minted", tokenToText(tid));
 

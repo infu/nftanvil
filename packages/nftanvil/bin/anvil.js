@@ -46,6 +46,9 @@ import pLimit from "p-limit";
 import getRandomValues from "get-random-values";
 import { execSync } from "child_process";
 import prompts from "prompts";
+import { blobFrom } from "fetch-blob/from.js";
+
+import fetch from "node-fetch";
 
 import colors from "colors";
 
@@ -760,14 +763,30 @@ const checkUploads = async (NFT_FROM, NFT_TO, options) => {
           }
 
           if (!found) {
-            await nft.burn({
-              memo: [],
-              subaccount: [AccountIdentifier.TextToArray(subaccount)],
-              token: tid,
-              user: { address: AccountIdentifier.TextToArray(address) },
-            });
+            // await nft.burn({
+            //   memo: [],
+            //   subaccount: [AccountIdentifier.TextToArray(subaccount)],
+            //   token: tid,
+            //   user: { address: AccountIdentifier.TextToArray(address) },
+            // });
 
-            delete minted[i];
+            // delete minted[i];
+            if (data[i].content)
+              await uploadFile(
+                nft,
+                index,
+                "content",
+                await chunkBlob(await blobFrom(data[i].content), fetch),
+                [AccountIdentifier.TextToArray(subaccount)]
+              );
+
+            await uploadFile(
+              nft,
+              index,
+              "thumb",
+              await chunkBlob(await blobFrom(data[i].thumb), fetch),
+              [AccountIdentifier.TextToArray(subaccount)]
+            );
 
             console.log(
               "Not found image data for token",

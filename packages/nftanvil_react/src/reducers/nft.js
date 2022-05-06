@@ -219,18 +219,15 @@ export const nft_purchase =
       }
     );
 
-    let prez;
-    try {
-      prez = await pwr.nft_purchase(BigInt(slot), {
-        token: tokenFromText(id),
-        user: { address: AccountIdentifier.TextToArray(address) },
-        subaccount,
-        affiliate: [],
-        amount,
-      });
+    let prez = await pwr.nft_purchase(BigInt(slot), {
+      token: tokenFromText(id),
+      user: { address: AccountIdentifier.TextToArray(address) },
+      subaccount,
+      affiliate: [],
+      amount,
+    });
 
-      if (prez.err) throw new Error(JSON.stringify(prez.err));
-    } catch (e) {}
+    if (prez.err) throw new Error(JSON.stringify(prez.err));
 
     dispatch(user_refresh_balances());
     dispatch(nft_fetch(id));
@@ -298,7 +295,7 @@ export const nft_set_price =
       price: price,
       subaccount,
     });
-    if (!("ok" in t)) throw t.err;
+    if (!("ok" in t)) throw new Error(JSON.stringify(t.err));
     dispatch(nft_fetch(id));
   };
 
@@ -323,21 +320,17 @@ export const nft_transfer =
       AccountIdentifier.TextToArray(s.user.subaccount) || null,
     ].filter(Boolean);
 
-    let t;
-    try {
-      t = await nftcan.transfer({
-        from: { address: AccountIdentifier.TextToArray(address) },
-        to: { address: AccountIdentifier.TextToArray(toAddress) },
-        token: tid,
-        amount: 1,
-        memo: [],
-        subaccount,
-      });
-      if (!t.ok) throw t.err;
-      let { transactionId } = t.ok;
-    } catch (e) {
-      console.error("Transfer error", e);
-    }
+    let t = await nftcan.transfer({
+      from: { address: AccountIdentifier.TextToArray(address) },
+      to: { address: AccountIdentifier.TextToArray(toAddress) },
+      token: tid,
+      amount: 1,
+      memo: [],
+      subaccount,
+    });
+
+    if (!t.ok) throw new Error(JSON.stringify(t.err));
+    let { transactionId } = t.ok;
 
     dispatch(nft_fetch(id));
 

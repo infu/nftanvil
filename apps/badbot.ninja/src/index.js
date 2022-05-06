@@ -6,7 +6,6 @@ import App from "./App";
 import { AnvilProvider } from "@vvv-interactive/nftanvil-react";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
-
 authentication.setOptions({ cookie: true });
 
 window.lockdown({

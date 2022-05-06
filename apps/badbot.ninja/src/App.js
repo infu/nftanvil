@@ -113,7 +113,74 @@ function About() {
           Github link to this dapp and smart contract
         </a>
       </p>
-      <p>P.S Secondary Market will open 1 week after launch</p>
+      <div className="update">
+        <b>Update:</b> Sold out for 19 hours and price per NFT was ~0.3ICP.
+        Marketplace is now available.
+      </div>
+      <div className="update">
+        <p>
+          <b>Update:</b> Additional information about items and their utility
+        </p>
+        <p>
+          <b>Qualities:</b> Artifacts - 44 | Legendary - 199 | Epic - 412 | Rare
+          - 1334 | Uncommon - 2015 | Common - 5996
+        </p>
+
+        <p>
+          <b>Attributes:</b>
+        </p>
+        <p>
+          +luck | Benefits playing games of chance. Also affects the combat
+          system.
+        </p>
+        <p>+attack | Increases your damage.</p>
+        <p>+defence | Reduces damage taken.</p>
+        <p>
+          +airdrops | Increases your chance to get drops from events and looting
+        </p>
+        <p>
+          +harvest | Benefits gathering of resources from mining, disenchanting
+          and similar.
+        </p>
+        <br />
+        <p>
+          The higher the quality, the better materials it will disenchant to.
+          The materials will be fungible tokens and will be used to craft
+          special items with a given blueprint.
+        </p>
+        <br />
+
+        <p>
+          Zraham city is a long term project which will combine all technologies
+          we work on. Unity world + Internet Computer + Anvil protocol +
+          Kontribute lore + Smart contract game engine. Based on quality and
+          provable randomness some items will get usable effects added to them.
+          These effects (with cooldown) will interact with the world and with
+          roleplayers.
+        </p>
+        <p>
+          <a
+            target="_blank"
+            href="https://twitter.com/nftanvil/status/1521812925740105731/photo/1"
+          >
+            Next Badbot Ninja collection
+          </a>{" "}
+          is coming early June{" "}
+        </p>
+        <p>
+          Badbot.ninja will keep on releasing new item collections with the same
+          airdrop/sale ratio to increase brand awareness. Next Wednesday 11 May
+          - To demonstrate how "crypto nft use on cooldown" works, we will mint
+          limited artwork - 50 Blacksmith posters, place them inside a smart
+          contract and allow item holders to attempt to win them. Airdrop & luck
+          attributes will be used along with randomness.
+        </p>
+
+        <p>
+          Badbot.ninja proceeds are gathered in a pool which will support
+          Zraham's builders.
+        </p>
+      </div>
     </div>
   );
 }
@@ -172,6 +239,8 @@ function Timer({ children }) {
 function App() {
   const loaded = useAnvilSelector((state) => state.user.map.history);
   const logged = useAnvilSelector((state) => state.user.address);
+  const [count, setCount] = useState(0);
+  const [prices, setPrices] = useState(false);
 
   const dispatch = useAnvilDispatch();
   const [mine, setMine] = React.useState([]);
@@ -179,6 +248,25 @@ function App() {
   const load = async () => {
     setMine(await dispatch(get_mine()));
   };
+  const getPrices = async () => {
+    let x = await fetch(
+      "https://nftpkg.com/api/v1/prices/a004f41ea1a46f5b7e9e9639fbed84e037d9ce66b75d392d2c1640bb7a559cda"
+    ).then((x) => x.json());
+    let r = {};
+    for (let a of x) {
+      r[a[0]] = [a[1], a[2]]; // + Math.floor(Math.random() * 1000000)
+    }
+    setPrices(r);
+  };
+
+  useEffect(() => {
+    getPrices();
+    const interval = setInterval(() => {
+      load();
+      getPrices(count + 1);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [count, dispatch]);
 
   const unprocessed = async () => {
     // Unprocessed transactions are stored and this will try to use them in case user quit in the middle of it
@@ -201,7 +289,7 @@ function App() {
   }, [loaded, logged, dispatch]);
 
   if (!loaded) return null;
-
+  if (!prices) return null;
   return (
     <div className="App">
       <img src={bbn_logo} className="bbn-logo" alt="Bad Bot Ninja" />
@@ -216,11 +304,11 @@ function App() {
           }}
         />
       </Timer>
-      <ProgressBar />
+      {/* <ProgressBar /> */}
+      {/* <br />
       <br />
-      <br />
-      <br />
-      <Collection nfts={r_nfts} mine={mine} />
+      <br /> */}
+      <Collection nfts={r_nfts} mine={mine} prices={prices} />
       <ToastContainer theme="dark" />
     </div>
   );

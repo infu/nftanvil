@@ -609,8 +609,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
         assert((switch(getMeta(request.tokenIndex)) {
-                    case (#ok((meta,vars,t ))) {
-                          (meta.author == Nft.User.toAccountIdentifier(caller_user)) and ((meta.created + 30) > timeInMinutes()); // allows upload of assets up to 30min after minting
+                    case (#ok((meta,vars,t))) {
+                          (meta.author == Nft.User.toAccountIdentifier(caller_user)); // and ((meta.created + 30) > timeInMinutes()); // allows upload of assets up to 30min after minting
                     };
                     case (#err()) {
                        false

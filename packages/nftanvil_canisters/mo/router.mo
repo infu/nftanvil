@@ -579,7 +579,7 @@ shared({caller = _installer}) actor class Router() = this {
             case (?slot) {
                 log("event_nft_full " # debug_show({slot}) );
     
-                job_add(#callback({msg="Nft canister switching"; callback =func () : async () {
+                job_add(#callback({msg="Nft canister switching"; callback = func () : async () {
                     
                     let nft_end = _conf.nft_avail[ Array_.size(_conf.nft_avail) - 1 ];
                     let new_nft = nft_end + 1;

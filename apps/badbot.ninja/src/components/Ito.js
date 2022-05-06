@@ -153,7 +153,7 @@ export function PriceOptions({ refreshMine }) {
 
   return (
     <div className={!logged ? "requiresLogin" : ""}>
-      {SOLDOUT ? <div className="soldout">Sold out!</div> : null}
+      {/* {SOLDOUT ? <div className="soldout">Sold out!</div> : null}
       <div className="priceOptions">
         <div
           className={
@@ -218,7 +218,8 @@ export function PriceOptions({ refreshMine }) {
             refreshMine={refreshMine}
           />
         </div>
-      </div>
+      </div> */}
+
       <div className="airdropOptions">
         <ButtonModal name="Use airdrop code">
           {({ setVisibility }) => (

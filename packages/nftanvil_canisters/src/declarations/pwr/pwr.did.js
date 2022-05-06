@@ -263,11 +263,6 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'config_set' : IDL.Func([Config], [], []),
-    'faucet' : IDL.Func(
-        [IDL.Record({ 'aid' : AccountIdentifier__2, 'amount' : Balance__3 })],
-        [],
-        [],
-      ),
     'nft_mint' : IDL.Func([CanisterSlot, MintRequest], [MintResponse], []),
     'nft_purchase' : IDL.Func(
         [CanisterSlot, PurchaseRequest],

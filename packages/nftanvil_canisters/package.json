@@ -5,7 +5,7 @@
     "publish-vessel": "./scripts/publish_vessel.sh",
     "watch": "babel -d cjs src --copy-files --watch",
     "build": "./scripts/build.sh && babel -d cjs src --copy-files",
-    "reinstall:prod": "./scripts/build.sh && ./scripts/reinstall_prod.sh",
+    "dont:use:reinstall:prod": "./scripts/build.sh && ./scripts/reinstall_prod.sh",
     "upgrade:prod": "./scripts/build.sh && ./scripts/upgrade_prod.sh",
     "reinstall:local": "./scripts/build.sh && ./scripts/reinstall_local.sh",
     "upgrade:local": "./scripts/build.sh && ./scripts/upgrade_local.sh",

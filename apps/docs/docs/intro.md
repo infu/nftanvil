@@ -75,3 +75,7 @@ The Internet has 7 layers of protocols. Some notable protocols: Bitcoin, Ethereu
 **Anvil protocol works over ICP protocol.**
 
 ### UX/ UI design
+
+As humans, we have an underlying “blueprint” for how we perceive and process the world around us, and the study of psychology helps us decipher this blueprint. Designers can use this knowledge to build more intuitive, human-centered products and experiences. Instead of forcing users to adapt to the design of a product or experience, we can use some key principles from psychology as a guide for designing in a way that is adapted to people.
+
+Laws of UX is a collection of best practices that designers can consider when building user interfaces. https://lawsofux.com/

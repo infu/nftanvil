@@ -1024,7 +1024,7 @@ module {
     public type Attribute = (Text, Nat16);
     public module Attribute = {
         public func validate((a,n) : Attribute) : Bool {
-            (a.size() <= 24)
+            (a.size() <= 36)
         }
     };
 
@@ -1060,7 +1060,7 @@ module {
     public type Tag = Text;
     public module Tag = {
         public func validate(t : Tag) : Bool {
-            t.size() <= 24
+            t.size() <= 36
         }
     };
 

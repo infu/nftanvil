@@ -34,6 +34,7 @@ import nftReducer, {
   nft_claim_link,
   nft_enter_code,
   nft_recharge_quote,
+  nft_set_price,
 } from "./reducers/nft";
 
 export { load_inventory, verify_domain };
@@ -64,6 +65,7 @@ export {
   nft_claim_link,
   nft_enter_code,
   nft_recharge_quote,
+  nft_set_price,
 };
 export const TestAnvilComponent = () => {
   return <div>fun component sweet 123 123 123</div>;

@@ -344,12 +344,14 @@ select {
   padding: 32px;
 }
 
-.modal-transfer-icp {
-  min-width: 300px;
+.modal-transfer-icp, .modal-nftbox {
+  
   text-align: left;
   max-width: 100%;
 }
-.modal-transfer-icp input {
+
+
+.modal-transfer-icp input, .modal-nftbox input {
   box-sizing: border-box;
   width: 100%;
   background-color: #787d86;
@@ -359,7 +361,7 @@ select {
 }
 
 .modal-airdrop-code {
-  min-width: 300px;
+
   text-align: left;
   max-width: 100%;
 }
@@ -504,3 +506,24 @@ label {
 .nft-sm .actions {
   margin-top: 8px;
 }
+
+.nft-sm .actions button {
+  padding: 4px 16px!important;
+  background-color: #282c34!important;
+  margin-top:4px;
+}
+
+button.confirmbuy {
+  background-color:#2d543f!important;
+}
+
+.actions button.buybut {background-color:#204923!important;border-color:#236127}
+
+.priceinfo {text-align:center;margin:6px 0px;}
+.priceinfo span {display:inline-block; padding:2px 4px; margin-left:2px; margin-right:2px; margin-top:2px;background-color:#3c414a; border-radius:4px;}
+.sellfee {font-size:11px;}
+
+.buyproc {padding:4px;font-size:13px;color:#1be274}
+
+.update {font-size:12px; padding:16px; border:1px solid rgb(48, 113, 52);margin-bottom:16px;line-height:14px;}
+.update b {color:rgb(48, 113, 52);}

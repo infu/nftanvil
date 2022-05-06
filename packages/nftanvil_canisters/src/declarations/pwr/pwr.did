@@ -277,10 +277,6 @@ type Class =
                           pwr;
                         }, AccountIdentifier__2, Balance__3) -> ();
    config_set: (Config) -> ();
-   faucet: (record {
-              aid: AccountIdentifier__2;
-              amount: Balance__3;
-            }) -> ();
    nft_mint: (CanisterSlot, MintRequest) -> (MintResponse);
    nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);
    nft_recharge: (CanisterSlot, RechargeRequest) -> (RechargeResponse);
