@@ -161,7 +161,7 @@ Provided you just minted these NFTs, you can easily find them in the history her
 Or you could copy your address from `npx anvil address` and append it to the url like so https://nftanvil.com/a00c223cb1bc2f5fc31603baa3d647ba38070d80d05636c3487eb7fba4d6d39e
 
 :::tip
-If you have 10,000 nfts in `input.js`, you can mint in portions and check if everything is alright. Start with 1 or 10 and if something is wrong, delete `minted.json` use `npx anvil burn-garbage`. If for some reason images didn't get uploaded, you can use `npx anvil check` to burn only the broken ones and then `npx anvil mint` to mint them again.
+If you have 10,000 nfts in `input.js`, you can mint in portions and check if everything is alright. Start with 1 or 10 and if something is wrong, delete `minted.json` use `npx anvil burn-garbage`. If for some reason images didn't get uploaded, you can use `npx anvil check` it will reupload missing images.
 :::
 
 ### 🔥 Burn garbage
@@ -182,9 +182,9 @@ You may have had network troubles during minting. It would result in some images
 npx anvil check 0 3
 ```
 
-This will check if everything is ok. If not, it will delete ids from `minted.json` and burn the NFTs.
+This will check if everything is ok. If not it will try to reupload images.
 
-You may also want to do a quick check, which doesn't check the images, only metadata
+You may also want to do a quick check, which doesn't check the images, only metadata. If not ok it will delete ids from `minted.json` and you can mint again the missing ones.
 
 ```bash
 npx anvil check --quick 0 3

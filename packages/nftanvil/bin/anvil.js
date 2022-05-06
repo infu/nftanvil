@@ -760,9 +760,12 @@ const checkUploads = async (NFT_FROM, NFT_TO, options) => {
           } else {
             let rez = await nft.metadata(tid);
             if (rez?.ok?.data) found = true;
+            else {
+              delete minted[i];
+            }
           }
 
-          if (!found) {
+          if (!found && !options.quick) {
             // await nft.burn({
             //   memo: [],
             //   subaccount: [AccountIdentifier.TextToArray(subaccount)],
@@ -771,6 +774,9 @@ const checkUploads = async (NFT_FROM, NFT_TO, options) => {
             // });
 
             // delete minted[i];
+
+            console.log("Not found image data for token", tid, " reuploading");
+
             if (data[i].content)
               await uploadFile(
                 nft,
@@ -786,12 +792,6 @@ const checkUploads = async (NFT_FROM, NFT_TO, options) => {
               "thumb",
               await chunkBlob(await blobFrom(data[i].thumb), fetch),
               [AccountIdentifier.TextToArray(subaccount)]
-            );
-
-            console.log(
-              "Not found image data for token",
-              tid,
-              " burning and deleting"
             );
           }
 
