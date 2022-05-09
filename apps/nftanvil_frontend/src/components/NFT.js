@@ -458,7 +458,15 @@ function TransferButton({ id, meta }) {
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Doesn't look like NFTAnvil address.
+              <Alert status="error">
+                <AlertIcon />
+                <AlertTitle>
+                  {" "}
+                  Warning!
+                  <br />
+                  Address may not support this NFT
+                </AlertTitle>
+              </Alert>
             </AlertDialogHeader>
 
             <AlertDialogBody>

@@ -1133,7 +1133,7 @@ program
 
 program
   .command("check")
-  .description("checks if everything was uploaded and burns nft if not")
+  .description("checks if everything was uploaded and reuploads nft if not")
   .argument("<from>", "from index")
   .argument("<to>", "to index")
   .option("-q, --quick")
