@@ -4,6 +4,11 @@ import "./index.css";
 import App from "./App";
 //import reportWebVitals from "./reportWebVitals";
 import { AnvilProvider } from "@vvv-interactive/nftanvil-react";
+import { BrowserRouter } from "react-router-dom";
+import { ChakraProvider } from "@chakra-ui/react";
+import { ColorModeScript } from "@chakra-ui/react";
+
+import { theme } from "./theme.js";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 authentication.setOptions({ cookie: true });
@@ -15,11 +20,18 @@ window.lockdown({
 });
 
 ReactDOM.render(
-  <React.StrictMode>
-    <AnvilProvider>
-      <App />
-    </AnvilProvider>
-  </React.StrictMode>,
+  <>
+    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+    <React.StrictMode>
+      <AnvilProvider>
+        <ChakraProvider theme={theme}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ChakraProvider>
+      </AnvilProvider>
+    </React.StrictMode>
+  </>,
   document.getElementById("root")
 );
 

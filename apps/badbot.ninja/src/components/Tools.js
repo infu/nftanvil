@@ -6,6 +6,7 @@ export const ButtonModal = ({ name, children }) => {
   return (
     <>
       <button
+        className="old"
         onClick={() => {
           setVisibility(true);
         }}

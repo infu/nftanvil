@@ -61,6 +61,34 @@ export const load_inventory =
     dispatch(pageSet({ aid, pageIdx, list }));
   };
 
+export const verify_domain_twitter = (domain) => async (dispatch, getState) => {
+  let s = getState();
+
+  if (s.inventory[domain + "_domain"] === undefined) {
+    dispatch(verifiedDomainSet({ domain, data: -1 }));
+
+    let data = await new Promise((resolve, reject) => {
+      fetch("https://nftpkg.com/api/v1/verify?url=" + domain)
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          try {
+            resolve(data.text.replace(/[\s]+/gs, ""));
+          } catch (e) {
+            console.log(e);
+            resolve(false);
+          }
+        })
+        .catch((e) => {
+          resolve(false);
+        });
+    });
+
+    dispatch(verifiedDomainSet({ domain, data }));
+  }
+};
+
 export const verify_domain = (domain) => async (dispatch, getState) => {
   let s = getState();
 

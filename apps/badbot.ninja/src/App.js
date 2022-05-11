@@ -17,7 +17,10 @@ import {
   nft_fetch,
   user_pwr_transfer,
   user_refresh_balances,
+  TestAnvilComponent,
 } from "@vvv-interactive/nftanvil-react";
+import { Inventory } from "@vvv-interactive/nftanvil-react/cjs/components/Inventory";
+
 import { User } from "./components/User";
 import { Collection } from "./components/Collection";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
@@ -25,7 +28,10 @@ import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cj
 import { Principal } from "@dfinity/principal";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
-
+import {
+  claim as claimUsewin,
+  unprocessed_tx as unprocessed_txUsewin,
+} from "./actions/usewin";
 import {
   buy,
   claim,
@@ -36,9 +42,17 @@ import {
 } from "./actions/purchase";
 import { ButtonModal } from "./components/Tools.js";
 import { PriceOptions, ProgressBar } from "./components/Ito.js";
+import { UseWinGame } from "./components/Usewin.js";
 import { ToastContainer } from "react-toastify";
+import { Link, NavLink, BrowserRouter, Routes, Route } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
-
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Center,
+  useColorMode,
+} from "@chakra-ui/react";
 import logo from "./logo.svg";
 import bbn_logo from "./assets/bbn_logo.png";
 
@@ -113,6 +127,8 @@ function About() {
           Github link to this dapp and smart contract
         </a>
       </p>
+      <br />
+      <br />
       <div className="update">
         <b>Update:</b> Sold out for 19 hours and price per NFT was ~0.3ICP.
         Marketplace is now available.
@@ -239,6 +255,8 @@ function Timer({ children }) {
 function App() {
   const loaded = useAnvilSelector((state) => state.user.map.history);
   const logged = useAnvilSelector((state) => state.user.address);
+  const { colorMode, toggleColorMode } = useColorMode();
+
   const [count, setCount] = useState(0);
   const [prices, setPrices] = useState(false);
 
@@ -278,13 +296,26 @@ function App() {
     load();
   };
 
+  const unprocessedUsewin = async () => {
+    // Unprocessed transactions are stored and this will try to use them in case user quit in the middle of it
+    for (let j = 0; j < 10; j++) {
+      let re = await dispatch(unprocessed_txUsewin());
+
+      if (re === false) break;
+    }
+    load();
+  };
+
   useEffect(() => {
+    if (colorMode === "light") toggleColorMode();
     if (loaded && logged) {
       dispatch(claim()).catch((e) => {});
+      dispatch(claimUsewin()).catch((e) => {});
 
       // in case something went wrong, on refresh this will claim purchased nfts
       load();
       unprocessed();
+      unprocessedUsewin();
     }
   }, [loaded, logged, dispatch]);
 
@@ -294,9 +325,50 @@ function App() {
     <div className="App">
       <img src={bbn_logo} className="bbn-logo" alt="Bad Bot Ninja" />
       <h1 className="Title">Bad Bot Ninja</h1>
-      <About />
-
+      <PageTabs />
       <User />
+
+      <Routes>
+        <Route
+          path="/"
+          element={<PageMarketplace mine={mine} prices={prices} load={load} />}
+        />
+        <Route path="/inventory" element={<PageInventory />} />
+        <Route path="about" element={<PageAbout />} />
+        <Route path="boss" element={<PageBoss />} />
+      </Routes>
+
+      <ToastContainer theme="dark" />
+    </div>
+  );
+}
+
+function PageAbout() {
+  return <About />;
+}
+
+function PageBoss() {
+  return (
+    <UseWinGame
+      nfts={nfts}
+      refreshMine={() => {
+        //load();
+      }}
+    />
+  );
+}
+function PageInventory() {
+  const address = useAnvilSelector((state) => state.user.address);
+
+  return (
+    <>
+      <Inventory address={address} />
+    </>
+  );
+}
+function PageMarketplace({ load, mine, prices }) {
+  return (
+    <>
       <Timer>
         <PriceOptions
           refreshMine={() => {
@@ -309,8 +381,45 @@ function App() {
       <br />
       <br /> */}
       <Collection nfts={r_nfts} mine={mine} prices={prices} />
-      <ToastContainer theme="dark" />
-    </div>
+    </>
+  );
+}
+function PageTabs(p) {
+  return (
+    <Center>
+      <Box {...p}>
+        <ButtonGroup variant="outline" spacing="3">
+          <NavLink to="/">
+            {({ isActive }) => (
+              <Button isActive={isActive} variant="solid" colorScheme="orange">
+                Marketplace
+              </Button>
+            )}
+          </NavLink>
+          <NavLink to="/inventory">
+            {({ isActive }) => (
+              <Button isActive={isActive} variant="solid" colorScheme="orange">
+                Inventory
+              </Button>
+            )}
+          </NavLink>
+          <NavLink to="/boss">
+            {({ isActive }) => (
+              <Button isActive={isActive} variant="solid" colorScheme="orange">
+                Boss
+              </Button>
+            )}
+          </NavLink>
+          <NavLink to="/about">
+            {({ isActive }) => (
+              <Button isActive={isActive} variant="solid" colorScheme="orange">
+                About
+              </Button>
+            )}
+          </NavLink>
+        </ButtonGroup>
+      </Box>
+    </Center>
   );
 }
 

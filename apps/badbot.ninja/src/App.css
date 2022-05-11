@@ -1,7 +1,11 @@
-body {
-  background-color: #282c34;
+html {
+  overflow-y:scroll;
 
-  color: white;
+}
+body {
+  /* background-color: #282c34;
+
+  color: white; */
 }
 
 .Title {
@@ -38,6 +42,7 @@ body {
 }
 
 .nft-sm {
+
   max-width: 650px;
   width: 100%;
   display: flex;
@@ -52,6 +57,7 @@ body {
 .nft-img {
   width: 140px;
   height: 140px;
+  min-width:140px;
 }
 
 .nft-img img {
@@ -72,6 +78,7 @@ body {
 
 .nft-lore {
   padding-top: 12px;
+  padding-right: 12px;
   font-size: 14px;
 }
 
@@ -178,12 +185,10 @@ body {
   margin-bottom: 8px;
 }
 
-button {
+button.old {
   background-color: #444a57;
   color: white;
-  border: 1px solid #5c566b;
-  border-bottom: 2px solid #1a1436;
-  border-right: 2px solid #211849;
+
 
   padding: 10px 20px;
   border-radius: 4px;
@@ -195,31 +200,12 @@ button {
   transition-duration: 0.4s;
   overflow: hidden;
 }
-.c-actions button {
+.c-actions button.old {
   padding: 3px 12px;
 }
-button:after {
-  content: "";
-  background: #90ee90;
-  display: block;
-  position: absolute;
-  padding-top: 300%;
-  padding-left: 350%;
-  margin-left: -20px !important;
-  margin-top: -120%;
-  border-radius: 10px;
-  opacity: 0;
-  transition: all 0.8s;
-}
 
-button:active:after {
-  padding: 0;
-  margin: 0;
-  opacity: 1;
-  transition: 0s;
-}
 
-button.attention {
+button.old.attention {
   background-color: #3d5849;
   color: white;
   border: 1px solid #378337;
@@ -227,7 +213,7 @@ button.attention {
   border-right: 2px solid #184918;
 }
 
-select {
+select.old {
   background-color: #444a57;
   color: white;
   border: 1px solid #2d3950;
@@ -302,8 +288,8 @@ select {
 .bbn-logo {
   margin: auto;
   display: block;
-  max-width: 100%;
-  margin-bottom: -64px;
+  margin-bottom: -14px;
+ 
 }
 
 .airdropOptions {
@@ -507,23 +493,31 @@ label {
   margin-top: 8px;
 }
 
-.nft-sm .actions button {
+.nft-sm .actions button.old {
   padding: 4px 16px!important;
   background-color: #282c34!important;
   margin-top:4px;
 }
 
-button.confirmbuy {
+button.old.confirmbuy {
   background-color:#2d543f!important;
 }
 
-.actions button.buybut {background-color:#204923!important;border-color:#236127}
+.actions button.old.buybut {background-color:#204923!important;border-color:#236127}
 
 .priceinfo {text-align:center;margin:6px 0px;}
-.priceinfo span {display:inline-block; padding:2px 4px; margin-left:2px; margin-right:2px; margin-top:2px;background-color:#3c414a; border-radius:4px;}
+.priceinfo span {display:inline-block; padding:2px 4px; margin-left:2px; margin-right:2px; margin-top:2px;background-color:#201c1d; border-radius:4px;}
 .sellfee {font-size:11px;}
 
 .buyproc {padding:4px;font-size:13px;color:#1be274}
 
-.update {font-size:12px; padding:16px; border:1px solid rgb(48, 113, 52);margin-bottom:16px;line-height:14px;}
+.update { padding:16px; border:1px solid rgb(48, 113, 52);margin-bottom:16px;}
 .update b {color:rgb(48, 113, 52);}
+
+.navi button.old {background-color:#4b505a}
+a.active button.old {background-color:#204923}
+
+.navi {text-align:center;}
+.navi button.old {margin:0px;border-radius:0px;}
+.navi a:first-child button.old {border-radius:15px 0px 0px 15px;}
+.navi a:last-child button.old {border-radius:0px 15px 15px 0px;}

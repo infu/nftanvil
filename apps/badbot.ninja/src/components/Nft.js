@@ -39,8 +39,6 @@ export function NftSingle({ id }) {
 
   if (!meta) return null;
 
-  console.log("META", meta);
-
   let nft = [
     tokenFromText(id),
     meta.quality,
@@ -52,7 +50,7 @@ export function NftSingle({ id }) {
 
   return (
     <div>
-      <NftThumb nft={nft} />
+      <NftThumb nft={nft} meta={meta} />
     </div>
   );
 }
@@ -93,9 +91,11 @@ function NftTransfer({ id }) {
             <input ref={addressInput} type="text" id="address"></input>
           </div>
           <div className="modal-actions">
-            <button onClick={() => setVisibility(false)}>Cancel</button>
+            <button className="old" onClick={() => setVisibility(false)}>
+              Cancel
+            </button>
             <button
-              className="attention"
+              className="old attention"
               onClick={() => sendNft().then(() => setVisibility(false))}
             >
               Send
@@ -187,13 +187,16 @@ function NftSell({ id, myprice }) {
           </div>
           <div className="modal-actions">
             <button
+              className="old"
               onClick={() => removeSaleNft().then(() => setVisibility(false))}
             >
               Don't sell
             </button>
-            <button onClick={() => setVisibility(false)}>Cancel</button>
+            <button className="old" onClick={() => setVisibility(false)}>
+              Cancel
+            </button>
             <button
-              className="attention"
+              className="old attention"
               onClick={() => sellNft().then(() => setVisibility(false))}
             >
               Set
@@ -240,7 +243,7 @@ function NftBuy({ className, refreshMine, id, price }) {
             </div>
           ) : null}
           <button
-            className={confirm ? "confirmbuy" : "buybut"}
+            className={confirm ? "old confirmbuy" : "old buybut"}
             onClick={async () => {
               if (!confirm) setConfirm(true);
               else {
@@ -255,7 +258,7 @@ function NftBuy({ className, refreshMine, id, price }) {
           </button>
           {confirm ? (
             <button
-              className={confirm ? "confirmbuy" : ""}
+              className={confirm ? "old confirmbuy" : "old"}
               onClick={() => {
                 setConfirm(false);
               }}
@@ -269,7 +272,7 @@ function NftBuy({ className, refreshMine, id, price }) {
   );
 }
 
-export function NftThumb({ nft, owner = false, mine }) {
+export function NftThumb({ nft, owner = false, mine, meta }) {
   let [id, quality, name, lore, attributes, tags, price] = nft;
 
   // attributes = [
@@ -281,10 +284,10 @@ export function NftThumb({ nft, owner = false, mine }) {
   const idt = tokenToText(id);
   const map = useAnvilSelector((state) => state.user.map);
   if (!map.history) return null;
-  let url = tokenUrl(map.space, id, "thumb");
+  let url = meta?.thumb?.external || tokenUrl(map.space, id, "thumb");
   let qa = itemQuality.dark[quality];
 
-  const is_mine = mine.indexOf(id) !== -1;
+  const is_mine = mine ? mine.indexOf(id) !== -1 : false;
 
   return (
     <div className="nft-sm">
@@ -300,7 +303,6 @@ export function NftThumb({ nft, owner = false, mine }) {
         {is_mine ? (
           <div className="actions">
             <NftTransfer id={idt}></NftTransfer>
-
             <NftSell id={idt} myprice={price}></NftSell>
           </div>
         ) : (
@@ -309,14 +311,16 @@ export function NftThumb({ nft, owner = false, mine }) {
           </div>
         )}
       </div>
-      <div className="nft-attr-box">
-        {attributes.map((attr, idx) => (
-          <div className="nft-attr" key={idx}>
-            <span className="label">{attr[0]}</span>{" "}
-            <span className="val">+{attr[1]}</span>
-          </div>
-        ))}
-      </div>
+      {!attributes.length ? null : (
+        <div className="nft-attr-box">
+          {attributes.map((attr, idx) => (
+            <div className="nft-attr" key={idx}>
+              <span className="label">{attr[0]}</span>{" "}
+              <span className="val">+{attr[1]}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

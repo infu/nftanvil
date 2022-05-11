@@ -1,0 +1,49 @@
+type TransactionId = blob;
+type TokenIdentifier = nat64;
+type SubAccount = blob;
+type Result_4 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: Balance;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: blob;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: AccountRecordSerialized;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: Basket;
+ };
+type Class = 
+ service {
+   claim: (AccountIdentifier, opt SubAccount, TokenIdentifier) -> (Result_4);
+   get_script_address: () -> (text) query;
+   icp_balance: () -> (Result_3);
+   icp_transfer: (AccountIdentifier, Balance) -> (Result_2);
+   init_inventory: (nat) -> ();
+   init_random: () -> ();
+   owned: (AccountIdentifier) -> (Result_1) query;
+   stats: () -> (record {
+                   added: nat;
+                   available: nat;
+                   total: nat;
+                 }) query;
+   use_tx: (TransactionId, opt SubAccount) -> (Result);
+ };
+type Basket = vec opt TokenIdentifier;
+type Balance = nat64;
+type AccountRecordSerialized = record {tokens: vec TokenIdentifier;};
+type AccountIdentifier = blob;
+service : () -> Class

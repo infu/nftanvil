@@ -14,6 +14,8 @@ module {
           rem : shared (aid: Nft.AccountIdentifier, idx:Nft.TokenIndex) -> async ();
           add_transaction : shared (aid: Nft.AccountIdentifier, tx: Nft.TransactionId) -> async ();
           meta : query (aid: Nft.AccountIdentifier) -> async ?AccountMeta;
+          list : query (aid: Nft.AccountIdentifier, from:Nat, to:Nat) -> async [Nft.TokenIdentifier];
+
      };
 
      public type AccountMeta = {

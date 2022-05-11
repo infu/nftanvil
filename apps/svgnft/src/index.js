@@ -83,14 +83,21 @@ console.log(
 );
 
 const opt = (defs, cnt) => {
-  let own = defs.innerHTML;
+  //let own = defs.innerHTML;
   let res = "";
 
   for (let x of defs.children) {
-    if (cnt.indexOf("#" + x.id) !== -1 || own.indexOf("#" + x.id) !== -1) {
+    if (cnt.indexOf("#" + x.id + ")") !== -1) {
       res += x.outerHTML;
     }
   }
+  // second pass for references
+  for (let x of defs.children) {
+    if (res.indexOf("#" + x.id + '"') !== -1) {
+      res += x.outerHTML;
+    }
+  }
+
   return res;
 };
 
@@ -103,6 +110,35 @@ const tpl = (x) => {
     ${x.content}
     </svg>
     `;
+};
+
+const svgcode = (source) => {
+  let rez = { order: [], obj: {} };
+
+  let all = { ...source.variable, ...source.permanent };
+  let allOrder = Object.keys(all);
+
+  allOrder.sort((a, b) => {
+    a = source.variable[a] || source.permanent[a];
+    b = source.variable[b] || source.permanent[b];
+    return a.groupOrder - b.groupOrder;
+  });
+
+  for (let group of allOrder) {
+    for (let trait in all[group]) {
+      let code = all[group][trait].outerHTML;
+      let codemore = opt(source.defs, code);
+      let fin = codemore + code;
+      if (!rez.obj[group]) rez.obj[group] = {};
+      rez.obj[group][trait] = {
+        regularity: all[group][trait].regularity,
+        content: fin.replace(/\n/gs, " "),
+      };
+      rez.order.push({ group, trait });
+    }
+  }
+
+  return rez;
 };
 
 const generate = (source, seed = 12333334, quality = 1) => {
@@ -189,6 +225,8 @@ const generate = (source, seed = 12333334, quality = 1) => {
 
   return rez;
 };
+
+fs.writeFileSync("./build/contract.json", JSON.stringify(svgcode(source)));
 
 for (let i = 0; i < 100; i++) {
   let dna = Math.floor(Math.random() * 100000000000000);

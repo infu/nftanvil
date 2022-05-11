@@ -38,7 +38,9 @@ function Basket({ ids, onClose }) {
         <div className="title">Congratulations!</div>
         <div className="subtitle">You just got {ids.length} NFTs</div>
         <div className="actions">
-          <button onClick={() => onClose()}>OK</button>
+          <button className="old" onClick={() => onClose()}>
+            OK
+          </button>
         </div>
         <div className="collection">
           {nftcut.map((nft, idx) => {
@@ -46,7 +48,9 @@ function Basket({ ids, onClose }) {
           })}
         </div>
         <div className="actions">
-          <button onClick={() => onClose()}>OK</button>
+          <button className="old" onClick={() => onClose()}>
+            OK
+          </button>
         </div>
       </div>
     </div>
@@ -58,14 +62,14 @@ function BuyButton({ price, className, refreshMine, onBuy }) {
   const dispatch = useAnvilDispatch();
 
   return (
-    <div className="buybutton">
+    <div className="old buybutton">
       {confirm ? (
         <div style={{ width: "100%", position: "absolute", top: "-23px" }}>
           confirm
         </div>
       ) : null}
       <button
-        className={className}
+        className={"old " + className}
         onClick={async () => {
           if (!confirm) setConfirm(true);
           else {
@@ -78,6 +82,7 @@ function BuyButton({ price, className, refreshMine, onBuy }) {
       </button>
       {confirm ? (
         <button
+          className="old"
           onClick={() => {
             setConfirm(false);
           }}
@@ -231,9 +236,11 @@ export function PriceOptions({ refreshMine }) {
               </div>
 
               <div className="modal-actions">
-                <button onClick={() => setVisibility(false)}>Cancel</button>
+                <button className="old" onClick={() => setVisibility(false)}>
+                  Cancel
+                </button>
                 <button
-                  className="attention"
+                  className="old attention"
                   onClick={() => {
                     setVisibility(false);
                     onAirdrop(codeInput.current.value.trim());

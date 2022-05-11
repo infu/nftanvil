@@ -64,6 +64,7 @@ export function User() {
         {address ? (
           <div>
             <button
+              className="old"
               onClick={() => {
                 dispatch(user_logout());
               }}
@@ -89,8 +90,13 @@ export function User() {
                     <input ref={amountInput} type="number" id="amount"></input>
                   </div>
                   <div className="modal-actions">
-                    <button onClick={() => setVisibility(false)}>Cancel</button>
-                    <button className="attention" onClick={() => sendIcp()}>
+                    <button
+                      className="old"
+                      onClick={() => setVisibility(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button className="old attention" onClick={() => sendIcp()}>
                       Send
                     </button>
                   </div>
@@ -104,7 +110,7 @@ export function User() {
           </div>
         ) : (
           <button
-            className="attention"
+            className="old attention"
             onClick={() => {
               dispatch(user_login());
             }}

@@ -17,6 +17,15 @@ import {
   nft_fetch,
 } from "@vvv-interactive/nftanvil-react";
 import { NftThumb } from "./Nft";
+import {
+  HStack,
+  Center,
+  Flex,
+  Box,
+  Select,
+  Checkbox,
+  Switch,
+} from "@chakra-ui/react";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 import { itemQuality } from "@vvv-interactive/nftanvil-tools/cjs/items.js";
@@ -37,8 +46,8 @@ export function Collection({ nfts, mine, only, prices }) {
   const actionsRef = useRef(null);
 
   const [page, setPage] = React.useState(0);
-  const [filterQuality, setFilterQuality] = React.useState(-1);
-  const [sortBy, setSortBy] = React.useState(false);
+  const [filterQuality, setFilterQuality] = React.useState(6);
+  const [sortBy, setSortBy] = React.useState("priceasc");
   const [showMine, setShowMine] = React.useState(false);
 
   let nftcut = showMine
@@ -91,6 +100,7 @@ export function Collection({ nfts, mine, only, prices }) {
   const pagination = (
     <div className="c-actions">
       <button
+        className="old"
         disabled={page == 0}
         onClick={() => {
           setPage(page - 1);
@@ -100,6 +110,7 @@ export function Collection({ nfts, mine, only, prices }) {
         Prev
       </button>
       <button
+        className="old"
         disabled={slice.length == 0}
         onClick={() => {
           setPage(page + 1);
@@ -113,46 +124,59 @@ export function Collection({ nfts, mine, only, prices }) {
 
   const filters = (
     <div className="filters" ref={actionsRef}>
-      <select
-        onChange={(e) => {
-          setFilterQuality(e.target.value);
-          setPage(0);
-        }}
-      >
-        {itemQuality.dark.map(({ label, color }, idx) => (
-          <option key={label} value={idx}>
-            {label == "Poor" ? "all" : label}
-          </option>
-        ))}
-      </select>
-      <select
-        onChange={(e) => {
-          setSortBy(e.target.value);
-          setPage(0);
-        }}
-      >
-        <option value={false}>all</option>
-        <option key={"priceasc"} value="priceasc">
-          price asc
-        </option>
-        <option key={"pricedesc"} value="pricedesc">
-          price desc
-        </option>
-        {ATTR.map((att, idx) => (
-          <option key={idx} value={att}>
-            with {att}
-          </option>
-        ))}
-      </select>
-      <input
-        checked={showMine}
-        type="checkbox"
-        id="mine"
-        onChange={() => {
-          setShowMine(!showMine);
-        }}
-      />
-      <label htmlFor="mine">owned</label>
+      <Center>
+        <Flex align="center">
+          <Box mw={200} p={2}>
+            <Select
+              onChange={(e) => {
+                setFilterQuality(e.target.value);
+                setPage(0);
+              }}
+              defaultValue={filterQuality}
+            >
+              {itemQuality.dark.map(({ label, color }, idx) => (
+                <option key={label} value={idx}>
+                  {label == "Poor" ? "all" : label}
+                </option>
+              ))}
+            </Select>
+          </Box>
+          <Box mw={200} p={2}>
+            <Select
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setPage(0);
+              }}
+              defaultValue="priceasc"
+            >
+              <option value={false}>all</option>
+              <option key={"priceasc"} value="priceasc">
+                price asc
+              </option>
+              <option key={"pricedesc"} value="pricedesc">
+                price desc
+              </option>
+              {ATTR.map((att, idx) => (
+                <option key={idx} value={att}>
+                  with {att}
+                </option>
+              ))}
+            </Select>
+          </Box>
+          <Box p={2}>
+            <Switch
+              checked={showMine}
+              type="checkbox"
+              id="mine"
+              onChange={() => {
+                setShowMine(!showMine);
+              }}
+            >
+              Owned
+            </Switch>
+          </Box>
+        </Flex>
+      </Center>
     </div>
   );
 

@@ -3,6 +3,7 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import inventoryReducer, {
   load_inventory,
+  verify_domain_twitter,
   verify_domain,
 } from "./reducers/inventory";
 
@@ -37,7 +38,7 @@ import nftReducer, {
   nft_set_price,
 } from "./reducers/nft";
 
-export { load_inventory, verify_domain };
+export { load_inventory, verify_domain, verify_domain_twitter };
 
 export {
   user_auth,
@@ -71,6 +72,8 @@ export const TestAnvilComponent = () => {
   return <div>fun component sweet 123 123 123</div>;
 };
 
+import { InventoryLarge } from "./components/Inventory.js";
+export { InventoryLarge };
 import {
   Provider,
   createStoreHook,
