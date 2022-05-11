@@ -236,7 +236,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 switch(mark_tx(tx_id)) {
                 case (#ok()) {
 
-                    let chance = (randomNumber + Nat32.toNat(rand.get(32))) % (10000 / boost);
+                    let chance = (randomNumber + Nat32.toNat(rand.get(32))) % (300 / boost);
                     
                     if (chance != 0) return #ok([]);
 
