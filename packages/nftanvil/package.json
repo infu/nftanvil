@@ -26,5 +26,5 @@
     "watch": "babel -d cjs src --copy-files --watch",
     "build": "babel -d cjs src --copy-files"
   },
-  "gitHead": "499b544023457dd7b89f59cd08f51a80a0606a8f"
+  "gitHead": "67a309187a4c57cb5444a3992ac48df916986680"
 }
