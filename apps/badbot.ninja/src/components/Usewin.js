@@ -169,7 +169,7 @@ export function UseWinGame({ refreshMine, nfts }) {
             ml="auto"
             mr="auto"
           >
-            This is just a little game for you to play with while we are
+            This is just a little silly game for you to play with while we are
             developing the real thing. A{" "}
             <a
               href="https://github.com/infu/nftanvil/blob/main/apps/badbot.ninja/mo/usewin.mo"

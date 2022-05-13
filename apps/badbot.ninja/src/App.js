@@ -52,6 +52,7 @@ import {
   ButtonGroup,
   Center,
   useColorMode,
+  Wrap,
 } from "@chakra-ui/react";
 import logo from "./logo.svg";
 import bbn_logo from "./assets/bbn_logo.png";
@@ -388,7 +389,7 @@ function PageTabs(p) {
   return (
     <Center>
       <Box {...p}>
-        <ButtonGroup variant="outline" spacing="3">
+        <Wrap spacing="3" justify="center">
           <NavLink to="/">
             {({ isActive }) => (
               <Button isActive={isActive} variant="solid" colorScheme="orange">
@@ -417,7 +418,7 @@ function PageTabs(p) {
               </Button>
             )}
           </NavLink>
-        </ButtonGroup>
+        </Wrap>
       </Box>
     </Center>
   );

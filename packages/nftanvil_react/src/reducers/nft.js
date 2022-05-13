@@ -193,7 +193,7 @@ const nft_fetch_file = async (
 };
 
 export const nft_purchase =
-  ({ id, amount }) =>
+  ({ id, amount, affiliate = [] }) =>
   async (dispatch, getState) => {
     let s = getState();
 
@@ -223,7 +223,7 @@ export const nft_purchase =
       token: tokenFromText(id),
       user: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
-      affiliate: [],
+      affiliate,
       amount,
     });
 
