@@ -1,6 +1,6 @@
 {
   "name": "svgnft",
-  "version": "1.0.0",
+  "version": "0.39.0",
   "main": "index.js",
   "license": "MIT",
   "type": "module",
