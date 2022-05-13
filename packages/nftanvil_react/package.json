@@ -48,5 +48,6 @@
     "@emotion/styled": "^11",
     "framer-motion": "^4",
     "react-toastify": "^8.2.0"
-  }
+  },
+  "gitHead": "499b544023457dd7b89f59cd08f51a80a0606a8f"
 }

@@ -10,5 +10,6 @@
   },
   "scripts": {
     "start": "node src/index.js"
-  }
+  },
+  "gitHead": "499b544023457dd7b89f59cd08f51a80a0606a8f"
 }
