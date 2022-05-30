@@ -734,12 +734,7 @@ module {
 
     //)
 
-
-
-  
-
-
-   
+ 
     //(TokenIndex
     // Represents an individual token's index within a given canister.
     public type TokenIndex = Nat16;

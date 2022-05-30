@@ -2,15 +2,16 @@
   "name": "svgnft",
   "version": "0.41.0",
   "main": "index.js",
-  "license": "MIT",
   "type": "module",
+  "license": "MIT",
   "private": true,
   "dependencies": {
     "jsdom": "^19.0.0",
+    "node-fetch": "^3.2.4",
     "pseudo-random": "^0.6.0"
   },
   "scripts": {
-    "start": "node src/index.js"
+    "build": "node src/index.js"
   },
   "gitHead": "67a309187a4c57cb5444a3992ac48df916986680"
 }
