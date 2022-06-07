@@ -3,6 +3,10 @@
     "nft": {
       "main": "renderer.mo",
       "type": "motoko"
+    },
+    "ito": {
+      "main": "mo/ito.mo",
+      "type": "motoko"
     }
   },
 

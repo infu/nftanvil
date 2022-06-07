@@ -114,6 +114,9 @@ const ContentBox = styled.div`
     margin-bottom: 5vh;
     margin-top: 1vh;
     border-radius: 6px;
+    width: 85vw;
+    height: auto;
+    object-fit: contain;
   }
 `;
 
@@ -1146,9 +1149,9 @@ export const RechargeButton = ({ id, meta }) => {
 export const NFTPopover = ({ meta }) => {
   return (
     <Stack>
-      <Center>
+      {/* <Center>
         <NFTContent meta={meta} />
-      </Center>
+      </Center> */}
       <Center>
         <NFTInfo meta={meta} />
       </Center>

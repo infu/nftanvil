@@ -4918,13 +4918,7 @@
       <path d="M430.58,491.41h0c13.37,0,24.31,10.74,24.31,23.87v11.07c0,13.12-10.94,23.86-24.31,23.86h0c-13.37,0-24.31-10.74-24.31-23.86V515.28C406.27,502.15,417.21,491.41,430.58,491.41Z" style="fill-rule: evenodd;fill: url(#linear-gradient-293)"/>
       <g>
         <polygon points="431.24 572.97 438.23 531.34 494.26 548.55 455.36 526.16 574.56 521.8 455.36 517.43 491.26 493.05 438.23 512.26 431.24 470.63 424.25 512.26 386.22 497.05 407.11 517.43 287.92 521.8 407.11 526.16 382.22 544.55 424.25 531.34 431.24 572.97" style="fill-rule: evenodd;fill: url(#radial-gradient-2)"/>
-        <g style="opacity: 0.9">
-          <image width="223" height="125" transform="translate(319.43 460.15)" xlink:href="source1.png"/>
-        </g>
         <path d="M422.1,521.62a8.89,8.89,0,1,0,8.88-8.88A8.89,8.89,0,0,0,422.1,521.62Z" style="fill-rule: evenodd;fill: url(#radial-gradient-3)"/>
-      </g>
-      <g style="opacity: 0.9">
-        <image width="223" height="125" transform="translate(218.43 460.15)" xlink:href="source2.png"/>
       </g>
       <path d="M338.93,521.54a8.88,8.88,0,1,1-8.88-8.88A8.88,8.88,0,0,1,338.93,521.54Z" style="fill-rule: evenodd;fill: url(#radial-gradient-4)"/>
     </g>
@@ -4946,14 +4940,8 @@
         </g>
       </g>
       <polygon points="329.79 572.85 322.8 531.22 266.77 548.43 305.67 526.04 186.47 521.68 305.67 517.32 269.77 492.93 322.8 512.14 329.79 470.51 336.79 512.14 374.81 496.93 353.92 517.32 473.11 521.68 353.92 526.04 378.81 544.43 336.79 531.22 329.79 572.85" style="fill-rule: evenodd;fill: url(#radial-gradient-5)"/>
-      <g style="opacity: 0.9">
-        <image width="223" height="124" transform="translate(218.86 460.32)" xlink:href="source3.png"/>
-      </g>
       <g>
         <polygon points="431.24 572.85 438.23 531.22 494.26 548.43 455.36 526.04 574.56 521.68 455.36 517.32 491.26 492.93 438.23 512.14 431.24 470.51 424.25 512.14 386.22 496.93 407.11 517.32 287.92 521.68 407.11 526.04 382.22 544.43 424.25 531.22 431.24 572.85" style="fill-rule: evenodd;fill: url(#radial-gradient-6)"/>
-        <g style="opacity: 0.9">
-          <image width="223" height="124" transform="translate(319.86 460.32)" xlink:href="source4.png"/>
-        </g>
         <path d="M422.1,521.5a8.89,8.89,0,1,0,8.88-8.88A8.89,8.89,0,0,0,422.1,521.5Z" style="fill-rule: evenodd;fill: url(#radial-gradient-7)"/>
       </g>
       <path d="M338.93,521.5a8.88,8.88,0,1,1-8.88-8.88A8.89,8.89,0,0,1,338.93,521.5Z" style="fill-rule: evenodd;fill: url(#radial-gradient-8)"/>
@@ -4969,9 +4957,6 @@
           </g>
         </g>
         <polygon points="329.79 572.82 322.8 531.18 266.77 548.39 305.67 526.01 186.47 521.64 305.67 517.28 269.77 492.89 322.8 512.11 329.79 470.47 336.79 512.11 374.81 496.89 353.92 517.28 473.11 521.64 353.92 526.01 378.81 544.39 336.79 531.18 329.79 572.82" style="fill-rule: evenodd;fill: url(#radial-gradient-9)"/>
-        <g style="opacity: 0.9">
-          <image width="223" height="125" transform="translate(218.43 459.99)" xlink:href="source5.png"/>
-        </g>
       </g>
       <g>
         <g>
@@ -4984,9 +4969,6 @@
         </g>
         <g>
           <polygon points="431.24 572.82 438.23 531.18 494.26 548.39 455.36 526.01 574.56 521.64 455.36 517.28 491.26 492.89 438.23 512.11 431.24 470.47 424.25 512.11 386.22 496.89 407.11 517.28 287.92 521.64 407.11 526.01 382.22 544.39 424.25 531.18 431.24 572.82" style="fill-rule: evenodd;fill: url(#radial-gradient-10)"/>
-          <g style="opacity: 0.9">
-            <image width="223" height="125" transform="translate(319.43 459.99)" xlink:href="source6.png"/>
-          </g>
           <path d="M422.1,521.46a8.89,8.89,0,1,0,8.88-8.88A8.88,8.88,0,0,0,422.1,521.46Z" style="fill-rule: evenodd;fill: url(#radial-gradient-11)"/>
         </g>
       </g>
@@ -5016,13 +4998,7 @@
       <polygon points="329.89 572.82 322.9 531.18 266.87 548.4 305.76 526.01 186.57 521.65 305.76 517.28 269.87 492.9 322.9 512.11 329.89 470.48 336.88 512.11 374.91 496.9 354.01 517.28 473.21 521.65 354.01 526.01 378.91 544.4 336.88 531.18 329.89 572.82" style="fill-rule: evenodd;fill: url(#radial-gradient-13)"/>
       <g>
         <polygon points="431.34 572.82 438.33 531.18 494.36 548.4 455.46 526.01 574.65 521.65 455.46 517.28 491.36 492.9 438.33 512.11 431.34 470.48 424.34 512.11 386.32 496.9 407.21 517.28 288.02 521.65 407.21 526.01 382.32 544.4 424.34 531.18 431.34 572.82" style="fill-rule: evenodd;fill: url(#radial-gradient-14)"/>
-        <g style="opacity: 0.9">
-          <image width="223" height="125" transform="translate(319.43 460.07)" xlink:href="source7.png"/>
-        </g>
         <path d="M422.2,521.47a8.88,8.88,0,1,0,8.88-8.89A8.89,8.89,0,0,0,422.2,521.47Z" style="fill-rule: evenodd;fill: url(#radial-gradient-15)"/>
-      </g>
-      <g style="opacity: 0.9">
-        <image width="223" height="125" transform="translate(218.43 460.07)" xlink:href="source8.png"/>
       </g>
       <path d="M339,521.47a8.88,8.88,0,1,1-8.88-8.89A8.88,8.88,0,0,1,339,521.47Z" style="fill-rule: evenodd;fill: url(#radial-gradient-16)"/>
     </g>

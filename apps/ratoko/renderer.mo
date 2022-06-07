@@ -13,6 +13,8 @@ shared ({caller}) actor class Renderer() = this {
 
     private stable var store : [var ?Text] = Array.init<?Text>(2500, null); // there is enough space for 50 groups with 50 features
 
+    let head = "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 1254.81 1254.2'>";
+    let tail = "</svg>";
 
     public shared func set(group:Nat, feature:Nat, data: Text) : async () {
         store[group * 50 + feature] := ?data;
@@ -22,7 +24,7 @@ shared ({caller}) actor class Renderer() = this {
  
         var group:Nat = 0;
 
-        Array.foldRight<Nat8, Text>(x, "", func (feature:Nat8, acc) {
+        let r = Array.foldLeft<Nat8, Text>(x, "", func (acc, feature:Nat8) {
             
             let st = switch(store[group * 50 + Nat8.toNat(feature)]) {
                 case (?a) a;
@@ -34,8 +36,9 @@ shared ({caller}) actor class Renderer() = this {
             group += 1;
 
             return r;
-        }) 
+        });
 
+        return head # r # tail;
     };
    
     // Painless HTTP response - Start

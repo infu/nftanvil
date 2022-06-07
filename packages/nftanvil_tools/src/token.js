@@ -8,6 +8,21 @@ import basex from "base-x";
 //var token_base = basex("0123456789abcdefghijkmnopqrstuvwxyz");
 var token_base = basex("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ");
 
+export const neuronStakeAccountIdentifier = (p, s) => {
+  const padding = [
+    12, 110, 101, 117, 114, 111, 110, 45, 115, 116, 97, 107, 101,
+  ]; // Buffer("\x0Cneuron-stake");
+  const array = new Uint8Array([
+    ...padding,
+    ...Principal.fromText(p).toUint8Array(),
+    ...getSubAccountArray(s),
+  ]);
+  const hash = sha224(array);
+  const checksum = to32bits(getCrc32(hash));
+  const array2 = new Uint8Array([...checksum, ...hash]);
+  return toHexString(array2);
+};
+
 export const principalToAccountIdentifier = (p, s) => {
   const padding = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100]; //Buffer("\x0Aaccount-id");
   const array = new Uint8Array([

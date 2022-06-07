@@ -64,11 +64,11 @@ console.log(
   }).magenta
 );
 
-const recover = async () => {
-  let { address, subaccount } = await routerCanister();
+const recover = async (opts) => {
+  let { address, subaccount, proxyCanister } = await ifProxy(opts.proxy);
 
   let map = await getMap();
-
+  //console.log("MAP", map);
   let minted;
   try {
     minted = JSON.parse(fs.readFileSync("./minted.json"));
@@ -161,13 +161,15 @@ const recover = async () => {
           let name = meta.ok.data.name[0];
           let lore = meta.ok.data.lore[0];
           let quality = meta.ok.data.quality;
+          let tags = meta.ok.data.tags.join(",");
 
           for (let [idx, v] of data.entries()) {
             if (
               !minted[idx] &&
               v.name[0] === name &&
               (lore ? v.lore[0] === lore : true) &&
-              v.quality === quality
+              v.quality === quality &&
+              v.tags.join(",") === tags
             ) {
               console.log("found match", idx, tokenToText(tid));
               minted[idx] = Number(tid);
@@ -186,8 +188,10 @@ const recover = async () => {
   console.log(`DONE. ${recovered} recovered nfts.`);
 };
 
-const burnGarbage = async () => {
-  let { address, subaccount } = await routerCanister();
+const burnGarbage = async (opts) => {
+  let { address, subaccount, proxyCanister } = await ifProxy(opts.proxy);
+
+  // let { address, subaccount } = await routerCanister();
 
   let map = await getMap();
 
@@ -258,11 +262,13 @@ const burnGarbage = async () => {
 
         let canister = PrincipalFromSlot(map.space, slot).toText();
 
-        let nft = nftCanister(canister);
+        let nft = nftCanister(proxyCanister ? proxyCanister : canister);
 
         await nft.burn({
           memo: [],
-          subaccount: [AccountIdentifier.TextToArray(subaccount)],
+          subaccount: subaccount
+            ? [AccountIdentifier.TextToArray(subaccount)]
+            : [],
           token: tid,
           user: { address: AccountIdentifier.TextToArray(address) },
         });
@@ -393,9 +399,21 @@ const contractBalance = async (COUNT) => {
   let ITO_PRINCIPAL = getCanisterId("ito");
 
   let itoContract = can(itoCreateActor, ITO_PRINCIPAL);
-
+  let c_address = principalToAccountIdentifier(ITO_PRINCIPAL);
+  console.log("address", c_address);
   let res = await itoContract.icp_balance();
+  if (res.err) console.log("ERR", res.err);
   console.log(res.ok, "E8S ", AccountIdentifier.e8sToIcp(res.ok), "ICP");
+};
+
+const contractStats = async (COUNT) => {
+  let { principal, address, subaccount } = await routerCanister();
+  let ITO_PRINCIPAL = getCanisterId("ito");
+
+  let itoContract = can(itoCreateActor, ITO_PRINCIPAL);
+  let c_address = principalToAccountIdentifier(ITO_PRINCIPAL);
+  let res = await itoContract.stats();
+  console.log(res);
 };
 
 const itoChangeParams = async (purchase, airdrop) => {
@@ -525,8 +543,10 @@ const itoAuthorize = async () => {
   }
 };
 
-const saleAdd = async (NFT_FROM, NFT_TO) => {
-  let { principal, address, subaccount } = await routerCanister();
+const saleAdd = async (NFT_FROM, NFT_TO, opts) => {
+  let { address, subaccount, proxyCanister } = await ifProxy(opts.proxy);
+
+  // let { principal, address, subaccount } = await routerCanister();
 
   let ITO_PRINCIPAL = getCanisterId("ito");
 
@@ -566,20 +586,22 @@ const saleAdd = async (NFT_FROM, NFT_TO) => {
         try {
           let { index, slot } = decodeTokenId(tid);
 
-          let canister = PrincipalFromSlot(map.space, slot).toText();
+          if (!proxyCanister) {
+            let canister = PrincipalFromSlot(map.space, slot).toText();
 
-          let nft = nftCanister(canister);
+            let nft = nftCanister(canister);
 
-          let rez = await nft.transfer({
-            subaccount: [AccountIdentifier.TextToArray(subaccount)],
-            token: tid,
-            from: { address: AccountIdentifier.TextToArray(address) },
-            to: { address: AccountIdentifier.TextToArray(TO_ADDRESS) },
-            memo: [],
-          });
+            let rez = await nft.transfer({
+              subaccount: [AccountIdentifier.TextToArray(subaccount)],
+              token: tid,
+              from: { address: AccountIdentifier.TextToArray(address) },
+              to: { address: AccountIdentifier.TextToArray(TO_ADDRESS) },
+              memo: [],
+            });
 
-          if ("err" in rez) {
-            console.log("Couldn't transfer nft", tid);
+            if ("err" in rez) {
+              console.log("Couldn't transfer nft", tid);
+            }
           }
 
           let srez = await itoContract.add(tid);
@@ -904,8 +926,31 @@ const IS_LOCAL = () => {
   return program.opts().local;
 };
 
-const mintMain = async (NFT_FROM, NFT_TO) => {
-  console.log("options", program.opts().local);
+const ifProxy = async (prx) => {
+  let { address, subaccount } = await routerCanister();
+
+  let proxyCanister = prx
+    ? prx === "ito"
+      ? Principal.fromText(getCanisterId("ito"))
+      : Principal.fromText(prx)
+    : false;
+
+  if (proxyCanister) {
+    address = principalToAccountIdentifier(proxyCanister.toText());
+    subaccount = null;
+  }
+
+  return { proxyCanister, address, subaccount };
+};
+
+const mintMain = async (NFT_FROM, NFT_TO, opts) => {
+  let proxyCanister = opts.proxy
+    ? opts.proxy === "ito"
+      ? Principal.fromText(getCanisterId("ito"))
+      : Principal.fromText(opts.proxy)
+    : false;
+
+  console.log("proxyCanister", proxyCanister.toText());
 
   let data = await new Promise((resolve, reject) => {
     import(path.resolve(process.cwd(), "./input.js")).then((importedModule) => {
@@ -969,6 +1014,11 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
 
   let { principal, address, subaccount } = await routerCanister();
 
+  if (proxyCanister) {
+    address = principalToAccountIdentifier(proxyCanister.toText());
+    subaccount = null;
+  }
+
   let map = await getMap();
 
   await balanceAndAddress();
@@ -986,7 +1036,7 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
 
     let request = {
       user: { address: AccountIdentifier.TextToArray(address) },
-      subaccount: [AccountIdentifier.TextToArray(subaccount)],
+      subaccount: subaccount ? [AccountIdentifier.TextToArray(subaccount)] : [],
       metadata: inputToMeta(s),
     };
 
@@ -994,7 +1044,7 @@ const mintMain = async (NFT_FROM, NFT_TO) => {
   }
 
   try {
-    let resp = await easyMint(items);
+    let resp = await easyMint(items, proxyCanister.toText());
     for (let j = 0; j < resp.length; j++) {
       if (nftids[NFT_FROM + j]) continue;
       nftids[NFT_FROM + j] = resp[j];
@@ -1085,9 +1135,10 @@ program
 program
   .command("burn-garbage")
   .description("burn everything your address owns except nfts from minted.json")
+  .option("-p, --proxy <principal>")
   .action((options) => {
     console.log("Searching...");
-    burnGarbage();
+    burnGarbage(options);
   });
 
 program
@@ -1095,6 +1146,7 @@ program
   .description("mint nfts from index to index")
   .argument("<from>", "from index")
   .argument("<to>", "to index")
+  .option("-p, --proxy <principal>")
   .action((from, to, options) => {
     console.log(`Minting from ${from} to ${to}`);
     mintMain(parseInt(from, 10), parseInt(to, 10), options);
@@ -1147,9 +1199,10 @@ program
   .description(
     "searches inventory and adds nfts to minted.json if they are missing"
   )
-  .action((from, to, principal, options) => {
+  .option("-p, --proxy <principal>")
+  .action((options) => {
     console.log(`Searching...`);
-    recover();
+    recover(options);
   });
 
 const ito = new Command("ito");
@@ -1170,11 +1223,12 @@ ito
 ito
   .command("add")
   .description("transfer nfts to ITO contract")
+  .option("-p, --proxy <principal>")
   .argument("<from>", "from index")
   .argument("<to>", "to index")
-  .action((from, to, principal, options) => {
+  .action((from, to, opts) => {
     console.log(`Adding to ITO nfts from ${from} - ${to}`);
-    saleAdd(parseInt(from, 10), parseInt(to, 10));
+    saleAdd(parseInt(from, 10), parseInt(to, 10), opts);
   });
 
 ito
@@ -1183,6 +1237,14 @@ ito
   .action((options) => {
     console.log(`Checking ITO balance`);
     contractBalance();
+  });
+
+ito
+  .command("stats")
+  .description("gets stats of ITO contract")
+  .action((options) => {
+    console.log(`Checking ITO stats`);
+    contractStats();
   });
 
 ito
