@@ -8,7 +8,7 @@ import {
   tokenFromText,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import { PrincipalToIdx } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
-
+import { nft_enter_code } from "@vvv-interactive/nftanvil-react/cjs/reducers/nft";
 import {
   useAnvilDispatch,
   useAnvilSelector,
@@ -20,6 +20,10 @@ import {
   TestAnvilComponent,
 } from "@vvv-interactive/nftanvil-react";
 import { Inventory } from "@vvv-interactive/nftanvil-react/cjs/components/Inventory";
+import {
+  NFTPage,
+  NFTClaim,
+} from "@vvv-interactive/nftanvil-react/cjs/components/NFT";
 
 import { User } from "./components/User";
 import { Collection } from "./components/Collection";
@@ -44,7 +48,15 @@ import { ButtonModal } from "./components/Tools.js";
 import { PriceOptions, ProgressBar } from "./components/Ito.js";
 import { UseWinGame } from "./components/Usewin.js";
 import { ToastContainer } from "react-toastify";
-import { Link, NavLink, BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import {
   Box,
@@ -330,18 +342,43 @@ function App() {
       <User />
 
       <Routes>
+        <Route path="/nfta:id/:code" element={<NFTPageWrapper />} />
+        <Route path="/nfta:id" element={<NFTPageWrapper />} />
         <Route
           path="/"
           element={<PageMarketplace mine={mine} prices={prices} load={load} />}
         />
         <Route path="/inventory" element={<PageInventory />} />
+
         <Route path="about" element={<PageAbout />} />
         <Route path="boss" element={<PageBoss />} />
+        <Route path="/:code" element={<NFTClaimWrapper />} />
       </Routes>
 
       <ToastContainer theme="dark" />
     </div>
   );
+}
+
+function NFTPageWrapper() {
+  let { id, code } = useParams();
+  return <NFTPage id={"nfta" + id} code={code} />;
+}
+
+function NFTClaimWrapper() {
+  let { code } = useParams();
+
+  let navigate = useNavigate();
+  const dispatch = useAnvilDispatch();
+  const go = async () => {
+    const url = await dispatch(nft_enter_code(code));
+    navigate(url);
+  };
+  useEffect(() => {
+    go();
+  }, [code, dispatch]);
+
+  return null;
 }
 
 function PageAbout() {
@@ -359,11 +396,18 @@ function PageBoss() {
   );
 }
 function PageInventory() {
+  let navigate = useNavigate();
+
   const address = useAnvilSelector((state) => state.user.address);
 
   return (
     <>
-      <Inventory address={address} />
+      <Inventory
+        address={address}
+        onOpenNft={(id) => {
+          navigate("/" + id); //, { replace: true }
+        }}
+      />
     </>
   );
 }

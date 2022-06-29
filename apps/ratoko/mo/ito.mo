@@ -52,7 +52,9 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   private let MAX_CODES = 10000;
   private stable var LEFT_AIRDROP : Nat = 3000;
   private stable var LEFT_PURCHASE : Nat = 6000;
-  private let START_TIMESTAMP : Nat32 = 1651089600; //1654951047
+  private let START_TIMESTAMP : Nat32 = 1656518400; //1654951047
+
+  private let ALLOWED_USE_COLLECTION = Nft.AccountIdentifier.fromText("a00ead92e83a4c1555453ada429a4851cc4f12d5a126a2d58fd93241b176d602");
 
   // Edit whats bellow only if you know what you are doing
   private let MAX_TOKEN_SPACE = MAX_TOKENS * 10;
@@ -157,7 +159,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   };
 
   // Marks a transaction as used, if its already used - returns error
-  private func use(tx_id: Nft.TransactionId) :  Result.Result<(), Text> {
+  private func use_fn(tx_id: Nft.TransactionId) :  Result.Result<(), Text> {
       switch(_used.get(tx_id)) {
         case (?a) {
           return #err("TX already used");
@@ -282,6 +284,59 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
   // Dependent on the amount sent, we give different amount of nfts
   // Transactions get stored so they can't be used for second time
   // If there are not enough nfts in contract, we will refund
+  public shared({caller}) func ticket_tx(tx_id:  Nft.TransactionId, subaccount: ?Nft.SubAccount) : async Result.Result<Basket, Text> {
+
+    let scriptAccount = getScriptAccount();
+    let caller_aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
+
+    let tx = await anvil.getTransaction(tx_id);
+    switch(tx) {
+      case (?t) {
+         switch (t.info) {
+          // case (#nft(#burn({created; user; memo; token;}))) {
+
+          case (#nft(#use({use; created; user; memo; token;}))) {
+            
+          if (use != #cooldown(518400)) return #err("Bad cooldown");
+
+          switch(await Cluster.nftFromTid(anvil.conf, token).metadata(token)) {
+              case (#ok({data})) {
+
+                  if (data.author != ALLOWED_USE_COLLECTION) return #err("Nft not part of the collection required for this contract");
+             
+                  //ok
+                  if (caller_aid != user) return #err("Unauthorized");
+                  
+                  switch(use_fn(tx_id)) {
+                    case (#ok()) {
+                      if (now() < START_TIMESTAMP) {
+                        return #err("Hasn't started yet");
+                        } else switch(give(caller_aid, 1, #airdrop)) { //send 1 nfts to user
+                        case (#ok(basket)) {
+                          #ok(basket);
+                        };
+                        case (#err(e)) { // refund
+                          #err(e);
+                        };
+                      };
+                    };
+                    case (#err(t)) return #err(t); // directly exits
+                  };
+                  //
+
+                };
+                case (#err(e)) return #err("Token metadata error " # debug_show(e));
+                };
+          };
+          case _ { return #err("Wrong type of tx");}
+        };
+      };
+      case (null) {
+        return (#err("Tx not found"))
+      };
+    }; 
+  };
+
   public shared({caller}) func buy_tx(tx_id:  Nft.TransactionId, subaccount: ?Nft.SubAccount) : async Result.Result<Basket, Text> {
 
 
@@ -297,8 +352,8 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
             if (caller_aid != from) return #err("Unauthorized");
             switch(switch(amount) {
               // pricing option one (its written verbose because different packages may give more things differently)
-              case (29940120) {
-                switch(use(tx_id)) {
+              case (200000000) {
+                switch(use_fn(tx_id)) {
                   case (#ok()) {
                     if (now() < START_TIMESTAMP) { #refund("Hasn't started yet"); }
                     else switch(give(from, 1, #buy)) { //send 2 nfts to user
@@ -314,11 +369,11 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
               };
               // pricing option two
-              case (134730539) {
-                switch(use(tx_id)) {
+              case (360000000) {
+                switch(use_fn(tx_id)) {
                   case (#ok()) {
                     if (now() < START_TIMESTAMP) { #refund("Hasn't started yet"); }
-                    else switch(give(from, 5, #buy)) {
+                    else switch(give(from, 2, #buy)) {
                       case (#ok(basket)) {
                         #ok(basket);
                       };
@@ -331,11 +386,11 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
                 };
               };
               // pricing option three
-              case (479041916) {
-                switch(use(tx_id)) {
+              case (1600000000) {
+                switch(use_fn(tx_id)) {
                    case (#ok()) {
                     if (now() < START_TIMESTAMP) { #refund("Hasn't started yet"); }
-                    else switch(give(from, 20, #buy)) { 
+                    else switch(give(from, 10, #buy)) { 
                       case (#ok(basket)) {
                         #ok(basket);
                       };

@@ -1,0 +1,20 @@
+{
+  "short_name": "Bad Bot Ninja",
+  "name": "Mataverse apparel",
+  "icons": [
+    {
+      "src": "bbn_192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "bbn_512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#282c34"
+}

@@ -35,7 +35,7 @@ import {
   NumberDecrementStepper,
 } from "@chakra-ui/react";
 
-import { verify_domain, verify_domainTwitter } from "../reducers/inventory";
+import { verify_domain, verify_domain_twitter } from "../reducers/inventory";
 import { NftHistory } from "./History";
 import { Spinner } from "@chakra-ui/react";
 import Confetti from "./Confetti";
@@ -113,6 +113,9 @@ const ContentBox = styled.div`
     max-height: 85vh;
     margin-bottom: 5vh;
     margin-top: 1vh;
+    width: 85vw;
+    height: auto;
+    object-fit: contain;
     border-radius: 6px;
   }
 `;
@@ -203,14 +206,14 @@ const ThumbLarge = styled.div`
   }
 `;
 
-export const NFTMenu = ({ id, meta, owner, nobuy = false }) => {
+export const NFTMenu = ({ id, meta, owner, nobuy = false, renderButtons }) => {
   const pro = useSelector((state) => state.user.pro);
 
   return (
     <Box p={3} maxWidth="375px" textAlign="justify">
       {owner ? (
         <Wrap spacing="3">
-          <UseButton id={id} meta={meta} />
+          {renderButtons ? renderButtons({ id, meta }) : null}
           {pro ? <RechargeButton id={id} meta={meta} /> : null}
 
           <TransferButton id={id} meta={meta} />
@@ -218,7 +221,7 @@ export const NFTMenu = ({ id, meta, owner, nobuy = false }) => {
           <TransferLinkButton id={id} meta={meta} />
           <SetPriceButton id={id} meta={meta} />
 
-          {pro ? <BurnButton id={id} meta={meta} /> : null}
+          <BurnButton id={id} meta={meta} />
           {pro ? <SocketButton id={id} meta={meta} /> : null}
           {pro ? <UnsocketButton id={id} meta={meta} /> : null}
         </Wrap>
@@ -310,7 +313,7 @@ function SetPriceButton({ id, meta }) {
         },
       ],
     };
-    console.log(price);
+    // console.log(price);
 
     onClose();
     let toastId = toast("Setting price...", {
@@ -1216,7 +1219,7 @@ export const NFTLarge = ({ id }) => {
   );
 };
 
-export const NFT = ({ id, thumbSize }) => {
+export const NFT = ({ id, thumbSize, onClick }) => {
   const meta = useSelector((state) => state.nft[id]);
 
   const dispatch = useDispatch();
@@ -1230,6 +1233,7 @@ export const NFT = ({ id, thumbSize }) => {
   return (
     <Thumb
       style={{ zIndex: popoverOpen ? 10 : 0 }}
+      onClick={onClick}
       onMouseOver={() => {
         setPopover(true);
       }}
@@ -1264,22 +1268,19 @@ export const NFT = ({ id, thumbSize }) => {
   );
 };
 
-export const NFTClaim = (p) => {
-  const code = p.match.params.code;
-
+export const NFTClaim = ({ code, onRedirect }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(nft_enter_code(code));
+    onRedirect(dispatch(nft_enter_code(code)));
   }, [code, dispatch]);
 
   return null;
 };
 
-export const NFTPage = (p) => {
-  const id = p.match.params.id;
-  const code = p.match.params.code;
-
+export const NFTPage = ({ id, code, renderButtons }) => {
+  // const id = p.match.params.id;
+  // const code = p.match.params.code;
   const address = useSelector((state) => state.user.address);
 
   const meta = useSelector((state) => state.nft[id]);
@@ -1332,6 +1333,7 @@ export const NFTPage = (p) => {
           }
           id={id}
           meta={meta}
+          renderButtons={renderButtons}
         />
       </Center>
 
@@ -1507,7 +1509,7 @@ const MetaDomainTwitter = ({ meta, showLink }) => {
   }
 
   useEffect(() => {
-    dispatch(verify_domainTwitter(surl));
+    dispatch(verify_domain_twitter(surl));
   }, [surl, dispatch]);
 
   let urlSafe = verified ? "https://" + surl : null;

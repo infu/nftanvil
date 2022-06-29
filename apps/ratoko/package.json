@@ -2,9 +2,9 @@
   "name": "svgnft",
   "version": "0.42.0",
   "main": "index.js",
-  "type": "module",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "dependencies": {
     "jsdom": "^19.0.0",
     "node-fetch": "^3.2.4",

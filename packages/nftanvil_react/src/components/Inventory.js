@@ -40,9 +40,10 @@ const InventoryBox = styled.div`
   margin-top: 28px;
   padding: 0px;
   border-radius: 8px;
+  cursor: pointer;
 `;
 
-export const Inventory = ({ address }) => {
+export const Inventory = ({ address, onOpenNft }) => {
   const maxItems = 100;
 
   const acc = useSelector((state) => state.user.map.account);
@@ -94,14 +95,8 @@ export const Inventory = ({ address }) => {
           ) : (
             <Wrap direction={"horizontal"} spacing="0">
               {items &&
-                items.map((id) => (
-                  <a
-                    key={id}
-                    href={"https://nftanvil.com/" + id}
-                    target="_anvil"
-                  >
-                    <NFT id={id} />
-                  </a>
+                items.map((id, idx) => (
+                  <NFT key={idx} id={id} onClick={() => onOpenNft(id)} />
                 ))}
             </Wrap>
           )}
@@ -155,7 +150,7 @@ export const InventoryLarge = ({ address }) => {
 
   if (!items) return null;
 
-  console.log({ items, meta, address, pageIdx, maxItems });
+  // console.log({ items, meta, address, pageIdx, maxItems });
 
   return (
     <Stack mt="8">
