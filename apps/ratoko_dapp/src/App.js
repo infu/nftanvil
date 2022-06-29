@@ -77,7 +77,7 @@ import r_right from "./assets/r_right.png";
 import nfts from "./nfts.json";
 import "./App.css";
 
-const START = Date.now() / 1000; //1656518400; //1656507600; //Date.now() / 1000 + 30;
+const START = 1656518400; //1656507600; //Date.now() / 1000 + 30;
 
 const getShuffledArr = (arr) => {
   const newArr = arr.slice();
