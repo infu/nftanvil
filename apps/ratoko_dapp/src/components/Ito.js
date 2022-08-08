@@ -160,9 +160,9 @@ export function PriceOptions({ refreshMine }) {
 
   return (
     <div className={"pricewrapper " + (!logged ? "requiresLogin" : "")}>
-      <img src={mframe} className="mframe" alt="Mframe" />
+      {/* <img src={mframe} className="mframe" alt="Mframe" /> */}
 
-      {SOLDOUT ? <div className="soldout">Sold out!</div> : null}
+      {/* {SOLDOUT ? <div className="soldout">Sold out!</div> : null}
       <div className="priceOptions">
         <div
           className={
@@ -227,7 +227,7 @@ export function PriceOptions({ refreshMine }) {
             refreshMine={refreshMine}
           />
         </div>
-      </div>
+      </div> */}
 
       <div className="airdropOptions">
         <ButtonModal name="Use airdrop code">

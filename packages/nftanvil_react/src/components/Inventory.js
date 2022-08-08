@@ -117,36 +117,8 @@ export const Inventory = ({ address, onOpenNft }) => {
   );
 };
 
-export const InventoryLarge = ({ address }) => {
-  const maxItems = 40;
-
-  const acc = useSelector((state) => state.user.map.account);
-  // const { width, height } = useWindowSize();
-  const [pageIdx, setPageIdx] = useState(0);
-
-  const [isLoading, setLoading] = useState(true);
-
-  const dispatch = useDispatch();
-
-  const load = async () => {
-    await dispatch(load_inventory(address, pageIdx, maxItems)).catch((e) => {
-      console.log(e);
-    });
-    setLoading(false);
-  };
-
+export const InventoryLarge = ({ items, onOpenNft, custom }) => {
   let bg = useColorModeValue(itemgrid_light, itemgrid);
-
-  useEffect(() => {
-    if (!acc?.length) return null;
-    load();
-  }, [address, acc, pageIdx]);
-
-  const items = useSelector(
-    (state) => state.inventory[address] && state.inventory[address][pageIdx]
-  );
-
-  const meta = useSelector((state) => state.inventory[address + "meta"]);
 
   if (!items) return null;
 
@@ -154,37 +126,21 @@ export const InventoryLarge = ({ address }) => {
 
   return (
     <Stack mt="8">
-      <Pagination
-        address={address}
-        pageIdx={pageIdx}
-        end={items.length < maxItems}
-        lg={true}
-        setPageIdx={setPageIdx}
-      />
-
       <Center>
         <Box mt="4" mb="4" w={"100%"} bg={bg}>
-          {isLoading ? (
-            <Box h="72px">
-              <Center>
-                <Spinner size="lg" mt="11px" />
-              </Center>
-            </Box>
-          ) : (
-            <Wrap direction={"horizontal"} spacing="5" justify="center">
-              {items && items.map((id) => <NFTLarge id={id} key={id} />)}
-            </Wrap>
-          )}
+          <Wrap direction={"horizontal"} spacing="5" justify="center">
+            {items &&
+              items.map((id) => (
+                <NFTLarge
+                  custom={custom}
+                  id={id}
+                  key={id}
+                  onClick={() => onOpenNft(id)}
+                />
+              ))}
+          </Wrap>
         </Box>
       </Center>
-
-      <Pagination
-        address={address}
-        pageIdx={pageIdx}
-        end={items.length < maxItems}
-        lg={true}
-        setPageIdx={setPageIdx}
-      />
 
       {/* {meta ? (
         <NftHistory transactions={meta.transactions} showThumb={true} />

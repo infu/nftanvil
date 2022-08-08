@@ -55,7 +55,7 @@
   "proxy": "http://localhost:8000",
   "scripts": {
     "start": "node dfx.env.js && react-scripts start",
-    "start:prod": "react-scripts start",
+    "start:prod": "cp .env.production.local .env.development.local && react-scripts start",
     "build": "node dfx.env.js && react-scripts build",
     "deploy": "dfx deploy --network ic frontend"
   },

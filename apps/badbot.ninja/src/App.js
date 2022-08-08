@@ -24,6 +24,7 @@ import {
   NFTPage,
   NFTClaim,
 } from "@vvv-interactive/nftanvil-react/cjs/components/NFT";
+import { UseButton } from "./components/Ticket.js";
 
 import { User } from "./components/User";
 import { Collection } from "./components/Collection";
@@ -279,6 +280,7 @@ function App() {
   const load = async () => {
     setMine(await dispatch(get_mine()));
   };
+
   const getPrices = async () => {
     let x = await fetch(
       "https://nftpkg.com/api/v1/prices/a004f41ea1a46f5b7e9e9639fbed84e037d9ce66b75d392d2c1640bb7a559cda"
@@ -362,7 +364,20 @@ function App() {
 
 function NFTPageWrapper() {
   let { id, code } = useParams();
-  return <NFTPage id={"nfta" + id} code={code} />;
+  return (
+    <NFTPage
+      id={"nfta" + id}
+      code={code}
+      renderButtons={({ id, meta }) => {
+        if (
+          meta.author !==
+          "a004f41ea1a46f5b7e9e9639fbed84e037d9ce66b75d392d2c1640bb7a559cda"
+        )
+          return null;
+        return <UseButton id={id} meta={meta} />;
+      }}
+    />
+  );
 }
 
 function NFTClaimWrapper() {
@@ -448,13 +463,13 @@ function PageTabs(p) {
               </Button>
             )}
           </NavLink>
-          <NavLink to="/boss">
+          {/* <NavLink to="/boss">
             {({ isActive }) => (
               <Button isActive={isActive} variant="solid" colorScheme="orange">
                 Boss
               </Button>
             )}
-          </NavLink>
+          </NavLink> */}
           <NavLink to="/about">
             {({ isActive }) => (
               <Button isActive={isActive} variant="solid" colorScheme="orange">

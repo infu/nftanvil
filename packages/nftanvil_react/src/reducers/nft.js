@@ -50,6 +50,7 @@ export const nft_fetch = (id) => async (dispatch, getState) => {
   let s = getState();
 
   let tid = tokenFromText(id);
+
   let { index, slot } = decodeTokenId(tid);
   let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
 

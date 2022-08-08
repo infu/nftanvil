@@ -109,13 +109,13 @@ const ContentBox = styled.div`
 
   video,
   img {
-    max-width: 85vw;
-    max-height: 85vh;
+    max-width: ${(props) => props.mw || "85vw"};
+    max-height: ${(props) => props.mh || "85vh"};
     margin-bottom: 5vh;
     margin-top: 1vh;
     border-radius: 6px;
-    width: 85vw;
-    height: auto;
+    width: ${(props) => props.w || "85vw"};
+    height: ${(props) => props.h || "auto"};
     object-fit: contain;
   }
 `;
@@ -1410,7 +1410,7 @@ export const NFTContent = (p) => {
   const url = c.url || c;
 
   return (
-    <ContentBox>
+    <ContentBox w={p.w} h={p.h} mw={p.mw} mh={p.mh}>
       {ctype === "image" && url ? (
         <img crossOrigin="true" src={url} alt="" width="100%" />
       ) : null}
@@ -1426,7 +1426,7 @@ export const NFTContent = (p) => {
 export const NFTPreview = (p) => {
   return (
     <Stack spacing="5">
-      <NFTContent meta={p} />
+      <NFTContent meta={p} w={"auto"} h={"auto"} mw={"auto"} mh={"auto"} />
       <NFTInfo meta={p} />
       <NFTThumb meta={p} />
       <NFTThumbLarge meta={p} />

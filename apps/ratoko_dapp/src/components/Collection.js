@@ -61,10 +61,15 @@ export function Collection({ nfts, mine, only, prices }) {
 
   let priced = filtered
     .map((x) => {
-      let pr = prices[x[0]][1];
-      if (sortBy === "priceasc" && !pr) return false;
-      if (sortBy === "pricedesc" && !pr) return false;
-      return [...x, pr];
+      try {
+        let pr = prices[x[0]][1];
+        if (sortBy === "priceasc" && !pr) return false;
+        if (sortBy === "pricedesc" && !pr) return false;
+
+        return [...x, pr];
+      } catch (e) {
+        return false;
+      }
     })
     .filter(Boolean);
 

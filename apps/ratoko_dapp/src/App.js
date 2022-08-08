@@ -20,8 +20,12 @@ import {
   TestAnvilComponent,
 } from "@vvv-interactive/nftanvil-react";
 import { nft_enter_code } from "@vvv-interactive/nftanvil-react/cjs/reducers/nft";
+import { Wallet } from "@vvv-interactive/nftanvil-react/cjs/components/Wallet";
 
-import { Inventory } from "@vvv-interactive/nftanvil-react/cjs/components/Inventory";
+import {
+  Inventory,
+  InventoryLarge,
+} from "@vvv-interactive/nftanvil-react/cjs/components/Inventory";
 import { UseButton } from "./components/Ticket.js";
 import { User } from "./components/User";
 import { Collection } from "./components/Collection";
@@ -31,7 +35,10 @@ import { Principal } from "@dfinity/principal";
 
 import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
 import powered from "./assets/powered.dark.svg";
-
+import {
+  MarketplaceLoad,
+  MarketplaceFilters,
+} from "@vvv-interactive/nftanvil-react/cjs/components/Marketplace";
 import {
   NFTPage,
   NFTClaim,
@@ -61,11 +68,13 @@ import "react-toastify/dist/ReactToastify.css";
 import {
   Box,
   Button,
+  Stack,
   ButtonGroup,
   Center,
   useColorMode,
   Wrap,
 } from "@chakra-ui/react";
+
 import logo from "./logo.svg";
 import ratoko_logo from "./assets/ratoko_logo.png";
 import f_left from "./assets/f_left.png";
@@ -93,68 +102,49 @@ let r_nfts = getShuffledArr(nfts);
 function About() {
   return (
     <div className="about">
+      <p>Welcome to Ratoko digital breedable collectibles</p>
       <p>
-        Welcome to Ratoko digital breedable collectibles &amp; powered by Anvil!
-      </p>
-      <p>
-        This collection plans to be traded for Bitcoin with IC's novel
-        bridgeless tech. It was inspired by this talk{" "}
+        Why a rat?{" "}
         <a href="https://www.youtube.com/watch?v=810aKcfM__Q" target="_blank">
           Bubble Boy and the Sewer Rat
-        </a>{" "}
-        made by our favorite Bitcoin advocate - Andreas Antonopoulos (not
-        affiliated).
+        </a>
       </p>
-      <blockquote>
-        Security is a process of openness and exposure. Its a process of
-        continuously adapting to new attacks and in that process dynamically
-        becoming more and more robust ~ AA
-      </blockquote>
+
       <p>
         Andreas calls <b>Bitcoin a rat</b>, a survivor, and closed-source crypto
         projects - bubble boys.
       </p>
-
       <p>
-        We stand for open-source projects from day one.{" "}
-        <a href="https://github.com/infu/nftanvil" target="_blank">
-          Anvil
-        </a>{" "}
-        is one of the biggest Motoko{" "}
-        <i>(Internet Computer's own programming language)</i> open-source
-        projects to date, only rivaled by{" "}
-        <a target="_blank" href="https://github.com/sagacards/legends-nft">
-          Saga Legends
-        </a>{" "}
-        and{" "}
-        <a href="https://github.com/aviate-labs" target="_blank">
-          Aviate Labs
+        <a target="_blank" href="https://twitter.com/AnvilRatoko">
+          Follow our twitter here @AnvilRatoko
         </a>
-      </p>
-      <p>
-        This dapp will list, promote and reward all open-source Motoko projects.
-        If you have one, post it on{" "}
-        <a href="https://discord.gg/UUYyQZujed" target="_blank">
-          our Discord server
-        </a>{" "}
-        #open-source-motoko
       </p>
 
       <p>
         <b>Features:</b>
         <br />
+        - Independent
+        <br />
+        - Minted by the Blacksmith. Crafted by the Sculptor.
+        <br />
         - 10k (1st gen) NFTs (500 team, 500 reserve, 6k public mint, 2.5k
-        airdrop, 500 won via BadBot.Ninja boss fight) <br /> - Open-source all
-        the way
+        airdrop, 500 won via BadBot.Ninja boss fight)
+        <br />
+        - Launch sold 58 NFTs for ~10$ each and got canceled after a week.
+        Remaining NFTs will be airdropped. So far around 2k NFTs have been
+        dropped thru various outlets. We are tightening drops and will require
+        proof of humanity for the remaining ones.
+        <br /> - Open-source all the way
         <br /> - Graphics are on-chain generated SVGs. <br />- Breedable (later
         this year)
-        <br />- Marketplace (next week)
+        <br /> - Marketplace (next week)
         <br /> - In the only NFT ecosystem which works towards true
         decentralization, not only of governance but of user traffic too.
         <br /> - Trade for Bitcoin (later this year)
-        <br />- It's made to survive for thousands of years. Anvil NFTs have
+        <br /> - It's made to survive for thousands of years. Anvil NFTs have
         extensive DoS protection on IC and a fully automated refueling system.
-        <br /> - NFTs can be used commercially by owners. See terms and
+        <br />- Reverse-gas NFTs, free to use unless you abuse
+        <br /> - NFT art can be used commercially by owners. See terms and
         conditions for more info.
         <br /> - Underpromise, Overdeliver.
       </p>
@@ -210,7 +200,7 @@ function Timer({ children }) {
       <div className="countdown">{time}</div>
       <div className={open ? "ito-open" : "ito-waiting"}>
         {children}
-        {open ? <ProgressBar /> : null}
+        {/* {open ? <ProgressBar /> : null} */}
       </div>
     </div>
   );
@@ -298,11 +288,21 @@ function App() {
       <h1 className="Title">Ratoko</h1>
       <div className="inner-page">
         <PageTabs />
-        <User />
+        {/* <User /> */}
 
+        <Box p="4" ta="center">
+          <Center>
+            <Wallet />
+          </Center>
+        </Box>
         <Routes>
+          <Route path="/" element={<PageAbout />} />
           <Route
-            path="/"
+            path="mint"
+            element={<PageMint mine={mine} prices={prices} load={load} />}
+          />
+          <Route
+            path="marketplace"
             element={
               <PageMarketplace mine={mine} prices={prices} load={load} />
             }
@@ -310,6 +310,8 @@ function App() {
           <Route path="/nfta:id/:code" element={<NFTPageWrapper />} />
           <Route path="/nfta:id" element={<NFTPageWrapper />} />
           <Route path="/inventory" element={<PageInventory />} />
+          <Route path="/mk" element={<PageMk />} />
+
           <Route path="about" element={<PageAbout />} />
           <Route path="terms" element={<Terms />} />
           <Route path="/:code" element={<NFTClaimWrapper />} />
@@ -361,7 +363,7 @@ function NFTClaimWrapper() {
 function Terms() {
   return (
     <div className="termspage">
-      <h3>TERMS & CONDITIONS</h3>
+      <h3>TERMS &amp; CONDITIONS</h3>
       <p>
         Ratoko is a collection of digital artworks (NFTs) running on the
         Internet Computer. This website is only an interface allowing
@@ -433,6 +435,72 @@ function PageAbout() {
   return <About />;
 }
 
+function PageMk() {
+  let navigate = useNavigate();
+
+  // const { width, height } = useWindowSize();
+
+  return (
+    <>
+      <MarketplaceLoad
+        author={
+          "a00aa2d5f5f9738e300615f21104cd06bbeb86bb8daee215525ac2ffde621bed" //, // "a004f41ea1a46f5b7e9e9639fbed84e037d9ce66b75d392d2c1640bb7a559cda" // "bbd87200973033cb69bc0aee03e90df1a1de01e28aa0246bb175baabfd071754"
+        }
+      >
+        {(items) => (
+          <MarketplaceFilters
+            items={items}
+            attributes={[
+              ["attack", "with attack"],
+              ["airdrops", "width airdrops"],
+            ]}
+            tags={[
+              ["Ship 13", "Space 23"],
+              ["Thistle Fusion", "Terraform Haze"],
+            ]}
+          >
+            {({
+              goPageBack,
+              goPageNext,
+              stats,
+              fOrder,
+              fQuality,
+              fTags,
+              slice,
+            }) => {
+              return (
+                <Box>
+                  <Stack m="auto" maxW={"600px"}>
+                    <Box>
+                      {goPageBack}
+                      {goPageNext}
+                    </Box>
+                    {fOrder}
+                    {fTags}
+                    {stats ? <div>Floor: {stats.floor}</div> : null}
+                    {stats ? <div>Mean: {stats.mean}</div> : null}
+                  </Stack>
+                  <InventoryLarge
+                    items={slice.map((x) => tokenToText(x[0]))}
+                    custom={(meta) => {
+                      return (
+                        <div style={{ paddingTop: "30px" }}>{meta.tags[0]}</div>
+                      );
+                    }}
+                    onOpenNft={(id) => {
+                      navigate("/" + id); //, { replace: true }
+                    }}
+                  />
+                </Box>
+              );
+            }}
+          </MarketplaceFilters>
+        )}
+      </MarketplaceLoad>
+    </>
+  );
+}
+
 function PageInventory() {
   let navigate = useNavigate();
 
@@ -450,7 +518,7 @@ function PageInventory() {
   );
 }
 
-function PageMarketplace({ load, mine, prices }) {
+function PageMint({ load, mine, prices }) {
   return (
     <>
       <Timer>
@@ -460,13 +528,18 @@ function PageMarketplace({ load, mine, prices }) {
           }}
         />
       </Timer>
-      <br />
-      <br />
-      <br />
+    </>
+  );
+}
+
+function PageMarketplace({ load, mine, prices }) {
+  return (
+    <>
       <Collection nfts={r_nfts} mine={mine} prices={prices} />
     </>
   );
 }
+
 function Footer() {
   return (
     <div className="footer">
@@ -474,7 +547,7 @@ function Footer() {
       <a target="_blank" href="https://github.com/infu/nftanvil">
         Fully open-source
       </a>{" "}
-      | Made by VVV DAO
+      | Made by the Blacksmith &amp; the Sculptor.
       <a target="_blank" href="https://docs.nftanvil.com">
         <img
           src={powered}
@@ -495,10 +568,17 @@ function PageTabs(p) {
     <Center>
       <Box {...p}>
         <Wrap spacing="3" justify="center">
-          <NavLink to="/">
+          <NavLink to="/mint">
             {({ isActive }) => (
               <Button isActive={isActive} variant="solid" colorScheme="orange">
                 Mint
+              </Button>
+            )}
+          </NavLink>
+          <NavLink to="/marketplace">
+            {({ isActive }) => (
+              <Button isActive={isActive} variant="solid" colorScheme="orange">
+                Marketplace
               </Button>
             )}
           </NavLink>

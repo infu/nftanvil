@@ -238,11 +238,6 @@ function NftBuy({ className, refreshMine, id, price }) {
         <div className="buyproc">Buying...</div>
       ) : (
         <>
-          {confirm ? (
-            <div style={{ width: "100%", position: "absolute", top: "-23px" }}>
-              confirm
-            </div>
-          ) : null}
           <button
             className={confirm ? "old confirmbuy" : "old buybut"}
             onClick={async () => {
@@ -327,20 +322,15 @@ export function NftThumb({ nft, owner = false, mine }) {
             document.body
           )
         : null}
-      <div className="nft-img" onClick={() => setFull(true)}>
-        <img src={url} alt="nft" />
+      <div className="nft-img">
+        <img src={url} alt="nft" onClick={() => setFull(true)} />
         <div className="nft-info">
           <div className="nft-quality">{qa.label}</div>
-          {/* {is_mine ? (
-            <div className="actions">
-              <NftTransfer id={idt}></NftTransfer>
-              <NftSell id={idt} myprice={price}></NftSell>
-            </div>
-          ) : (
+          {is_mine ? null : (
             <div className="actions">
               <NftBuy id={idt} price={price} />
             </div>
-          )} */}
+          )}
         </div>
       </div>
       {/* <div className="nft-info">

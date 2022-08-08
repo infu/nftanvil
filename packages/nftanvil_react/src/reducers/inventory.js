@@ -31,6 +31,13 @@ export const inventorySlice = createSlice({
 
 const { pageSet, metaSet, verifiedDomainSet } = inventorySlice.actions;
 
+export const load_author = (aid) => async (dispatch, getState) => {
+  let x = await fetch("https://nftpkg.com/api/v1/marketplace/" + aid).then(
+    (x) => x.json()
+  );
+  return x;
+};
+
 export const load_inventory =
   (aid, pageIdx, max) => async (dispatch, getState) => {
     let identity = authentication.client

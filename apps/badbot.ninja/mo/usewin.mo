@@ -209,6 +209,7 @@ shared({caller = _installer}) actor class Class() : async IF.Interface = this {
 
 
   public shared({caller}) func use_tx(tx_id:  Nft.TransactionId, subaccount: ?Nft.SubAccount) : async Result.Result<Basket, Text> {
+    return #err("Inactive");
 
     let scriptAccount = getScriptAccount();
     let caller_aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);

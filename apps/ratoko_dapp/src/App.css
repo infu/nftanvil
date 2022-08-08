@@ -163,6 +163,7 @@ color:#bb916a
   font-size: 12px;
   margin-top: 0px;
   color: #626a7a;
+  display:inline-block;
 }
 .nft-img {
   cursor:pointer;
@@ -401,8 +402,8 @@ select.old {
   z-index:10;
   width:400px;
   opacity:0.2;
-
 }
+
 .f-left {
   position:fixed;
   top:0px;
@@ -659,7 +660,8 @@ label {
 }
 
 .nft-sm .actions {
-  margin-top: 8px;
+  display:inline-block;
+  /* margin-top: 16px; */
 }
 
 .nft-sm .actions button.old {
@@ -672,7 +674,7 @@ button.old.confirmbuy {
   background-color:#2d543f!important;
 }
 
-.actions button.old.buybut {background-color:#204923!important;border-color:#236127}
+.actions button.old.buybut {background-color:#204923!important;border-color:#236127; font-size:10px;}
 
 .priceinfo {text-align:center;margin:6px 0px;}
 .priceinfo span {display:inline-block; padding:2px 4px; margin-left:2px; margin-right:2px; margin-top:2px;background-color:#201c1d; border-radius:4px;}
@@ -694,7 +696,12 @@ a.active button.old {background-color:#204923}
 
 /* Portrait and Landscape */
 @media only screen and (max-device-width: 900px) {
-
+  .f-right {
+    display:none;
+  }
+  .f-left {
+    display:none;
+  }
   .r-left {
     width:200px;
   }

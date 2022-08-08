@@ -1163,7 +1163,12 @@ export const NFTPopover = ({ meta }) => {
   );
 };
 
-export const NFTLarge = ({ id }) => {
+export const NFTLarge = ({
+  id,
+  onClick,
+  custom = false,
+  showDomain = false,
+}) => {
   const meta = useSelector((state) => state.nft[id]);
 
   const mode = useColorModeValue("light", "dark");
@@ -1177,7 +1182,11 @@ export const NFTLarge = ({ id }) => {
   if (!meta) return null;
 
   return (
-    <ThumbLarge mode={mode}>
+    <ThumbLarge
+      mode={mode}
+      onClick={onClick}
+      style={{ cursor: onClick ? "pointer" : "auto" }}
+    >
       {meta.thumb?.ipfs?.url ? (
         <img alt="" className="custom" src={meta.thumb.ipfs.url} />
       ) : meta.thumb?.internal?.url ? (
@@ -1189,7 +1198,7 @@ export const NFTLarge = ({ id }) => {
       )}
 
       <div className="info">
-        {meta.domain ? (
+        {showDomain && meta.domain ? (
           meta.domain.indexOf("twitter.com/") !== -1 ? (
             <MetaDomainTwitter key={"domain"} meta={meta} showLink={false} />
           ) : (
@@ -1202,12 +1211,16 @@ export const NFTLarge = ({ id }) => {
             </div>
           ) : null} */}
 
-        <div className="author">
-          <div className="label">AUTHOR</div>
-          <div>
-            <ACC short={true}>{meta.author}</ACC>
+        {custom ? (
+          custom(meta)
+        ) : (
+          <div className="author">
+            <div className="label">AUTHOR</div>
+            <div>
+              <ACC short={true}>{meta.author}</ACC>
+            </div>
           </div>
-        </div>
+        )}
         {meta.price.amount && meta.price.amount !== "0" ? (
           <div className="price">
             <div className="label">PRICE</div>
@@ -1232,7 +1245,10 @@ export const NFT = ({ id, thumbSize, onClick }) => {
 
   return (
     <Thumb
-      style={{ zIndex: popoverOpen ? 10 : 0 }}
+      style={{
+        zIndex: popoverOpen ? 10 : 0,
+        cursor: onClick ? "pointer" : "auto",
+      }}
       onClick={onClick}
       onMouseOver={() => {
         setPopover(true);

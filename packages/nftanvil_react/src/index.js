@@ -5,6 +5,7 @@ import inventoryReducer, {
   load_inventory,
   verify_domain_twitter,
   verify_domain,
+  load_author,
 } from "./reducers/inventory";
 
 import userReducer, {
@@ -38,7 +39,7 @@ import nftReducer, {
   nft_set_price,
 } from "./reducers/nft";
 
-export { load_inventory, verify_domain, verify_domain_twitter };
+export { load_author, load_inventory, verify_domain, verify_domain_twitter };
 
 export {
   user_auth,
@@ -68,6 +69,7 @@ export {
   nft_recharge_quote,
   nft_set_price,
 };
+
 export const TestAnvilComponent = () => {
   return <div>fun component sweet 123 123 123</div>;
 };
