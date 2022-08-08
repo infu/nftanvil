@@ -9,7 +9,6 @@
 
 # dfx temporary files
 .dfx/
-cosmicrafts
 
 # dependencies
 node_modules
