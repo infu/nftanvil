@@ -196,6 +196,14 @@ export const auth =
     map.router = map.router.toString();
     map = BigIntToString(map);
 
+    console.log(
+      "Treasury",
+      PrincipalFromSlot(map.space, map.treasury).toText(),
+      principalToAccountIdentifier(
+        PrincipalFromSlot(map.space, map.treasury).toText()
+      )
+    );
+
     console.log("ROUTER MAP", map);
 
     // map.space = map.space.map((x) => {

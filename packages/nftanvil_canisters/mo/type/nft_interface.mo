@@ -609,7 +609,7 @@ module {
         CommonError
     >;
 
-    public type UploadChunkRequest =  {
+    public type UploadChunkRequest = {
         subaccount : ?SubAccount;
         tokenIndex: TokenIndex;
         position : {#content; #thumb};
@@ -617,7 +617,7 @@ module {
         data : Blob;
     };
 
-    public type FetchChunkRequest =  {
+    public type FetchChunkRequest = {
         tokenIndex: TokenIndex;
         position : {#content; #thumb};
         chunkIdx : Nat32;

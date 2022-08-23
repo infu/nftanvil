@@ -145,6 +145,8 @@ export function PwrStats({ slot }) {
     load();
   }, [slot]);
 
+  console.log(stats);
+
   if (!stats) return null;
 
   //const mem_mb = Number(stats.rts_total_allocation / 1024n / 1024n);

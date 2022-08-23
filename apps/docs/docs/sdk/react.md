@@ -111,3 +111,78 @@ function MyButton() {
 ```
 
 `nftanvil-react` takes care of cluster discovery, identity management & canister targeting to make that one-liner work. You can find what `user_transfer_icp` does under the hood here https://github.com/infu/nftanvil/blob/main/packages/nftanvil_react/src/reducers/user.js
+
+### Marketplace component
+
+Importing components
+
+```jsx
+import {
+  MarketplaceLoad,
+  MarketplaceFilters,
+} from "@vvv-interactive/nftanvil-react/cjs/components/Marketplace";
+```
+
+Fetching items by author id
+
+```jsx
+ <MarketplaceLoad
+        author={
+          "a00aa2d5f5f9738e300615f21104cd06bbeb86bb8daee215525ac2ffde621bed"
+        }
+      >
+        {(items) => (
+          ...
+        )}
+</MarketplaceLoad>
+```
+
+Creating marketplace gallery filters and sorting. Provides various useful shortcuts
+
+```jsx
+<MarketplaceFilters
+      items={items} // Items laded from <MarketplaceLoad>
+
+      filterTags={["tagone","tagtwo"]} // These tags will be filtered out
+
+      attributes={[ // These will add sort options
+          ["attack", "with attack"],
+          ["airdrops", "width airdrops"],
+      ]}
+
+      tags={[["blue","gold","red"],["head","torso","legs","waist"]]}
+      // These will create multiple tag select inputs inside resulting `fTags`
+
+    >
+      {({
+        goPageBack, //button - go prev page
+        goPageNext, //button - go next page
+        stats,      //object - stats - stdLow, floor, mean, high
+        fOrder,     //input - select with sorting options
+        fQuality,   //input - select with quality options
+        fTags,      //array of inputs - custom selects
+        slice,      //items remaining after all the filtering is done
+        tagsLeft,   //all the tags remaining after filtering is done
+      }) => {
+      ...
+      }}
+</MarketplaceFilters>
+```
+
+### Inventory component
+
+This component can be used inside marketplace context or standalone.
+
+```jsx
+<InventoryLarge
+  items={slice.map((x) => tokenToText(x[0]))} //input slice of items to visualize
+  custom={(meta) => {
+    // what to display in the bottom left corner of the large nft thumb
+    return <div style={{ paddingTop: "8px", width: "80%" }}>{meta.name}</div>;
+  }}
+  onOpenNft={(id) => {
+    // what happens when the nft is clicked
+    navigate("/" + id);
+  }}
+/>
+```
