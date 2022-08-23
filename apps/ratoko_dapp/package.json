@@ -1,6 +1,6 @@
 {
   "name": "ratoko_dapp",
-  "version": "0.43.0",
+  "version": "0.44.0",
   "private": true,
   "dependencies": {
     "@chakra-ui/icons": "^1.0.15",
@@ -10,9 +10,9 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
-    "@vvv-interactive/nftanvil-canisters": "^0.43.0",
-    "@vvv-interactive/nftanvil-react": "^0.43.0",
-    "@vvv-interactive/nftanvil-tools": "^0.43.0",
+    "@vvv-interactive/nftanvil-canisters": "^0.44.0",
+    "@vvv-interactive/nftanvil-react": "^0.44.0",
+    "@vvv-interactive/nftanvil-tools": "^0.44.0",
     "framer-motion": "^4",
     "moment": "^2.29.3",
     "react": "^17.0.2",
