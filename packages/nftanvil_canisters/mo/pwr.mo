@@ -153,7 +153,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   // public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
   //   assert(Cluster.pwr2slot(_conf, aid) == _slot);
-  //   don't uncomment by mistake 
+    // don't uncomment by mistake 
   //   balanceAdd(#pwr, aid, amount); //TODO: Remove in production
   // };
 

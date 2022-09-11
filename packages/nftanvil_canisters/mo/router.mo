@@ -152,6 +152,7 @@ shared({caller = _installer}) actor class Router() = this {
         })
     };
 
+
     public shared({caller}) func refuel() : async () {
         assert(caller == _installer);
 
@@ -476,7 +477,6 @@ shared({caller = _installer}) actor class Router() = this {
     // This func is only for local development because sequential ids aren't guaranteed on IC network yet.
     public shared ({caller}) func create_local_canisters() : async () {
             assert(caller == _installer);
-            Cycles.add(200_000_000_000);
 
             var cnt = 0;
             let max = 50;
@@ -484,6 +484,8 @@ shared({caller = _installer}) actor class Router() = this {
             var end : ?Nat64 = null;
 
             while (cnt < max) {
+                Cycles.add(200_000_000_000);
+  
                 let {canister_id} = await IC.create_canister({settings = ?{
                     controllers = ?[_installer, Principal.fromActor(this)];
                     compute_allocation = null;
@@ -497,7 +499,6 @@ shared({caller = _installer}) actor class Router() = this {
 
             switch(start) {
                 case (?range_start) {
-
 
                     switch(end) {
                         case (?range_end) {

@@ -33,6 +33,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
+
 import {
   Popover,
   PopoverTrigger,
@@ -48,6 +49,7 @@ import {
   CloseButton,
   Switch,
 } from "@chakra-ui/react";
+
 import { useClipboard, useColorMode } from "@chakra-ui/react";
 import {
   SunIcon,
@@ -321,7 +323,7 @@ function LoginBox() {
         ) : (
           <>
             <ICPBOX mobile={false} />
-            {/* <ANVBOX mobile={false} /> */}
+            <ANVBOX mobile={false} />
 
             <Popover trigger={"hover"}>
               <PopoverTrigger>
@@ -660,7 +662,7 @@ function MobileMenu() {
             ) : (
               <>
                 <ICPBOX mobile={true} />
-                {/* <ANVBOX mobile={true} /> */}
+                <ANVBOX mobile={true} />
 
                 <MenuItem
                   onClick={() => {
