@@ -8,13 +8,13 @@ import {
   nft_use,
   user_pwr_transfer,
   user_refresh_balances,
-} from "@vvv-interactive/nftanvil-react";
+} from "./link_lib";
 
 import { base58ToBytes } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
 import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import { Principal } from "@dfinity/principal";
-import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
+import authentication from "../link_lib/auth.js";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";

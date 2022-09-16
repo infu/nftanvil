@@ -405,7 +405,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         if (Nft.User.equal(request.from, request.to) == true) return #err(#Other("There is no need to transfer it to yourself"));
 
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
- 
+
         switch ( balRequireOwnerOrAllowance(balRequireMinimum(balGet({token = request.token; user = request.from}),1),caller_user, caller)) {
             case (#ok(holder, tokenIndex, bal:Nft.Balance,allowance)) {
                 
@@ -1415,7 +1415,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
     private func SNFT_move(from: AccountIdentifier, to:AccountIdentifier, tidx: TokenIndex) : () {
-
+        // TODO: Put opt lock timer (10sec)
         switch(getToken(tidx)) {
             case (#ok(t)) {
                 SNFT_put(to, tidx);

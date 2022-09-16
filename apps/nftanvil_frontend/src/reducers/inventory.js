@@ -5,15 +5,31 @@ import { produce } from "immer";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+
+export const positionRestore = () => {
+  let obj = {};
+  try {
+    obj = JSON.parse(window.localStorage.getItem("pos"));
+    if (!obj) obj = {};
+  } catch (e) {}
+  console.log("RESTORING", obj);
+  return obj;
+};
+
 export const inventorySlice = createSlice({
   name: "inventory",
-  initialState: {},
+  initialState: { positions: positionRestore() },
   reducers: {
     pageSet: (state, action) => {
       return produce(state, (draft) => {
         if (!draft[action.payload.aid]) draft[action.payload.aid] = [];
         draft[action.payload.aid][action.payload.pageIdx] = action.payload.list;
         return draft;
+      });
+    },
+    positionSet: (state, action) => {
+      return produce(state, (draft) => {
+        draft.positions[action.payload.id] = action.payload.pos;
       });
     },
     metaSet: (state, action) => {
@@ -28,13 +44,15 @@ export const inventorySlice = createSlice({
   },
 });
 
-export const { pageSet, metaSet, verifiedDomainSet } = inventorySlice.actions;
+export const { pageSet, metaSet, verifiedDomainSet, positionSet } =
+  inventorySlice.actions;
 
 export const loadInventory =
   (aid, pageIdx, max) => async (dispatch, getState) => {
     let identity = authentication.client
       ? authentication.client.getIdentity()
       : null;
+
     let s = getState();
     if (!s.user.map.account?.length) return null;
 
@@ -58,6 +76,14 @@ export const loadInventory =
     );
     list = list.filter((x) => x !== 0n).map((x) => tokenToText(x));
     dispatch(pageSet({ aid, pageIdx, list }));
+  };
+
+export const positionSave =
+  ({ id, pos }) =>
+  async (dispatch, getState) => {
+    dispatch(positionSet({ id, pos }));
+    let ser = JSON.stringify(getState().inventory.positions);
+    window.localStorage.setItem("pos", ser);
   };
 
 export const verifyDomainTwitter = (domain) => async (dispatch, getState) => {

@@ -83,7 +83,11 @@ import { Nftstorage } from "./components/Nftstorage";
 import { Mint } from "./components/Mint";
 import { HistoryRedirect, History, HistoryTx } from "./components/History";
 
-import { Inventory, InventoryLarge } from "./components/Inventory";
+import {
+  Inventory,
+  InventoryPage,
+  InventoryLarge,
+} from "./components/Inventory";
 import { NFTPage, NFTClaim } from "./components/NFT";
 import { useWindowSize } from "react-use";
 import { Menu, MenuButton, MenuList, MenuItem } from "@chakra-ui/react";
@@ -322,8 +326,8 @@ function LoginBox() {
           </>
         ) : (
           <>
-            <ICPBOX mobile={false} />
-            <ANVBOX mobile={false} />
+            {/* <ICPBOX mobile={false} />
+            <ANVBOX mobile={false} /> */}
 
             <Popover trigger={"hover"}>
               <PopoverTrigger>
@@ -661,8 +665,8 @@ function MobileMenu() {
               </MenuItem>
             ) : (
               <>
-                <ICPBOX mobile={true} />
-                <ANVBOX mobile={true} />
+                {/* <ICPBOX mobile={true} />
+                <ANVBOX mobile={true} /> */}
 
                 <MenuItem
                   onClick={() => {
@@ -789,7 +793,10 @@ function App() {
               path="/:address(.{64})/lg/:pageIdx?"
               component={InventoryLarge}
             />
-            <Route path="/:address(.{64})/:pageIdx?" component={Inventory} />
+            <Route
+              path="/:address(.{64})/:pageIdx?"
+              component={InventoryPage}
+            />
 
             <Route path="/:code" component={NFTClaim} />
 

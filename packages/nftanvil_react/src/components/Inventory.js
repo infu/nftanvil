@@ -31,6 +31,7 @@ import styled from "@emotion/styled";
 import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
 import { NftHistory } from "./History";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token";
+import { useDrop, useDrag } from "react-dnd";
 
 const InventoryBox = styled.div`
   background: url(${(props) => props.bg});
@@ -43,11 +44,20 @@ const InventoryBox = styled.div`
   cursor: pointer;
 `;
 
-export const Inventory = ({ address, onOpenNft }) => {
-  const maxItems = 100;
+const NFTEmpty = styled.div`
+  width: 72px;
+  height: 72px;
+  border-radius: 6px;
+  background-color: ${(props) => (props.isOver ? "rgba(0,30,60,0.4)" : "")};
+`;
+
+// const cols = Math.min(Math.floor((width - 50) / 72), 10);
+// const rows = Math.ceil(maxItems / cols);
+
+export const Inventory = ({ address, onOpenNft, cols, rows }) => {
+  const maxItems = cols * rows;
 
   const acc = useSelector((state) => state.user.map.account);
-  const { width, height } = useWindowSize();
   const [pageIdx, setPageIdx] = useState(0);
 
   const [isLoading, setLoading] = useState(true);
@@ -68,12 +78,17 @@ export const Inventory = ({ address, onOpenNft }) => {
   const items = useSelector(
     (state) => state.inventory[address] && state.inventory[address][pageIdx]
   );
-  const meta = useSelector((state) => state.inventory[address + "meta"]);
 
   if (!items) return null;
 
-  const cols = Math.min(Math.floor((width - 50) / 72), 10);
-  const rows = Math.ceil(maxItems / cols);
+  const grid = Array(rows * cols)
+    .fill(0)
+    .map((x, idx) => {
+      let id = items[idx];
+      if (id) {
+        return <NFT id={id} key={id} />;
+      } else return <Empty key={"S" + idx} cell={idx} />;
+    });
 
   return (
     <Stack mt="8">
@@ -85,22 +100,19 @@ export const Inventory = ({ address, onOpenNft }) => {
       />
 
       <Center>
-        <InventoryBox width={cols * 72} height={rows * 72} bg={bg}>
-          {isLoading ? (
-            <Box h="72px">
-              <Center>
-                <Spinner size="lg" mt="11px" />
-              </Center>
-            </Box>
-          ) : (
+        {isLoading ? (
+          <Box h="72px">
+            <Center>
+              <Spinner size="lg" mt="11px" />
+            </Center>
+          </Box>
+        ) : (
+          <InventoryBox width={cols * 72} height={rows * 72} bg={bg}>
             <Wrap direction={"horizontal"} spacing="0">
-              {items &&
-                items.map((id, idx) => (
-                  <NFT key={idx} id={id} onClick={() => onOpenNft(id)} />
-                ))}
+              {grid}
             </Wrap>
-          )}
-        </InventoryBox>
+          </InventoryBox>
+        )}
       </Center>
 
       <Pagination
@@ -109,43 +121,26 @@ export const Inventory = ({ address, onOpenNft }) => {
         end={items.length < maxItems}
         setPageIdx={setPageIdx}
       />
-
-      {/* {meta ? (
-        <NftHistory transactions={meta.transactions} showThumb={true} />
-      ) : null} */}
     </Stack>
   );
 };
 
-export const InventoryLarge = ({ items, onOpenNft, custom }) => {
-  let bg = useColorModeValue(itemgrid_light, itemgrid);
-
-  if (!items) return null;
-
-  // console.log({ items, meta, address, pageIdx, maxItems });
+export const Empty = ({ cell }) => {
+  const [{ canDrop, isOver }, drop] = useDrop(() => ({
+    // The type (or types) to accept - strings or symbols
+    accept: "nft",
+    // Props to collect
+    drop: () => ({ cell }),
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  }));
 
   return (
-    <Stack mt="8">
-      <Center>
-        <Box mt="4" mb="4" w={"100%"} bg={bg}>
-          <Wrap direction={"horizontal"} spacing="5" justify="center">
-            {items &&
-              items.map((id) => (
-                <NFTLarge
-                  custom={custom}
-                  id={id}
-                  key={id}
-                  onClick={() => onOpenNft(id)}
-                />
-              ))}
-          </Wrap>
-        </Box>
-      </Center>
-
-      {/* {meta ? (
-        <NftHistory transactions={meta.transactions} showThumb={true} />
-      ) : null} */}
-    </Stack>
+    <>
+      <NFTEmpty ref={drop} isOver={isOver}></NFTEmpty>
+    </>
   );
 };
 

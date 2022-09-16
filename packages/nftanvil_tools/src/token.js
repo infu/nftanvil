@@ -64,6 +64,7 @@ export const decodeTokenId = (t) => {
 };
 
 export const tokenToText = (tid) => {
+  if (tid === 0n || tid === 0) return false;
   let p = new Uint8Array([
     ...numberToBytesArray(getCrc32(numberToBytesArray(tid, 8)) & 65535, 2),
     ...numberToBytesArray(tid, 8),

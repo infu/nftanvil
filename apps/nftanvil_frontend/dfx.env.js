@@ -48,6 +48,9 @@ for (const canister in canisters) {
 if (process.env.NODE_ENV !== "production") {
   txt +=
     "REACT_APP_IDENTITY_PROVIDER=http://localhost:8000?canisterId=rwlgt-iiaaa-aaaaa-aaaaa-cai\n";
+  // txt +=
+  //   "REACT_APP_IDENTITY_PROVIDER=http://localhost:8000?canisterId=vvypb-ayaaa-aaaaa-aaa3a-cai\n";
+
   txt += "REACT_APP_LOCAL_BACKEND=true\n";
 }
 

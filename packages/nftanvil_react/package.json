@@ -4,9 +4,13 @@
   "main": "cjs/index.js",
   "license": "MIT",
   "dependencies": {
+    "@emeraldpay/hashicon": "^0.5.2",
+    "@emeraldpay/hashicon-react": "^0.5.2",
     "@vvv-interactive/nftanvil-canisters": "^0.44.0",
     "@vvv-interactive/nftanvil-tools": "^0.44.0",
     "react": "^17.0.2",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^17.0.2",
     "react-redux": "^7.2.6"
   },

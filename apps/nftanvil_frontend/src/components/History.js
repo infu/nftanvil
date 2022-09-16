@@ -114,6 +114,12 @@ const Val = styled.div`
   font-weight: normal;
 `;
 
+const NFTImgHistory = styled.div`
+  .thumb-large {
+    margin: 0px 7px 7px 0px;
+  }
+`;
+
 const HistoryEvent = ({ ev, canister, idx, showThumb = true }) => {
   const boxColor = useColorModeValue("white", "gray.700");
   const space = useSelector((state) => state.user.map.space);
@@ -242,9 +248,9 @@ const HistoryEvent = ({ ev, canister, idx, showThumb = true }) => {
   return (
     <Stack direction="horizontal" spacing="0">
       {"token" in details ? (
-        <Box w="250px" mb="7px" mr="7px">
+        <NFTImgHistory>
           <NFTLarge id={tokenToText(details.token)} />
-        </Box>
+        </NFTImgHistory>
       ) : null}
       {inner}
     </Stack>

@@ -26,7 +26,9 @@ module {
     public type Interface = actor {
         balance              : query BalanceRequest         -> async BalanceResponse;
         pwr_transfer         : shared TransferRequest       -> async TransferResponse;
-        balanceAddExternal   : shared ({#anv; #pwr}, AccountIdentifier, Balance) -> async ();
+        balanceAddExternal   : shared (FTokenId, AccountIdentifier, Balance) -> async ();
+
+        // only for icp
         pwr_withdraw         : shared WithdrawRequest       -> async WithdrawResponse;
         pwr_purchase_intent  : shared PurchaseIntentRequest -> async PurchaseIntentResponse;
         pwr_purchase_claim   : shared PurchaseClaimRequest  -> async PurchaseClaimResponse;
@@ -34,13 +36,17 @@ module {
     };
 
 
+    public let TOKEN_ICP : FTokenId = 1;
+    public let TOKEN_ANV : FTokenId = 2;
+
     public type BalanceRequest = {
         user: Nft.User;
     };
 
     public type BalanceResponse = {
-        pwr : Balance;
-        anv : Balance;
+        ft : AccountRecordSerialized;
+        // pwr : Balance;
+        // anv : Balance;
         oracle : Nft.Oracle;
     };
 
@@ -69,6 +75,7 @@ module {
     public type Currency = {#anv; #pwr};
 
     public type TransferRequest = {
+        token      : FTokenId;
         from       : User;
         to         : User;
         amount     : Balance;
@@ -89,42 +96,66 @@ module {
     public type Memo = Nft.Memo;
     //)
 
-    
+
+    public type FTokenId = Nat64;
    
-    public type AccountRecord = {
-        var pwr : Nat64;
-        var anv : Nat64;
+
+    public type AccountRecord = [var (FTokenId,Balance)];
+    // {
+    //     var pwr : Nat64;
+    //     var anv : Nat64;
+    //     };
+
+    public type AccountRecordSerialized = [(FTokenId,Balance)];
+    // {
+    //     pwr : Nat64;
+    //     anv : Nat64;
+    // };
+
+    // public type AccountResult = AccountRecordSerialized;
+    // {
+    //     pwr : Nat64;
+    //     anv : Nat64;
+    // };
+
+    public func AccountRecordFindToken(x: AccountRecord, search: FTokenId) : ?Nat {
+        var found : ?Nat = null;
+        label se for (idx in x.keys()) {
+            if (x[idx].0 == search) {
+                found := ?idx;
+                break se;
+            };
         };
-
-    public type AccountRecordSerialized = {
-        pwr : Nat64;
-        anv : Nat64;
+        found;
+        // {
+        //     pwr = x.pwr;
+        //     anv = x.anv;
+        // }
     };
 
-    public type AccountResult = {
-        pwr : Nat64;
-        anv : Nat64;
+    public func AccountRecordSerialize(x: AccountRecord) : AccountRecordSerialized {
+        Array.freeze(x);
+        
+        // {
+        //     pwr = x.pwr;
+        //     anv = x.anv;
+        // }
     };
 
-    public func AccountRecordSerialize(x : AccountRecord) : AccountRecordSerialized {
-        {
-            pwr = x.pwr;
-            anv = x.anv;
-        }
-    };
-
-    public func AccountRecordUnserialize(x:AccountRecordSerialized) : AccountRecord {
-        {
-            var pwr = x.pwr;
-            var anv = x.anv;
-        }
+    public func AccountRecordUnserialize(x: AccountRecordSerialized) : AccountRecord {
+        Array.thaw(x);
+        // {
+        //     var pwr = x.pwr;
+        //     var anv = x.anv;
+        // }
     };
 
     public func AccountRecordBlank() : AccountRecord {
-        {
-            var pwr = 0;
-            var anv = 0;
-        }
+        [var]
+        // {
+        //     var pwr = 0;
+        //     var anv = 0;
+        // }
     };
     
 

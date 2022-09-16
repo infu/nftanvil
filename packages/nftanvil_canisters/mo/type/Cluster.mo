@@ -21,7 +21,7 @@ module {
     public type Oracle = Nft.Oracle;
 
     public let MGR_MIN_INACTIVE_CAN_CYCLES = 100_000_000_000;
-    public let MGR_MIN_ACTIVE_CAN_CYCLES = 10_000_000_000_000;
+    public let MGR_MIN_ACTIVE_CAN_CYCLES = 4_000_000_000_000; //TODO: change back to 10T
     public let MGR_IGNORE_CYCLES = 1_000_000_000;
     public let TIME_BETWEEN_REFUELS =  14400000000000; //1000000000*60*60*4; // 4 hours;
 

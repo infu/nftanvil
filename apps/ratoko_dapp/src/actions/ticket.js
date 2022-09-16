@@ -9,11 +9,11 @@ import {
   nft_burn,
   nft_use,
   user_refresh_balances,
-} from "@vvv-interactive/nftanvil-react";
+} from "./link_lib";
 import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactionid.js";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { createItoActor } from "../declarations/ito.js";
-import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
+import authentication from "../link_lib/auth.js";
 import { toast } from "react-toastify";
 import { claim } from "./purchase";
 export const msg =

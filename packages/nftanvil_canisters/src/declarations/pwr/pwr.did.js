@@ -5,7 +5,9 @@ export const idlFactory = ({ IDL }) => {
     'address' : AccountIdentifier,
   });
   const BalanceRequest = IDL.Record({ 'user' : User__2 });
+  const FTokenId = IDL.Nat64;
   const Balance__1 = IDL.Nat64;
+  const AccountRecordSerialized = IDL.Vec(IDL.Tuple(FTokenId, Balance__1));
   const Oracle__1 = IDL.Record({
     'icpFee' : IDL.Nat64,
     'anvFee' : IDL.Nat64,
@@ -13,8 +15,7 @@ export const idlFactory = ({ IDL }) => {
     'pwrFee' : IDL.Nat64,
   });
   const BalanceResponse = IDL.Record({
-    'anv' : Balance__1,
-    'pwr' : Balance__1,
+    'ft' : AccountRecordSerialized,
     'oracle' : Oracle__1,
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
@@ -226,6 +227,7 @@ export const idlFactory = ({ IDL }) => {
   const Memo = IDL.Vec(IDL.Nat8);
   const TransferRequest = IDL.Record({
     'to' : User__1,
+    'token' : FTokenId,
     'from' : User__1,
     'memo' : Memo,
     'subaccount' : IDL.Opt(SubAccount__1),
@@ -254,15 +256,22 @@ export const idlFactory = ({ IDL }) => {
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
     'balanceAddExternal' : IDL.Func(
-        [
-          IDL.Variant({ 'anv' : IDL.Null, 'pwr' : IDL.Null }),
-          AccountIdentifier__2,
-          Balance__3,
-        ],
+        [FTokenId, AccountIdentifier__2, Balance__3],
         [],
         [],
       ),
     'config_set' : IDL.Func([Config], [], []),
+    'faucet' : IDL.Func(
+        [
+          IDL.Record({
+            'aid' : AccountIdentifier__2,
+            'token' : FTokenId,
+            'amount' : Balance__3,
+          }),
+        ],
+        [],
+        [],
+      ),
     'nft_mint' : IDL.Func([CanisterSlot, MintRequest], [MintResponse], []),
     'nft_purchase' : IDL.Func(
         [CanisterSlot, PurchaseRequest],

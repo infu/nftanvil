@@ -50,6 +50,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   type Balance = Nft.Balance;
 
 
+
   //Handle canister upgrades
   system func preupgrade() {
       _tmpAccount := Iter.toArray(_account.serialize());
@@ -67,30 +68,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       _cycles_recieved += accepted;
   };
 
-  // public shared({caller}) func anv_transfer(request: Anv.TransferRequest) : async Anv.TransferResponse {
-  //     let aid = Nft.User.toAccountIdentifier(request.from);
-  //     let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
-  //     if (caller_user != request.from) return #err(#Unauthorized(aid));
-
-  //     switch(_account.get(aid)) {
-  //           case (?ac) {
-
-  //             if (ac.anv < (request.amount + _oracle.anvFee)) return #err(#InsufficientBalance);
-
-  //             let to_aid = Nft.User.toAccountIdentifier(request.to);
-
-  //             ac.anv := ac.anv - request.amount - _oracle.anvFee;
-              
-  //             balanceAdd( #anv, to_aid, request.amount);
-
-  //             let transactionId = await Cluster.history(_conf).add(#anv(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
-  //             #ok({transactionId});
-
-  //           };
-  //           case (_) return #err(#InsufficientBalance);
-  //       };
-  //   };
 
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
@@ -136,28 +114,30 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         switch(_account.get(aid)) {
             case (?ac) {
                 {
-                    pwr = ac.pwr;
-                    anv = ac.anv;
+                    ft = Pwr.AccountRecordSerialize(ac);
+                    // pwr = ac.pwr;
+                    // anv = ac.anv;
                     oracle = _oracle;
                 }
             };
             case (_) {
               {
-                pwr = 0;
-                anv = 0;
+                ft = [];
+                // pwr = 0;
+                // anv = 0;
                 oracle = _oracle;
               }
             }
         };
     };
 
-  // public shared({caller}) func faucet({aid: AccountIdentifier; amount :Balance}) : async () {
-  //   assert(Cluster.pwr2slot(_conf, aid) == _slot);
+  public shared({caller}) func faucet({token: Pwr.FTokenId; aid: AccountIdentifier; amount :Balance}) : async () {
+    assert(Cluster.pwr2slot(_conf, aid) == _slot);
     // don't uncomment by mistake 
-  //   balanceAdd(#pwr, aid, amount); //TODO: Remove in production
-  // };
+    balanceAdd(token, aid, amount); //TODO: Remove in production
+  };
 
-  public shared({caller}) func balanceAddExternal(target : {#anv; #pwr}, aid:AccountIdentifier, amount: Balance) : async () {
+  public shared({caller}) func balanceAddExternal(target : Pwr.FTokenId, aid:AccountIdentifier, amount: Balance) : async () {
     
     assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 
@@ -187,24 +167,27 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     switch(_account.get(aid)) {
           case (?ac) {
 
-            if (ac.pwr < (request.amount + _oracle.pwrFee)) return #err(#InsufficientBalance);
+            switch(balanceRem(request.token, aid, request.amount + _oracle.pwrFee)) {
+              case (#ok()) {
+                  _fees_charged += _oracle.pwrFee;
 
-            let to_aid = Nft.User.toAccountIdentifier(request.to);
+                  let to_aid = Nft.User.toAccountIdentifier(request.to);
+                 
+                  await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternal(request.token, to_aid, request.amount);
 
-            ac.pwr :=  ac.pwr - request.amount - _oracle.pwrFee;
+                  if (isAnvil) {
+                    //This avoids adding two transactions for one operation like minting
+                    #ok({transactionId=Blob.fromArray([])});
+                  } else {
+                    let transactionId = await Cluster.history(_conf).add(#pwr(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
+                    #ok({transactionId});
+                  }
 
-            _fees_charged += _oracle.pwrFee;
+              };
+              case (#err(e)) return #err(e)
+            };
 
-            await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternal(#pwr, to_aid, request.amount);
 
-
-            if (isAnvil) {
-              //This avoids adding two transactions for one operation like minting
-              #ok({transactionId=Blob.fromArray([])});
-            } else {
-              let transactionId = await Cluster.history(_conf).add(#pwr(#transfer({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); memo=request.memo; amount=request.amount})));
-              #ok({transactionId});
-            }
           };
           case (_) return #err(#InsufficientBalance);
       };
@@ -221,33 +204,51 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     switch(_account.get(aid)) {
           case (?ac) {
 
-            if (ac.pwr < (request.amount + _oracle.icpFee)) return #err(#InsufficientBalance);
+            switch(Pwr.AccountRecordFindToken(ac, Pwr.TOKEN_ICP)) {
+              case (?tidx) {
 
-            let to_aid = Nft.User.toAccountIdentifier(request.to);
+                  if (ac[tidx].1 < (request.amount + _oracle.icpFee)) return #err(#InsufficientBalance);
 
-            ac.pwr := ac.pwr - request.amount - _oracle.icpFee;
+                  let to_aid = Nft.User.toAccountIdentifier(request.to);
 
-             
-              switch(try { await Cluster.treasury(_conf).pwr_withdraw(request) } catch (e) { #Err(); }) {
-                case (#Ok(blockIndex)) {
-                      try {
-                        _icp_withdrawn += request.amount + _oracle.icpFee;
-                      
-                        let transactionId = await Cluster.history(_conf).add(#pwr(#withdraw({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); amount=request.amount})));
 
-                        #ok({transactionId});
-                      } catch (e) {
-                        return #err(#Other("Operation executed, but adding transaction to history failed"));
+                  ac[tidx] := (
+                    ac[tidx].0, 
+                    ac[tidx].1 - request.amount - _oracle.pwrFee
+                  );
+
+                  // ac.pwr := ac.pwr - request.amount - _oracle.icpFee;
+
+                  
+                    switch(try { await Cluster.treasury(_conf).pwr_withdraw(request) } catch (e) { #Err(); }) {
+                      case (#Ok(blockIndex)) {
+                            try {
+                              _icp_withdrawn += request.amount + _oracle.icpFee;
+                            
+                              let transactionId = await Cluster.history(_conf).add(#pwr(#withdraw({created=Time.now(); from=Nft.User.toAccountIdentifier(request.from); to=Nft.User.toAccountIdentifier(request.to); amount=request.amount})));
+
+                              #ok({transactionId});
+                            } catch (e) {
+                              return #err(#Other("Operation executed, but adding transaction to history failed"));
+                            }
+
+                      };
+
+                      case (#Err(e)) {
+                            // Return balance to user
+                            balanceAdd(Pwr.TOKEN_ICP, to_aid, request.amount);
+                            #err(#Rejected);
                       }
+                    }; 
+                    
+              };
 
-                };
+              case (null) {
+                 return #err(#InsufficientBalance);
+              };
+            };
 
-                case (#Err(e)) {
-                      // Return balance to user
-                      balanceAdd(#pwr, to_aid, request.amount);
-                      #err(#Rejected);
-                }
-              }; 
+
           
 
           };
@@ -274,7 +275,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
    // _fees_charged += _oracle.pwrFee;
 
     // take amount out
-    switch(balanceRem(#pwr, aid, cost )) {
+    switch(balanceRem(Pwr.TOKEN_ICP, aid, cost )) {
       case (#ok()) ();
       case (#err(e)) return #err(e)
     };
@@ -284,12 +285,12 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
         _mint_accumulated += cost;
 
-        balanceAdd(#anv, aid, cost);
+        balanceAdd(Pwr.TOKEN_ANV, aid, cost);
 
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(#pwr, aid, cost); // return because of fail TODO: Do not return pwrFee if error was intentional (if that is possible)
+        balanceAdd(Pwr.TOKEN_ICP, aid, cost); // return because of fail TODO: Do not return pwrFee if error was intentional (if that is possible)
 
         return #err(e);
       }
@@ -320,7 +321,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     let cost:Nat64 = request.amount + _oracle.pwrFee + affiliate_amount;
 
     // take amount out
-    switch(balanceRem(#pwr, aid, cost)) {
+    switch(balanceRem(Pwr.TOKEN_ICP, aid, cost)) {
       case (#ok()) ();
       case (#err(e)) return #err(e)
     };
@@ -361,18 +362,18 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
           
           // give to NFTAnvil
           _distributed_anvil += anvil_cut;
-          await Cluster.pwrFromAid(_conf, NFTAnvil_profits).balanceAddExternal(#pwr, NFTAnvil_profits, anvil_cut);
+          await Cluster.pwrFromAid(_conf, NFTAnvil_profits).balanceAddExternal(Pwr.TOKEN_ICP, NFTAnvil_profits, anvil_cut);
 
           // give to Author
           _distributed_author += author_cut;
-          await Cluster.pwrFromAid(_conf, purchase.author.address).balanceAddExternal(#pwr, purchase.author.address, author_cut);
+          await Cluster.pwrFromAid(_conf, purchase.author.address).balanceAddExternal(Pwr.TOKEN_ICP, purchase.author.address, author_cut);
 
 
           // give to Marketplace
           switch(purchase.marketplace) {
             case (?marketplace) {
               _distributed_marketplace += marketplace_cut;
-              await Cluster.pwrFromAid(_conf, marketplace.address).balanceAddExternal(#pwr, marketplace.address, marketplace_cut);
+              await Cluster.pwrFromAid(_conf, marketplace.address).balanceAddExternal(Pwr.TOKEN_ICP, marketplace.address, marketplace_cut);
               Debug.print("Marketplace cut " # debug_show(marketplace_cut) # " " # debug_show(marketplace));
             };
             case (null) ();
@@ -382,7 +383,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
           switch(purchase.affiliate) {
             case (?affiliate) {
               _distributed_affiliate += affiliate.amount;
-              await Cluster.pwrFromAid(_conf, affiliate.address).balanceAddExternal(#pwr, affiliate.address, affiliate.amount);
+              await Cluster.pwrFromAid(_conf, affiliate.address).balanceAddExternal(Pwr.TOKEN_ICP, affiliate.address, affiliate.amount);
               Debug.print("Affiliate cut " # debug_show(affiliate.amount) # " " # debug_show(affiliate));
             };
             case (null) ();
@@ -391,14 +392,14 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
           // give to Seller
           _distributed_seller += seller_cut;
 
-          await Cluster.pwrFromAid(_conf, purchase.seller).balanceAddExternal(#pwr, purchase.seller, seller_cut);
+          await Cluster.pwrFromAid(_conf, purchase.seller).balanceAddExternal(Pwr.TOKEN_ICP, purchase.seller, seller_cut);
           
 
 
           return #ok(resp);
         };
         case (#err(e)) {
-          balanceAdd(#pwr, aid, cost - _oracle.pwrFee); // return because of fail. 
+          balanceAdd(Pwr.TOKEN_ICP, aid, cost - _oracle.pwrFee); // return because of fail. 
 
           return #err(e);
         }
@@ -479,7 +480,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     let cost:Nat64 = request.amount;
 
     // take amount out
-    switch(balanceRem(#pwr, aid, cost + _oracle.pwrFee)) {
+    switch(balanceRem(Pwr.TOKEN_ICP, aid, cost + _oracle.pwrFee)) {
       case (#ok()) ();
       case (#err(e)) return #err(e)
     };
@@ -493,7 +494,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(#pwr, aid, cost); // return because of fail
+        balanceAdd(Pwr.TOKEN_ICP, aid, cost); // return because of fail
 
         return #err(e);
       }
@@ -545,7 +546,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
                 _icp_deposited += amount.e8s;
 
-                balanceAdd(#pwr, toUserAID, amount.e8s); // TODO: This 1000 is here for demo only
+                balanceAdd(Pwr.TOKEN_ICP, toUserAID, amount.e8s); // TODO: This 1000 is here for demo only
                 
                 let transactionId = await Cluster.history(_conf).add(#pwr(#mint({created=Time.now(); user=Nft.User.toAccountIdentifier(request.user); amount=amount.e8s})));
 
@@ -560,62 +561,73 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   };
 
 
-  private func balanceAdd(target : {#anv; #pwr}, aid:AccountIdentifier, amount: Balance) : () {
+  private func balanceAdd(target : Pwr.FTokenId, aid:AccountIdentifier, amount: Balance) : () {
 
-      if (amount == 0) return ();
+     if (amount == 0) return ();
 
      switch(_account.get(aid)) {
             case (?ac) {
                 
-                switch(target) {
-                  case (#anv) {
-                    ac.anv := ac.anv + amount;
+                  switch(Pwr.AccountRecordFindToken(ac, target)) {
+                  case (?tidx) {
+
+                      ac[tidx] := (
+                        ac[tidx].0, 
+                        ac[tidx].1 + amount
+                      );
+
+                      ();
                   };
-                  case (#pwr) {
-                    ac.pwr := ac.pwr + amount;
+                  case (null) {
+         
+                    _account.put(aid, Array.thaw(Array.append(
+                      Array.freeze(ac), 
+                      [(
+                       target,
+                       amount
+                      )]
+                     )));
+
                   };
                 };
-                
+
             };
             case (_) { 
                  _total_accounts += 1;
                  let newobj = Pwr.AccountRecordBlank();
                  _account.put(aid, newobj); 
-
-                 switch(target) {
-                  case (#anv) {
-                    newobj.anv := newobj.anv + amount;
-                  };
-                  case (#pwr) {
-                    newobj.pwr := newobj.pwr + amount;
-                  };
-                };
-
+                 balanceAdd(target, aid, amount);
              }
         };
   };
 
-  private func balanceRem(target : {#anv; #pwr}, aid:AccountIdentifier, amount: Balance) : Result.Result<(), {#InsufficientBalance}> {
+  private func balanceRem(target : Pwr.FTokenId, aid:AccountIdentifier, amount: Balance) : Result.Result<(), {#InsufficientBalance}> {
 
        switch(_account.get(aid)) {
             case (?ac) {
 
-                switch(target) {
-                  case (#anv) {
-                    if (ac.anv < amount) return #err(#InsufficientBalance);
-                    ac.anv := ac.anv - amount;
-                  };
-                  case (#pwr) {
-                    if (ac.pwr < amount) return #err(#InsufficientBalance);
-                    ac.pwr := ac.pwr - amount;
-                  };
-                };
-                
-                if ((ac.anv < _oracle.anvFee) and (ac.pwr < _oracle.pwrFee)) {
-                  _account.delete(aid);
+                  switch(Pwr.AccountRecordFindToken(ac, target)) {
+
+                    case (?tidx) {
+
+                        if (ac[tidx].1 < amount) return #err(#InsufficientBalance);
+
+                        ac[tidx] := (
+                          ac[tidx].0, 
+                          ac[tidx].1 - amount
+                        );
+
+                        #ok();
+                    };
+                    case (null) {
+                      return #err(#InsufficientBalance);
+                    };
                 };
 
-                #ok();
+                // TODO: get this back
+                // if ((ac.anv < _oracle.anvFee) and (ac.pwr < _oracle.pwrFee)) {
+                //   _account.delete(aid);
+                // };
 
             };
             case (_) return #err(#InsufficientBalance);

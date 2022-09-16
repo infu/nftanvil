@@ -35,6 +35,8 @@ import {
   NumberDecrementStepper,
 } from "@chakra-ui/react";
 
+import { positionSave } from "../reducers/inventory";
+
 import { verifyDomain, verifyDomainTwitter } from "../reducers/inventory";
 import { setDominantColor } from "../reducers/user";
 import { NftHistory } from "./History";
@@ -103,6 +105,8 @@ import {
   AVG_MESSAGE_COST,
   FULLY_CHARGED_MINUTES,
 } from "@vvv-interactive/nftanvil-tools/cjs/pricing.js";
+
+import { useDrag } from "react-dnd";
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -1167,13 +1171,13 @@ export const NFTLarge = ({ id }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(nftFetch(id));
+    dispatch(nftFetch(id)).catch((e) => {});
   }, [id, dispatch]);
 
   if (!meta) return null;
 
   return (
-    <ThumbLarge mode={mode}>
+    <ThumbLarge mode={mode} className="thumb-large">
       <Link to={"/" + id}>
         {meta.thumb?.ipfs?.url ? (
           <img alt="" className="custom" src={meta.thumb.ipfs.url} />
@@ -1218,11 +1222,31 @@ export const NFTLarge = ({ id }) => {
 };
 
 export const NFT = ({ id, thumbSize }) => {
-  const meta = useSelector((state) => state.nft[id]);
-
   const dispatch = useDispatch();
 
-  const [popoverOpen, setPopover] = useState(false);
+  const [{ opacity, dragging }, dragRef] = useDrag(
+    () => ({
+      type: "nft",
+      item: { id },
+      end: (item, monitor) => {
+        const dropResult = monitor.getDropResult();
+        if (item && dropResult) {
+          dispatch(positionSave({ id: item.id, pos: dropResult.cell }));
+        }
+      },
+      collect: (monitor) => ({
+        opacity: monitor.isDragging() ? 0.5 : 1,
+        dragging: monitor.isDragging(),
+      }),
+    }),
+    []
+  );
+
+  const meta = useSelector((state) => state.nft[id]);
+
+  const [mouseOver, setMouseOver] = useState(false);
+
+  const popoverOpen = !dragging && mouseOver;
 
   useEffect(() => {
     dispatch(nftFetch(id));
@@ -1230,12 +1254,19 @@ export const NFT = ({ id, thumbSize }) => {
 
   return (
     <Thumb
-      style={{ zIndex: popoverOpen ? 10 : 0 }}
+      ref={dragRef}
+      style={{
+        zIndex: popoverOpen ? 10 : 0,
+        opacity,
+      }}
       onMouseOver={() => {
-        setPopover(true);
+        setMouseOver(true);
+      }}
+      onMouseDown={() => {
+        setMouseOver(false);
       }}
       onMouseOut={() => {
-        setPopover(false);
+        setMouseOver(false);
       }}
     >
       <Link to={"/" + id}>

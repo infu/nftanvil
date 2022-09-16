@@ -15,6 +15,10 @@ import { ColorModeScript } from "@chakra-ui/react";
 import { ConnectedRouter } from "connected-react-router";
 import { useSelector } from "react-redux";
 import { faucet } from "./reducers/user.js";
+
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+
 //import "./decorations/Christmass";
 
 // Sentry.init({
@@ -32,8 +36,8 @@ setTimeout(() => {
 }, 100);
 
 if (process.env.NODE_ENV !== "production") {
-  window.faucet = (address) => {
-    store.dispatch(faucet(address));
+  window.faucet = (...arg) => {
+    store.dispatch(faucet(...arg));
   };
 }
 
@@ -42,13 +46,15 @@ setTimeout(() => {
     <>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
       <React.StrictMode>
-        <Provider store={store}>
-          <ChakraProvider theme={theme}>
-            <ConnectedRouter history={history}>
-              <App />
-            </ConnectedRouter>
-          </ChakraProvider>
-        </Provider>
+        <DndProvider backend={HTML5Backend}>
+          <Provider store={store}>
+            <ChakraProvider theme={theme}>
+              <ConnectedRouter history={history}>
+                <App />
+              </ConnectedRouter>
+            </ChakraProvider>
+          </Provider>
+        </DndProvider>
       </React.StrictMode>
     </>,
     document.getElementById("root")

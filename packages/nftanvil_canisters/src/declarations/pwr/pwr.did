@@ -48,6 +48,7 @@ type TransferRequest =
    memo: Memo;
    subaccount: opt SubAccount__1;
    to: User__1;
+   token: FTokenId;
  };
 type TransferError = 
  variant {
@@ -238,6 +239,7 @@ type ItemTransfer =
  };
 type IPFS_CID = text;
 type ICP = record {e8s: nat64;};
+type FTokenId = nat64;
 type ExternalUrl = text;
 type DomainName = text;
 type CustomVar = blob;
@@ -272,11 +274,14 @@ type Config =
 type Class = 
  service {
    balance: (BalanceRequest) -> (BalanceResponse) query;
-   balanceAddExternal: (variant {
-                          anv;
-                          pwr;
-                        }, AccountIdentifier__2, Balance__3) -> ();
+   balanceAddExternal: (FTokenId, AccountIdentifier__2, Balance__3) -> ();
    config_set: (Config) -> ();
+   faucet:
+    (record {
+       aid: AccountIdentifier__2;
+       amount: Balance__3;
+       token: FTokenId;
+     }) -> ();
    nft_mint: (CanisterSlot, MintRequest) -> (MintResponse);
    nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);
    nft_recharge: (CanisterSlot, RechargeRequest) -> (RechargeResponse);
@@ -322,9 +327,8 @@ type Balance__2 = nat64;
 type Balance__1 = nat64;
 type BalanceResponse = 
  record {
-   anv: Balance__1;
+   ft: AccountRecordSerialized;
    oracle: Oracle__1;
-   pwr: Balance__1;
  };
 type BalanceRequest = record {user: User__2;};
 type Balance = nat64;
@@ -334,6 +338,11 @@ type Attribute =
    text;
    nat16;
  };
+type AccountRecordSerialized = 
+ vec record {
+       FTokenId;
+       Balance__1;
+     };
 type AccountIdentifier__2 = blob;
 type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;

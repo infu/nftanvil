@@ -3,32 +3,25 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 //import reportWebVitals from "./reportWebVitals";
-import { AnvilProvider } from "@vvv-interactive/nftanvil-react";
+import { AnvilProvider } from "./link_lib";
 import { BrowserRouter } from "react-router-dom";
-import { ChakraProvider } from "@chakra-ui/react";
-import { ColorModeScript } from "@chakra-ui/react";
 
-import { theme } from "./theme.js";
-
-import authentication from "@vvv-interactive/nftanvil-react/cjs/auth.js";
+import authentication from "./link_lib/auth.js";
 authentication.setOptions({ cookie: true });
 
-window.lockdown({
-  //comes from lockdown.umd.min.js
-  consoleTaming: "unsafe", // Leave original start console in place
-  overrideTaming: "min",
-});
+// window.lockdown({
+//   //comes from lockdown.umd.min.js
+//   consoleTaming: "unsafe", // Leave original start console in place
+//   overrideTaming: "min",
+// });
 
 ReactDOM.render(
   <>
-    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
     <React.StrictMode>
       <AnvilProvider>
-        <ChakraProvider theme={theme}>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </ChakraProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </AnvilProvider>
     </React.StrictMode>
   </>,

@@ -1,3 +1,5 @@
+/* global BigInt */
+
 import { createSlice } from "@reduxjs/toolkit";
 import { AuthClient } from "@dfinity/auth-client";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
@@ -33,8 +35,7 @@ const initialState = {
   principal: null,
   anonymous: true,
   focused: true,
-  icp: "0",
-  anv: "0",
+  ft: {},
   map: {},
   acccan: "",
   oracle: {
@@ -57,8 +58,7 @@ export const userSlice = createSlice({
     balancesSet: (state, action) => {
       return {
         ...state,
-        icp: action.payload.icp,
-        anv: action.payload.anv,
+        ft: action.payload.ft,
         oracle: action.payload.oracle,
       };
     },
@@ -319,24 +319,26 @@ export const refresh_icp_balance = () => async (dispatch, getState) => {
 };
 
 // for local testing
-export const faucet = (address) => async (dispatch, getState) => {
-  let s = getState();
+export const faucet =
+  (token, address, amount) => async (dispatch, getState) => {
+    let s = getState();
 
-  let pwrcan = pwrCanister(
-    PrincipalFromSlot(
-      s.user.map.space,
-      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
-    ),
-    { agentOptions: await authentication.getAgentOptions() }
-  );
+    let pwrcan = pwrCanister(
+      PrincipalFromSlot(
+        s.user.map.space,
+        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+      ),
+      { agentOptions: await authentication.getAgentOptions() }
+    );
 
-  let resp = await pwrcan.faucet({
-    aid: AccountIdentifier.TextToArray(address),
-    amount: 800000000n,
-  });
+    let resp = await pwrcan.faucet({
+      token, //: 1,
+      aid: AccountIdentifier.TextToArray(address),
+      amount, //: 800000000n,
+    });
 
-  console.log(resp);
-};
+    console.log(resp);
+  };
 
 export const refresh_pwr_balance = () => async (dispatch, getState) => {
   let identity = authentication.client.getIdentity();
@@ -358,7 +360,7 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
     .balance({
       user: { address: AccountIdentifier.TextToArray(address) },
     })
-    .then(async ({ pwr, anv, oracle }) => {
+    .then(async ({ ft, oracle }) => {
       // if (Number(pwr) === 0) {
       //   //TODO: Remove in production
       //   let fres = await pwrcan.faucet({
@@ -368,17 +370,116 @@ export const refresh_pwr_balance = () => async (dispatch, getState) => {
       //   dispatch(refresh_pwr_balance());
       //   return;
       // }
+      let o = Object.assign(
+        {},
+        ...ft.map(([id, bal]) => {
+          return { [id]: bal.toString() };
+        })
+      );
 
       oracle = BigIntToString(oracle);
-      dispatch(
-        balancesSet({ icp: pwr.toString(), anv: anv.toString(), oracle })
-      );
+      dispatch(balancesSet({ ft: o, oracle }));
     })
     .catch((e) => {
       // We are most probably logged out. There is currently no better way to handle expired agentjs chain
       if (e.toString().includes("delegation has expired")) dispatch(logout());
     });
 };
+
+export const transfer_token =
+  ({ id, to, amount }) =>
+  async (dispatch, getState) => {
+    let identity = authentication.client.getIdentity();
+
+    let s = getState();
+
+    let address = s.user.address;
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+    ].filter(Boolean);
+
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        s.user.map.space,
+        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+      ),
+      {
+        agentOptions: await authentication.getAgentOptions(),
+      }
+    );
+
+    let toastId = toast("Sending...", {
+      type: toast.TYPE.INFO,
+      position: "bottom-right",
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: false,
+    });
+    let trez;
+    try {
+      //   'to' : User__1,
+      // 'token' : FTokenId,
+      // 'from' : User__1,
+      // 'memo' : Memo,
+      // 'subaccount' : IDL.Opt(SubAccount__1),
+      // 'amount' : Balance__1,
+
+      //to:variant {principal:principal; address:vec nat8};
+      //token: nat64;
+      //from:variant { principal: principal; address:vec nat8 };
+      //memo:vec nat8;
+      //subaccount:opt vec nat8;
+      //amount: nat64
+
+      let req = {
+        token: Number(id),
+        amount: Number(amount),
+        memo: [0],
+        from: { address: AccountIdentifier.TextToArray(address) },
+        to: { address: AccountIdentifier.TextToArray(to) },
+        subaccount: subaccount,
+      };
+
+      console.log(req);
+      trez = await pwr.pwr_transfer(req);
+
+      if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
+
+      toast.update(toastId, {
+        type: toast.TYPE.SUCCESS,
+        isLoading: false,
+        render: (
+          <TransactionToast
+            title={`Transfer of ${AccountIdentifier.e8sToIcp(
+              amount
+            )} ICP successfull.`}
+          />
+        ),
+        autoClose: 9000,
+        pauseOnHover: true,
+      });
+
+      dispatch(refresh_balances());
+    } catch (e) {
+      console.error(e.message);
+      toast.update(toastId, {
+        type: toast.TYPE.ERROR,
+        isLoading: false,
+        closeOnClick: true,
+
+        render: (
+          <TransactionFailed
+            title="Transfer failed"
+            message={JSON.stringify(e.message)}
+          />
+        ),
+      });
+    }
+
+    return trez;
+  };
 
 export const transfer_icp =
   ({ to, amount }) =>
