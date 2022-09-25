@@ -68,6 +68,11 @@ type SubAccount__2 = blob;
 type SubAccount__1 = blob;
 type SubAccount = blob;
 type Share = nat16;
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
 type RechargeResponse = 
  variant {
    err:
@@ -239,6 +244,7 @@ type ItemTransfer =
  };
 type IPFS_CID = text;
 type ICP = record {e8s: nat64;};
+type FTokenId__1 = nat64;
 type FTokenId = nat64;
 type ExternalUrl = text;
 type DomainName = text;
@@ -269,18 +275,22 @@ type Config =
    pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   tokenregistry: CanisterSlot;
    treasury: CanisterSlot;
  };
 type Class = 
  service {
    balance: (BalanceRequest) -> (BalanceResponse) query;
-   balanceAddExternal: (FTokenId, AccountIdentifier__2, Balance__3) -> ();
+   balanceAddExternal: (FTokenId__1, AccountIdentifier__2, Balance__3) -> ();
+   balanceAddExternalProtected: (FTokenId__1, AccountIdentifier__2,
+    Balance__3, bool) -> (Result);
    config_set: (Config) -> ();
-   faucet:
+   exists: (AccountIdentifier) -> (bool) query;
+   ft_mint:
     (record {
        aid: AccountIdentifier__2;
        amount: Balance__3;
-       token: FTokenId;
+       id: FTokenId__1;
      }) -> ();
    nft_mint: (CanisterSlot, MintRequest) -> (MintResponse);
    nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);

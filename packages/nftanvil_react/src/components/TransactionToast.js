@@ -11,13 +11,7 @@ export const TransactionToast = (props) => {
   const dispatch = useDispatch();
 
   return (
-    <div
-    // onClick={() => {
-    //   if (props.tokenId) dispatch(push(props.tokenId));
-    //   else if (props.transactionId)
-    //     dispatch(push("/" + TransactionId.toText(props.transactionId)));
-    // }}
-    >
+    <div>
       <div>{props.title}</div>
       {props.tokenId ? (
         <div style={{ fontSize: "10px" }}>

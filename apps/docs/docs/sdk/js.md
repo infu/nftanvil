@@ -34,7 +34,7 @@ let response = await ledger.account_balance({
 
 ### @vvv-interactive/nftanvil-tools
 
-Has pure functions which will help you transform objects, generate and parse ids. Without them you will hardly do anything. There are plenty of usage examples all across the monorepo.
+Has pure functions which will help you transform objects, and generate and parse ids. Without them, you will hardly do anything. There are plenty of usage examples all across the monorepo.
 
 ```
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";

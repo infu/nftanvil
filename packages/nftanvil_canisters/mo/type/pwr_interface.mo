@@ -25,14 +25,17 @@ module {
     //(0🔶 Interface
     public type Interface = actor {
         balance              : query BalanceRequest         -> async BalanceResponse;
+        exists               : query (aid: Nft.AccountIdentifier) -> async Bool;
         pwr_transfer         : shared TransferRequest       -> async TransferResponse;
         balanceAddExternal   : shared (FTokenId, AccountIdentifier, Balance) -> async ();
+        balanceAddExternalProtected   : shared (FTokenId, AccountIdentifier, Balance, Bool) -> async Result.Result<(), Text>;
 
         // only for icp
         pwr_withdraw         : shared WithdrawRequest       -> async WithdrawResponse;
         pwr_purchase_intent  : shared PurchaseIntentRequest -> async PurchaseIntentResponse;
         pwr_purchase_claim   : shared PurchaseClaimRequest  -> async PurchaseClaimResponse;
         nft_mint             : shared (slot: Nft.CanisterSlot, request: Nft.MintRequest) -> async Nft.MintResponse;
+        ft_mint              : shared ({id: Nft.FTokenId; aid: AccountIdentifier; amount : Balance}) -> async ();
     };
 
 

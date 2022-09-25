@@ -105,7 +105,17 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
     private stable var _distributed_author : Nat64 = 0;
     private stable var _distributed_anvil : Nat64 = 0;
 
+    public query func exists(aid: Nft.AccountIdentifier) : async Bool {
+      _exists(aid)
+    };
 
+    private func _exists(aid: Nft.AccountIdentifier) : Bool {
+      switch(_account.get(aid)) {
+          case (?ac) true;
+          case (_) false;
+       };
+    };
+    
 
     public query func balance(request: Pwr.BalanceRequest) : async Pwr.BalanceResponse {
         let aid = Nft.User.toAccountIdentifier(request.user);
@@ -131,13 +141,30 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         };
     };
 
-  public shared({caller}) func faucet({token: Pwr.FTokenId; aid: AccountIdentifier; amount :Balance}) : async () {
+  public shared({caller}) func ft_mint({id: Nft.FTokenId; aid: AccountIdentifier; amount : Balance}) : async () {
     assert(Cluster.pwr2slot(_conf, aid) == _slot);
-    // don't uncomment by mistake 
-    balanceAdd(token, aid, amount); //TODO: Remove in production
+    assert(Nft.APrincipal.toSlot(_conf.space, caller) == _conf.tokenregistry);
+
+    balanceAdd(id, aid, amount); 
   };
 
-  public shared({caller}) func balanceAddExternal(target : Pwr.FTokenId, aid:AccountIdentifier, amount: Balance) : async () {
+  public shared({caller}) func balanceAddExternalProtected(target : Nft.FTokenId, aid:AccountIdentifier, amount: Balance, account_creation_allowed: Bool) : async Result.Result<(), Text> {
+    
+    if (_exists(aid) == false) {
+       if (account_creation_allowed == false) return #err("Account creation not allowed for this token");
+       ignore Cluster.tokenregistry(_conf).track_usage(target, 1); // add one account
+    };
+
+    assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
+
+    assert(Cluster.pwr2slot(_conf, aid) == _slot);
+
+    balanceAdd(target, aid, amount);
+
+    #ok();
+  };
+
+  public shared({caller}) func balanceAddExternal(target : Nft.FTokenId, aid:AccountIdentifier, amount: Balance) : async () {
     
     assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
 
@@ -148,6 +175,8 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
 
   public shared({caller}) func pwr_transfer(request: Pwr.TransferRequest) : async Pwr.TransferResponse {
     let aid = Nft.User.toAccountIdentifier(request.from);
+    let to_aid = Nft.User.toAccountIdentifier(request.to);
+
     assert(Cluster.pwr2slot(_conf, aid) == _slot);
 
     let isAnvil = Nft.APrincipal.isLegitimate(_conf.space, caller); // Checks if caller is from Anvil principal space
@@ -160,20 +189,31 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
       };
     }; 
 
+    let {transferable; fee; account_creation_allowed} = await Cluster.tokenregistry(_conf).token_logistics(request.token);
+    if (transferable == false) return #err(#Rejected);
+
     if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
     if (caller_user != request.from) return #err(#Unauthorized(aid));
 
+      
     switch(_account.get(aid)) {
           case (?ac) {
 
-            switch(balanceRem(request.token, aid, request.amount + _oracle.pwrFee)) {
+            switch(balanceRem(request.token, aid, request.amount + fee)) {
               case (#ok()) {
-                  _fees_charged += _oracle.pwrFee;
 
-                  let to_aid = Nft.User.toAccountIdentifier(request.to);
-                 
-                  await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternal(request.token, to_aid, request.amount);
+                  switch(await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternalProtected(request.token, to_aid, request.amount, account_creation_allowed)) {
+                    case (#ok()) {
+
+                    };
+                    case (#err(t)) {
+                      balanceAdd(request.token, aid, request.amount + fee); //refund
+                      return #err(#Other(t));
+                    };
+                  };
+
+                  _fees_charged += fee; // TODO separate counters or report back to
 
                   if (isAnvil) {
                     //This avoids adding two transactions for one operation like minting
@@ -561,7 +601,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
   };
 
 
-  private func balanceAdd(target : Pwr.FTokenId, aid:AccountIdentifier, amount: Balance) : () {
+  private func balanceAdd(target : Nft.FTokenId, aid:AccountIdentifier, amount: Balance) : () {
 
      if (amount == 0) return ();
 
@@ -601,7 +641,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
         };
   };
 
-  private func balanceRem(target : Pwr.FTokenId, aid:AccountIdentifier, amount: Balance) : Result.Result<(), {#InsufficientBalance}> {
+  private func balanceRem(target : Nft.FTokenId, aid:AccountIdentifier, amount: Balance) : Result.Result<(), {#InsufficientBalance}> {
 
        switch(_account.get(aid)) {
             case (?ac) {
@@ -625,7 +665,7 @@ shared({caller = _installer}) actor class Class() : async Pwr.Interface = this {
                 };
 
                 // TODO: get this back
-                // if ((ac.anv < _oracle.anvFee) and (ac.pwr < _oracle.pwrFee)) {
+                // if ((ac.anv == 0< _oracle.anvFee) and (ac.pwr < _oracle.pwrFee)) {
                 //   _account.delete(aid);
                 // };
 

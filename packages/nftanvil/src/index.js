@@ -18,6 +18,7 @@ import {
   PrincipalFromSlot,
   claimBalance,
   can,
+  tokenregistryCanister,
 } from "./internal.js";
 
 export {
@@ -39,4 +40,5 @@ export {
   getMap,
   PrincipalFromSlot,
   claimBalance,
+  tokenregistryCanister,
 };

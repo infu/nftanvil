@@ -21,6 +21,30 @@ export function icpToE8s(x) {
     return 0n;
   }
 }
+
+export function createBigIntDecimal(dec) {
+  return BigInt("1" + "".padStart(dec, 0));
+}
+
+export function placeDecimal(x, dec, precision) {
+  if (!x) return null;
+  if (precision > dec) precision = dec;
+  let precisionTmp = createBigIntDecimal(precision);
+
+  return (
+    Number((BigInt(x) * precisionTmp) / createBigIntDecimal(dec)) /
+    Number(precisionTmp)
+  ).toFixed(precision);
+}
+
+export function removeDecimal(x, dec) {
+  try {
+    return BigInt(Math.round(x * Number(createBigIntDecimal(dec))));
+  } catch (e) {
+    return 0n;
+  }
+}
+
 // PWR
 export function e8sToPwr(x) {
   if (!x) return null;

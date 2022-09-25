@@ -4,9 +4,10 @@ sidebar_position: 1
 
 # Cli
 
-Anvil's command line interface is made to provide easy to use commands for minting & distributing large nft collections.
+Anvil's command line interface is made to provide easy-to-use commands for minting & distributing large nft collections.
 
 You don't have to use this and can instead write your own scripts directly using the npm packages `@vvv-interactive/nftanvil-canisters` and `@vvv-interactive/nftanvil-tools`
+![](../../static/img/20220920123045.png)
 
 ### Requirements
 
@@ -150,7 +151,7 @@ npx anvil mint 0 3
 
 Where `from` and `to` are the indexes of the items in your input.js array.
 
-This will mint the NFTs and create a file `minted.json` in which index from `input.js` points to raw nft id. This id when converted to text will look like `nftac76by0gdlu2de20z` and will be viewable at `https://nftanvil.com/nftac76by0gdlu2de20z`
+This will mint the NFTs and create a file `minted.json` in which the index from `input.js` points to raw nft id. This id when converted to text will look like `nftac76by0gdlu2de20z` and will be viewable at `https://nftanvil.com/nftac76by0gdlu2de20z`
 
 ```json
 { "0": 329129, "1": 132572, "2": 132573 }
@@ -182,7 +183,7 @@ You may have had network troubles during minting. It would result in some images
 npx anvil check 0 3
 ```
 
-This will check if everything is ok. If not it will try to reupload images.
+This will check if everything is ok. If not it will try to re-upload images.
 
 You may also want to do a quick check, which doesn't check the images, only metadata. If not ok it will delete ids from `minted.json` and you can mint again the missing ones.
 
@@ -220,9 +221,9 @@ This will produce the file `giftcodes.json`
 }
 ```
 
-Whoever has that code or link, can claim the NFT. The code will work only once and only if the nfts don't get transfered, burned or another gift code overwrites the previous one.
+Whoever has that code or link, can claim the NFT. The code will work only once and only if the nfts don't get transferred, burned or another gift code overwrites the previous one.
 These are as secure as the messenger, email you send them with.
 
 ### Initial Token Offering
 
-We have also created a smart contract + dapp and paired it with `npx anvil ito` command. You can use that to distribute nfts in a random way so everyone gets a fair chance of winning the best ones. More on that in its separate page
+We have also created a smart contract + dapp and paired it with `npx anvil ito` command. You can use that to distribute nfts in a random way so everyone gets a fair chance of winning the best ones. More on that on its separate page

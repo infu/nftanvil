@@ -34,25 +34,27 @@ export const nftSlice = createSlice({
   name: "nft",
   initialState: {},
   reducers: {
-    nftSet: (state, action) => {
-      return {
-        ...state,
-        [action.payload.id]: action.payload.meta,
-      };
+    loaded: (state, action) => {
+      let busy = state[action.payload.id]?.busy;
+      state[action.payload.id] = action.payload.meta;
+      if (busy) state[action.payload.id].busy = busy;
+    },
+    setBusy: (state, action) => {
+      state[action.payload.id].busy = action.payload.busy;
     },
   },
 });
 
-export const { nftSet } = nftSlice.actions;
+export const { loaded, setBusy } = nftSlice.actions;
 
 export const nft_fetch = (id) => async (dispatch, getState) => {
-  let identity = authentication.client.getIdentity();
   let s = getState();
 
   let tid = tokenFromText(id);
 
   let { index, slot } = decodeTokenId(tid);
-  let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+
+  let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
   let nftcan = nftCanister(canister, {
     agentOptions: authentication.getAgentOptions(),
@@ -108,7 +110,7 @@ export const nft_fetch = (id) => async (dispatch, getState) => {
     (meta.transfer.bindsDuration && meta.boundUntil < now);
 
   if (meta.thumb.internal)
-    meta.thumb.internal.url = tokenUrl(s.user.map.space, tid, "thumb");
+    meta.thumb.internal.url = tokenUrl(s.ic.anvil.space, tid, "thumb");
   if (meta.thumb.ipfs) meta.thumb.ipfs.url = ipfsTokenUrl(meta.thumb.ipfs.cid);
 
   let subaccount = [
@@ -124,12 +126,12 @@ export const nft_fetch = (id) => async (dispatch, getState) => {
         position: "content",
         subaccount,
       });
-    else meta.content.internal.url = tokenUrl(s.user.map.space, tid, "content");
+    else meta.content.internal.url = tokenUrl(s.ic.anvil.space, tid, "content");
   }
   if (meta.content?.ipfs)
     meta.content.ipfs.url = ipfsTokenUrl(meta.content.ipfs.cid);
 
-  dispatch(nftSet({ id, meta }));
+  dispatch(loaded({ id, meta }));
   return meta;
 };
 
@@ -141,7 +143,7 @@ export const nft_media_get = async (
 
   let tid = tokenFromText(id);
   let { index, slot } = decodeTokenId(tid);
-  let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+  let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
   let nftcan = nftCanister(canister, {
     agentOptions: authentication.getAgentOptions(),
@@ -194,7 +196,7 @@ const nft_fetch_file = async (
 };
 
 export const nft_purchase =
-  ({ id, amount, affiliate = [] }) =>
+  ({ address, id, amount, affiliate = [] }) =>
   async (dispatch, getState) => {
     let s = getState();
 
@@ -203,17 +205,17 @@ export const nft_purchase =
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
 
-    let address = s.user.address;
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     console.log("BUYING", id, amount);
 
     let pwr = pwrCanister(
       PrincipalFromSlot(
-        s.user.map.space,
-        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+        s.ic.anvil.space,
+        AccountIdentifier.TextToSlot(address, s.ic.anvil.pwr)
       ),
       {
         agentOptions: authentication.getAgentOptions(),
@@ -245,7 +247,7 @@ export const nft_purchase =
 //     let tid = tokenFromText(id);
 //     let { slot } = decodeTokenId(tid);
 //     //console.log("t", id, slot, tokenFromText(id));
-//     let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+//     let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
 //     let nftcan = nftCanister(canister, {
 //       agentOptions: authentication.getAgentOptions(),
@@ -268,26 +270,24 @@ export const nft_purchase =
 //   };
 
 export const nft_set_price =
-  ({ id, price }) =>
+  ({ address, id, price }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
 
     console.log("Setting price", id, { slot });
 
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
 
-    let address = s.user.address;
-
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     let t = await nftcan.set_price({
@@ -300,35 +300,40 @@ export const nft_set_price =
     dispatch(nft_fetch(id));
   };
 
-export const nft_transfer =
-  ({ id, toAddress }) =>
-  async (dispatch, getState) => {
-    let s = getState();
+const delay = (ms) => new Promise((resolve, reject) => setTimeout(resolve, ms));
 
-    let identity = authentication.client.getIdentity();
+export const nft_transfer =
+  ({ address, id, toAddress }) =>
+  async (dispatch, getState) => {
+    dispatch(setBusy({ id, busy: true }));
+    let s = getState();
 
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
 
-    let address = s.user.address;
-
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
-    let t = await nftcan.transfer({
-      from: { address: AccountIdentifier.TextToArray(address) },
-      to: { address: AccountIdentifier.TextToArray(toAddress) },
-      token: tid,
-      amount: 1,
-      memo: [],
-      subaccount,
-    });
+    let t = await nftcan
+      .transfer({
+        from: { address: AccountIdentifier.TextToArray(address) },
+        to: { address: AccountIdentifier.TextToArray(toAddress) },
+        token: tid,
+        amount: 1,
+        memo: [],
+        subaccount,
+      })
+      .catch((err) => {
+        return { err };
+      });
+    dispatch(setBusy({ id, busy: false }));
 
     if (!t.ok) throw new Error(JSON.stringify(t.err));
     let { transactionId } = t.ok;
@@ -339,22 +344,20 @@ export const nft_transfer =
   };
 
 export const nft_plug =
-  ({ plug_id, socket_id }) =>
+  ({ address, plug_id, socket_id }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
-
     let { slot } = decodeTokenId(tokenFromText(plug_id));
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
 
-    let address = s.user.address;
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     let t = await nftcan.plug({
@@ -371,22 +374,20 @@ export const nft_plug =
   };
 
 export const nft_unsocket =
-  ({ plug_id, socket_id }) =>
+  ({ address, plug_id, socket_id }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
-
     let { slot } = decodeTokenId(tokenFromText(socket_id));
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
 
-    let address = s.user.address;
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     let t = await nftcan.unsocket({
@@ -403,31 +404,28 @@ export const nft_unsocket =
   };
 
 export const nft_recharge =
-  ({ id, amount }) =>
+  ({ address, id, amount }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
-
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
-    // let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
-    let address = s.user.address;
+    // let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
+    ].filter(Boolean);
 
     // let nftcan = nftCanister(canister, { agentOptions: authentication.getAgentOptions() });
     let pwr = pwrCanister(
       PrincipalFromSlot(
-        s.user.map.space,
-        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+        s.ic.anvil.space,
+        AccountIdentifier.TextToSlot(address, s.ic.anvil.pwr)
       ),
       {
         agentOptions: authentication.getAgentOptions(),
       }
     );
-
-    let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
-    ].filter(Boolean);
 
     let t;
     try {
@@ -451,23 +449,21 @@ export const nft_recharge =
   };
 
 export const nft_burn =
-  ({ id }) =>
+  ({ address, id }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
-
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
 
-    let address = s.user.address;
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     let rez = await nftcan.burn({
@@ -486,22 +482,21 @@ export const nft_burn =
   };
 
 export const nft_approve =
-  ({ id, spender }) =>
+  ({ address, id, spender }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
 
-    let address = s.user.address;
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     let rez = await nftcan.approve({
@@ -517,23 +512,21 @@ export const nft_approve =
   };
 
 export const nft_use =
-  ({ id, use, memo }) =>
+  ({ address, id, use, memo }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
-
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
 
-    let address = s.user.address;
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     let r = await nftcan.use({
@@ -552,23 +545,21 @@ export const nft_use =
   };
 
 export const nft_transfer_link =
-  ({ id }) =>
+  ({ address, id }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
-
     let tid = tokenFromText(id);
     let { index, slot } = decodeTokenId(tid);
-    let canister = PrincipalFromSlot(s.user.map.space, slot).toText();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot).toText();
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
 
-    let address = s.user.address;
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     let { key, hash } = generateKeyHashPair();
@@ -587,20 +578,16 @@ export const nft_transfer_link =
   };
 
 export const nft_claim_link =
-  ({ code }) =>
+  ({ address, code }) =>
   async (dispatch, getState) => {
     let s = getState();
     let { slot, tokenIndex, key } = decodeLink(code);
 
-    let canister = PrincipalFromSlot(s.user.map.space, slot);
-
-    let identity = authentication.client.getIdentity();
+    let canister = PrincipalFromSlot(s.ic.anvil.space, slot);
 
     let nftcan = nftCanister(canister, {
       agentOptions: authentication.getAgentOptions(),
     });
-
-    let address = s.user.address;
 
     let tid = encodeTokenId(slot, tokenIndex);
 
@@ -620,9 +607,7 @@ export const nft_enter_code = (code) => async (dispatch, getState) => {
 
   let { slot, tokenIndex } = decodeLink(code);
 
-  if (!s.user.map.space) throw Error("Map not loaded");
-
-  let canister = PrincipalFromSlot(s.user.map.space, slot);
+  if (!s.ic.anvil.space) throw Error("Map not loaded");
 
   let id = encodeTokenId(slot, tokenIndex);
   return "/" + tokenToText(id) + "/" + code;
@@ -632,13 +617,13 @@ export const nft_recharge_quote =
   ({ id }) =>
   async (dispatch, getState) => {
     let s = getState();
-    const icpCycles = BigInt(s.user.oracle.icpCycles);
+    const icpCycles = BigInt(s.ic.oracle.icpCycles);
 
     let nft = s.nft[id];
 
     const ops = priceOps({ ttl: null }) / icpCycles;
 
-    const transfer = BigInt(s.user.oracle.pwrFee);
+    const transfer = BigInt(s.ic.oracle.pwrFee);
 
     const storage =
       priceStorage({
@@ -652,10 +637,8 @@ export const nft_recharge_quote =
     let full = ops + transfer + storage;
 
     let current = BigInt(nft.pwr[0]) + BigInt(nft.pwr[1]);
-    let diff = full - current + BigInt(s.user.oracle.pwrFee);
+    let diff = full - current + BigInt(s.ic.oracle.pwrFee);
     if (diff < 30000n) diff = 0n;
-
-    //console.log({ full, current, diff });
 
     return diff;
   };
@@ -663,8 +646,8 @@ export const nft_recharge_quote =
 export const nft_mint_quote = (vals) => async (dispatch, getState) => {
   let s = getState();
 
-  const icpCycles = BigInt(s.user.oracle.icpCycles);
-  const transfer = BigInt(s.user.oracle.pwrFee);
+  const icpCycles = BigInt(s.ic.oracle.icpCycles);
+  const transfer = BigInt(s.ic.oracle.pwrFee);
   const ops = priceOps({ ttl: vals.ttl }) / icpCycles;
 
   const storage =
@@ -679,17 +662,18 @@ export const nft_mint_quote = (vals) => async (dispatch, getState) => {
   return { transfer, ops, storage };
 };
 
-export const nft_mint = (vals) => async (dispatch, getState) => {
+export const nft_mint = (address, vals) => async (dispatch, getState) => {
   let s = getState();
   const key_nftstorage = s.user.key_nftstorage;
 
-  let available = s.user.map.nft_avail;
+  let available = s.ic.anvil.nft_avail;
   let slot = available[Math.floor(Math.random() * available.length)];
 
-  let canisterId = PrincipalFromSlot(s.user.map.space, slot);
+  let canisterId = PrincipalFromSlot(s.ic.anvil.space, slot);
 
-  let identity = authentication.client.getIdentity();
-  let address = s.user.address;
+  let subaccount = [
+    AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) || null,
+  ].filter(Boolean);
 
   let nft = nftCanister(canisterId, {
     agentOptions: authentication.getAgentOptions(),
@@ -697,30 +681,13 @@ export const nft_mint = (vals) => async (dispatch, getState) => {
 
   let pwr = pwrCanister(
     PrincipalFromSlot(
-      s.user.map.space,
-      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+      s.ic.anvil.space,
+      AccountIdentifier.TextToSlot(address, s.ic.anvil.pwr)
     ),
     {
       agentOptions: authentication.getAgentOptions(),
     }
   );
-
-  // console.log(
-  //   "PWR Canister",
-  //   PrincipalFromSlot(
-  //     s.user.map.space,
-  //     AccountIdentifier.TextToSlot(address, s.user.map.pwr)
-  //   ).toText()
-  // );
-
-  // console.log(
-  //   "NFT Canister",
-  //   PrincipalFromSlot(s.user.map.space, slot).toText()
-  // );
-
-  let subaccount = [
-    AccountIdentifier.TextToArray(s.user.subaccount) || null,
-  ].filter(Boolean);
 
   if (!address) throw Error("Annonymous cant mint"); // Wont let annonymous mint
 

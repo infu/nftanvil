@@ -75,7 +75,7 @@ You can now import the Anvil package like so
 import Anvil "mo:anvil/base/Anvil";
 ```
 
-If you have trouble making it work, you can check how its done at https://github.com/infu/nftanvil/tree/main/apps/badbot.ninja
+If you have trouble making it work, you can check how it's done at https://github.com/infu/nftanvil/tree/main/apps/badbot.ninja
 
 Because it needs to download the cluster configuration and cache it, we need to create a global object like so
 
@@ -96,7 +96,7 @@ It will download the cluster config once `anvil.conf` and `anvil.oracle` and cac
 
 You will need `anvil.conf` for various functions.
 
-Check https://github.com/infu/nftanvil/blob/main/apps/badbot.ninja/mo/ito.mo as example initial token offering contract which uses Anvil protocol
+Check https://github.com/infu/nftanvil/blob/main/apps/badbot.ninja/mo/ito.mo as an example initial token offering contract which uses Anvil protocol
 
 ```motoko
 import Cluster  "mo:anvil/type/Cluster";  // creates objects for inter-canister calls
@@ -124,16 +124,16 @@ public shared({caller}) func test(token_id: Nft.TokenIdentifier) : async () {
                 });
 ```
 
-If anvil.config needs upate, it will get an update.
+If anvil.config needs an update, it will automatically fetch it.
 
-Then it will create interface object of the exact canister holding our target token and then initiate inter-canister call and wait for the response.
+Then it will create an interface object of the exact canister holding our target token and then initiate the inter-canister call and wait for the response.
 
 [Cluster.mo](/docs/motoko/cluster/factory)
 has all the object factory functions you will need to send calls to the Anvil cluster.
 
 To figure out what are the inputs/outputs of functions and what they do, you can check their interfaces specs here:
 
-[Nft.mo](/docs/motoko/nft/interface) NFTs data, metadata, transfer, use, burn,..
+[Nft.mo](/docs/motoko/nft/interface) NFTs data, metadata, transfer, use, burn...
 
 [Account.mo](/docs/motoko/account/interface) Inventory. Reverse index, AccountIdentifier -> TokenIdentifier
 
@@ -141,4 +141,4 @@ To figure out what are the inputs/outputs of functions and what they do, you can
 
 [History.mo](/docs/motoko/history/interface) Anvil transaction history
 
-[Ledger.mo](/docs/motoko/ledger/interface) NNS ledger added in package for convenience
+[Ledger.mo](/docs/motoko/ledger/interface) NNS ledger added in the package for convenience

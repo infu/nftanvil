@@ -1,0 +1,10 @@
+{
+  "symbol": "WOOD",
+  "name": "Wood",
+  "desc": "Chop some wood",
+  "decimals": 0,
+  "fee": 0,
+  "transferable": true,
+  "max_accounts": 10000,
+  "image": "./coin3.png"
+}

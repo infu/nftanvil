@@ -7,6 +7,7 @@ import type_account "../mo/type/account_interface";
 import type_router "../mo/type/router_interface";
 import type_anvil "../mo/type/anvil_interface";
 import type_treasury "../mo/type/treasury_interface";
+import type_tokenregistry "../mo/type/tokenregistry_interface";
 
 import account "../mo/account";
 import history "../mo/history";
@@ -15,5 +16,6 @@ import nft "../mo/nft";
 import router "../mo/router";
 import anvil "../mo/anvil";
 import treasury "../mo/treasury";
+import tokenregistry "../mo/tokenregistry";
 
 import Anvil "../mo/base/Anvil";

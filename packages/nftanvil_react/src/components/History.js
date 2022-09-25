@@ -117,7 +117,7 @@ const Val = styled.div`
 
 const HistoryEvent = ({ ev, canister, idx, showThumb = true }) => {
   const boxColor = useColorModeValue("white", "gray.700");
-  const space = useSelector((state) => state.user.map.space);
+  const space = useSelector((state) => state.ic.anvil.space);
 
   if (!ev?.info) return null;
   let etype = Object.keys(ev.info)[0];
@@ -323,7 +323,7 @@ export const History = (p) => {
 export const HistoryTx = (p) => {
   const total = useSelector((state) => state.history.total);
   const events = useSelector((state) => state.history.events);
-  const space = useSelector((state) => state.user.map.space);
+  const space = useSelector((state) => state.ic.anvil.space);
 
   const tx = p.match.params.tx;
 

@@ -2,7 +2,7 @@ import { AuthClient } from "@dfinity/auth-client";
 
 let client = null;
 
-const defaultOptions = { cookie: false };
+const defaultOptions = { cookie: true };
 
 const auth = {
   client,

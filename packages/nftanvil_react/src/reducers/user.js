@@ -4,7 +4,8 @@ import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 // import Cookies from "js-cookie";
 import { ledgerCanister } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
-
+import { produce } from "immer";
+import { anvilSelector, oracleLoaded } from "./ic";
 import authentication from "../auth";
 
 import {
@@ -13,27 +14,13 @@ import {
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import { BigIntToString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
-
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
+import { restoreVar } from "../util";
 
 const initialState = {
-  address: null,
-  subaccount: null,
-  principal: null,
-  anonymous: true,
-  focused: true,
-  icp: "0",
-  anv: "0",
-  map: {},
-  acccan: "",
-  oracle: {
-    icpCycles: "160000",
-    icpFee: "10000",
-    pwrFee: "10000",
-    anvFee: "10000",
-  },
-  pro: false,
+  authenticated: false,
+  accounts: {},
 };
 
 export const userSlice = createSlice({
@@ -41,47 +28,19 @@ export const userSlice = createSlice({
   initialState,
   reducers: {
     resetReducer: () => initialState,
-    balancesSet: (state, action) => {
-      return {
-        ...state,
-        icp: action.payload.icp,
-        anv: action.payload.anv,
-        oracle: action.payload.oracle,
-      };
-    },
-    focusSet: (state, action) => {
-      return { ...state, focused: action.payload };
-    },
-    proSet: (state, action) => {
-      return {
-        ...state,
-        pro: action.payload,
-      };
-    },
 
-    authSet: (state, action) => {
-      const { address, subaccount, principal, anonymous, map, acccan } =
-        action.payload;
-      return {
-        ...state,
-        address,
-        principal,
-        anonymous,
-        subaccount,
-        ...(map ? { map, acccan } : {}),
-      };
-    },
-    mapSet: (state, action) => {
-      return {
-        ...state,
-        map: action.payload,
-      };
+    authenticated: (state, action) => {
+      state.authenticated = true;
+      state.accounts = action.payload;
     },
   },
 });
 
+export const anvil_ready = (s) =>
+  s.ic.anvil.account && s.ic.anvil.account.length !== 0;
+
 // Action creators are generated for each case reducer function
-export const { resetReducer, proSet, authSet, balancesSet, focusSet, mapSet } =
+export const { resetReducer, authenticated, focusSet, discovered } =
   userSlice.actions;
 
 export const user_login = () => (dispatch) => {
@@ -116,6 +75,15 @@ export const user_auth =
     let anonymous = !(await authClient.isAuthenticated());
     let address, subaccount;
 
+    let s = getState();
+    let map = s.ic.anvil;
+    if (!map) {
+      console.log("Map not loaded");
+      return;
+    }
+
+    let accountIdx = 0;
+    let auth_obj = {};
     if (!anonymous) {
       for (let i = 0; i < 100000; i++) {
         let c = principalToAccountIdentifier(principal, i);
@@ -123,31 +91,36 @@ export const user_auth =
         if (c.substring(0, 3) === "a00") {
           address = c;
           subaccount = AccountIdentifier.ArrayToText(getSubAccountArray(i));
-          //console.log(subaccount);
+          let acccan = address
+            ? PrincipalFromSlot(
+                map.space,
+                AccountIdentifier.TextToSlot(address, map.account)
+              ).toText()
+            : null;
 
-          break;
+          auth_obj[address] = {
+            address,
+            subaccount,
+            principal,
+            acccan,
+          };
+
+          accountIdx++;
+          if (accountIdx >= 3) break;
         }
       }
+
+      dispatch(authenticated(auth_obj));
+
+      dispatch(user_refresh_balances(address));
     }
 
-    let pro = window.localStorage.getItem("pro") == "true";
-    if (pro) dispatch(proSet(true));
-
-    router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
-      agentOptions: authentication.getAgentOptions(),
-    });
-
-    let map = await router.config_get();
-
-    map.router = map.router.toString();
-    map = BigIntToString(map);
-
-    // console.log("ROUTER MAP", map);
+    // dev helper
 
     if (process.env.REACT_APP_LOCAL_BACKEND) {
       console.log(
         "Proxy command:\n icx-proxy --address 127.0.0.1:8453 --dns-alias " +
-          map.nft_avail
+          [...map.nft_avail, map.tokenregistry]
             .map(
               (slot) =>
                 `${slot}.lvh.me:${PrincipalFromSlot(map.space, slot).toText()}`
@@ -155,180 +128,81 @@ export const user_auth =
             .join(" ")
       );
     }
-
-    let acccan = address
-      ? PrincipalFromSlot(
-          map.space,
-          AccountIdentifier.TextToSlot(address, map.account)
-        ).toText()
-      : null;
-
-    dispatch(
-      authSet({ address, subaccount, principal, anonymous, map, acccan })
-    );
-    dispatch(user_refresh_balances());
   };
 
 export const user_refresh_config = () => async (dispatch, getState) => {
   let map = await router.config_get();
   map = BigIntToString(map);
-  // console.log("ROUTER MAP", map);
-  dispatch(mapSet(map));
+  window.localStorage.setItem("map", JSON.stringify(map));
+  dispatch(discovered(map));
 };
 
-export const user_refresh_balances = () => async (dispatch, getState) => {
-  if (!authentication || !authentication.client) return;
-  if (!(await authentication.client.isAuthenticated())) return;
-  await dispatch(user_refresh_icp_balance());
-  if (!(await authentication.client.isAuthenticated())) return;
-  dispatch(user_refresh_pwr_balance());
-  dispatch(user_restore_purchase());
+export const all_user_refresh_balances = () => async (dispatch, getState) => {
+  let addresses = Object.keys(getState().user.accounts);
+  addresses.forEach((address) => {
+    dispatch(user_refresh_balances(address));
+  });
 };
+
+export const user_refresh_balances =
+  (address) => async (dispatch, getState) => {
+    if (!authentication || !authentication.client) return;
+    if (!(await authentication.client.isAuthenticated())) return;
+    await dispatch(user_refresh_icp_balance({ address }));
+    if (!(await authentication.client.isAuthenticated())) return;
+    // dispatch(user_refresh_pwr_balance({ address }));
+    dispatch(user_restore_purchase({ address }));
+  };
 
 export const user_logout = () => async (dispatch, getState) => {
-  var authClient = await AuthClient.create();
-
-  authClient.logout();
-
-  const identity = await authClient.getIdentity();
-  router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {
-    agentOptions: authentication.getAgentOptions(),
-  });
-
-  let principal = identity.getPrincipal().toString();
-  let anonymous = !(await authClient.isAuthenticated());
-
-  //dispatch(authSet({ address: null, principal, anonymous }));
+  authentication.client.logout();
 
   dispatch(resetReducer());
-  dispatch(user_auth());
+  // dispatch(user_auth());
 };
 
-export const user_refresh_icp_balance = () => async (dispatch, getState) => {
-  let identity = authentication.client.getIdentity();
-
-  let s = getState();
-
-  let address = s.user.address;
-  if (!address) return;
-
-  let ledger = ledgerCanister({
-    agentOptions: authentication.getAgentOptions(),
-  });
-
-  await ledger
-    .account_balance({
-      account: AccountIdentifier.TextToArray(address),
-    })
-    .then((icp) => {
-      let e8s = icp.e8s;
-
-      if (e8s >= 30000n) {
-        // automatically wrap ICP
-        dispatch(user_pwr_buy({ amount: e8s - 10000n }));
-      }
-    })
-    .catch((e) => {
-      if (!process.env.REACT_APP_LOCAL_BACKEND) console.log(e); // Will always show bug in dev mode because there is ledger canister on the local replica
-    });
-};
-
-export const user_refresh_pwr_balance = () => async (dispatch, getState) => {
-  let identity = authentication.client.getIdentity();
-
-  let s = getState();
-
-  let address = s.user.address;
-  if (!address) return;
-
-  let pwrcan = pwrCanister(
-    PrincipalFromSlot(
-      s.user.map.space,
-      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
-    ),
-    { agentOptions: authentication.getAgentOptions() }
-  );
-
-  await pwrcan
-    .balance({
-      user: { address: AccountIdentifier.TextToArray(address) },
-    })
-    .then(async ({ pwr, anv, oracle }) => {
-      // if (Number(pwr) === 0) {
-      //   //TODO: Remove in production
-      //   let fres = await pwrcan.faucet({
-      //     aid: AccountIdentifier.TextToArray(address),
-      //     amount: 800000000n,
-      //   });
-      //   dispatch(refresh_pwr_balance());
-      //   return;
-      // }
-
-      oracle = BigIntToString(oracle);
-      dispatch(
-        balancesSet({ icp: pwr.toString(), anv: anv.toString(), oracle })
-      );
-    })
-    .catch((e) => {
-      // We are most probably logged out. There is currently no better way to handle expired agentjs chain
-      if (e.toString().includes("delegation has expired"))
-        dispatch(user_logout());
-    });
-};
-
-export const user_pwr_transfer =
-  ({ to, amount, memo = [] }) =>
+export const user_refresh_icp_balance =
+  ({ address }) =>
   async (dispatch, getState) => {
     let identity = authentication.client.getIdentity();
 
     let s = getState();
 
-    let address = s.user.address;
-    let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
-    ].filter(Boolean);
-
-    let pwr = pwrCanister(
-      PrincipalFromSlot(
-        s.user.map.space,
-        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
-      ),
-      {
-        agentOptions: authentication.getAgentOptions(),
-      }
-    );
-
-    let trez = await pwr.pwr_transfer({
-      amount,
-      from: { address: AccountIdentifier.TextToArray(address) },
-      to: { address: AccountIdentifier.TextToArray(to) },
-      subaccount: subaccount,
-      memo,
+    let ledger = ledgerCanister({
+      agentOptions: authentication.getAgentOptions(),
     });
 
-    if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
+    await ledger
+      .account_balance({
+        account: AccountIdentifier.TextToArray(address),
+      })
+      .then((icp) => {
+        let e8s = icp.e8s;
 
-    dispatch(user_refresh_balances());
-
-    return trez;
+        if (e8s >= 30000n) {
+          // automatically wrap ICP
+          dispatch(user_pwr_buy({ amount: e8s - 10000n }));
+        }
+      })
+      .catch((e) => {
+        if (!process.env.REACT_APP_LOCAL_BACKEND) console.log(e); // Will always show bug in dev mode because there is ledger canister on the local replica
+      });
   };
 
 export const user_transfer_icp =
-  ({ to, amount }) =>
+  ({ address, to, amount }) =>
   async (dispatch, getState) => {
-    let identity = authentication.client.getIdentity();
-
     let s = getState();
 
-    let address = s.user.address;
     let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
     ].filter(Boolean);
 
     let pwr = pwrCanister(
       PrincipalFromSlot(
-        s.user.map.space,
-        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+        s.ic.anvil.space,
+        AccountIdentifier.TextToSlot(address, s.ic.anvil.pwr)
       ),
       {
         agentOptions: authentication.getAgentOptions(),
@@ -344,32 +218,30 @@ export const user_transfer_icp =
 
     if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
 
-    dispatch(user_refresh_balances());
+    dispatch(user_refresh_balances(address));
 
     return trez;
   };
 
 export const user_pwr_buy =
-  ({ amount }) =>
+  ({ address, amount }) =>
   async (dispatch, getState) => {
     let s = getState();
 
-    let identity = authentication.client.getIdentity();
-    let address = s.user.address;
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
+    ].filter(Boolean);
 
     let pwr = pwrCanister(
       PrincipalFromSlot(
-        s.user.map.space,
-        AccountIdentifier.TextToSlot(address, s.user.map.pwr)
+        s.ic.anvil.space,
+        AccountIdentifier.TextToSlot(address, s.ic.anvil.pwr)
       ),
       {
         agentOptions: authentication.getAgentOptions(),
       }
     );
-
-    let subaccount = [
-      AccountIdentifier.TextToArray(s.user.subaccount) || null,
-    ].filter(Boolean);
 
     let intent = await pwr.pwr_purchase_intent({
       user: { address: AccountIdentifier.TextToArray(address) },
@@ -409,51 +281,41 @@ export const user_pwr_buy =
       let { transactionId } = claim.ok;
     } catch (e) {}
 
-    dispatch(user_refresh_balances());
+    dispatch(user_refresh_balances(address));
   };
 
-export const user_restore_purchase = () => async (dispatch, getState) => {
-  let s = getState();
+export const user_restore_purchase =
+  ({ address }) =>
+  async (dispatch, getState) => {
+    let s = getState();
 
-  let identity = authentication.client.getIdentity();
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
+    ].filter(Boolean);
 
-  let address = s.user.address;
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        s.ic.anvil.space,
+        AccountIdentifier.TextToSlot(address, s.ic.anvil.pwr)
+      ),
+      {
+        agentOptions: authentication.getAgentOptions(),
+      }
+    );
 
-  let pwr = pwrCanister(
-    PrincipalFromSlot(
-      s.user.map.space,
-      AccountIdentifier.TextToSlot(address, s.user.map.pwr)
-    ),
-    {
-      agentOptions: authentication.getAgentOptions(),
-    }
-  );
+    try {
+      let claim = await pwr.pwr_purchase_claim({
+        user: { address: AccountIdentifier.TextToArray(address) },
+        subaccount,
+      });
 
-  let subaccount = [
-    AccountIdentifier.TextToArray(s.user.subaccount) || null,
-  ].filter(Boolean);
+      if (claim.err) throw claim.err;
 
-  try {
-    let claim = await pwr.pwr_purchase_claim({
-      user: { address: AccountIdentifier.TextToArray(address) },
-      subaccount,
-    });
+      let { transactionId } = claim.ok;
 
-    if (claim.err) throw claim.err;
-
-    let { transactionId } = claim.ok;
-
-    dispatch(user_refresh_pwr_balance());
-  } catch (e) {}
-};
-
-export const window_focus = () => async (dispatch, getState) => {
-  dispatch(focusSet(true));
-  dispatch(user_refresh_balances());
-};
-
-export const window_blur = () => async (dispatch, getState) => {
-  dispatch(focusSet(false));
-};
+      dispatch(user_refresh_pwr_balance());
+    } catch (e) {}
+  };
 
 export default userSlice.reducer;

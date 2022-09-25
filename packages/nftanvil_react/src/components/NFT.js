@@ -35,14 +35,19 @@ import {
   NumberDecrementStepper,
 } from "@chakra-ui/react";
 
-import { verify_domain, verify_domain_twitter } from "../reducers/inventory";
+import { move_item } from "../reducers/inventory";
+import { verify_domain, verify_domain_twitter } from "../reducers/verify";
+
 import { NftHistory } from "./History";
 import { Spinner } from "@chakra-ui/react";
 import Confetti from "./Confetti";
 import { LoginRequired } from "./LoginRequired";
 import { toast } from "react-toastify";
 import lodash from "lodash";
-import { tokenFromText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+import {
+  tokenFromText,
+  fungibleUrl,
+} from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
@@ -103,6 +108,34 @@ import {
   AVG_MESSAGE_COST,
   FULLY_CHARGED_MINUTES,
 } from "@vvv-interactive/nftanvil-tools/cjs/pricing.js";
+import { useDrag } from "react-dnd";
+
+const Busy = styled.div`
+  display: inline-block;
+  width: 72px;
+  height: 72px;
+
+  :after {
+    content: " ";
+    display: block;
+    width: 52px;
+    height: 52px;
+    margin: 10px;
+    border-radius: 50%;
+    border: 4px solid #333;
+    border-color: #333 transparent #333 transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+  }
+
+  @keyframes lds-dual-ring {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
 
 const ContentBox = styled.div`
   margin: 12px 0px;
@@ -126,6 +159,7 @@ const Thumb = styled.div`
   border-radius: 6px;
   position: relative;
   box-overflow: hidden;
+  cursor: pointer;
 
   .border {
     top: 0px;
@@ -207,7 +241,7 @@ const ThumbLarge = styled.div`
 `;
 
 export const NFTMenu = ({ id, meta, owner, nobuy = false, renderButtons }) => {
-  const pro = useSelector((state) => state.user.pro);
+  const pro = useSelector((state) => state.ui.pro);
 
   return (
     <Box p={3} maxWidth="375px" textAlign="justify">
@@ -238,10 +272,10 @@ export const NFTMenu = ({ id, meta, owner, nobuy = false, renderButtons }) => {
   );
 };
 
-function SetPriceButton({ id, meta }) {
+function SetPriceButton({ address, id, meta }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
-  const address = useSelector((state) => state.user.address);
+  // const address = useSelector((state) => state.user.address);
 
   const initialRef = React.useRef();
   const removeSale = async () => {
@@ -1153,9 +1187,6 @@ export const RechargeButton = ({ id, meta }) => {
 export const NFTPopover = ({ meta }) => {
   return (
     <Stack>
-      {/* <Center>
-        <NFTContent meta={meta} />
-      </Center> */}
       <Center>
         <NFTInfo meta={meta} />
       </Center>
@@ -1205,11 +1236,6 @@ export const NFTLarge = ({
             <MetaDomain key={"domain"} meta={meta} showLink={false} />
           )
         ) : null}
-        {/* {meta.domain ? (
-            <div className="collection">
-              <MetaDomain meta={meta} showLink={false} />
-            </div>
-          ) : null} */}
 
         {custom ? (
           custom(meta)
@@ -1232,29 +1258,60 @@ export const NFTLarge = ({
   );
 };
 
-export const NFT = ({ id, thumbSize, onClick }) => {
-  const meta = useSelector((state) => state.nft[id]);
-
+export const NFT = ({ token, aid, thumbSize, onClick }) => {
   const dispatch = useDispatch();
+  const meta = useSelector((state) => state.nft[token.id]);
+  let busy = meta && meta.busy;
+  const [{ opacity, dragging }, dragRef] = useDrag(
+    () => ({
+      type: "token",
+      item: { token },
+      end: (item, monitor) => {
+        const dropResult = monitor.getDropResult();
+        if (item && dropResult) {
+          dispatch(
+            move_item({
+              from_aid: aid,
+              to_aid: dropResult.aid,
+              token: item.token,
+              pos: dropResult.pos,
+            })
+          );
+        }
+      },
+      canDrag: (monitor) => !busy,
+      collect: (monitor) => ({
+        opacity: monitor.isDragging() ? 0.5 : 1,
+        dragging: monitor.isDragging(),
+      }),
+    }),
+    [busy]
+  );
 
-  const [popoverOpen, setPopover] = useState(false);
+  const [mouseOver, setMouseOver] = useState(false);
+  const popoverOpen = !dragging && mouseOver;
 
   useEffect(() => {
-    dispatch(nft_fetch(id));
-  }, [id, dispatch]);
+    dispatch(nft_fetch(token.id));
+  }, [token, dispatch]);
 
   return (
     <Thumb
+      ref={dragRef}
       style={{
+        opacity: busy ? "0.3" : opacity,
         zIndex: popoverOpen ? 10 : 0,
-        cursor: onClick ? "pointer" : "auto",
+        // cursor: onClick ? "pointer" : "auto",
       }}
       onClick={onClick}
       onMouseOver={() => {
-        setPopover(true);
+        setMouseOver(true);
+      }}
+      onMouseDown={() => {
+        setMouseOver(false);
       }}
       onMouseOut={() => {
-        setPopover(false);
+        setMouseOver(false);
       }}
     >
       {meta?.thumb?.ipfs?.url ? (
@@ -1267,6 +1324,7 @@ export const NFT = ({ id, thumbSize, onClick }) => {
         ""
       )}
       <div className="border" />
+      {busy ? <Busy /> : null}
       {popoverOpen ? (
         <Box
           sx={{
@@ -1294,13 +1352,9 @@ export const NFTClaim = ({ code, onRedirect }) => {
   return null;
 };
 
-export const NFTPage = ({ id, code, renderButtons }) => {
-  // const id = p.match.params.id;
-  // const code = p.match.params.code;
-  const address = useSelector((state) => state.user.address);
-
+export const NFTPage = ({ address, id, code, renderButtons }) => {
   const meta = useSelector((state) => state.nft[id]);
-  const pro = useSelector((state) => state.user.pro);
+  const pro = useSelector((state) => state.ui.pro);
 
   const [claimed, setClaimed] = useState(false);
   const [error, setError] = useState(false);
@@ -1475,7 +1529,12 @@ export const NFTThumbLarge = (p) => {
   if (!c) return null;
 
   return (
-    <ThumbLarge {...p} style={{ marginLeft: "6px" }} mode={mode}>
+    <ThumbLarge
+      {...p}
+      style={{ marginLeft: "6px" }}
+      mode={mode}
+      className="thumb-large"
+    >
       {c.url ? <img className="custom" alt="" src={c.url} /> : ""}
       <div className="info">
         {p.meta.domain ? (
@@ -1515,7 +1574,7 @@ const MetaDomainTwitter = ({ meta, showLink }) => {
   let url = new URL("https://" + meta.domain);
   let surl = url.href.replace(/^https?:\/\//, "");
   const dispatch = useDispatch();
-  const domainInfo = useSelector((state) => state.inventory[surl + "_domain"]);
+  const domainInfo = useSelector((state) => state.verify[surl]);
   const isLoading = domainInfo === -1 ? true : false;
   let verified = false;
   try {
@@ -1562,9 +1621,7 @@ const MetaDomainTwitter = ({ meta, showLink }) => {
 const MetaDomain = ({ meta, showLink }) => {
   let url = new URL("https://" + meta.domain);
   const dispatch = useDispatch();
-  const domainInfo = useSelector(
-    (state) => state.inventory[url.hostname + "_domain"]
-  );
+  const domainInfo = useSelector((state) => state.verify[url.hostname]);
   const isLoading = domainInfo === -1 ? true : false;
   let verified = false;
   try {
@@ -1862,11 +1919,6 @@ export const NFTProInfo = ({ id, meta }) => {
       {meta.content?.thumb?.url ? <img src={meta.content.thumb.url} /> : ""}
 
       <Stack spacing={0}>
-        {/* {id ? (
-          <Text fontSize="9px" sx={{ textTransform: "uppercase" }}>
-            ID: <NFTA>{id}</NFTA>
-          </Text>
-        ) : null} */}
         {meta.pwr ? (
           <Text fontSize="9px">
             Ops: <ICP>{meta.pwr[0]}</ICP> Storage: <ICP>{meta.pwr[1]}</ICP>

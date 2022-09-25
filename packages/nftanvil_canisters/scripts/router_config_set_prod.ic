@@ -14,6 +14,7 @@ call as wallet router.config_set(
         account = record {5010:nat64; 5042:nat64};
         pwr = record {5050:nat64; 5082:nat64};
         treasury = 5004:nat64;
+        tokenregistry = 5005:nat64;
         history = 5100:nat64;
         history_range = record {5100:nat64; 5500:nat64};
         space = vec { vec { 17830671:nat64; 17836454:nat64} };

@@ -160,6 +160,18 @@ export const ipfsTokenUrl = (cid) => {
   return "https://ipfs.io/ipfs/" + cid;
 };
 
+export const fungibleUrl = (map, tid) => {
+  let key = tid.toString(16).padStart(5, 0); // bitUnsignedFix(bitShiftRight(tid, 16));
+
+  let canister = PrincipalFromSlot(map.space, map.tokenregistry).toText();
+
+  if (process.env.REACT_APP_LOCAL_BACKEND) {
+    return "http://" + map.tokenregistry + ".lvh.me:8453/" + key;
+  } else {
+    return "https://" + canister + ".raw.ic0.app/" + key;
+  }
+};
+
 export const tokenUrl = (space, tid, type) => {
   let { index, slot } = decodeTokenId(tid);
   let canister = PrincipalFromSlot(space, slot).toText();

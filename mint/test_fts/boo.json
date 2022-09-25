@@ -1,0 +1,10 @@
+{
+  "symbol": "ETH",
+  "name": "Ethereum",
+  "desc": "Ethereum is a decentralized open-source blockchain system",
+  "decimals": 6,
+  "fee": 10000,
+  "transferable": true,
+  "max_accounts": 10000,
+  "image": "./coin4.png"
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { login } from "../reducers/user";
+import { user_login } from "../reducers/user";
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
@@ -8,8 +8,7 @@ import {
 import { Button } from "@chakra-ui/react";
 import Dfinity from "../assets/dfinity.svg";
 
-export function LoginRequired({ label, children }) {
-  const anonymous = useSelector((state) => state.user.anonymous);
+export function LoginRequired({ anonymous = true, label, children }) {
   const dispatch = useDispatch();
 
   return anonymous ? (
@@ -23,7 +22,7 @@ export function LoginRequired({ label, children }) {
         w={"100%"}
         colorScheme="teal"
         size="lg"
-        onClick={() => dispatch(login())}
+        onClick={() => dispatch(user_login())}
       >
         {label || "Authenticate"}
       </Button>

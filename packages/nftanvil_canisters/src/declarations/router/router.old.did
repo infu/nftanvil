@@ -28,6 +28,7 @@ type Config__1 =
    pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   tokenregistry: CanisterSlot;
    treasury: CanisterSlot;
  };
 type Config = 
@@ -41,6 +42,7 @@ type Config =
    pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   tokenregistry: CanisterSlot;
    treasury: CanisterSlot;
  };
 type CanisterSlot = nat64;

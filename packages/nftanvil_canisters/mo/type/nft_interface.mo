@@ -272,6 +272,7 @@ module {
         pwr: CanisterRange;
         anvil: CanisterSlot;
         treasury: CanisterSlot;
+        tokenregistry: CanisterSlot;
         history: CanisterSlot;
         history_range: CanisterRange;
         space:[[Nat64]];
@@ -355,6 +356,8 @@ module {
         unplug      : shared (request: UnsocketRequest) -> async UnplugResponse;
     };
     // Balance refers to an amount of a particular token.
+
+    public type FTokenId = Nat64;
     public type Balance = Nat64;
 
     public type CustomId = Nat64;

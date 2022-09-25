@@ -15,7 +15,7 @@ const config = {
   favicon: "img/anvillogo.svg",
   organizationName: "VVV DAO", // Usually your GitHub org/user name.
   projectName: "anvildocs", // Usually your repo name.
-
+  themes: ["@docusaurus/theme-live-codeblock"],
   presets: [
     [
       "classic",

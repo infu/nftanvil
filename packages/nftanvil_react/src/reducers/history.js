@@ -15,7 +15,6 @@ import * as TransactionId from "@vvv-interactive/nftanvil-tools/cjs/transactioni
 
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 
-import { toast } from "react-toastify";
 import _ from "lodash";
 
 export const userSlice = createSlice({
@@ -28,35 +27,32 @@ export const userSlice = createSlice({
     events: [],
   },
   reducers: {
-    setEvents: (state, action) => {
-      return {
-        ...state,
-        lastUpdated: Math.floor(Date.now() / 1000),
-        events: action.payload,
-      };
+    loaded: (state, action) => {
+      state.lastUpdated = Math.floor(Date.now() / 1000);
+      state.events = action.payload;
     },
     setInfo: (state, action) => {
-      return { ...state, ...action.payload };
+      let { total } = action.payload;
+      state.total = total;
     },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const { setEvents, setInfo } = userSlice.actions;
+export const { loaded, setInfo } = userSlice.actions;
 
 export const loadInfo = () => async (dispatch, getState) => {
-  let identity = authentication.client.getIdentity();
   let s = getState();
 
   let history = historyCanister(
-    PrincipalFromSlot(s.user.map.space, s.user.map.history),
+    PrincipalFromSlot(s.ic.anvil.space, s.ic.anvil.history),
     { agentOptions: await authentication.getAgentOptions() }
   );
 
   let { total, previous } = await history.info();
   let p = {
     total,
-    canister: PrincipalFromSlot(s.user.map.space, s.user.map.history).toText(),
+    canister: PrincipalFromSlot(s.ic.anvil.space, s.ic.anvil.history).toText(),
   };
   dispatch(setInfo({ total }));
   return p;
@@ -69,8 +65,6 @@ export const tailHistory =
 export const loadHistory =
   ({ canister, from, to }) =>
   async (dispatch, getState) => {
-    let identity = authentication.client.getIdentity();
-
     let s = getState();
     dispatch(loadInfo());
 
@@ -87,20 +81,19 @@ export const loadHistory =
       return typeof v === "bigint" ? v.toString() : v;
     });
 
-    dispatch(setEvents(events));
+    dispatch(loaded(events));
   };
 
 export const loadNftHistory =
   ({ transactions }) =>
   async (dispatch, getState) => {
-    let identity = authentication.client.getIdentity();
     let s = getState();
 
     let r = await Promise.all(
       transactions.map(async (tx_id) => {
         let { slot, idx } = TransactionId.decode(tx_id);
 
-        let canister = PrincipalFromSlot(s.user.map.space, slot);
+        let canister = PrincipalFromSlot(s.ic.anvil.space, slot);
 
         let history = historyCanister(canister, {
           agentOptions: await authentication.getAgentOptions(),
@@ -130,8 +123,6 @@ const mapValuesDeep = (obj, cb) => {
 };
 
 export const cluster_info = () => async (dispatch, getState) => {
-  let identity = authentication.client.getIdentity();
-
   let s = getState();
 
   let map = await router.config_get();

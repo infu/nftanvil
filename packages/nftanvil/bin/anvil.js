@@ -5,6 +5,7 @@ import {
   pwrCanister,
   nftCanister,
   accountCanister,
+  tokenregistryCanister,
   getMap,
   AccountIdentifier,
   PrincipalFromSlot,
@@ -31,6 +32,7 @@ import {
   generateKeyHashPair,
   uploadFile,
   bytesToBase58,
+  blobPrepare,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
 import { Actor, HttpAgent } from "@dfinity/agent";
@@ -943,6 +945,69 @@ const ifProxy = async (prx) => {
   return { proxyCanister, address, subaccount };
 };
 
+const ftRegister = async (spec) => {
+  let { principal, address, subaccount } = await routerCanister();
+
+  let map = await getMap();
+
+  let canister = PrincipalFromSlot(map.space, map.tokenregistry).toText();
+
+  console.log(map.tokenregistry, canister);
+  // console.log({ canister });
+  let treg = tokenregistryCanister(canister);
+
+  let info = JSON.parse(fs.readFileSync(spec));
+
+  let image = await blobFrom(info.image);
+
+  if (image.size < 5000 || image.size > 131072) {
+    console.log("Image must be bellow 125kb and above 5k");
+    return;
+  }
+  let { name, symbol, desc, decimals, fee, transferable, max_accounts } = info;
+
+  image = await blobPrepare(image); //(await chunkBlob(image, fetch))[0];
+  let req = {
+    name,
+    symbol,
+    desc,
+    decimals,
+    fee,
+    transferable,
+    max_accounts,
+    image,
+  };
+
+  let rez = await treg.register(req);
+
+  console.log(rez);
+
+  // await balanceAndAddress();
+};
+
+const ftMint = async (id, aid, amount, opts) => {
+  let { principal, address, subaccount } = await routerCanister();
+
+  let map = await getMap();
+
+  let canister = PrincipalFromSlot(map.space, map.tokenregistry).toText();
+
+  console.log(map.tokenregistry, canister);
+
+  // console.log({ canister });
+  let treg = tokenregistryCanister(canister);
+
+  let rez = await treg.mint({
+    id: BigInt(id),
+    aid: AccountIdentifier.TextToArray(aid),
+    amount: BigInt(amount),
+  });
+
+  console.log(rez);
+
+  // await balanceAndAddress();
+};
+
 const mintMain = async (NFT_FROM, NFT_TO, opts) => {
   let proxyCanister = opts.proxy
     ? opts.proxy === "ito"
@@ -950,7 +1015,7 @@ const mintMain = async (NFT_FROM, NFT_TO, opts) => {
       : Principal.fromText(opts.proxy)
     : false;
 
-  console.log("proxyCanister", proxyCanister.toText());
+  if (proxyCanister) console.log("proxyCanister", proxyCanister.toText());
 
   let data = await new Promise((resolve, reject) => {
     import(path.resolve(process.cwd(), "./input.js")).then((importedModule) => {
@@ -1044,7 +1109,10 @@ const mintMain = async (NFT_FROM, NFT_TO, opts) => {
   }
 
   try {
-    let resp = await easyMint(items, proxyCanister.toText());
+    let resp = await easyMint(
+      items,
+      proxyCanister ? proxyCanister.toText() : false
+    );
     for (let j = 0; j < resp.length; j++) {
       if (nftids[NFT_FROM + j]) continue;
       nftids[NFT_FROM + j] = resp[j];
@@ -1205,6 +1273,30 @@ program
     recover(options);
   });
 
+const fungible = new Command("fungible");
+fungible.description("Fungible tokens");
+
+fungible
+  .command("create")
+  .description("create a fungible token")
+  .argument("<spec>", "json spec file")
+
+  .action((spec) => {
+    console.log(`Creating fungible token`);
+    ftRegister(spec);
+  });
+
+fungible
+  .command("mint")
+  .description("mint a fungible token")
+  .argument("<id>", "token id")
+  .argument("<aid>", "account id")
+  .argument("<amount>", "amount")
+  .action((id, aid, amount, options) => {
+    console.log(`Minting ${amount} fungible tokens`);
+    ftMint(id, aid, amount, options);
+  });
+
 const ito = new Command("ito");
 ito.description("ITO - Initial Token Offering");
 
@@ -1277,5 +1369,6 @@ ito
   });
 
 program.addCommand(ito);
+program.addCommand(fungible);
 
 program.parse();

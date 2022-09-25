@@ -124,6 +124,7 @@ export const idlFactory = ({ IDL }) => {
     'nft' : CanisterRange,
     'pwr' : CanisterRange,
     'anvil' : CanisterSlot,
+    'tokenregistry' : CanisterSlot,
     'history' : CanisterSlot,
     'nft_avail' : IDL.Vec(CanisterSlot),
     'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),

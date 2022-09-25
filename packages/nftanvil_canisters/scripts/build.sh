@@ -18,6 +18,7 @@ done
 `dfx cache show`/moc --idl --hide-warnings `vessel sources 2>>/dev/null` -c mo/history.mo -o build/history.wasm &
 `dfx cache show`/moc --idl --hide-warnings `vessel sources 2>>/dev/null` -c mo/anvil.mo -o build/anvil.wasm &
 `dfx cache show`/moc --idl --hide-warnings `vessel sources 2>>/dev/null` -c mo/treasury.mo -o build/treasury.wasm &
+`dfx cache show`/moc --idl --hide-warnings `vessel sources 2>>/dev/null` -c mo/tokenregistry.mo -o build/tokenregistry.wasm &
 
 
 wait
@@ -42,3 +43,6 @@ didc bind src/declarations/anvil/anvil.did --target js > src/declarations/anvil/
 
 mv build/treasury.did src/declarations/treasury/
 didc bind src/declarations/treasury/treasury.did --target js > src/declarations/treasury/treasury.did.js
+
+mv build/tokenregistry.did src/declarations/tokenregistry/
+didc bind src/declarations/tokenregistry/tokenregistry.did --target js > src/declarations/tokenregistry/tokenregistry.did.js

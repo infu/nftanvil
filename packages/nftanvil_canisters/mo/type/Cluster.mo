@@ -8,6 +8,8 @@ import History "./history_interface";
 import Account "./account_interface";
 import Ledger "./ledger_interface";
 import Treasury "./treasury_interface";
+import Tokenregistry "./tokenregistry_interface";
+
 import Float "mo:base/Float";
 import Int64 "mo:base/Int64";
 import Nat16 "mo:base/Nat16";
@@ -37,6 +39,7 @@ module {
                 pwr = (5050,5053);
                 anvil = 5003;
                 treasury = 5004;
+                tokenregistry = 5005;
                 history = 5100;
                 history_range = (5100,5500);
                 space = [[17830671, 17836454]]
@@ -75,6 +78,10 @@ module {
 
     public func treasury(conf : Config) : Treasury.Interface {
         actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.treasury))) :  Treasury.Interface;
+    };
+
+    public func tokenregistry(conf : Config) : Tokenregistry.Interface {
+        actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.tokenregistry))) :  Tokenregistry.Interface;
     };
 
     public func treasury_address(conf : Config) : Nft.AccountIdentifier {
@@ -205,6 +212,10 @@ module {
             ignore installed_pwr<()>(conf, func (slot: CanisterSlot) {
                  fn(slot);
             });
+            
+            fn(conf.anvil);
+            fn(conf.treasury);
+            fn(conf.tokenregistry);
 
         };
 

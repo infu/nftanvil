@@ -19,7 +19,6 @@ import Blob "mo:base/Blob";
 import Cluster  "./type/Cluster";
 import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim"; 
-import TrieRecord "./lib/TrieRecord";
 import Debug "mo:base/Debug";
 import Treasury "./type/treasury_interface";
 

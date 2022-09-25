@@ -6,15 +6,15 @@ sidebar_position: 5
 
 This dapp https://github.com/infu/nftanvil/tree/main/apps/badbot.ninja demonstrates how `nftanvil-react` package is used.
 
-The plan is to have plug and play components. For now it provides helper functions and you have to make the components yourself.
+The plan is to have plug-and-play components. For now, it provides helper functions and you have to make the components yourself.
 
-It makes sure you get properly prefixed AccountIdentifier and also automatically wraps ICP transfered to it.
+It makes sure you get properly prefixed AccountIdentifier and also automatically wraps ICP transferred to it.
 
 Functions here - https://github.com/infu/nftanvil/tree/main/packages/nftanvil_react/src/reducers
 
 ### Installation
 
-To add to existing React project:
+To add to the existing React project:
 
 ```
 npm i @vvv-interactive/nftanvil-react
@@ -22,10 +22,10 @@ npm i @vvv-interactive/nftanvil-react
 
 In your index.js wrap your app with `AnvilProvider` it will give context to our functions and components - an internal Redux state to make our lives easier.
 
-If you don't know how Redux works, you can go trough one of the https://redux.js.org/ tutorials and you will quickly figure it out.
+If you don't know how Redux works, you can go through one of the https://redux.js.org/ tutorials and you will quickly figure it out.
 
 :::tip
-Install Redux DevTools to easily inspect the state and see whats going on under the hood https://chrome.google.com/webstore/detail/redux-devtools/lmhkpmbekcpmknklioeibfkpmmfibljd
+Install Redux DevTools to easily inspect the state and see what's going on under the hood https://chrome.google.com/webstore/detail/redux-devtools/lmhkpmbekcpmknklioeibfkpmmfibljd
 :::
 
 ```js
@@ -171,7 +171,7 @@ Creating marketplace gallery filters and sorting. Provides various useful shortc
 
 ### Inventory component
 
-This component can be used inside marketplace context or standalone.
+This component can be used inside a marketplace context or standalone.
 
 ```jsx
 <InventoryLarge

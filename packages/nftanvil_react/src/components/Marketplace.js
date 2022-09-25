@@ -37,9 +37,7 @@ export function MarketplaceLoad({ author, children }) {
   const [items, setItems] = useState([]);
   const [isLoading, setLoading] = useState(true);
 
-  const acc = useAnvilSelector((state) => state.user.map.account);
   const maxItems = 40;
-  const address = useAnvilSelector((state) => state.user.address);
 
   const dispatch = useAnvilDispatch();
 
@@ -52,9 +50,8 @@ export function MarketplaceLoad({ author, children }) {
   };
 
   useEffect(() => {
-    if (!acc?.length) return null;
     load();
-  }, [address, acc]);
+  }, []);
 
   return children(items);
 }

@@ -50,22 +50,6 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
-import coin1 from "../assets/coins/coin1.png";
-import coin2 from "../assets/coins/coin2.png";
-import coin3 from "../assets/coins/coin3.png";
-import coin4 from "../assets/coins/coin4.png";
-import coin5 from "../assets/coins/coin5.png";
-import coin6 from "../assets/coins/coin6.png";
-
-const tokenImg = {
-  1: coin1,
-  2: coin2,
-  3: coin3,
-  4: coin4,
-  5: coin5,
-  6: coin6,
-};
-
 const InventoryBox = styled.div`
   background: url(${(props) => props.bg});
   background-size: 72px 72px;
@@ -241,7 +225,7 @@ export const FToken = ({ id, bal }) => {
       }}
       onClick={modal.onOpen}
     >
-      <img className="cimg" alt="" src={tokenImg[id]} />
+      <img className="cimg" alt="" />
       <div className="bal">{amount}</div>
       <div className="border" />
       <TransferModal id={id} {...modal} />

@@ -1,0 +1,61 @@
+module.exports = [
+  {
+    name: "Ratoko test",
+    attributes: { attack: 3, airdrops: 5, harvest: 1, luck: 1 },
+    authorShare: 100,
+    content: "./x2.jpg",
+    thumb: "./thumbs/x2.jpg",
+  },
+  {
+    name: "Ratoko test",
+    attributes: { attack: 3, airdrops: 5, harvest: 1, luck: 1 },
+    authorShare: 100,
+    content: "./x3.jpg",
+    thumb: "./thumbs/x3.jpg",
+  },
+
+  {
+    name: "Ratoko test",
+    attributes: { attack: 3, airdrops: 5, harvest: 1, luck: 1 },
+    authorShare: 100,
+    content: "./x4.jpg",
+    thumb: "./thumbs/x4.jpg",
+  },
+  {
+    name: "Ratoko test",
+    attributes: { attack: 3, airdrops: 5, harvest: 1, luck: 1 },
+    authorShare: 100,
+    content: "./x5.jpg",
+    thumb: "./thumbs/x5.jpg",
+  },
+  {
+    name: "Ratoko test",
+    attributes: { attack: 3, airdrops: 5, harvest: 1, luck: 1 },
+    authorShare: 100,
+    content: "./x6.jpg",
+    thumb: "./thumbs/x6.jpg",
+  },
+  {
+    name: "Ratoko test",
+    attributes: { attack: 3, airdrops: 5, harvest: 1, luck: 1 },
+    authorShare: 100,
+    content: "./x7.jpg",
+    thumb: "./thumbs/x7.jpg",
+  },
+  {
+    name: "Ratoko",
+    quality: 5,
+    attributes: { attack: 22, airdrops: 5, harvest: 1, luck: 1 },
+    authorShare: 100,
+    content: "./x8.jpg",
+    thumb: "./thumbs/x8.jpg",
+  },
+  {
+    name: "Ratoko",
+    quality: 6,
+    attributes: { attack: 33, airdrops: 5, harvest: 1, luck: 1 },
+    authorShare: 100,
+    content: "./x9.jpg",
+    thumb: "./thumbs/x9.jpg",
+  },
+];

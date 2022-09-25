@@ -1,0 +1,10 @@
+{
+  "symbol": "ANV",
+  "name": "Anvil mega token",
+  "desc": "The token you always dreamed of having",
+  "decimals": 10,
+  "fee": 1000,
+  "transferable": true,
+  "max_accounts": 10000,
+  "image": "./coin2.png"
+}

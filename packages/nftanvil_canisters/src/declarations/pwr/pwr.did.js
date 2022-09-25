@@ -18,14 +18,17 @@ export const idlFactory = ({ IDL }) => {
     'ft' : AccountRecordSerialized,
     'oracle' : Oracle__1,
   });
+  const FTokenId__1 = IDL.Nat64;
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__3 = IDL.Nat64;
+  const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
     'nft' : CanisterRange,
     'pwr' : CanisterRange,
     'anvil' : CanisterSlot,
+    'tokenregistry' : CanisterSlot,
     'history' : CanisterSlot,
     'nft_avail' : IDL.Vec(CanisterSlot),
     'space' : IDL.Vec(IDL.Vec(IDL.Nat64)),
@@ -256,16 +259,22 @@ export const idlFactory = ({ IDL }) => {
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
     'balanceAddExternal' : IDL.Func(
-        [FTokenId, AccountIdentifier__2, Balance__3],
+        [FTokenId__1, AccountIdentifier__2, Balance__3],
         [],
         [],
       ),
+    'balanceAddExternalProtected' : IDL.Func(
+        [FTokenId__1, AccountIdentifier__2, Balance__3, IDL.Bool],
+        [Result],
+        [],
+      ),
     'config_set' : IDL.Func([Config], [], []),
-    'faucet' : IDL.Func(
+    'exists' : IDL.Func([AccountIdentifier], [IDL.Bool], ['query']),
+    'ft_mint' : IDL.Func(
         [
           IDL.Record({
+            'id' : FTokenId__1,
             'aid' : AccountIdentifier__2,
-            'token' : FTokenId,
             'amount' : Balance__3,
           }),
         ],

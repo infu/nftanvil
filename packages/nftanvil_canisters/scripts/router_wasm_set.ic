@@ -47,3 +47,11 @@ call as wallet router.wasm_set(
         wasm = file "../build/treasury.wasm";
     }
 );
+
+
+call as wallet router.wasm_set(
+    record {
+        name = "tokenregistry";
+        wasm = file "../build/tokenregistry.wasm";
+    }
+);

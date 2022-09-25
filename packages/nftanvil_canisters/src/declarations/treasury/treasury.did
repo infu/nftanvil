@@ -54,6 +54,7 @@ type Config =
    pwr: CanisterRange;
    router: principal;
    space: vec vec nat64;
+   tokenregistry: CanisterSlot;
    treasury: CanisterSlot;
  };
 type Class = 
