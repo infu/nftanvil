@@ -5,7 +5,12 @@ import {
   useAnvilDispatch,
   useAnvilSelector,
   tokenSelector,
+  ft_transfer,
 } from "@vvv-interactive/nftanvil-react";
+import {
+  principalToAccountIdentifier,
+  getSubAccountArray,
+} from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import { Stack, Button, Box, Center } from "@chakra-ui/react";
 import { Code } from "../Code";
 
@@ -15,17 +20,45 @@ export function PageInventory3() {
   const accounts = useAnvilSelector((state) => state.user.accounts);
   let address = Object.keys(accounts)[0];
 
+  const floodrepeat = async () => {
+    while (true) {
+      await flood();
+    }
+  };
+
+  const flood = async () => {
+    await Promise.all(
+      Array(20)
+        .fill(0)
+        .map((_) => {
+          return floodOne();
+        })
+    ).then((x) => {
+      let total_ok = x.reduce((prev, cur) => {
+        return "ok" in cur ? prev + 1 : prev;
+      }, 0);
+      console.log("Total ok", total_ok);
+    });
+  };
+
+  const floodOne = () => {
+    let principal = accounts[address].principal;
+    let i = Math.round(Math.random() * 10000000000000);
+    let to = principalToAccountIdentifier(principal, i);
+    return dispatch(ft_transfer({ id: 4, address, to, amount: 30000 })).catch(
+      (e) => {
+        console.log(e);
+        return {};
+      }
+    );
+  };
+
   return (
     <>
-      <Code code={``} />
       <Center>
         <Stack direction="horizontal">
-          <Inventory address={address} cols={5} rows={3} />
-          {/* <Requirements tokens={[
-            { t: 0, author: "a00903c0d031a9a99a5d760f4cb64a5025eedb29513f2488186caaf1ed6c685e", quality: ">=5" },
-            { t: 1, amount : "500000"},
-            { t: 2, amount : "500000"},
-          ]}/> */}
+          <Button onClick={flood}>Flood</Button>
+          <Button onClick={floodrepeat}>Flood Repeat</Button>
         </Stack>
       </Center>
     </>

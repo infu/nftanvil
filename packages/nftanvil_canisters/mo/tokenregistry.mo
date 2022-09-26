@@ -88,17 +88,19 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
         #ok(Nat64.fromNat(id));
     };
 
-    public shared({caller}) func mint({id: FTokenId; aid: Nft.AccountIdentifier; amount:Nat64}) : async Result.Result<Nat64, Text> {
+    public shared({caller}) func mint({id: FTokenId; aid: Nft.AccountIdentifier; amount:Nat64}) : async Result.Result< {transactionId : Blob}, Text> {
         let t = switch(_state[Nat64.toNat(id)]) { case (?x) x; case(_) return #err("Token doesn't exist"); };
 
         if (t.mintable != true) return #err("Not mintable");
         if (t.controller != caller) return #err("Not token controller");
 
         await Cluster.pwrFromAid(_conf, aid).ft_mint({id; aid; amount});
-
+        
+        let transactionId = await Cluster.history(_conf).add(#ft(#mint({token = id; created=Time.now(); user=aid; amount=amount})));
+        
         t.total_supply += amount;
 
-        #ok(t.total_supply);
+        #ok({transactionId});
     };
 
 
@@ -200,7 +202,7 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
   };
 
 
-  public query func stats () : async (Cluster.StatsResponse and {
+  public query func stats() : async (Cluster.StatsResponse and {
 
     }) {
         {

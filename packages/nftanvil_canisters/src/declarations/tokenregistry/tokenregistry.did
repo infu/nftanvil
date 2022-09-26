@@ -25,7 +25,7 @@ type StatsResponse =
 type Result = 
  variant {
    err: text;
-   ok: nat64;
+   ok: record {transactionId: blob;};
  };
 type Response = 
  record {

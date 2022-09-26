@@ -1257,6 +1257,8 @@ module {
                 case (#nft(x)) NftEvent.hash(x);
                 case (#pwr(x)) PwrEvent.hash(x);
                 case (#anv(x)) AnvEvent.hash(x);
+                case (#ft(x)) FtEvent.hash(x);
+
                 case (#treasury(x)) [];
             };
         }
@@ -1266,11 +1268,17 @@ module {
         #nft : NftEvent;
         #pwr : PwrEvent;
         #anv : AnvEvent;
+        #ft : FtEvent;
     };
 
     public type AnvEvent = {
         #transfer : EventFungibleTransaction;
         // vote
+    };
+
+    public type FtEvent = {
+        #transfer : FtTransaction;
+        #mint : FtMint;
     };
 
     public type PwrEvent = {
@@ -1538,6 +1546,52 @@ module {
                     amount: Balance;
                     memo: Memo;
                 };
+
+    // new
+
+     public module FtEvent = {
+        public func hash(e : FtEvent) : [Nat8] {
+             switch (e) {
+                case (#transfer({token;from;to;amount;memo;created})) {
+                    Array.flatten<Nat8>([
+                        [9:Nat8],
+                        Blob_.nat64ToBytes(token),
+                        Blob_.intToBytes(created),
+                        Blob.toArray(from),
+                        Blob.toArray(to),
+                        Blob_.nat64ToBytes(amount),
+                        Blob.toArray(memo)
+                    ])
+                };
+                case (#mint({token;created;user;amount})) {
+                    Array.flatten<Nat8>([
+                        [10:Nat8],
+                        Blob_.nat64ToBytes(token),
+                        Blob_.intToBytes(created),
+                        Blob.toArray(user),
+                        Blob_.nat64ToBytes(amount),
+                    ])
+                };
+             }
+        }
+    };
+
+    public type FtTransaction =  {
+                    token: FTokenId;
+                    created: Timestamp;
+                    from: AccountIdentifier;
+                    to: AccountIdentifier;
+                    amount: Balance;
+                    memo: Memo;
+                };
+
+    public type FtMint = {
+                    token: FTokenId;
+                    created: Timestamp;
+                    user: AccountIdentifier;
+                    amount: Balance;
+                };
+
 
     public type Block = {
         events: [Event]

@@ -42,7 +42,6 @@ export const ft_transfer =
   ({ id, address, to, amount, memo = [] }) =>
   async (dispatch, getState) => {
     let s = getState();
-
     let subaccount = [
       AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
         null,
@@ -67,7 +66,7 @@ export const ft_transfer =
       subaccount: subaccount,
     };
 
-    let trez = await pwr.pwr_transfer(req);
+    let trez = await pwr.transfer(req);
 
     if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
 

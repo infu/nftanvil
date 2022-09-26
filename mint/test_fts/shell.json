@@ -1,0 +1,10 @@
+{
+  "symbol": "SHELL",
+  "name": "SHELL mega token",
+  "desc": "The token you always dreamed of having",
+  "decimals": 10,
+  "fee": 1000,
+  "transferable": true,
+  "max_accounts": 100000000,
+  "image": "./coin6.png"
+}

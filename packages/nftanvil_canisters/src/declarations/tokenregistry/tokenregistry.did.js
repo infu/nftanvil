@@ -50,7 +50,10 @@ export const idlFactory = ({ IDL }) => {
     'symbol' : IDL.Text,
   });
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
-  const Result = IDL.Variant({ 'ok' : IDL.Nat64, 'err' : IDL.Text });
+  const Result = IDL.Variant({
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'err' : IDL.Text,
+  });
   const Oracle = IDL.Record({
     'icpFee' : IDL.Nat64,
     'anvFee' : IDL.Nat64,

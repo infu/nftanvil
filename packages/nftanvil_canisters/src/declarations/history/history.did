@@ -133,15 +133,39 @@ type InfoResponse =
    previous: opt principal;
    total: EventIndex;
  };
+type FtTransaction = 
+ record {
+   amount: Balance;
+   created: Timestamp;
+   from: AccountIdentifier;
+   memo: Memo;
+   to: AccountIdentifier;
+   token: FTokenId;
+ };
+type FtMint = 
+ record {
+   amount: Balance;
+   created: Timestamp;
+   token: FTokenId;
+   user: AccountIdentifier;
+ };
+type FtEvent = 
+ variant {
+   mint: FtMint;
+   transfer: FtTransaction;
+ };
+type FTokenId = nat64;
 type EventInfo__1 = 
  variant {
    anv: AnvEvent;
+   ft: FtEvent;
    nft: NftEvent;
    pwr: PwrEvent;
  };
 type EventInfo = 
  variant {
    anv: AnvEvent;
+   ft: FtEvent;
    nft: NftEvent;
    pwr: PwrEvent;
  };

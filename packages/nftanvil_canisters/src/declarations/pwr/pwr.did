@@ -5,10 +5,10 @@ type WithdrawResponse =
  };
 type WithdrawRequest = 
  record {
-   amount: Balance;
-   from: User;
-   subaccount: opt SubAccount;
-   to: User;
+   amount: Balance__1;
+   from: User__1;
+   subaccount: opt SubAccount__1;
+   to: User__1;
  };
 type User__2 = 
  variant {
@@ -43,12 +43,25 @@ type TransferResponse =
  };
 type TransferRequest = 
  record {
-   amount: Balance__1;
-   from: User__1;
+   amount: Balance;
+   from: User;
    memo: Memo;
-   subaccount: opt SubAccount__1;
-   to: User__1;
+   subaccount: opt SubAccount;
+   to: User;
    token: FTokenId;
+ };
+type TransferOldResponse = 
+ variant {
+   err: TransferResponseError;
+   ok: record {transactionId: blob;};
+ };
+type TransferOldRequest = 
+ record {
+   amount: Balance;
+   from: User;
+   memo: Memo;
+   subaccount: opt SubAccount;
+   to: User;
  };
 type TransferError = 
  variant {
@@ -133,8 +146,8 @@ type PurchaseIntentResponse =
  };
 type PurchaseIntentRequest = 
  record {
-   subaccount: opt SubAccount__1;
-   user: User__1;
+   subaccount: opt SubAccount;
+   user: User;
  };
 type PurchaseClaimResponse = 
  variant {
@@ -146,8 +159,8 @@ type PurchaseClaimResponse =
  };
 type PurchaseClaimRequest = 
  record {
-   subaccount: opt SubAccount__1;
-   user: User__1;
+   subaccount: opt SubAccount;
+   user: User;
  };
 type Price = 
  record {
@@ -244,7 +257,6 @@ type ItemTransfer =
  };
 type IPFS_CID = text;
 type ICP = record {e8s: nat64;};
-type FTokenId__1 = nat64;
 type FTokenId = nat64;
 type ExternalUrl = text;
 type DomainName = text;
@@ -281,16 +293,16 @@ type Config =
 type Class = 
  service {
    balance: (BalanceRequest) -> (BalanceResponse) query;
-   balanceAddExternal: (FTokenId__1, AccountIdentifier__2, Balance__3) -> ();
-   balanceAddExternalProtected: (FTokenId__1, AccountIdentifier__2,
-    Balance__3, bool) -> (Result);
+   balanceAddExternal: (FTokenId, AccountIdentifier__2, Balance__3) -> ();
+   balanceAddExternalProtected: (FTokenId, AccountIdentifier__2, Balance__3,
+    bool) -> (Result);
    config_set: (Config) -> ();
    exists: (AccountIdentifier) -> (bool) query;
    ft_mint:
     (record {
        aid: AccountIdentifier__2;
        amount: Balance__3;
-       id: FTokenId__1;
+       id: FTokenId;
      }) -> ();
    nft_mint: (CanisterSlot, MintRequest) -> (MintResponse);
    nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);
@@ -298,7 +310,7 @@ type Class =
    oracle_set: (Oracle) -> ();
    pwr_purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    pwr_purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
-   pwr_transfer: (TransferRequest) -> (TransferResponse);
+   pwr_transfer: (TransferOldRequest) -> (TransferOldResponse);
    pwr_withdraw: (WithdrawRequest) -> (WithdrawResponse);
    stats: () ->
     (record {
@@ -323,6 +335,7 @@ type Class =
        rts_version: text;
        total_accounts: nat;
      }) query;
+   transfer: (TransferRequest) -> (TransferResponse);
    wallet_receive: () -> ();
  };
 type CanisterSlot = nat64;
@@ -337,8 +350,10 @@ type Balance__2 = nat64;
 type Balance__1 = nat64;
 type BalanceResponse = 
  record {
+   anv: Balance;
    ft: AccountRecordSerialized;
    oracle: Oracle__1;
+   pwr: Balance;
  };
 type BalanceRequest = record {user: User__2;};
 type Balance = nat64;
@@ -351,7 +366,7 @@ type Attribute =
 type AccountRecordSerialized = 
  vec record {
        FTokenId;
-       Balance__1;
+       Balance;
      };
 type AccountIdentifier__2 = blob;
 type AccountIdentifier__1 = blob;

@@ -69,13 +69,13 @@ function Header(p) {
               </Button>
             )}
           </NavLink>
-          {/* <NavLink to="/inventory3">
+          <NavLink to="/inventory3">
             {({ isActive }) => (
               <Button isActive={isActive} variant="solid" colorScheme="gray">
                 3
               </Button>
             )}
-          </NavLink> */}
+          </NavLink>
           <NavLink to="/demoflow">
             {({ isActive }) => (
               <Button isActive={isActive} variant="solid" colorScheme="gray">

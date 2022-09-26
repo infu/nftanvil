@@ -6,8 +6,8 @@ export const idlFactory = ({ IDL }) => {
   });
   const BalanceRequest = IDL.Record({ 'user' : User__2 });
   const FTokenId = IDL.Nat64;
-  const Balance__1 = IDL.Nat64;
-  const AccountRecordSerialized = IDL.Vec(IDL.Tuple(FTokenId, Balance__1));
+  const Balance = IDL.Nat64;
+  const AccountRecordSerialized = IDL.Vec(IDL.Tuple(FTokenId, Balance));
   const Oracle__1 = IDL.Record({
     'icpFee' : IDL.Nat64,
     'anvFee' : IDL.Nat64,
@@ -16,9 +16,10 @@ export const idlFactory = ({ IDL }) => {
   });
   const BalanceResponse = IDL.Record({
     'ft' : AccountRecordSerialized,
+    'anv' : Balance,
+    'pwr' : Balance,
     'oracle' : Oracle__1,
   });
-  const FTokenId__1 = IDL.Nat64;
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__3 = IDL.Nat64;
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
@@ -193,14 +194,14 @@ export const idlFactory = ({ IDL }) => {
     'icpCycles' : IDL.Nat64,
     'pwrFee' : IDL.Nat64,
   });
-  const User__1 = IDL.Variant({
+  const User = IDL.Variant({
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
   });
-  const SubAccount__1 = IDL.Vec(IDL.Nat8);
+  const SubAccount = IDL.Vec(IDL.Nat8);
   const PurchaseClaimRequest = IDL.Record({
-    'user' : User__1,
-    'subaccount' : IDL.Opt(SubAccount__1),
+    'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
   });
   const ICP = IDL.Record({ 'e8s' : IDL.Nat64 });
   const BlockIndex = IDL.Nat64;
@@ -219,8 +220,8 @@ export const idlFactory = ({ IDL }) => {
     }),
   });
   const PurchaseIntentRequest = IDL.Record({
-    'user' : User__1,
-    'subaccount' : IDL.Opt(SubAccount__1),
+    'user' : User,
+    'subaccount' : IDL.Opt(SubAccount),
   });
   const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
   const PurchaseIntentResponse = IDL.Variant({
@@ -228,43 +229,54 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Text,
   });
   const Memo = IDL.Vec(IDL.Nat8);
-  const TransferRequest = IDL.Record({
-    'to' : User__1,
-    'token' : FTokenId,
-    'from' : User__1,
-    'memo' : Memo,
-    'subaccount' : IDL.Opt(SubAccount__1),
-    'amount' : Balance__1,
-  });
-  const TransferResponse = IDL.Variant({
-    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
-    'err' : TransferResponseError,
-  });
-  const User = IDL.Variant({
-    'principal' : IDL.Principal,
-    'address' : AccountIdentifier,
-  });
-  const SubAccount = IDL.Vec(IDL.Nat8);
-  const Balance = IDL.Nat64;
-  const WithdrawRequest = IDL.Record({
+  const TransferOldRequest = IDL.Record({
     'to' : User,
     'from' : User,
+    'memo' : Memo,
     'subaccount' : IDL.Opt(SubAccount),
     'amount' : Balance,
   });
+  const TransferOldResponse = IDL.Variant({
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'err' : TransferResponseError,
+  });
+  const User__1 = IDL.Variant({
+    'principal' : IDL.Principal,
+    'address' : AccountIdentifier,
+  });
+  const SubAccount__1 = IDL.Vec(IDL.Nat8);
+  const Balance__1 = IDL.Nat64;
+  const WithdrawRequest = IDL.Record({
+    'to' : User__1,
+    'from' : User__1,
+    'subaccount' : IDL.Opt(SubAccount__1),
+    'amount' : Balance__1,
+  });
   const WithdrawResponse = IDL.Variant({
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'err' : TransferResponseError,
+  });
+  const TransferRequest = IDL.Record({
+    'to' : User,
+    'token' : FTokenId,
+    'from' : User,
+    'memo' : Memo,
+    'subaccount' : IDL.Opt(SubAccount),
+    'amount' : Balance,
+  });
+  const TransferResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : TransferResponseError,
   });
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
     'balanceAddExternal' : IDL.Func(
-        [FTokenId__1, AccountIdentifier__2, Balance__3],
+        [FTokenId, AccountIdentifier__2, Balance__3],
         [],
         [],
       ),
     'balanceAddExternalProtected' : IDL.Func(
-        [FTokenId__1, AccountIdentifier__2, Balance__3, IDL.Bool],
+        [FTokenId, AccountIdentifier__2, Balance__3, IDL.Bool],
         [Result],
         [],
       ),
@@ -273,7 +285,7 @@ export const idlFactory = ({ IDL }) => {
     'ft_mint' : IDL.Func(
         [
           IDL.Record({
-            'id' : FTokenId__1,
+            'id' : FTokenId,
             'aid' : AccountIdentifier__2,
             'amount' : Balance__3,
           }),
@@ -303,7 +315,7 @@ export const idlFactory = ({ IDL }) => {
         [PurchaseIntentResponse],
         [],
       ),
-    'pwr_transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
+    'pwr_transfer' : IDL.Func([TransferOldRequest], [TransferOldResponse], []),
     'pwr_withdraw' : IDL.Func([WithdrawRequest], [WithdrawResponse], []),
     'stats' : IDL.Func(
         [],
@@ -333,6 +345,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'transfer' : IDL.Func([TransferRequest], [TransferResponse], []),
     'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;

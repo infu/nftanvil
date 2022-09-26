@@ -29,7 +29,6 @@ import userReducer, {
   user_refresh_balances,
   user_refresh_config,
   user_transfer_icp,
-  user_transfer_token,
 } from "./reducers/user";
 
 import nftReducer, {
@@ -50,7 +49,9 @@ import nftReducer, {
   nft_set_price,
 } from "./reducers/nft";
 
-import ftReducer from "./reducers/ft";
+import ftReducer, { ft_transfer } from "./reducers/ft";
+export { ft_transfer };
+
 import uiReducer, { window_focus, window_blur } from "./reducers/ui";
 
 import icReducer, { anvil_discover } from "./reducers/ic";
@@ -86,7 +87,6 @@ export {
   user_refresh_balances,
   user_refresh_config,
   user_transfer_icp,
-  user_transfer_token,
 };
 
 export {

@@ -1,8 +1,24 @@
 export const idlFactory = ({ IDL }) => {
-  const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const Timestamp = IDL.Int;
-  const Memo = IDL.Vec(IDL.Nat8);
+  const FTokenId = IDL.Nat64;
+  const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
+  const FtMint = IDL.Record({
+    'created' : Timestamp,
+    'token' : FTokenId,
+    'user' : AccountIdentifier,
+    'amount' : Balance,
+  });
+  const Memo = IDL.Vec(IDL.Nat8);
+  const FtTransaction = IDL.Record({
+    'to' : AccountIdentifier,
+    'created' : Timestamp,
+    'token' : FTokenId,
+    'from' : AccountIdentifier,
+    'memo' : Memo,
+    'amount' : Balance,
+  });
+  const FtEvent = IDL.Variant({ 'mint' : FtMint, 'transfer' : FtTransaction });
   const EventFungibleTransaction = IDL.Record({
     'to' : AccountIdentifier,
     'created' : Timestamp,
@@ -113,6 +129,7 @@ export const idlFactory = ({ IDL }) => {
     'transfer' : EventFungibleTransaction,
   });
   const EventInfo__1 = IDL.Variant({
+    'ft' : FtEvent,
     'anv' : AnvEvent,
     'nft' : NftEvent,
     'pwr' : PwrEvent,
@@ -135,6 +152,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const EventIndex = IDL.Nat32;
   const EventInfo = IDL.Variant({
+    'ft' : FtEvent,
     'anv' : AnvEvent,
     'nft' : NftEvent,
     'pwr' : PwrEvent,
