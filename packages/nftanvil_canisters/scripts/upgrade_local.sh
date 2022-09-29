@@ -4,6 +4,10 @@ export WALLET_ID=`dfx identity get-wallet`
 export ROUTER_ID=`dfx canister id router`
 echo "Stop router"
 dfx canister stop router
+
+echo "Set proper config"
+
+
 echo "Upgrading router"
 /usr/local/bin/ic-repl -r local ./scripts/upgrade_router_wasm.ic
 echo "Start router"
