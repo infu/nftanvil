@@ -1,6 +1,12 @@
 import fs from "fs";
 import _ from "lodash";
 import chalk from "chalk";
+import icblast, {
+  fileIdentity,
+  blast,
+  file,
+  internetIdentity,
+} from "@infu/icblast";
 
 export const print = (t, type = false) => {
   switch (type) {
@@ -17,4 +23,21 @@ export const dfx_canisters = () => {
   let local = JSON.parse(fs.readFileSync(".dfx/local/canister_ids.json"));
   let ic = JSON.parse(fs.readFileSync("./canister_ids.json"));
   return _.merge(local, ic);
+};
+
+export const canisterMgr = (aaa, wallet) => {
+  return {
+    upgrade: (canister_id, wasm, arg = {}) => {
+      return walletCall(
+        wallet,
+        aaa,
+        "install_code",
+        0 // cycles to add
+      )({
+        arg,
+        wasm_module: file(wasm),
+        canister_id,
+      });
+    },
+  };
 };

@@ -4,7 +4,7 @@ import icblast, {
   file,
   internetIdentity,
 } from "@infu/icblast";
-import { print, dfx_canisters } from "./tools.js";
+import { print, dfx_canisters, canisterMgr } from "./tools.js";
 import {
   PrincipalToIdx,
   PrincipalFromIdx,
@@ -18,13 +18,18 @@ import {
 
 // let identity = await internetIdentity();
 let identity = await fileIdentity(0);
+
 console.log(identity.getPrincipal().toText());
 
-let canisters = dfx_canisters();
-
 let ic = icblast({ local: true, identity });
+let aaa = ic("aaaaa-aa", "ic");
+let wallet = await ic("vlgg5-pyaaa-aaaai-qaqba-cai", "wallet");
 
-let can = await ic(canisters.router.local);
+let mgr = canisterMgr(aaa, wallet);
+
+let canisters = dfx_canisters();
+let router_id = canisters.router.local;
+let can = await ic(router_id);
 
 let conf = await can.config_get();
 
@@ -34,7 +39,8 @@ print("Get config", "info");
 
 print("Set proper config");
 
-print("Upgrading router");
+print("Upgrading router", "info");
+mgr.upgrade(router_id, "../build/router.wasm");
 
 print("Stop All");
 
