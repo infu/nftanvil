@@ -4,7 +4,6 @@ import { bytesArrayToNumber, numberToBytesArray } from "./data";
 export const PrincipalFromIdx = (idx) => {
   return Principal.fromUint8Array([...numberToBytesArray(idx, 8), 1, 1]);
 };
-
 export const PrincipalFromSlot = (space, idx) => {
   let start = Number(space[0][0]);
   return PrincipalFromIdx(start + Number(idx));
