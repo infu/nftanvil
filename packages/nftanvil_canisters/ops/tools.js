@@ -7,33 +7,34 @@ import icblast, {
   fileIdentity,
   blast,
   file,
-  internetIdentity, walletCall
+  internetIdentity,
+  walletCall,
+  walletProxy,
 } from "@infu/icblast";
 import ora from "ora";
 
 let spinner;
 
 export const print = {
-  
-  notice: (t) => console.log(chalk.hex("#1d1096")("❄ ") + chalk.hex("#4f40df").bold(t)),
+  notice: (t) =>
+    console.log(chalk.hex("#1d1096")("❄ ") + chalk.hex("#4f40df").bold(t)),
   warning: (t) => console.log(chalk.orange("⚠") + chalk.red.bold(t)),
-  info: (t) => 
+  info: (t) =>
     console.log(chalk.hex("#7e08ec")("➜ ") + chalk.hex("#8d62fb").bold(t)),
   loading: (t) => {
     if (spinner) spinner.succeed();
-    spinner = ora({ text:chalk.hex("#8d62fb").bold(t) }).start();
+    spinner = ora({ text: chalk.hex("#8d62fb").bold(t) }).start();
   },
   done: (t) => {
     if (spinner) spinner.succeed();
     console.log(chalk.hex("#00815e")(t));
-
   },
-  msg: (t) => console.log(chalk.hex("#9b9a86")(t))
-}
+  msg: (t) => console.log(chalk.hex("#9b9a86")(t)),
+};
 
 const toPrincipal = (tt) => {
   if (typeof tt == "string") return Principal.fromText(tt);
-  return tt
+  return tt;
 };
 
 export const dfx_canisters = () => {
@@ -44,7 +45,12 @@ export const dfx_canisters = () => {
 
 export const canisterMgr = (aaa, wallet) => {
   return {
-    upgrade: async (canister_id, wasm_path, mode = { upgrade: null }, arg = []) => {
+    upgrade: async (
+      canister_id,
+      wasm_path,
+      mode = { upgrade: null },
+      arg = []
+    ) => {
       return walletCall(
         wallet,
         aaa,
@@ -54,13 +60,11 @@ export const canisterMgr = (aaa, wallet) => {
         arg,
         wasm_module: await file(wasm_path),
         canister_id: toPrincipal(canister_id),
-        mode
+        mode,
       });
     },
   };
 };
-
-
 
 // export const walletCall =
 //   (wallet, can, method, cycles = 0) =>
@@ -76,4 +80,3 @@ export const canisterMgr = (aaa, wallet) => {
 //     if (!("Ok" in response)) throw response.Err;
 //     return can["$" + method](response.Ok.return);
 //   };
-

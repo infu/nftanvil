@@ -3,8 +3,9 @@ import icblast, {
   blast,
   file,
   internetIdentity,
+  walletProxy,
 } from "@infu/icblast";
-import { print, dfx_canisters, canisterMgr, walletProxy} from "./tools.js";
+import { print, dfx_canisters, canisterMgr } from "./tools.js";
 import {
   PrincipalToIdx,
   PrincipalFromIdx,
@@ -16,24 +17,21 @@ import {
   getSubAccountArray,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
-
 // let identity = await internetIdentity();
 let identity = await fileIdentity(0);
 print.notice("Anvil cluster upgrade");
 
-print.notice("Script principal: " +identity.getPrincipal().toText());
+print.notice("Script principal: " + identity.getPrincipal().toText());
 
 let ic = icblast({ local: true, identity });
 let aaa = await ic("aaaaa-aa", "ic");
 
-let wallet = await ic("rwlgt-iiaaa-aaaaa-aaaaa-cai", "wallet");
+let wallet = await ic("ryjl3-tyaaa-aaaaa-aaaba-cai", "wallet");
 let mgr = canisterMgr(aaa, wallet);
 
 let canisters = dfx_canisters();
 let router_id = canisters.router.local;
 let router = await ic(router_id);
-
-
 
 print.loading("Get config");
 let conf = await router.config_get();
@@ -49,9 +47,10 @@ conf = {
   account: [21n, 22n],
   history_range: [30n, 50n],
   tokenregistry: 24, //5005
-  router: Principal.fromText("ryjl3-tyaaa-aaaaa-aaaba-cai"),
-  treasury: 25n
+  router: Principal.fromText("r7inp-6aaaa-aaaaa-aaabq-cai"),
+  treasury: 25n,
 };
+
 print.loading("Set proper config");
 
 await walletProxy(wallet, router).config_set(conf);
@@ -59,43 +58,43 @@ await walletProxy(wallet, router).config_set(conf);
 print.loading("Upgrading router");
 await mgr.upgrade(router_id, "./build/router.wasm");
 
-print.loading("Stop All");
-await walletProxy(wallet, router).stop_all();
+// print.loading("Stop All");
+// await walletProxy(wallet, router).stop_all();
 
 print.loading("Set WASM");
 
-await walletProxy(wallet, router).wasm_set({  
-  name : "nft",
-  wasm : await file("./build/nft.wasm")
-});
-await walletProxy(wallet, router).wasm_set({  
-  name : "account",
-  wasm : await file("./build/account.wasm")
-});
-await walletProxy(wallet, router).wasm_set({  
-  name : "pwr",
-  wasm : await file("./build/pwr.wasm")
-});
-await walletProxy(wallet, router).wasm_set({  
-  name : "history",
-  wasm : await file("./build/history.wasm")
-});
-await walletProxy(wallet, router).wasm_set({  
-  name : "anvil",
-  wasm : await file("./build/anvil.wasm")
-});
-await walletProxy(wallet, router).wasm_set({  
-  name : "treasury",
-  wasm : await file("./build/treasury.wasm")
+await walletProxy(wallet, router).wasm_set({
+  name: "nft",
+  wasm: await file("./build/nft.wasm"),
 });
 await walletProxy(wallet, router).wasm_set({
-  name : "tokenregistry",
-  wasm : await file("./build/tokenregistry.wasm")
+  name: "account",
+  wasm: await file("./build/account.wasm"),
+});
+await walletProxy(wallet, router).wasm_set({
+  name: "pwr",
+  wasm: await file("./build/pwr.wasm"),
+});
+await walletProxy(wallet, router).wasm_set({
+  name: "history",
+  wasm: await file("./build/history.wasm"),
+});
+await walletProxy(wallet, router).wasm_set({
+  name: "anvil",
+  wasm: await file("./build/anvil.wasm"),
+});
+await walletProxy(wallet, router).wasm_set({
+  name: "treasury",
+  wasm: await file("./build/treasury.wasm"),
+});
+await walletProxy(wallet, router).wasm_set({
+  name: "tokenregistry",
+  wasm: await file("./build/tokenregistry.wasm"),
 });
 
 print.loading("Run Upgrade");
 await walletProxy(wallet, router).upgrade();
-  
+
 print.loading("Start All");
 await walletProxy(wallet, router).start_all();
 
