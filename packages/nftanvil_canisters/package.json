@@ -34,7 +34,8 @@
     "@dfinity/identity": "^0.10.1",
     "@dfinity/principal": "^0.10.1",
     "@infu/icblast": "^1.1.0",
-    "chalk": "^5.0.1"
+    "chalk": "^5.0.1",
+    "ora": "^6.1.2"
   },
   "gitHead": "67a309187a4c57cb5444a3992ac48df916986680"
 }

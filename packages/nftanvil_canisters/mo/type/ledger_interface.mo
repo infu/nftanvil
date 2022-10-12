@@ -1,10 +1,10 @@
 //@name=ledger
-import Blob "mo:base/Blob";
-import Array "mo:base/Array";
-import Binary "mo:encoding/Binary";
-import CRC32 "mo:hash/CRC32";
-import Principal "mo:base/Principal";
-import Result "mo:base/Result";
+// import Blob "mo:base/Blob";
+// import Array "mo:base/Array";
+// import Binary "mo:encoding/Binary";
+// import CRC32 "mo:hash/CRC32";
+// import Principal "mo:base/Principal";
+// import Result "mo:base/Result";
 
 module {
     //(0🔶 Interface

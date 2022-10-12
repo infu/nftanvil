@@ -178,6 +178,16 @@ module {
         public type SubAccount = Blob; //32 bytes
 
         public module SubAccount = {
+            public func fromPrincipal(p: Principal) : Blob { // the format used by IC services like CNC
+                let pa = Blob.toArray(Principal.toBlob(p));
+                let pa_size = pa.size();
+                Blob.fromArray(Array.tabulate<Nat8>(32, func (idx) {
+                    if (idx == 0) return Nat8.fromNat(pa_size);
+                    if (idx <= pa_size) return pa[idx-1];
+                    return 0;
+                }));
+            };
+
             public func fromNat(idx: Nat) : SubAccount {
                 Blob.fromArray(_Array.concat<Nat8>(
                     Array.freeze(Array.init<Nat8>(24, 0)),
