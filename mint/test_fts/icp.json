@@ -1,0 +1,10 @@
+{
+  "symbol": "ICP",
+  "name": "ICP",
+  "desc": "Internet Computer Protocol",
+  "decimals": 8,
+  "fee": 10000,
+  "transferable": true,
+  "max_accounts": 50000,
+  "image": "./coin4.png"
+}
