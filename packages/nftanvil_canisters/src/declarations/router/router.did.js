@@ -14,6 +14,24 @@ export const idlFactory = ({ IDL }) => {
     'router' : IDL.Principal,
     'treasury' : CanisterSlot,
   });
+  const CanisterSlot__1 = IDL.Nat64;
+  const Job_Install_Code = IDL.Record({
+    'mode' : IDL.Variant({
+      'reinstall' : IDL.Null,
+      'upgrade' : IDL.Null,
+      'install' : IDL.Null,
+    }),
+    'slot' : CanisterSlot__1,
+    'wasm' : IDL.Variant({
+      'nft' : IDL.Null,
+      'pwr' : IDL.Null,
+      'anvil' : IDL.Null,
+      'tokenregistry' : IDL.Null,
+      'history' : IDL.Null,
+      'account' : IDL.Null,
+      'treasury' : IDL.Null,
+    }),
+  });
   const LogEvent = IDL.Record({ 'msg' : IDL.Text, 'time' : IDL.Nat32 });
   const Oracle__1 = IDL.Record({
     'icpFee' : IDL.Nat64,
@@ -46,6 +64,7 @@ export const idlFactory = ({ IDL }) => {
     'create_local_canisters' : IDL.Func([], [], []),
     'event_history_full' : IDL.Func([], [], []),
     'event_nft_full' : IDL.Func([IDL.Principal], [], []),
+    'install_one' : IDL.Func([Job_Install_Code], [], []),
     'log_get' : IDL.Func([], [IDL.Vec(LogEvent)], ['query']),
     'oracle_set' : IDL.Func([Oracle__1], [], []),
     'refuel' : IDL.Func([], [], []),

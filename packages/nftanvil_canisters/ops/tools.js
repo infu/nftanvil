@@ -45,13 +45,8 @@ export const dfx_canisters = () => {
 
 export const canisterMgr = (aaa, wallet) => {
   return {
-    upgrade: async (
-      canister_id,
-      wasm_path,
-      mode = { upgrade: null },
-      arg = []
-    ) => {
-      return walletCall(
+    upgrade: async (canister_id, wasm_path, arg = []) => {
+      let resp = await walletCall(
         wallet,
         aaa,
         "install_code",
@@ -60,11 +55,30 @@ export const canisterMgr = (aaa, wallet) => {
         arg,
         wasm_module: await file(wasm_path),
         canister_id: toPrincipal(canister_id),
-        mode,
+        mode: { upgrade: null },
       });
+      await delay(2000);
+      return resp;
+    },
+    reinstall: async (canister_id, wasm_path, arg = []) => {
+      let resp = await walletCall(
+        wallet,
+        aaa,
+        "install_code",
+        0 // cycles to add
+      )({
+        arg,
+        wasm_module: await file(wasm_path),
+        canister_id: toPrincipal(canister_id),
+        mode: { reinstall: null },
+      });
+      await delay(2000);
+      return resp;
     },
   };
 };
+
+export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // export const walletCall =
 //   (wallet, can, method, cycles = 0) =>

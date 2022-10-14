@@ -5,6 +5,7 @@ type Router =
    create_local_canisters: () -> ();
    event_history_full: () -> ();
    event_nft_full: (principal) -> ();
+   install_one: (Job_Install_Code) -> ();
    log_get: () -> (vec LogEvent) query;
    oracle_set: (Oracle__1) -> ();
    refuel: () -> ();
@@ -54,6 +55,24 @@ type LogEvent =
    msg: text;
    time: nat32;
  };
+type Job_Install_Code = 
+ record {
+   mode: variant {
+           install;
+           reinstall;
+           upgrade;
+         };
+   slot: CanisterSlot__1;
+   wasm: variant {
+           account;
+           anvil;
+           history;
+           nft;
+           pwr;
+           tokenregistry;
+           treasury;
+         };
+ };
 type Config__1 = 
  record {
    account: CanisterRange;
@@ -82,6 +101,7 @@ type Config =
    tokenregistry: CanisterSlot;
    treasury: CanisterSlot;
  };
+type CanisterSlot__1 = nat64;
 type CanisterSlot = nat64;
 type CanisterRange = 
  record {

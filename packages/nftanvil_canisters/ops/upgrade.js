@@ -5,7 +5,7 @@ import icblast, {
   internetIdentity,
   walletProxy,
 } from "@infu/icblast";
-import { print, dfx_canisters, canisterMgr } from "./tools.js";
+import { print, dfx_canisters, canisterMgr, delay } from "./tools.js";
 import {
   PrincipalToIdx,
   PrincipalFromIdx,
@@ -16,6 +16,7 @@ import {
   principalToAccountIdentifier,
   getSubAccountArray,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+import { exit } from "yarn-audit-fix";
 
 // let identity = await internetIdentity();
 let identity = await fileIdentity(0);
@@ -35,28 +36,37 @@ let router = await ic(router_id);
 
 print.loading("Get config");
 let conf = await router.config_get();
-// console.log(conf);
 
-conf = {
-  nft: [0n, 20n],
-  pwr: [27n, 29n],
-  anvil: 26n,
-  history: 30n,
-  nft_avail: [0n, 1n, 2n],
-  space: [[3n, 52n]],
-  account: [21n, 22n],
-  history_range: [30n, 50n],
-  tokenregistry: 24, //5005
-  router: Principal.fromText("r7inp-6aaaa-aaaaa-aaabq-cai"),
-  treasury: 25n,
-};
+// modifying it here in case it losts its values
+conf.tokenregistry = 24;
 
-print.loading("Set proper config");
+//console.log(conf);
 
-await walletProxy(wallet, router).config_set(conf);
+//process.exit();
+
+// conf = {
+//   nft: [0, 20],
+//   pwr: [27, 29],
+//   anvil: 26,
+//   history: 30,
+//   nft_avail: [0, 1, 2],
+//   space: [[5, 54]],
+//   tokenregistry: 24,
+//   account: [21, 22],
+//   history_range: [30, 50],
+//   router: Principal.fromText("r7inp-6aaaa-aaaaa-aaabq-cai"),
+//   treasury: 25,
+// };
 
 print.loading("Upgrading router");
 await mgr.upgrade(router_id, "./build/router.wasm");
+
+// refresh router IDL after installing it
+ic = icblast({ local: true, identity });
+router = await ic(router_id);
+
+print.loading("Set proper config");
+await walletProxy(wallet, router).config_set(conf);
 
 // print.loading("Stop All");
 // await walletProxy(wallet, router).stop_all();
@@ -90,6 +100,13 @@ await walletProxy(wallet, router).wasm_set({
 await walletProxy(wallet, router).wasm_set({
   name: "tokenregistry",
   wasm: await file("./build/tokenregistry.wasm"),
+});
+
+print.loading("Install new canisters");
+await walletProxy(wallet, router).install_one({
+  slot: 24,
+  wasm: { tokenregistry: null },
+  mode: { install: null },
 });
 
 print.loading("Run Upgrade");

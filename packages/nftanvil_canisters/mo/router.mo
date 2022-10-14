@@ -249,7 +249,12 @@ shared({caller = _installer}) actor class Router() = this {
 
     };
 
+    public shared({caller}) func install_one({slot; wasm; mode}: Job_Install_Code) : async () {
+        assert(caller == _installer);
 
+        await job_install_code({slot; wasm; mode});
+       
+    };
 
     public shared({caller}) func upgrade() : async () {
         assert(caller == _installer);
