@@ -41,11 +41,11 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
   private stable var _cycles_recieved : Nat = Cycles.balance();
   private stable var _slot : Nft.CanisterSlot = 0;
 
-  // private stable var _tmpAccount: [(AccountIdentifier, Pwr.AccountRecordSerialized)] = [];
+  private stable var _tmpAccount: [(AccountIdentifier, Pwr.Old.AccountRecordSerialized)] = [];
 
   private stable var _total_accounts : Nat = 0;
 
-  // private var _account: TrieRecord.TrieRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized> = TrieRecord.TrieRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Pwr.AccountRecordSerialize, Pwr.AccountRecordUnserialize);
+  private var _account: TrieRecord.TrieRecord<AccountIdentifier, Pwr.Old.AccountRecord, Pwr.Old.AccountRecordSerialized> = TrieRecord.TrieRecord<AccountIdentifier, Pwr.Old.AccountRecord, Pwr.Old.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Pwr.Old.AccountRecordSerialize, Pwr.Old.AccountRecordUnserialize);
 
   type AccountRecord = Pwr.AccountRecord;
   private let HAsize = 4000000;
@@ -58,9 +58,9 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
   );
 
   // upgrade logic
-  // for ((k,v) in _account.serialize()) {
-  //   _state.put(k, Pwr.AccountRecordUnserialize(v));
-  // };
+  for ((k,v) in _account.serialize()) {
+    _state.put(k, Pwr.AccountRecordUnserialize(v));
+  };
 
   // delete old
   //_account := TrieRecord.TrieRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized>( Iter.fromArray<(Pwr.AccountIdentifier, Pwr.AccountRecordSerialized)>([]),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Pwr.AccountRecordSerialize, Pwr.AccountRecordUnserialize);
@@ -68,14 +68,14 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
   private let ledger : Ledger.Interface = actor ("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
   //Handle canister upgrades
-  // system func preupgrade() {
-  //     _tmpAccount := Iter.toArray(_account.serialize());
-  // };
+  system func preupgrade() {
+      _tmpAccount := Iter.toArray(_account.serialize());
+  };
 
-  // system func postupgrade() {
-  //     _tmpAccount := [];
-  //     _cycles_recieved := Cycles.balance();
-  // };
+  system func postupgrade() {
+      _tmpAccount := [];
+      _cycles_recieved := Cycles.balance();
+  };
 
   public func wallet_receive() : async () {
     let available = Cycles.available();

@@ -168,4 +168,43 @@ module {
         [var];
     };
 
+
+    public module Old = {
+            public type AccountRecord = {
+                var pwr : Nat64;
+                var anv : Nat64;
+                };
+
+            public type AccountRecordSerialized = {
+                pwr : Nat64;
+                anv : Nat64;
+            };
+
+            public type AccountResult = {
+                pwr : Nat64;
+                anv : Nat64;
+            };
+
+            public func AccountRecordSerialize(x : Old.AccountRecord) : Old.AccountRecordSerialized {
+                {
+                    pwr = x.pwr;
+                    anv = x.anv;
+                }
+            };
+
+            public func AccountRecordUnserialize(x:Old.AccountRecordSerialized) : Old.AccountRecord {
+                {
+                    var pwr = x.pwr;
+                    var anv = x.anv;
+                }
+            };
+
+            public func AccountRecordBlank() : Old.AccountRecord {
+                {
+                    var pwr = 0;
+                    var anv = 0;
+                }
+            };
+    }
+
 };
