@@ -671,25 +671,25 @@ shared({caller = _installer}) actor class Router() = this {
     public shared({caller}) func start_all() : async () {
         assert(caller == _installer);
 
-        ignore Cluster.Slots.installed_history<()>(_conf, func (slot: CanisterSlot) {
-            job_add(#canister_start({slot}));
-            });
+        // ignore Cluster.Slots.installed_history<()>(_conf, func (slot: CanisterSlot) {
+        //     job_add(#canister_start({slot}));
+        //     });
 
-        ignore Cluster.Slots.installed_account<()>(_conf, func (slot: CanisterSlot) {
-            job_add(#canister_start({slot}));
-            });
+        // ignore Cluster.Slots.installed_account<()>(_conf, func (slot: CanisterSlot) {
+        //     job_add(#canister_start({slot}));
+        //     });
 
-        ignore Cluster.Slots.installed_nft<()>(_conf, func (slot: CanisterSlot) {
-            job_add(#canister_start({slot}));
-            });
+        // ignore Cluster.Slots.installed_nft<()>(_conf, func (slot: CanisterSlot) {
+        //     job_add(#canister_start({slot}));
+        //     });
 
-        ignore Cluster.Slots.installed_pwr<()>(_conf, func (slot: CanisterSlot) {
-            job_add(#canister_start({slot}));
-            });
+        // ignore Cluster.Slots.installed_pwr<()>(_conf, func (slot: CanisterSlot) {
+        //     job_add(#canister_start({slot}));
+        //     });
 
-        job_add(#canister_start({slot = _conf.treasury}));
-        job_add(#canister_start({slot = _conf.tokenregistry}));
-        job_add(#canister_start({slot = _conf.anvil}));
+        // job_add(#canister_start({slot = _conf.treasury}));
+        // job_add(#canister_start({slot = _conf.tokenregistry}));
+        // job_add(#canister_start({slot = _conf.anvil}));
 
         job_add(#callback({msg="Cluster started"; callback = func () : async () { 
             _maintenance := false;

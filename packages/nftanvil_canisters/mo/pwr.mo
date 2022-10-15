@@ -58,13 +58,13 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
   );
 
   // upgrade logic
-  for ((k, v) in _account.serialize()) {
-    let {pwr; anv} = v;
-    let pwr_id : Pwr.FTokenId = 1;
-    let anv_id : Pwr.FTokenId = 2;
-    let acc : Pwr.AccountRecordSerialized = [(pwr_id, pwr), (anv_id, anv)];
-    _state.put(k, ?Pwr.AccountRecordUnserialize(acc));
-  };
+  // for ((k, v) in _account.serialize()) {
+  //   let {pwr; anv} = v;
+  //   let pwr_id : Pwr.FTokenId = 1;
+  //   let anv_id : Pwr.FTokenId = 2;
+  //   let acc : Pwr.AccountRecordSerialized = [(pwr_id, pwr), (anv_id, anv)];
+  //   _state.put(k, ?Pwr.AccountRecordUnserialize(acc));
+  // };
 
   // delete old
   //_account := TrieRecord.TrieRecord<AccountIdentifier, Pwr.AccountRecord, Pwr.AccountRecordSerialized>( Iter.fromArray<(Pwr.AccountIdentifier, Pwr.AccountRecordSerialized)>([]),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Pwr.AccountRecordSerialize, Pwr.AccountRecordUnserialize);

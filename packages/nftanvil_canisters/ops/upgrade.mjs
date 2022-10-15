@@ -5,7 +5,7 @@ import icblast, {
   internetIdentity,
   walletProxy,
 } from "@infu/icblast";
-import { print, dfx_canisters, canisterMgr, delay } from "./tools.js";
+import { print, dfx_canisters, canisterMgr, delay } from "./tools.mjs";
 import {
   PrincipalToIdx,
   PrincipalFromIdx,
@@ -23,23 +23,28 @@ let identity = await fileIdentity(0);
 print.notice("Anvil cluster upgrade");
 
 print.notice("Script principal: " + identity.getPrincipal().toText());
-
-let ic = icblast({ local: true, identity });
+// let ic = icblast({ local: true, identity });
+let ic = icblast({ identity });
 let aaa = await ic("aaaaa-aa", "ic");
 
-let wallet = await ic("ryjl3-tyaaa-aaaaa-aaaba-cai", "wallet");
+let wallet = await ic("vlgg5-pyaaa-aaaai-qaqba-cai", "wallet");
+// let wallet = await ic("ryjl3-tyaaa-aaaaa-aaaba-cai", "wallet");
 let mgr = canisterMgr(aaa, wallet);
 
 let canisters = dfx_canisters();
-let router_id = canisters.router.local;
+// let router_id = canisters.router.local;
+let router_id = canisters.router.ic;
 let router = await ic(router_id);
+
+// console.log(router_id);
+// process.exit();
 
 print.loading("Get config");
 let conf = await router.config_get();
 
 // modifying it here in case it losts its values
-conf.tokenregistry = 24;
-
+// conf.tokenregistry = 24;
+// conf.tokenregistry = 5005;
 //console.log(conf);
 
 //process.exit();
@@ -62,7 +67,9 @@ print.loading("Upgrading router");
 await mgr.upgrade(router_id, "./build/router.wasm");
 
 // refresh router IDL after installing it
-ic = icblast({ local: true, identity });
+// ic = icblast({ local: true, identity });
+ic = icblast({ identity });
+
 router = await ic(router_id);
 
 print.loading("Set proper config");
@@ -103,11 +110,16 @@ await walletProxy(wallet, router).wasm_set({
 });
 
 print.loading("Install new canisters");
-await walletProxy(wallet, router).install_one({
-  slot: 24,
-  wasm: { tokenregistry: null },
-  mode: { install: null },
-});
+// await walletProxy(wallet, router).install_one({
+//   slot: 24,
+//   wasm: { tokenregistry: null },
+//   mode: { install: null },
+// });
+// await walletProxy(wallet, router).install_one({
+//   slot: 5005,
+//   wasm: { tokenregistry: null },
+//   mode: { install: null },
+// });
 
 print.loading("Run Upgrade");
 await walletProxy(wallet, router).upgrade();
