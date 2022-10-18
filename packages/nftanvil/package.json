@@ -5,6 +5,12 @@
   "type": "module",
   "license": "MIT",
   "dependencies": {
+    "@dfinity/agent": "^0.14.0",
+    "@dfinity/auth-client": "^0.14.0",
+    "@dfinity/authentication": "^0.14.0",
+    "@dfinity/candid": "^0.14.0",
+    "@dfinity/identity": "^0.14.0",
+    "@dfinity/principal": "^0.14.0",
     "@vvv-interactive/nftanvil-canisters": "^0.45.0",
     "@vvv-interactive/nftanvil-tools": "^0.45.0",
     "colors": "^1.4.0",

@@ -7,7 +7,10 @@ export { idlFactory } from "./declarations/ledger/ledger.did.js";
 export const canisterId = "ryjl3-tyaaa-aaaaa-aaaba-cai"; //process.env.NFT_CANISTER_ID;
 
 export const ledgerCanister = (options) => {
-  const agent = new HttpAgent({ ...(options ? options.agentOptions : {}) });
+  const agent = new HttpAgent({
+    host: process.env.REACT_APP_IC_GATEWAY || "https://ic0.app",
+    ...(options ? options.agentOptions : {}),
+  });
 
   // Fetch root key for certificate validation during development
   if (process.env.REACT_APP_LOCAL_BACKEND) {

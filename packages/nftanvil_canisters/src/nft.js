@@ -5,7 +5,10 @@ import { idlFactory } from "./declarations/nft/nft.did.js";
 export { idlFactory } from "./declarations/nft/nft.did.js";
 
 export const nftCanister = (canisterId, options) => {
-  const agent = new HttpAgent({ ...(options ? options.agentOptions : {}) });
+  const agent = new HttpAgent({
+    host: process.env.REACT_APP_IC_GATEWAY || "https://ic0.app",
+    ...(options ? options.agentOptions : {}),
+  });
 
   // Fetch root key for certificate validation during development
   if (process.env.REACT_APP_LOCAL_BACKEND) {

@@ -13,6 +13,25 @@ export const bytesArrayToNumber = (a) => {
   return n;
 };
 
+export const SerializableIC = (x) => {
+  if (x === undefined || x === null) return x;
+  if (typeof x === "bigint") return x.toString();
+  if (ArrayBuffer.isView(x) || x instanceof ArrayBuffer)
+    return [...x].map((y) => SerializableIC(y));
+
+  if (Array.isArray(x)) {
+    return x.map((y) => SerializableIC(y));
+  }
+
+  if (typeof x === "object")
+    return Object.fromEntries(
+      Object.keys(x).map((k) => {
+        return [k, SerializableIC(x[k])];
+      })
+    );
+  return x;
+};
+
 export const BigIntToString = (x) => {
   if (typeof x === "bigint") return x.toString();
   if (Array.isArray(x)) {
