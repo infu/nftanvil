@@ -5,8 +5,8 @@ import { combineEpics } from "redux-observable";
 import { createEpicMiddleware } from "redux-observable";
 import { activeEpics } from "./epics.js";
 import userReducer, {
-  user_auth,
   user_login,
+  user_login_ii,
   user_logout,
   user_refresh_balances,
   user_refresh_config,
@@ -39,7 +39,7 @@ import inventoryReducer, {
 
 import dialogReducer, { dialog_open } from "./reducers/dialog";
 
-import { Auth } from "./components/Auth";
+import { Auth, AuthII } from "./components/Auth";
 
 import nftReducer, {
   nft_fetch,
@@ -60,7 +60,7 @@ import nftReducer, {
   nft_mint_quote,
 } from "./reducers/nft";
 
-import ftReducer, { ft_transfer } from "./reducers/ft";
+import ftReducer, { ft_transfer, ft_mint } from "./reducers/ft";
 
 import uiReducer, {
   window_focus,
@@ -75,6 +75,7 @@ import verifyReducer, {
 } from "./reducers/verify";
 
 import toastReducer, { toast_create, toast_update } from "./reducers/toast";
+import taskReducer, { task_start, task_end } from "./reducers/task";
 
 import { ColorModeScript } from "@chakra-ui/react";
 import { ToastHandler } from "./components/ToastHandler";
@@ -82,7 +83,7 @@ import { Inventory } from "./components/Inventory";
 
 import { InventoryLarge } from "./components/InventoryLarge";
 
-import { TX, ICP, ACC, PRI, NFTA, HASH } from "./components/Code";
+import { TX, ICP, ANV, ACC, PRI, NFTA, HASH } from "./components/Code";
 import { theme } from "./theme.js";
 import {
   MarketplaceLoad,
@@ -99,12 +100,12 @@ import {
 
 export { InventoryLarge };
 
-export { TX, ICP, ACC, PRI, NFTA, HASH };
+export { TX, ICP, ANV, ACC, PRI, NFTA, HASH };
 export { Inventory };
 export { ui_pro_set };
 export { ft_transfer };
-export { Auth };
-
+export { Auth, AuthII };
+export { task_start, task_end };
 export { LoginRequired, NftHistory, HistoryEvent };
 export { MarketplaceLoad, MarketplaceFilters };
 export { history_load_info, history_load };
@@ -120,8 +121,8 @@ export {
 };
 
 export {
-  user_auth,
   user_login,
+  user_login_ii,
   user_logout,
   user_refresh_balances,
   user_refresh_config,
@@ -130,6 +131,7 @@ export {
 
 export {
   nft_fetch,
+  ft_mint,
   nft_mint,
   nft_mint_quote,
   nft_media_get,
@@ -160,6 +162,7 @@ export const store = configureStore({
   // devTools: { name: "Anvil" },
   reducer: {
     user: userReducer,
+    task: taskReducer,
     nft: nftReducer,
     ft: ftReducer,
     inventory: inventoryReducer,
@@ -200,7 +203,7 @@ export function AnvilProvider({ children }) {
 // Extra
 const init = async () => {
   await store.dispatch(anvil_discover());
-  await store.dispatch(user_auth());
+  // await store.dispatch(user_auth());
 };
 
 router.setOptions(process.env.REACT_APP_ROUTER_CANISTER_ID, {}); // maybe figure a better way without breaking everything else

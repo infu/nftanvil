@@ -31,7 +31,8 @@
     "react-use": "^17.4.0",
     "redux": "^4.2.0",
     "redux-observable": "^2.0.0",
-    "rxjs": "^7.5.7"
+    "rxjs": "^7.5.7",
+    "use-react-router-breadcrumbs": "^4.0.1"
   },
   "scripts": {
     "typecheck": "./helpers/monitor_and_typecheck.sh",

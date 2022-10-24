@@ -127,6 +127,19 @@ export const chunkBlob = async (url_or_blob) => {
   return r;
 };
 
+export const err2text = (e) => {
+  if (e === null || e === undefined) return e;
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  if (Object.keys(e).length === 1) {
+    let key = Object.keys(e)[0];
+    if (e[key] === null) return key;
+    if (typeof e[key] === "string" || "toString" in e[key])
+      return `${key}: ${e[key]}`;
+    return key;
+  }
+};
+
 export const blobPrepare = async (chunk) =>
   Array.from(new Uint8Array(await chunk.arrayBuffer()));
 

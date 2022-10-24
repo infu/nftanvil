@@ -2,7 +2,7 @@
 
 import { createSlice } from "@reduxjs/toolkit";
 import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account.js";
-import authentication from "../auth";
+import authentication from "../identities";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
@@ -307,13 +307,12 @@ const debounced_save_inventory = debounce((dispatch) => {
 
 export const load_inventory_ft = (address) => async (dispatch, getState) => {
   let s = getState();
-
   let pwrcan = pwrCanister(
     PrincipalFromSlot(
       s.ic.anvil.space,
       AccountIdentifier.TextToSlot(address, s.ic.anvil.pwr)
     ),
-    { agentOptions: authentication.getAgentOptions() }
+    { agentOptions: authentication.getAgentOptions(address) }
   );
 
   await pwrcan
@@ -321,7 +320,6 @@ export const load_inventory_ft = (address) => async (dispatch, getState) => {
       user: { address: AccountIdentifier.TextToArray(address) },
     })
     .then(async ({ ft, oracle }) => {
-      list = [...ft];
       let list = ft
         .map(([id, bal]) => {
           // console.log("BAL", bal);
@@ -354,7 +352,7 @@ export const load_inventory_nft = (aid) => async (dispatch, getState) => {
   );
 
   let acc = accountCanister(can, {
-    agentOptions: authentication.getAgentOptions(),
+    agentOptions: authentication.getAgentOptions(false),
   });
 
   let pageIdx = 0;

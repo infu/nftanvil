@@ -15,7 +15,7 @@ export const { loaded } = verifySlice.actions;
 export const verify_domain_twitter = (domain) => async (dispatch, getState) => {
   let s = getState();
 
-  if (s[domain] === undefined) {
+  if (s.verify[domain] === undefined) {
     dispatch(loaded({ domain, data: -1 }));
 
     let data = await new Promise((resolve, reject) => {

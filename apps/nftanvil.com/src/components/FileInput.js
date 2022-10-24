@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Button, Box, Center, Stack } from "@chakra-ui/react";
-import { UploadIcon } from "./icons";
+import { UploadIcon } from "../icons";
 export const FileInput = (props) => {
   const inputRef = React.createRef();
   return (
@@ -20,8 +20,8 @@ export const FileInput = (props) => {
       />
 
       <Button
-        height={"120px"}
         {...props.button}
+        leftIcon={<UploadIcon />}
         onClick={() => {
           if (inputRef?.current) {
             inputRef.current.value = "";
@@ -29,14 +29,7 @@ export const FileInput = (props) => {
           }
         }}
       >
-        <Stack spacing="3">
-          <Box>
-            <Center>
-              <UploadIcon color="white" w={"56px"} h={"56px"} />
-            </Center>
-          </Box>
-          <Box>{props.label || "Upload"}</Box>
-        </Stack>
+        {props.label || "Upload"}
       </Button>
     </>
   );

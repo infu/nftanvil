@@ -85,40 +85,41 @@ const Sicp = styled.span`
   font-family: Hexaframe;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgb(120, 200, 255);
+
+  color: ${(props) => (props.mode === "light" ? "#37a4f1" : "#012f58")};
   span {
-    color: rgb(60, 160, 230);
+    color: ${(props) => (props.mode === "light" ? "#37a4f1" : "#012f58")};
     vertical-align: super;
     font-size: 8px;
     position: relative;
     top: 0.1em;
   }
   b {
-    color: rgb(0, 160, 250);
+    color: ${(props) => (props.mode === "light" ? "#37a4f1" : "#012f58")};
   }
 `;
 
-export const ICP = ({ children, digits = 4 }) => {
-  const icpCycles = BigInt(useSelector((state) => state.ic.oracle.icpCycles));
+export const ICP = ({ children, mode = "light", digits = 4 }) => {
+  // const icpCycles = BigInt(useSelector((state) => state.ic.oracle.icpCycles));
 
   if (!children)
     return (
-      <Sicp>
+      <Sicp mode={mode}>
         <b>ICP</b>
       </Sicp>
     );
 
-  const xdr = Number((BigInt(children) * icpCycles) / 10000000000n) / 100;
+  // const xdr = Number((BigInt(children) * icpCycles) / 10000000000n) / 100;
 
   let val = AccountIdentifier.e8sToIcp(children);
   let [a, b] = val.toString().split(".");
   b = b.substring(0, digits);
   return (
-    <Tooltip hasArrow placement="left" label={`${xdr.toFixed(2)} XDR`}>
-      <Sicp>
-        {a}.<span>{b}</span> <b>ICP</b>
-      </Sicp>
-    </Tooltip>
+    // <Tooltip hasArrow placement="left" label={`${xdr.toFixed(2)} XDR`}>
+    <Sicp mode={mode}>
+      {a}.<span>{b}</span> <b>ICP</b>
+    </Sicp>
+    // </Tooltip>
   );
 };
 
@@ -152,6 +153,39 @@ export const ACC = ({ children, short = false, onClick = () => {} }) => {
       {short ? "..." : b}
       <b>{c}</b>
     </Sacc>
+  );
+};
+
+const Sanv = styled.span`
+  font-family: Hexaframe;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgb(220, 80, 255);
+  span {
+    color: rgb(160, 0, 255);
+    vertical-align: super;
+    font-size: 8px;
+    position: relative;
+    top: 0.1em;
+  }
+  b {
+    color: rgb(160, 40, 250);
+  }
+`;
+
+export const ANV = ({ children }) => {
+  if (!children)
+    return (
+      <Sanv>
+        <b>ANV</b>
+      </Sanv>
+    );
+  let val = AccountIdentifier.eToAnv(children);
+  let [a, b] = val.toString().split(".");
+  return (
+    <Sanv>
+      {a}.<span>{b}</span> <b>ANV</b>
+    </Sanv>
   );
 };
 

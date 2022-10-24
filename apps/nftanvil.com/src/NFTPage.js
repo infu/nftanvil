@@ -27,6 +27,7 @@ import { useParams } from "react-router-dom";
 
 export const NFTPage = ({ address, code, renderButtons }) => {
   let param = useParams();
+  console.log("NFTPage", param);
   const id = "nfta" + param.id;
 
   const meta = useSelector((state) => state.nft[id]);

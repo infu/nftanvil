@@ -56,6 +56,13 @@ shared({caller = _installer}) actor class Class() : async Treasury.Interface = t
 
     };
 
+    public func wallet_receive() : async () {
+        let available = Cycles.available();
+        let accepted = Cycles.accept(available);
+        assert (accepted == available);
+        // _cycles_recieved += accepted;
+    };
+
 
     public shared({caller}) func config_set(conf : Cluster.Config) : async () {
         assert(caller == _installer);

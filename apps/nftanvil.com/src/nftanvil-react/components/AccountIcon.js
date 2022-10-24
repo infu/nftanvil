@@ -22,7 +22,7 @@ import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
 
 import { toast } from "react-toastify";
 
-export const AccountIcon = ({ address }) => {
+export const AccountIcon = ({ address, provider, onClick }) => {
   const dispatch = useDispatch();
 
   const { onCopy } = useClipboard(address);
@@ -34,22 +34,41 @@ export const AccountIcon = ({ address }) => {
           p={"10px"}
           w={"72px"}
           h={"72px"}
-          sx={{ cursor: "pointer" }}
-          onClick={() => {
-            toast.info("Copied to clipboard", {
-              position: "bottom-right",
-            });
-            onCopy();
-          }}
+          sx={{ cursor: "pointer", position: "relative" }}
+          onClick={onClick}
         >
           <Hashicon value={address} size={52} />
+          <Text
+            fontWeight="bold"
+            color="gray.800"
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              lineHeight: "72px",
+              fontSize: "20px",
+              textAlign: "center",
+            }}
+          >
+            {provider === "vvv" ? "V" : provider === "ii" ? "II" : ""}
+          </Text>
         </Box>
       </PopoverTrigger>
       <PopoverContent bg={"gray.800"} w={350} sx={{ textAlign: "left" }}>
         <PopoverArrow bg={"gray.800"} />
         <PopoverBody>
           <Text mt={2} fontSize="sm">
-            <ACC>{address}</ACC>
+            <ACC
+              onClick={(x) => {
+                toast.info("Copied to clipboard", {
+                  position: "bottom-right",
+                });
+                onCopy();
+              }}
+            >
+              {address}
+            </ACC>
           </Text>
         </PopoverBody>
         <PopoverFooter

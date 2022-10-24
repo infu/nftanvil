@@ -1,22 +1,54 @@
-import { Box, Button, Center, HStack, Wrap } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Center,
+  HStack,
+  Wrap,
+  Text,
+  Image,
+} from "@chakra-ui/react";
 import { Routes, Route, Link, Outlet } from "react-router-dom";
 
-export const MarketplacePage = () => {
+export const MarketplaceRoute = () => {
+  return <Outlet />;
+};
+
+export const MarketplaceIndex = ({ collections }) => {
   return (
     <>
-      <Center>
-        <Box mb="3">
-          <HStack>
-            <Link to="a00aa2d5f5f9738e300615f21104cd06bbeb86bb8daee215525ac2ffde621bed">
-              <Button>Cosmicrafts</Button>
+      <Center mt="80px">
+        <Wrap spacing={25} mr="10" ml="10" justify={"center"} w={1000}>
+          {collections.map((x, idx) => (
+            <Link to={x.author} key={idx}>
+              <Box
+                w={300}
+                h={300}
+                borderRadius={5}
+                sx={{
+                  position: "relative",
+                  backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)), url(${x.cover})`,
+                  backgroundSize: "120%",
+                  backgroundPosition: "center",
+                }}
+              >
+                <Text
+                  sx={{
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    position: "absolute",
+                    bottom: "14px",
+                    left: "13px",
+                    right: "13px",
+                  }}
+                >
+                  {x.name}
+                </Text>
+              </Box>
             </Link>
-            <Link to="a00e800cc13897a27cd04fa4286bfb72ea01025956f991078f374227b8ed8a91">
-              <Button>Cosmicrafts Beta</Button>
-            </Link>
-          </HStack>
-        </Box>
+          ))}
+        </Wrap>
       </Center>
-      <Outlet />
     </>
   );
 };

@@ -75,7 +75,7 @@ export function MarketplaceFilters({
 }) {
   const [page, setPage] = React.useState(0);
   const [filterQuality, setFilterQuality] = React.useState(0);
-  const [sortBy, setSortBy] = React.useState(false);
+  const [sortBy, setSortBy] = React.useState("priceasc");
   const [selectedTags, setTag] = useState({});
   if (!items || !items.length) return null;
 
@@ -110,8 +110,35 @@ export function MarketplaceFilters({
 
   let tagsLeft = []
     .concat(...filtered.map((x) => x[4]))
-    .filter((x) => filterTags.indexOf(x) === -1)
-    .filter((v, i, a) => a.indexOf(v) === i);
+    .filter((x) => filterTags.indexOf(x) === -1 && x?.indexOf("#") !== 0)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .filter(Boolean);
+
+  if (tagsLeft.length <= 1) tagsLeft = [];
+
+  // auto attributes
+  let derived_attributes = attributes;
+  let seenQualities = [];
+
+  for (let nf of items) {
+    if (seenQualities.indexOf(nf[2]) === -1) seenQualities.push(nf[2]);
+  }
+  seenQualities = seenQualities.filter(Boolean);
+  if (seenQualities.length <= 1) seenQualities = [];
+
+  for (let nf of filtered) {
+    if (!nf[3]) continue;
+    if (!attributes.length) {
+      for (let pair of nf[3]) {
+        if (derived_attributes.indexOf(pair[0]) === -1)
+          derived_attributes.push(pair[0]);
+      }
+    }
+  }
+  derived_attributes = derived_attributes.map((x) => [
+    x,
+    capitalizeFirstLetter(x.toString()),
+  ]);
 
   let price_min = false;
   let price_max = false;
@@ -143,7 +170,7 @@ export function MarketplaceFilters({
 
   const goPageBack = (
     <Button
-      disabled={page == 0}
+      disabled={page === 0}
       onClick={() => {
         setPage(page - 1);
       }}
@@ -179,7 +206,7 @@ export function MarketplaceFilters({
     </Select>
   ));
 
-  const fQuality = (
+  const fQuality = seenQualities.length ? (
     <Select
       onChange={(e) => {
         setFilterQuality(e.target.value);
@@ -187,13 +214,16 @@ export function MarketplaceFilters({
       }}
       defaultValue={filterQuality}
     >
-      {itemQuality.dark.map(({ label, color }, idx) => (
-        <option key={label} value={idx}>
-          {label}
-        </option>
-      ))}
+      <option value={0}>All</option>
+      {itemQuality.dark
+        .filter(({ label, color }, idx) => seenQualities.indexOf(idx) !== -1)
+        .map(({ label, color }, idx) => (
+          <option key={label} value={idx}>
+            {label}
+          </option>
+        ))}
     </Select>
-  );
+  ) : null;
 
   const fOrder = (
     <Select
@@ -201,18 +231,17 @@ export function MarketplaceFilters({
         setSortBy(e.target.value);
         setPage(0);
       }}
-      defaultValue="false"
+      defaultValue="priceasc"
     >
-      <option value={false}>all</option>
       <option key={"priceasc"} value="priceasc">
-        price asc
+        ↗ Price
       </option>
       <option key={"pricedesc"} value="pricedesc">
-        price desc
+        ↘ Price
       </option>
-      {attributes.map(([k, v]) => (
+      {derived_attributes.map(([k, v]) => (
         <option key={k} value={k}>
-          {v}
+          ↘ {v}
         </option>
       ))}
     </Select>
@@ -238,4 +267,8 @@ export function MarketplaceFilters({
     slice,
     tagsLeft,
   });
+}
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }

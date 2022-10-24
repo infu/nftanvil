@@ -46,7 +46,13 @@ export const challengeDraw = (ctx, bitmap) => {
   ctx.putImageData(imd, 0, 0);
 };
 
-export const resizeImage = (src, MAX_WIDTH, MAX_HEIGHT, crop = false) => {
+export const resizeImage = (
+  src,
+  MAX_WIDTH,
+  MAX_HEIGHT,
+  crop = false,
+  type = "image/jpeg"
+) => {
   return new Promise((resolve) => {
     var img = new Image();
     const already_url =
@@ -103,9 +109,9 @@ export const resizeImage = (src, MAX_WIDTH, MAX_HEIGHT, crop = false) => {
         function (blob) {
           let url = URL.createObjectURL(blob);
           // console.log("BLOB", blob);
-          resolve({ type: "image/jpeg", size: blob.size, url });
+          resolve({ type, size: blob.size, url });
         },
-        "image/jpeg",
+        type,
         0.95
       );
     };

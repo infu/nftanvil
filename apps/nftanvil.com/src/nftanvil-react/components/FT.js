@@ -183,13 +183,15 @@ export const FTMeta = ({ token, meta }) => {
         <Text key={"name"} color={"white"} fontSize="16px">
           {capitalize(meta.name)}
         </Text>
-        <Text
-          key="lore"
-          fontSize="14px"
-          color={isDark ? "yellow" : "yellow.600"}
-        >
-          "{capitalize(meta.desc)}"
-        </Text>
+        {meta.desc.length ? (
+          <Text
+            key="desc"
+            fontSize="14px"
+            color={isDark ? "yellow" : "yellow.600"}
+          >
+            "{capitalize(meta.desc)}"
+          </Text>
+        ) : null}
         <Text key={"ts"} color={"white"} fontSize="14px">
           Total supply:{" "}
           {AccountIdentifier.placeDecimal(meta.total_supply, meta.decimals, 0)}

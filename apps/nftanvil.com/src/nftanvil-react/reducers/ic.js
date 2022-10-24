@@ -1,9 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
-import { BigIntToString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import { SerializableIC } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { restoreVar } from "../util";
-
-import authentication from "../auth";
 
 export const icSlice = createSlice({
   name: "ic",
@@ -32,7 +30,7 @@ export const { oracleLoaded, discovered } = icSlice.actions;
 export const anvil_discover = () => async (dispatch, getState) => {
   let map = await router.config_get();
   map.router = map.router.toString();
-  map = BigIntToString(map);
+  map = SerializableIC(map);
   dispatch(discovered(map));
 };
 

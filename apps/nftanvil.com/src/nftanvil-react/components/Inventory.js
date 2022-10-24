@@ -11,6 +11,7 @@ import {
   IconButton,
   Button,
 } from "@chakra-ui/react";
+import { SelectIcon } from "../icons";
 
 import {
   HamburgerIcon,
@@ -20,7 +21,6 @@ import {
 import { AccountIcon } from "./AccountIcon";
 
 import { FT } from "./FT";
-
 import { NFTLarge, NFT } from "./NFT";
 import itemgrid from "../assets/itemgrid.png";
 import itemgrid_tmp from "../assets/itemgrid_tmp.png";
@@ -31,6 +31,7 @@ import { useWindowSize } from "react-use";
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
+  dialog_open,
 } from "../index.js";
 
 import { load_inventory } from "../reducers/inventory";
@@ -160,7 +161,7 @@ const InventoryGrid = ({
 }) => {
   return (
     <InventoryBox width={cols * 72} height={rows * 72} bg={bg}>
-      <Wrap direction={"horizontal"} spacing="0">
+      <Wrap direction={"horizontal"} spacing="0" overflow="visible">
         {Array(rows * cols)
           .fill(0)
           .map((x, idx) => {
@@ -199,33 +200,40 @@ const InventoryGrid = ({
 };
 
 export const Inventory = ({
-  address,
   onClickNft,
   cols,
   rows,
   pagination = true,
+  initialAddress,
 }) => {
   const maxItems = cols * rows;
 
   // console.log("INVENTORY ADDRESS", address);
-  const temporary = address.indexOf("tmp") === 0;
+  const [address, setAddress] = useState(initialAddress);
+
+  const temporary = address?.indexOf("tmp") === 0;
   const ready = useSelector(anvil_ready);
   const [pageIdx, setPageIdx] = useState(0);
   const [pageRoot, setPageRoot] = useState(0);
+
   let bg = useColorModeValue(itemgrid_light, itemgrid);
 
-  const [isLoading, setLoading] = useState(true);
-
   const dispatch = useDispatch();
-
-  const load = async () => {
-    await dispatch(load_inventory(address));
-    setLoading(false);
+  const onSelectAccount = () => {
+    dispatch(
+      dialog_open({
+        name: "select_account",
+      })
+    ).then(setAddress);
   };
 
   useEffect(() => {
-    if (ready && !temporary) load();
+    if (address && ready && !temporary) dispatch(load_inventory(address));
   }, [address, ready, temporary]);
+
+  const provider = useSelector(
+    (state) => state.user.accounts[address]?.provider
+  );
 
   const items = useSelector((state) => state.inventory[address]?.content);
   const tmp_address = "tmp.attached." + address;
@@ -235,7 +243,35 @@ export const Inventory = ({
   const extended = items_tmp !== undefined && Object.keys(items_tmp).length > 0;
   const pageFrom = pageIdx * maxItems;
 
-  if (!ready) return null;
+  if (!address || !ready)
+    return (
+      <Box
+        mt="8"
+        mr={4}
+        p={1}
+        sx={{
+          border: "3px solid #111",
+          borderRadius: "10px",
+          cursor: "pointer",
+        }}
+        onClick={onSelectAccount}
+        w={cols * 72}
+        h={(rows + 1) * 72 + 18}
+        position="relative"
+      >
+        <SelectIcon
+          color="gray.500"
+          w="30px"
+          h="30px"
+          position="absolute"
+          top="50%"
+          left="50%"
+          ml="-15px"
+          mt="-15px"
+        />
+      </Box>
+    );
+
   return (
     <>
       <Stack
@@ -246,7 +282,11 @@ export const Inventory = ({
       >
         {pagination ? (
           <Stack direction="horizontal" mb={-1}>
-            <AccountIcon address={address} />
+            <AccountIcon
+              address={address}
+              provider={provider}
+              onClick={onSelectAccount}
+            />
 
             {Array(3)
               .fill(0)

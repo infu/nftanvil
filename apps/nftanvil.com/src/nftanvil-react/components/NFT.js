@@ -8,8 +8,11 @@ import {
   Box,
   useColorModeValue,
   AbsoluteCenter,
+  Skeleton,
+  Image,
 } from "@chakra-ui/react";
 import { itemQuality } from "@vvv-interactive/nftanvil-tools/cjs/items.js";
+import { err2text } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import {
   nft_fetch,
   nft_enter_code,
@@ -25,7 +28,7 @@ import {
   nft_recharge,
   nft_recharge_quote,
 } from "../reducers/nft";
-
+import { task_start, task_end, task_run } from "../reducers/task";
 import {
   NumberInput,
   NumberInputField,
@@ -45,6 +48,7 @@ import { toast } from "react-toastify";
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
+  dialog_open,
 } from "../index.js";
 import {
   Center,
@@ -83,6 +87,8 @@ import {
   Flex,
   Spacer,
 } from "@chakra-ui/react";
+
+import { CheckIcon, WarningTwoIcon } from "@chakra-ui/icons";
 import { VerifiedIcon } from "../icons";
 import moment from "moment";
 import styled from "@emotion/styled";
@@ -102,6 +108,8 @@ import {
   AVG_MESSAGE_COST,
   FULLY_CHARGED_MINUTES,
 } from "@vvv-interactive/nftanvil-tools/cjs/pricing.js";
+import { TaskButton } from "./TaskButton";
+
 import { useDrag } from "react-dnd";
 
 const Busy = styled.div`
@@ -128,22 +136,6 @@ const Busy = styled.div`
     100% {
       transform: rotate(360deg);
     }
-  }
-`;
-
-const ContentBox = styled.div`
-  margin: 12px 0px;
-
-  video,
-  img {
-    max-width: 85vw;
-    max-height: 85vh;
-    margin-bottom: 5vh;
-    margin-top: 1vh;
-    width: 85vw;
-    height: auto;
-    object-fit: contain;
-    border-radius: 6px;
   }
 `;
 
@@ -182,11 +174,14 @@ const Thumb = styled.div`
 `;
 
 const ThumbLarge = styled.div`
-  width: 216px;
-  height: 270px;
   position: relative;
   box-overflow: hidden;
-
+  img {
+    background-color: #1e1b24;
+    border: 1px solid
+      ${(props) => (props.mode === "light" ? "#c4bcdb" : "#3f3855")};
+    border-bottom: 0px solid;
+  }
   .custom {
     top: 0px;
     left: 0px;
@@ -205,9 +200,10 @@ const ThumbLarge = styled.div`
     padding-left: 10px;
     border-radius: 0px 0px 6px 6px;
     left: 0px;
-    bottom: 0px;
+    top: 216px;
     right: 0px;
     height: 54px;
+
     // text-shadow: 4px 4px 2px rgba(0, 0, 0, 0.6);
     background: ${(props) => (props.mode === "light" ? "#fff" : "#1d1b24")};
     border: 1px solid
@@ -241,7 +237,7 @@ export const NFTMenu = ({ id, meta, owner, nobuy = false, renderButtons }) => {
         <Wrap spacing="3">
           {renderButtons ? renderButtons({ id, meta }) : null}
           <RechargeButton id={id} meta={meta} />
-
+          <UseButton id={id} meta={meta} />
           <TransferButton id={id} meta={meta} />
           <TransferLinkButton id={id} meta={meta} />
           <SetPriceButton id={id} meta={meta} />
@@ -253,9 +249,7 @@ export const NFTMenu = ({ id, meta, owner, nobuy = false, renderButtons }) => {
       ) : (
         <Wrap>
           {!nobuy && meta.transferable && meta.price.amount !== "0" ? (
-            <LoginRequired label="Authenticate to buy">
-              <BuyButton id={id} meta={meta} />
-            </LoginRequired>
+            <BuyButton id={id} meta={meta} />
           ) : null}
         </Wrap>
       )}
@@ -267,19 +261,11 @@ function SetPriceButton({ address, id, meta }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
   // const address = useSelector((state) => state.user.address);
+  const task_id = id + "sell";
 
   const initialRef = React.useRef();
   const removeSale = async () => {
     onClose();
-    let toastId = toast("Removing from sale...", {
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    });
 
     let price = {
       amount: 0,
@@ -292,33 +278,18 @@ function SetPriceButton({ address, id, meta }) {
     };
 
     try {
+      dispatch(task_start({ task_id }));
       await dispatch(nft_set_price({ id, price }));
-
-      toast.update(toastId, {
-        type: toast.TYPE.SUCCESS,
-        isLoading: false,
-        render: (
-          <div>
-            <div>Removed from sale.</div>
-          </div>
-        ),
-        autoClose: 9000,
-        pauseOnHover: true,
-      });
+      dispatch(task_end({ task_id }));
     } catch (e) {
-      console.error("Remove from sale error", e);
-      toast.update(toastId, {
-        type: toast.TYPE.ERROR,
-        isLoading: false,
-        closeOnClick: true,
+      dispatch(
+        task_end({
+          task_id,
+          result: { err: true, msg: err2text(e) },
+        })
+      );
 
-        render: (
-          <TransactionFailed
-            title="Removing from sale failed"
-            message={e.message}
-          />
-        ),
-      });
+      console.error("Remove from sale error", e);
     }
   };
   const setPriceOk = async () => {
@@ -341,47 +312,33 @@ function SetPriceButton({ address, id, meta }) {
     // console.log(price);
 
     onClose();
-    let toastId = toast("Setting price...", {
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    });
 
     try {
-      await dispatch(nft_set_price({ id, price }));
+      dispatch(task_start({ task_id }));
 
-      toast.update(toastId, {
-        type: toast.TYPE.SUCCESS,
-        isLoading: false,
-        render: (
-          <div>
-            <div>Setting price successfull.</div>
-          </div>
-        ),
-        autoClose: 9000,
-        pauseOnHover: true,
-      });
+      await dispatch(nft_set_price({ id, price }));
+      dispatch(task_end({ task_id }));
     } catch (e) {
       console.error("SetPrice error", e);
-      toast.update(toastId, {
-        type: toast.TYPE.ERROR,
-        isLoading: false,
-        closeOnClick: true,
-
-        render: (
-          <TransactionFailed title="Setting price failed" message={e.message} />
-        ),
-      });
+      dispatch(
+        task_end({
+          task_id,
+          result: { err: true, msg: err2text(e) },
+        })
+      );
     }
   };
 
   return (
     <>
-      <Button onClick={onOpen}>Sell</Button>
+      <TaskButton
+        task_id={task_id}
+        onClick={onOpen}
+        w={"90px"}
+        loadingText="Sell"
+      >
+        Sell
+      </TaskButton>
 
       <Modal
         initialFocusRef={initialRef}
@@ -452,6 +409,7 @@ function SetPriceButton({ address, id, meta }) {
 function TransferButton({ id, meta }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [alertOpen, setAlertOpen] = React.useState(false);
+  const task_id = id + "transfer";
 
   const dispatch = useDispatch();
   const initialRef = React.useRef();
@@ -460,36 +418,50 @@ function TransferButton({ id, meta }) {
     let toAddress = initialRef.current.value.toUpperCase();
 
     onClose();
-
-    await dispatch(nft_transfer({ id, toAddress }));
+    setAlertOpen(false);
+    makeTransfer(toAddress);
   };
 
   const transferOk = async () => {
     let toAddress = initialRef.current.value.toUpperCase();
-    if (toAddress.toLowerCase().indexOf("a00") !== 0) {
-      setAlertOpen(true);
-      return;
-    }
+    if (
+      toAddress.toLowerCase().indexOf("a00") !== 0 &&
+      toAddress.toLowerCase().indexOf("ae0") !== 0
+    )
+      return setAlertOpen(true);
 
     onClose();
-
-    await dispatch(nft_transfer({ id, toAddress }));
+    makeTransfer(toAddress);
   };
 
+  const makeTransfer = async (toAddress) => {
+    try {
+      dispatch(task_start({ task_id }));
+      await dispatch(nft_transfer({ id, toAddress }));
+      dispatch(task_end({ task_id }));
+    } catch (e) {
+      dispatch(task_end({ task_id, result: { err: true, msg: err2text(e) } }));
+    }
+  };
   return (
     <>
-      <Button onClick={onOpen} isDisabled={!meta.transferable}>
+      <TaskButton
+        isDisabled={!meta.transferable}
+        task_id={task_id}
+        onClick={onOpen}
+        w={"120px"}
+        loadingText="Transfer"
+      >
         Transfer
-      </Button>
+      </TaskButton>
 
-      <AlertDialog isOpen={alertOpen} preserveScrollBarGap={true}>
+      <AlertDialog isOpen={alertOpen} preserveScrollBarGap={true} isCentered>
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
               <Alert status="error">
                 <AlertIcon />
                 <AlertTitle>
-                  {" "}
                   Warning!
                   <br />
                   Address may not support this NFT
@@ -498,7 +470,7 @@ function TransferButton({ id, meta }) {
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              All NFTAnvil addresses start with A00 and this one doesn't. If you
+              Anvil addresses start with A00 or AE0 and this one doesn't. If you
               send to such address you may not be able to access your NFT.
             </AlertDialogBody>
 
@@ -546,52 +518,30 @@ function UnsocketButton({ id }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
   const initialRef = React.useRef();
+  const task_id = id + "unsocket";
 
   const transferOk = async () => {
     let plug_id = initialRef.current.value;
     onClose();
-    let toastId = toast("Unplugging...", {
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    });
-    try {
-      let { transactionId } = await dispatch(
-        nft_unsocket({ socket_id: id, plug_id })
-      );
 
-      toast.update(toastId, {
-        type: toast.TYPE.SUCCESS,
-        isLoading: false,
-        render: (
-          <TransactionToast
-            title="Unplugging successfull"
-            transactionId={transactionId}
-          />
-        ),
-        autoClose: 9000,
-        pauseOnHover: true,
-      });
-    } catch (e) {
-      console.error("Unplugging error", e);
-      toast.update(toastId, {
-        type: toast.TYPE.ERROR,
-        isLoading: false,
-        closeOnClick: true,
-
-        render: (
-          <TransactionFailed title="Unplugging failed" message={e.message} />
-        ),
-      });
-    }
+    dispatch(
+      task_run(task_id, async () => {
+        let { transactionId } = await dispatch(
+          nft_unsocket({ socket_id: id, plug_id })
+        );
+      })
+    );
   };
   return (
     <>
-      <Button onClick={onOpen}>Unplug</Button>
+      <TaskButton
+        task_id={task_id}
+        onClick={onOpen}
+        w={"100px"}
+        loadingText="Unsocket"
+      >
+        Unsocket
+      </TaskButton>
 
       <Modal
         initialFocusRef={initialRef}
@@ -627,50 +577,30 @@ function SocketButton({ id }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
   const initialRef = React.useRef();
+  const task_id = id + "socket";
 
   const transferOk = async () => {
     let socket_id = initialRef.current.value;
     onClose();
-    let toastId = toast("Plugging...", {
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    });
-    try {
-      let { transactionId } = await dispatch(
-        nft_plug({ plug_id: id, socket_id })
-      );
 
-      toast.update(toastId, {
-        type: toast.TYPE.SUCCESS,
-        isLoading: false,
-        render: (
-          <TransactionToast
-            title="Plugging successfull"
-            transactionId={transactionId}
-          />
-        ),
-        autoClose: 9000,
-        pauseOnHover: true,
-      });
-    } catch (e) {
-      console.error("Plugging error", e);
-      toast.update(toastId, {
-        type: toast.TYPE.ERROR,
-        isLoading: false,
-        closeOnClick: true,
-
-        render: <TransactionFailed title="Socket failed" message={e.message} />,
-      });
-    }
+    dispatch(
+      task_run(task_id, async () => {
+        let { transactionId } = await dispatch(
+          nft_plug({ plug_id: id, socket_id })
+        );
+      })
+    );
   };
   return (
     <>
-      <Button onClick={onOpen}>Plug</Button>
+      <TaskButton
+        task_id={task_id}
+        onClick={onOpen}
+        w={"100px"}
+        loadingText="Socket"
+      >
+        Socket
+      </TaskButton>
 
       <Modal
         initialFocusRef={initialRef}
@@ -710,67 +640,45 @@ export const UseButton = ({ id, meta }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onClose = () => setIsOpen(false);
   const dispatch = useDispatch();
-
+  const task_id = id + "use";
   const cancelRef = React.useRef();
 
   const useOk = async () => {
     onClose();
-    let toastId = toast("Using...", {
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    });
 
     try {
-      let useData = { cooldown: 2 };
+      let useData = { cooldown: 1 };
       let memo = [12, 10, 5, 0, 0, 1, 7];
+      dispatch(task_start({ task_id }));
+
       let { transactionId } = await dispatch(
         nft_use({ id, use: useData, memo })
       );
 
-      toast.update(toastId, {
-        type: toast.TYPE.SUCCESS,
-        isLoading: false,
-        render: (
-          <TransactionToast
-            title="Use successfull"
-            transactionId={transactionId}
-          />
-        ),
-        autoClose: 9000,
-        pauseOnHover: true,
-      });
+      dispatch(task_end({ task_id, result: { err: false, msg: "Success" } }));
     } catch (e) {
-      let msg = "OnCooldown" in e ? "On cooldown" : JSON.stringify(e);
-
-      toast.update(toastId, {
-        type: toast.TYPE.ERROR,
-        isLoading: false,
-        closeOnClick: true,
-
-        render: (
-          <div>
-            <div>Using error.</div>
-            <div style={{ fontSize: "10px" }}>{msg}</div>
-          </div>
-        ),
-      });
+      // let msg = "OnCooldown" in e ? "On cooldown" : JSON.stringify(e);
+      dispatch(task_end({ task_id, result: { err: true, msg: err2text(e) } }));
     }
   };
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>Use</Button>
+      <TaskButton
+        task_id={task_id}
+        onClick={() => setIsOpen(true)}
+        w={"90px"}
+        loadingText="Use"
+      >
+        Use
+      </TaskButton>
 
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
         preserveScrollBarGap={true}
+        isCentered
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -800,7 +708,8 @@ export const UseButton = ({ id, meta }) => {
 
 export const TransferLinkButton = ({ id, meta }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [creatingLink, setCreateLink] = React.useState(false);
+
+  const task_id = id + "gift";
 
   const onClose = () => setIsOpen(false);
   const dispatch = useDispatch();
@@ -808,71 +717,59 @@ export const TransferLinkButton = ({ id, meta }) => {
   const cancelRef = React.useRef();
 
   const transferOk = async () => {
-    setCreateLink(true);
-    let code = await dispatch(nft_transfer_link({ id }));
-    setCreateLink(false);
+    onClose();
+    dispatch(
+      task_run(
+        task_id,
+        async () => {
+          let code = await dispatch(nft_transfer_link({ id }));
 
-    setLink("https://nftanvil.com/" + code);
+          navigator.clipboard.writeText("https://nftanvil.com/" + code);
+        },
+        { successMsg: "Copied to clipboard" }
+      )
+    );
   };
-
-  const [link, setLink] = React.useState(false);
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} isDisabled={!meta.transferable}>
+      <TaskButton
+        task_id={task_id}
+        onClick={() => setIsOpen(true)}
+        isDisabled={!meta.transferable}
+        w={"90px"}
+        loadingText="Gift"
+      >
         Gift
-      </Button>
+      </TaskButton>
 
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
         preserveScrollBarGap={true}
+        isCentered
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
-            {!link ? (
-              <>
-                <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Create gift code
-                </AlertDialogHeader>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Create gift code
+            </AlertDialogHeader>
 
-                <AlertDialogBody>
-                  Are you sure? Anyone with the code/link will be able to take
-                  the NFT from you.
-                </AlertDialogBody>
+            <AlertDialogBody>
+              Are you sure? Anyone with the code/link will be able to take the
+              NFT from you.
+            </AlertDialogBody>
 
-                <AlertDialogFooter>
-                  {!creatingLink ? (
-                    <Button ref={cancelRef} onClick={onClose}>
-                      Cancel
-                    </Button>
-                  ) : null}
-                  <Button
-                    isLoading={creatingLink}
-                    colorScheme="red"
-                    onClick={transferOk}
-                    ml={3}
-                  >
-                    Create link
-                  </Button>
-                </AlertDialogFooter>
-              </>
-            ) : (
-              <>
-                <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Link to claim NFT
-                </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
 
-                <AlertDialogBody>{link}</AlertDialogBody>
-
-                <AlertDialogFooter>
-                  <Button onClick={onClose} ml={3}>
-                    Ok
-                  </Button>
-                </AlertDialogFooter>
-              </>
-            )}
+              <Button colorScheme="red" onClick={transferOk} ml={3}>
+                Create link
+              </Button>
+            </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
@@ -884,31 +781,48 @@ export const BuyButton = ({ id, meta }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onClose = () => setIsOpen(false);
   const dispatch = useDispatch();
+  const task_id = id + "buy";
 
   const cancelRef = React.useRef();
 
   let amount = BigInt(meta.price.amount);
 
-  const buyOk = () => {
+  const buyOk = async () => {
     onClose();
-    dispatch(nft_purchase({ id, amount }));
+
+    let address = await dispatch(
+      dialog_open({
+        name: "select_account",
+      })
+    );
+
+    dispatch(
+      task_run(task_id, async () => {
+        await dispatch(nft_purchase({ address, id, amount }));
+      })
+    );
   };
 
   return (
     <>
-      <Button
+      <TaskButton
+        colorScheme={"green"}
+        size="lg"
+        task_id={task_id}
         onClick={async () => {
           setIsOpen(true);
         }}
+        loadingText="Buying"
       >
         Buy
-      </Button>
+      </TaskButton>
 
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
         preserveScrollBarGap={true}
+        isCentered
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -921,21 +835,14 @@ export const BuyButton = ({ id, meta }) => {
               <Text fontSize="12px" mt="2">
                 The price includes full recharge
               </Text>
-              <Text fontSize="14px" fontWeight={"bold"} mt="2">
-                Please make sure the seller or the author are reputable and
-                known to you. If the NFT has domain verification, make sure you
-                trust its domain. Someone could have minted artwork downloaded
-                from the Internet without the rights to do so. Being displayed
-                here doesn't make it legitimate.
-              </Text>
             </AlertDialogBody>
 
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={buyOk} ml={3}>
-                Buy. I understand the risks
+              <Button colorScheme="green" onClick={buyOk} ml={3}>
+                Buy
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -949,58 +856,35 @@ export const BurnButton = ({ id }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const onClose = () => setIsOpen(false);
   const dispatch = useDispatch();
-
+  const task_id = id + "burn";
   const cancelRef = React.useRef();
 
   const burnOk = async () => {
     onClose();
 
-    let toastId = toast("Burning...", {
-      type: toast.TYPE.INFO,
-      position: "bottom-right",
-      autoClose: false,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: false,
-    });
-
-    try {
-      let { transactionId } = await dispatch(nft_burn({ id }));
-
-      toast.update(toastId, {
-        type: toast.TYPE.SUCCESS,
-        isLoading: false,
-        render: (
-          <TransactionToast
-            title="Burning successfull"
-            transactionId={transactionId}
-          />
-        ),
-        autoClose: 9000,
-        pauseOnHover: true,
-      });
-    } catch (e) {
-      toast.update(toastId, {
-        type: toast.TYPE.ERROR,
-        isLoading: false,
-        closeOnClick: true,
-
-        render: (
-          <TransactionFailed title="Burning failed" message={e.message} />
-        ),
-      });
-    }
+    dispatch(
+      task_run(task_id, async () => {
+        let { transactionId } = await dispatch(nft_burn({ id }));
+      })
+    );
   };
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>Burn</Button>
+      <TaskButton
+        task_id={task_id}
+        onClick={() => setIsOpen(true)}
+        w={"90px"}
+        loadingText="Burn"
+      >
+        Burn
+      </TaskButton>
 
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
         preserveScrollBarGap={true}
+        isCentered
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -1031,7 +915,7 @@ export const BurnButton = ({ id }) => {
 export const RechargeButton = ({ id, meta }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [rechargeCost, setRechargeCost] = React.useState(0);
-
+  const task_id = id + "recharge";
   const onClose = () => setIsOpen(false);
   const dispatch = useDispatch();
 
@@ -1045,22 +929,33 @@ export const RechargeButton = ({ id, meta }) => {
 
   const rechargeOk = async () => {
     onClose();
-    dispatch(nft_recharge({ id, amount: rechargeCost }));
+
+    dispatch(
+      task_run(task_id, async () => {
+        await dispatch(nft_recharge({ id, amount: rechargeCost }));
+      })
+    );
   };
 
   if (!rechargeCost) return null;
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>
+      <TaskButton
+        task_id={task_id}
+        onClick={() => setIsOpen(true)}
+        w={"240px"}
+        loadingText="Recharging"
+      >
         <Text mr="2">Recharge for </Text>
         <ICP>{rechargeCost}</ICP>
-      </Button>
+      </TaskButton>
 
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
         preserveScrollBarGap={true}
+        isCentered
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
@@ -1114,51 +1009,59 @@ export const NFTLarge = ({
     dispatch(nft_fetch(id));
   }, [id, dispatch]);
 
-  if (!meta) return null;
+  // if (!meta) return null;
 
   return (
-    <ThumbLarge
-      mode={mode}
-      onClick={onClick}
-      style={{ cursor: onClick ? "pointer" : "auto" }}
-    >
-      {meta.thumb?.ipfs?.url ? (
-        <img alt="" className="custom" src={meta.thumb.ipfs.url} />
-      ) : meta.thumb?.internal?.url ? (
-        <img alt="" className="custom" src={meta.thumb.internal.url} />
-      ) : meta.thumb?.external ? (
-        <img alt="" className="custom" src={meta.thumb?.external} />
-      ) : (
-        ""
-      )}
-
-      <div className="info">
-        {showDomain && meta.domain ? (
-          meta.domain.indexOf("twitter.com/") !== -1 ? (
-            <MetaDomainTwitter key={"domain"} meta={meta} showLink={false} />
+    <Skeleton w="216px" h="270px" isLoaded={!!meta}>
+      {!!meta ? (
+        <ThumbLarge
+          mode={mode}
+          onClick={onClick}
+          style={{ cursor: onClick ? "pointer" : "auto" }}
+        >
+          {meta.thumb?.ipfs?.url ? (
+            <img alt="" className="custom" src={meta.thumb.ipfs.url} />
+          ) : meta.thumb?.internal?.url ? (
+            <img alt="" className="custom" src={meta.thumb.internal.url} />
+          ) : meta.thumb?.external ? (
+            <img alt="" className="custom" src={meta.thumb?.external} />
           ) : (
-            <MetaDomain key={"domain"} meta={meta} showLink={false} />
-          )
-        ) : null}
+            ""
+          )}
 
-        {custom ? (
-          custom(meta)
-        ) : (
-          <div className="author">
-            <div className="label">AUTHOR</div>
-            <div>
-              <ACC short={true}>{meta.author}</ACC>
-            </div>
+          <div className="info">
+            {showDomain && meta.domain ? (
+              meta.domain.indexOf("twitter.com/") !== -1 ? (
+                <MetaDomainTwitter
+                  key={"domain"}
+                  meta={meta}
+                  showLink={false}
+                />
+              ) : (
+                <MetaDomain key={"domain"} meta={meta} showLink={false} />
+              )
+            ) : null}
+
+            {custom ? (
+              custom(meta)
+            ) : (
+              <div className="author">
+                <div className="label">AUTHOR</div>
+                <div>
+                  <ACC short={true}>{meta.author}</ACC>
+                </div>
+              </div>
+            )}
+            {meta.price.amount && meta.price.amount !== "0" ? (
+              <div className="price">
+                <div className="label">PRICE</div>
+                <ICP digits={2}>{meta.price.amount}</ICP>
+              </div>
+            ) : null}
           </div>
-        )}
-        {meta.price.amount && meta.price.amount !== "0" ? (
-          <div className="price">
-            <div className="label">PRICE</div>
-            <ICP digits={2}>{meta.price.amount}</ICP>
-          </div>
-        ) : null}
-      </div>
-    </ThumbLarge>
+        </ThumbLarge>
+      ) : null}
+    </Skeleton>
   );
 };
 
@@ -1256,15 +1159,11 @@ export const NFTClaim = ({ code, onRedirect }) => {
   return null;
 };
 
-export const NFTContent = (p) => {
-  const dispatch = useDispatch();
-
+export const NFTContent = ({ meta, preset = "fullscreen" }) => {
   //if (p.meta?.content?.external) return null;
 
   const c =
-    p.meta?.content?.internal ||
-    p.meta?.content?.ipfs ||
-    p.meta?.content?.external;
+    meta?.content?.internal || meta?.content?.ipfs || meta?.content?.external;
 
   if (!c) return null;
 
@@ -1280,17 +1179,35 @@ export const NFTContent = (p) => {
 
   const url = c.url || c;
 
+  let slib = {
+    fullscreen: {
+      maxW: "85vw",
+      maxH: "85vh",
+      mb: "5vh",
+      mt: "1vh",
+      w: "85vw",
+      h: "auto",
+      objectFit: "contain",
+      borderRadius: "6px",
+    },
+    container: {
+      w: "100%",
+      objectFit: "contain",
+      borderRadius: "6px",
+    },
+  };
+
   return (
-    <ContentBox>
+    <>
       {ctype === "image" && url ? (
-        <img crossOrigin="true" src={url} alt="" width="100%" />
+        <Image crossOrigin="true" src={url} alt="" {...slib[preset]} />
       ) : null}
       {ctype === "video" && url ? (
-        <video controls loop muted autoPlay>
+        <Box as="video" controls loop muted autoPlay {...slib[preset]}>
           <source src={url} type={c.contentType} />
-        </video>
+        </Box>
       ) : null}
-    </ContentBox>
+    </>
   );
 };
 
@@ -1317,7 +1234,7 @@ export const NFTThumbLarge = (p) => {
   const c =
     p.meta?.thumb?.internal || p.meta?.thumb?.ipfs || p.meta?.thumb?.external;
 
-  if (!c) return null;
+  if (!c) return <Skeleton />;
 
   return (
     <ThumbLarge
@@ -1604,9 +1521,9 @@ export const NFTInfo = ({ id, meta }) => {
       </Text>
     ) : null,
     meta.sockets && meta.sockets.length ? (
-      <Wrap key="sockets" spacing={0}>
+      <Wrap key="sockets" spacing={0} overflow="visible">
         {meta.sockets.map((tid, idx) => (
-          <NFT id={tid} key={tid} />
+          <NFT token={{ id: tid }} key={tid} />
         ))}
       </Wrap>
     ) : null,
@@ -1656,7 +1573,7 @@ const NFTBatFull = styled.span`
 export const NFTPreview = (p) => {
   return (
     <Stack spacing="5">
-      <NFTContent meta={p} w={"auto"} h={"auto"} mw={"auto"} mh={"auto"} />
+      <NFTContent meta={p} />
       <NFTInfo meta={p} />
       <NFTThumb meta={p} />
       <NFTThumbLarge meta={p} />
@@ -1738,7 +1655,7 @@ export const NFTProInfo = ({ id, meta }) => {
         ) : null}
         {meta.authorShare ? (
           <Text fontSize="9px">
-            Author's share: <b>{(meta.authorShare / 100).toFixed(2)}%</b>
+            Author's royalties: <b>{(meta.authorShare / 100).toFixed(2)}%</b>
           </Text>
         ) : null}
         {meta.created ? (

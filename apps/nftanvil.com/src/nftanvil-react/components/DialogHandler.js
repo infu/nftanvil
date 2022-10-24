@@ -5,7 +5,11 @@ import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accounti
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
+  Auth,
+  AuthII,
+  user_logout,
 } from "../index.js";
+
 import {
   Modal,
   ModalOverlay,
@@ -20,8 +24,10 @@ import {
   Stack,
   Wrap,
   Box,
+  IconButton,
 } from "@chakra-ui/react";
 
+import { LogOff } from "../icons";
 import {
   Slider,
   SliderTrack,
@@ -89,38 +95,62 @@ export const DialogHandler = () => {
 export const AccountSelectModal = ({ title, onClose, onResult }) => {
   const accounts = useSelector((state) => state.user.accounts);
   const [customAccount, setCustomAccount] = React.useState("");
+  const authenticated = useSelector((state) => state.user.authenticated);
+  const authenticated_ii = useSelector((state) => state.user.authenticated_ii);
+  const dispatch = useDispatch();
 
   return (
-    <Modal onClose={onClose} isOpen={true} isCentered size={"sm"}>
+    <Modal
+      onClose={onClose}
+      isOpen={true}
+      isCentered
+      size={"sm"}
+      preserveScrollBarGap={true}
+    >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>{title || "Select account"}</ModalHeader>
         <ModalCloseButton />
+        {authenticated || authenticated_ii ? (
+          <IconButton
+            size="sm"
+            onClick={() => {
+              dispatch(user_logout());
+            }}
+            icon={<LogOff width="1em" height="1em" />}
+            bg={"transparent"}
+            sx={{ position: "absolute", top: 2, right: 50 }}
+          />
+        ) : null}
         <ModalBody>
           <Center>
-            <Wrap spacing={4}>
-              {Object.keys(accounts).map((address) => (
-                <Box
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => onResult(address)}
-                  key={address}
-                  border="1px"
-                  borderRadius="5"
-                  p={2}
-                  borderColor="gray.500"
-                >
-                  <AccountIcon address={address} />
-                  <Text fontSize="xs" textAlign="center">
-                    {address.substring(0, 4) + "..." + address.slice(-4)}
-                  </Text>
-                </Box>
-              ))}
-            </Wrap>
+            <Stack justifyContent={"center"} textAlign="center" spacing="4">
+              {!authenticated ? (
+                <Auth />
+              ) : (
+                <DisplayAccounts
+                  onResult={onResult}
+                  accounts={accounts}
+                  provider="vvv"
+                />
+              )}
+
+              {!authenticated_ii ? (
+                <AuthII />
+              ) : (
+                <DisplayAccounts
+                  onResult={onResult}
+                  accounts={accounts}
+                  provider="ii"
+                />
+              )}
+            </Stack>
           </Center>
+
           <Text mt={3} color="gray.500" textAlign="center">
             OR
           </Text>
-          <HStack mt={4} mb={6}>
+          <HStack mt={4} mb={6} ml="5" mr="5">
             <Input
               placeholder="a00f..."
               onChange={(e) => setCustomAccount(e.target.value)}
@@ -137,6 +167,35 @@ export const AccountSelectModal = ({ title, onClose, onResult }) => {
         </ModalFooter> */}
       </ModalContent>
     </Modal>
+  );
+};
+
+const DisplayAccounts = ({ accounts, provider, onResult }) => {
+  return (
+    <Wrap spacing={4}>
+      {Object.keys(accounts).map((address, idx) => {
+        if (accounts[address].provider !== provider) return null;
+        return (
+          <Box
+            sx={{ cursor: "pointer" }}
+            onClick={() => onResult(address)}
+            key={idx}
+            border="1px"
+            borderRadius="5"
+            p={2}
+            borderColor="gray.500"
+          >
+            <AccountIcon
+              address={address}
+              provider={accounts[address].provider}
+            />
+            <Text fontSize="xs" textAlign="center">
+              {address.substring(0, 4) + "..." + address.slice(-4)}
+            </Text>
+          </Box>
+        );
+      })}
+    </Wrap>
   );
 };
 
@@ -196,6 +255,7 @@ export const TransferModal = ({
       isOpen={true}
       isCentered
       size={"sm"}
+      preserveScrollBarGap={true}
     >
       <ModalOverlay />
       <ModalContent>

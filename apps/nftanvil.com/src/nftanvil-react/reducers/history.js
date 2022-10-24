@@ -4,7 +4,7 @@ import { router } from "@vvv-interactive/nftanvil-canisters/cjs/router.js";
 import { ledger } from "@vvv-interactive/nftanvil-canisters/cjs/ledger.js";
 import { historyCanister } from "@vvv-interactive/nftanvil-canisters/cjs/history.js";
 import { SerializableIC } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
-import authentication from "../auth";
+import authentication from "../identities";
 
 import { principalToAccountIdentifier } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 

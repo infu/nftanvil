@@ -10,8 +10,8 @@ export const Mint = () => {
             <Link to="nft">
               <Button>Nft</Button>
             </Link>
-            <Link to="collection">
-              <Button>Collection</Button>
+            <Link to="ft">
+              <Button>Fungible</Button>
             </Link>
           </HStack>
         </Box>

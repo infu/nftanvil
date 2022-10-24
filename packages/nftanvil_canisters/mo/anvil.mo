@@ -30,6 +30,12 @@ shared({caller = _installer}) actor class Class() : async Anvil.Interface = this
         _oracle := oracle
     };
 
-  
+     public func wallet_receive() : async () {
+        let available = Cycles.available();
+        let accepted = Cycles.accept(available);
+        assert (accepted == available);
+        // _cycles_recieved += accepted;
+    };
+    
 }
 

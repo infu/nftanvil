@@ -24,17 +24,19 @@ export const theme = extendTheme({
           // bg: "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(40, 23, 32, 1) 100%)",
           bg: mode(
             "linear-gradient(153deg, #d5d1cd 0%, #b2b3ba 100%)",
-            "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(30, 33, 32, 1) 100%)"
+            "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(40, 23, 32, 1) 100%)"
           )(props),
           backgroundAttachment: "fixed",
         },
-        html: {},
+        html: {
+          overflow: "-moz-scrollbars-vertical",
+          overflowY: "scroll",
+        },
         "*::placeholder": {
           color: mode("gray.400", "whiteAlpha.400")(props),
           scrollbarWidth: "thin",
           scrollbarColor: " #564d56 #363636",
         },
-
         "html::-webkit-scrollbar": {
           width: "16px",
         },
