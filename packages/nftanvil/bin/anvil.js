@@ -280,7 +280,7 @@ const burnGarbage = async (opts) => {
 };
 
 const balanceAndAddress = async () => {
-  let { address, subaccount } = await routerCanister();
+  let { address, principal, subaccount } = await routerCanister();
 
   let map = await getMap();
 
@@ -293,6 +293,7 @@ const balanceAndAddress = async () => {
   let balance = await pwr.balance({
     user: { address: AccountIdentifier.TextToArray(address) },
   });
+  console.log("Principal", principal.toText());
 
   console.log("Address", address);
   console.log(
@@ -964,7 +965,7 @@ const ftRegister = async (spec) => {
     console.log("Image must be bellow 125kb and above 5k");
     return;
   }
-  let { name, symbol, desc, decimals, fee, transferable, max_accounts } = info;
+  let { name, symbol, desc, decimals, fee, transferable, kind, origin } = info;
 
   image = await blobPrepare(image); //(await chunkBlob(image, fetch))[0];
   let req = {
@@ -974,7 +975,9 @@ const ftRegister = async (spec) => {
     decimals,
     fee,
     transferable,
-    max_accounts,
+    kind,
+    origin,
+    controller: principal,
     image,
   };
 

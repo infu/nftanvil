@@ -86,6 +86,19 @@ type Result =
    err: text;
    ok;
  };
+type RegisterRequest = 
+ record {
+   controller: principal;
+   decimals: nat8;
+   desc: text;
+   fee: nat64;
+   image: blob;
+   kind: FTKind;
+   name: text;
+   origin: text;
+   symbol: text;
+   transferable: bool;
+ };
 type RechargeResponse = 
  variant {
    err:
@@ -257,7 +270,27 @@ type ItemTransfer =
  };
 type IPFS_CID = text;
 type ICP = record {e8s: nat64;};
+type FtMintResponse = 
+ variant {
+   err: text;
+   ok: record {
+         id: FTokenId;
+         transactionId: blob;
+       };
+ };
+type FtMintRequest = 
+ record {
+   amount: Balance;
+   options: RegisterRequest;
+   subaccount: opt SubAccount;
+   user: User__2;
+ };
 type FTokenId = nat64;
+type FTKind = 
+ variant {
+   fractionless;
+   normal;
+ };
 type ExternalUrl = text;
 type DomainName = text;
 type CustomVar = blob;
@@ -293,9 +326,10 @@ type Config =
 type Class = 
  service {
    balance: (BalanceRequest) -> (BalanceResponse) query;
-   balanceAddExternal: (FTokenId, AccountIdentifier__2, Balance__3) -> ();
+   balanceAddExternal: (FTokenId, AccountIdentifier__2, Balance__3,
+    FTKind) -> ();
    balanceAddExternalProtected: (FTokenId, AccountIdentifier__2, Balance__3,
-    bool) -> (Result);
+    FTKind) -> (Result);
    config_set: (Config) -> ();
    exists: (AccountIdentifier) -> (bool) query;
    ft_mint:
@@ -303,7 +337,9 @@ type Class =
        aid: AccountIdentifier__2;
        amount: Balance__3;
        id: FTokenId;
+       kind: FTKind;
      }) -> ();
+   ft_register: (FtMintRequest) -> (FtMintResponse);
    nft_mint: (CanisterSlot, MintRequest) -> (MintResponse);
    nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);
    nft_recharge: (CanisterSlot, RechargeRequest) -> (RechargeResponse);

@@ -23,6 +23,7 @@ type Class =
  service {
    config_set: (Config) -> ();
    oracle_set: (Oracle) -> ();
+   wallet_receive: () -> ();
  };
 type CanisterSlot = nat64;
 type CanisterRange = 

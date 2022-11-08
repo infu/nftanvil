@@ -23,6 +23,7 @@ import Prim "mo:prim";
 import TrieRecord "./lib/TrieRecord";
 import Debug "mo:base/Debug";
 import HashArray "./lib/HashArray";
+import Tr "./type/tokenregistry_interface";
 
 shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = this {
 
@@ -148,23 +149,77 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     };
   };
 
-  public shared ({ caller }) func ft_mint({ id : Pwr.FTokenId; aid : AccountIdentifier; amount : Balance }) : async () {
+
+  public shared({caller}) func ft_register(request: Pwr.FtMintRequest) : async Pwr.FtMintResponse {
+
+    let aid = Nft.User.toAccountIdentifier(request.user);
+
+    // check caller
+    let caller_user : Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
+    if (caller_user != request.user) return #err("Unauthorized");
+
+    
+    let cost:Nat64 = (500 * Nat64.max(request.amount, 5000) * 10000) / 100000000;
+
+    let {symbol; name; desc; decimals; transferable; fee; image; kind; origin; controller} = request.options;
+    assert(controller == caller);
+    assert(symbol.size() < 20);
+    assert(name.size() < 125);
+    assert(desc.size() < 255);
+    assert(decimals == 8);
+    assert(kind == #fractionless);
+    assert(fee == 1);
+    assert(image.size() <= 131072);
+    assert(origin.size() < 255);
+
+    switch (balanceRem(Pwr.TOKEN_ANV, aid, cost, _oracle.anvFee, #normal)) {
+      case (#ok(deduced)) ();
+      case (#err(e)) return #err(debug_show(e));
+    };
+
+    switch(await Cluster.tokenregistry(_conf).register(request.options)) {
+        case (#ok(id)) {
+
+
+          switch(await Cluster.tokenregistry(_conf).mint({id; aid; amount = request.amount; mintable = false})) {
+            case (#ok({transactionId})) {
+                //balanceAdd(id, aid, request.amount, kind);
+
+                ignore Cluster.history(_conf).add(#ft(#register({ token = id; created = Time.now(); user = aid; cost = cost })));
+
+                #ok({transactionId; id});
+            };
+            case (#err(t)) {
+              balanceAdd(Pwr.TOKEN_ANV, aid, cost, kind);
+              return #err(t);
+            }
+          }
+
+        };
+        case (#err(t)) {
+          balanceAdd(Pwr.TOKEN_ANV, aid, cost, kind);
+          #err(t);
+        };
+    };
+
+  };
+
+  public shared ({ caller }) func ft_mint({ id : Pwr.FTokenId; aid : AccountIdentifier; amount : Balance; kind: Tr.FTKind }) : async () {
     assert (Cluster.pwr2slot(_conf, aid) == _slot);
     assert (Nft.APrincipal.toSlot(_conf.space, caller) == _conf.tokenregistry);
 
-    balanceAdd(id, aid, amount);
+    balanceAdd(id, aid, amount, kind);
   };
 
   public shared ({ caller }) func balanceAddExternalProtected(
     target : Pwr.FTokenId,
     aid : AccountIdentifier,
     amount : Balance,
-    account_creation_allowed : Bool,
+    kind : Tr.FTKind
   ) : async Result.Result<(), Text> {
 
     if (_exists(aid) == false) {
-      if (account_creation_allowed == false) return #err("Account creation not allowed for this token");
-      ignore Cluster.tokenregistry(_conf).track_usage(target, 1);
+      //ignore Cluster.tokenregistry(_conf).track_usage(target, 1);
       // add one account
     };
 
@@ -172,7 +227,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
     assert (Cluster.pwr2slot(_conf, aid) == _slot);
 
-    balanceAdd(target, aid, amount);
+    balanceAdd(target, aid, amount, kind);
 
     #ok();
   };
@@ -181,13 +236,14 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     target : Pwr.FTokenId,
     aid : AccountIdentifier,
     amount : Balance,
+    kind : Tr.FTKind
   ) : async () {
 
     assert (Nft.APrincipal.isLegitimate(_conf.space, caller));
 
     assert (Cluster.pwr2slot(_conf, aid) == _slot);
 
-    balanceAdd(target, aid, amount);
+    balanceAdd(target, aid, amount, kind);
   };
 
   // deprecated start
@@ -208,8 +264,9 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
       };
     };
 
-    let { transferable; fee; account_creation_allowed } = await Cluster.tokenregistry(_conf).token_logistics(token_id);
+    let { transferable; fee; kind } = await Cluster.tokenregistry(_conf).token_logistics(token_id);
     if (transferable == false) return #err(#Rejected);
+
 
     if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
 
@@ -218,15 +275,15 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     switch (_state.get(aid)) {
       case (?ac) {
 
-        switch (balanceRem(token_id, aid, request.amount + fee, fee)) {
-          case (#ok()) {
+        switch (balanceRem(token_id, aid, request.amount, fee, kind)) {
+          case (#ok(deduced)) {
 
-            switch (await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternalProtected(token_id, to_aid, request.amount, account_creation_allowed)) {
+            switch (await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternalProtected(token_id, to_aid, request.amount, kind)) {
               case (#ok()) {
 
               };
               case (#err(t)) {
-                balanceAdd(token_id, aid, request.amount + fee);
+                balanceAdd(token_id, aid, deduced, kind);
                 //refund
                 return #err(#Other(t));
               };
@@ -239,7 +296,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
               //This avoids adding two transactions for one operation like minting
               #ok({ transactionId = Blob.fromArray([]) });
             } else {
-              let transactionId = await Cluster.history(_conf).add(#ft(#transfer({ token = token_id; created = Time.now(); from = Nft.User.toAccountIdentifier(request.from); to = Nft.User.toAccountIdentifier(request.to); memo = request.memo; amount = request.amount })));
+              let transactionId = await Cluster.history(_conf).add(#ft(#transfer({ token = token_id; created = Time.now(); from = Nft.User.toAccountIdentifier(request.from); to = Nft.User.toAccountIdentifier(request.to); memo = request.memo; amount = deduced })));
               #ok({ transactionId });
             }
 
@@ -270,7 +327,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
       };
     };
 
-    let { transferable; fee; account_creation_allowed } = await Cluster.tokenregistry(_conf).token_logistics(request.token);
+    let { transferable; fee; kind } = await Cluster.tokenregistry(_conf).token_logistics(request.token);
     if (transferable == false) return #err(#Rejected);
 
     if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
@@ -281,7 +338,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
       case (?ac) {
 
         // check if there is enough
-        if (fee != 0) switch (Pwr.AccountRecordFindToken(ac, request.token)) {
+        if (kind == #normal) switch (Pwr.AccountRecordFindToken(ac, request.token)) {
           case (?tidx) {
             let amount_a = ac[tidx].1 - request.amount - fee;
             let amount_b = request.amount;
@@ -295,16 +352,16 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
             return #err(#InsufficientBalance);
           };
         };
+  
+        switch (balanceRem(request.token, aid, request.amount, fee, kind)) {
+          case (#ok(deduced)) {
 
-        switch (balanceRem(request.token, aid, request.amount + fee, fee)) {
-          case (#ok()) {
-
-            switch (await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternalProtected(request.token, to_aid, request.amount, account_creation_allowed)) {
+            switch (await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternalProtected(request.token, to_aid, deduced, kind)) {
               case (#ok()) {
 
               };
               case (#err(t)) {
-                balanceAdd(request.token, aid, request.amount + fee);
+                balanceAdd(request.token, aid, deduced, kind);
                 //refund
                 return #err(#Other(t));
               };
@@ -317,7 +374,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
               //This avoids adding two transactions for one operation like minting
               #ok({ transactionId = Blob.fromArray([]) });
             } else {
-              let transactionId = await Cluster.history(_conf).add(#ft(#transfer({ token = request.token; created = Time.now(); from = Nft.User.toAccountIdentifier(request.from); to = Nft.User.toAccountIdentifier(request.to); memo = request.memo; amount = request.amount })));
+              let transactionId = await Cluster.history(_conf).add(#ft(#transfer({ token = request.token; created = Time.now(); from = Nft.User.toAccountIdentifier(request.from); to = Nft.User.toAccountIdentifier(request.to); memo = request.memo; amount = deduced })));
               #ok({ transactionId });
             }
 
@@ -370,7 +427,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
               case (#Err(e)) {
                 // Return balance to user
-                balanceAdd(Pwr.TOKEN_ICP, to_aid, request.amount);
+                balanceAdd(Pwr.TOKEN_ICP, to_aid, request.amount, #normal);
                 #err(#Rejected);
               };
             };
@@ -415,8 +472,8 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     // _fees_charged += _oracle.pwrFee;
 
     // take amount out
-    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.pwrFee)) {
-      case (#ok())();
+    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.pwrFee, #normal)) {
+      case (#ok(deduced))();
       case (#err(e)) return #err(e);
     };
 
@@ -425,12 +482,12 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
         _mint_accumulated += cost;
 
-        balanceAdd(Pwr.TOKEN_ANV, aid, cost);
+        balanceAdd(Pwr.TOKEN_ANV, aid, cost, #normal);
 
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(Pwr.TOKEN_ICP, aid, cost);
+        balanceAdd(Pwr.TOKEN_ICP, aid, cost, #normal);
         // return because of fail TODO: Do not return pwrFee if error was intentional (if that is possible)
 
         return #err(e);
@@ -461,11 +518,11 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
       };
     };
 
-    let cost : Nat64 = request.amount + _oracle.pwrFee + affiliate_amount;
+    let cost : Nat64 = request.amount + affiliate_amount;
 
     // take amount out
-    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.pwrFee)) {
-      case (#ok())();
+    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.pwrFee, #normal)) {
+      case (#ok(deduced))();
       case (#err(e)) return #err(e);
     };
 
@@ -510,6 +567,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
           Pwr.TOKEN_ICP,
           NFTAnvil_profits,
           anvil_cut,
+          #normal
         );
 
         // give to Author
@@ -518,6 +576,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
           Pwr.TOKEN_ICP,
           purchase.author.address,
           author_cut,
+          #normal
         );
 
         // give to Marketplace
@@ -528,6 +587,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
               Pwr.TOKEN_ICP,
               marketplace.address,
               marketplace_cut,
+              #normal
             );
             Debug.print("Marketplace cut " # debug_show (marketplace_cut) # " " # debug_show (marketplace));
           };
@@ -542,6 +602,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
               Pwr.TOKEN_ICP,
               affiliate.address,
               affiliate.amount,
+              #normal
             );
             Debug.print("Affiliate cut " # debug_show (affiliate.amount) # " " # debug_show (affiliate));
           };
@@ -555,12 +616,13 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
           Pwr.TOKEN_ICP,
           purchase.seller,
           seller_cut,
+          #normal
         );
 
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(Pwr.TOKEN_ICP, aid, cost - _oracle.pwrFee);
+        balanceAdd(Pwr.TOKEN_ICP, aid, cost - _oracle.pwrFee, #normal);
         // return because of fail.
 
         return #err(e);
@@ -639,8 +701,8 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     let cost : Nat64 = request.amount;
 
     // take amount out
-    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost + _oracle.pwrFee, _oracle.pwrFee)) {
-      case (#ok())();
+    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.pwrFee, #normal)) {
+      case (#ok(deduced))();
       case (#err(e)) return #err(e);
     };
 
@@ -653,7 +715,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(Pwr.TOKEN_ICP, aid, cost);
+        balanceAdd(Pwr.TOKEN_ICP, aid, cost, #normal);
         // return because of fail
 
         return #err(e);
@@ -712,7 +774,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
         _icp_deposited += amount.e8s;
 
-        balanceAdd(Pwr.TOKEN_ICP, toUserAID, amount.e8s);
+        balanceAdd(Pwr.TOKEN_ICP, toUserAID, amount.e8s, #normal);
         // TODO: This 1000 is here for demo only
 
         let transactionId = await Cluster.history(_conf).add(#pwr(#mint({ created = Time.now(); user = Nft.User.toAccountIdentifier(request.user); amount = amount.e8s })));
@@ -731,6 +793,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     target : Pwr.FTokenId,
     aid : AccountIdentifier,
     amount : Balance,
+    kind : Tr.FTKind
   ) : () {
 
     if (amount == 0) return ();
@@ -763,7 +826,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
         _total_accounts += 1;
         let newobj = Pwr.AccountRecordBlank();
         _state.put(aid, ?newobj);
-        balanceAdd(target, aid, amount);
+        balanceAdd(target, aid, amount, kind);
       };
     };
   };
@@ -773,8 +836,10 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     aid : AccountIdentifier,
     amount : Balance,
     fee : Nat64,
-  ) : Result.Result<(), { #InsufficientBalance }> {
+    kind : Tr.FTKind
+  ) : Result.Result<Nat64, { #InsufficientBalance }> {
 
+    var deduced = amount;
     switch (_state.get(aid)) {
       case (?ac) {
 
@@ -782,13 +847,44 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
           case (?tidx) {
 
-            if (ac[tidx].1 < amount) return #err(#InsufficientBalance);
+            deduced := switch(kind) {
+              case (#normal) {
+                if (ac[tidx].1 < (amount + fee)) return #err(#InsufficientBalance);
+                
+                ac[tidx] := (
+                  ac[tidx].0,
+                  ac[tidx].1 - (amount + fee),
+                );
 
-            ac[tidx] := (
-              ac[tidx].0,
-              ac[tidx].1 - amount,
-            );
+                amount
+              };
+              case (#fractionless) {
+                let {whole; charges} = Pwr.Fractionless.decode(ac[tidx].1);
+                if (charges <= 1) return #err(#InsufficientBalance);
+                if (whole < amount) return #err(#InsufficientBalance);
+                if (whole == amount) {
+                  let all = ac[tidx].1;
+                    ac[tidx] := (
+                    ac[tidx].0,
+                    0,
+                  );
 
+                  all - fee;
+                } else {
+                  let chargesPerOne = charges / whole;
+
+                  let amountDeduced = Pwr.Fractionless.encode(amount, chargesPerOne*amount);
+                  let wholeRemaining = whole - amount;
+                  ac[tidx] := (
+                    ac[tidx].0,
+                    Pwr.Fractionless.encode(wholeRemaining, Nat64.min(wholeRemaining*499, charges - chargesPerOne*amount)),
+                  );
+                
+                  amountDeduced - fee;
+                }
+              };
+            };
+            
           };
           case (null) {
             return #err(#InsufficientBalance);
@@ -797,7 +893,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
         _state.put(aid, Pwr.AccountGarbageCollect(ac));
 
-        #ok();
+        #ok(deduced);
         // TODO: get this back
         // if ((ac.anv == 0< _oracle.anvFee) and (ac.pwr < _oracle.pwrFee)) {
         //   _account.delete(aid);

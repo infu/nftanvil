@@ -1,15 +1,28 @@
 export const idlFactory = ({ IDL }) => {
   const Timestamp = IDL.Int;
   const FTokenId = IDL.Nat64;
+  const Memo = IDL.Vec(IDL.Nat8);
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const Balance = IDL.Nat64;
+  const FtBurn = IDL.Record({
+    'created' : Timestamp,
+    'token' : FTokenId,
+    'memo' : Memo,
+    'user' : AccountIdentifier,
+    'amount' : Balance,
+  });
   const FtMint = IDL.Record({
     'created' : Timestamp,
     'token' : FTokenId,
     'user' : AccountIdentifier,
     'amount' : Balance,
   });
-  const Memo = IDL.Vec(IDL.Nat8);
+  const FtRegister = IDL.Record({
+    'created' : Timestamp,
+    'token' : FTokenId,
+    'cost' : Balance,
+    'user' : AccountIdentifier,
+  });
   const FtTransaction = IDL.Record({
     'to' : AccountIdentifier,
     'created' : Timestamp,
@@ -18,7 +31,12 @@ export const idlFactory = ({ IDL }) => {
     'memo' : Memo,
     'amount' : Balance,
   });
-  const FtEvent = IDL.Variant({ 'mint' : FtMint, 'transfer' : FtTransaction });
+  const FtEvent = IDL.Variant({
+    'burn' : FtBurn,
+    'mint' : FtMint,
+    'register' : FtRegister,
+    'transfer' : FtTransaction,
+  });
   const EventFungibleTransaction = IDL.Record({
     'to' : AccountIdentifier,
     'created' : Timestamp,

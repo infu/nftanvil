@@ -9,6 +9,7 @@ import Time "mo:base/Time";
 import Result "mo:base/Result";
 import Blob "mo:base/Blob";
 import Debug "mo:base/Debug";
+import Cycles "mo:base/ExperimentalCycles";
 
 
 shared({caller = _installer}) actor class Class() : async Anvil.Interface = this {

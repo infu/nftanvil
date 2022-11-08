@@ -104,12 +104,13 @@ export const MintForm = () => {
           symbol: "",
           name: "",
           desc: "",
-
-          max_accounts: 20000,
+          kind: { fractionless: null },
+          origin: "",
           transferable: true,
           image: false,
-          fee: 100000,
+          fee: 1,
           supply: 10000,
+          decimals: 8,
         }}
         onSubmit={async (values, actions) => {
           try {
@@ -226,12 +227,12 @@ const FormInner = ({ props }) => {
                   />
                 ) : null}
               </Box>
-              <Field name="domain" validate={validateDomain}>
+              <Field name="origin" validate={validateDomain}>
                 {({ field, form }) => (
                   <FormControl
-                    isInvalid={form.errors.domain && form.touched.domain}
+                    isInvalid={form.errors.origin && form.touched.origin}
                   >
-                    <FormLabel htmlFor="domain">
+                    <FormLabel htmlFor="origin">
                       <FormTip
                         text={`Will have external link to that location. It must be verified by placing /.well-known/nftanvil.json with {"/pathname":["allowed_author_aid","another_allowed_author_aid"]}.`}
                       >
@@ -240,11 +241,11 @@ const FormInner = ({ props }) => {
                     </FormLabel>
                     <Input
                       {...field}
-                      id="domain"
+                      id="origin"
                       placeholder="yourdomain.com/my_collection/"
                       variant="filled"
                     />
-                    <FormErrorMessage>{form.errors.domain}</FormErrorMessage>
+                    <FormErrorMessage>{form.errors.origin}</FormErrorMessage>
                   </FormControl>
                 )}
               </Field>
@@ -359,7 +360,7 @@ const FormInner = ({ props }) => {
                 Mint
                 <Tag colorScheme="blue" ml="3">
                   <ANV mode="dark">
-                    {Math.max(props.values.supply, 40000) * 1000}
+                    {Math.max(props.values.supply, 5000) * 500 * 10000}
                   </ANV>
                 </Tag>
               </Button>

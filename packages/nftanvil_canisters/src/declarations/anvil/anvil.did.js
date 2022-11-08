@@ -23,6 +23,7 @@ export const idlFactory = ({ IDL }) => {
   const Class = IDL.Service({
     'config_set' : IDL.Func([Config], [], []),
     'oracle_set' : IDL.Func([Oracle], [], []),
+    'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;
 };

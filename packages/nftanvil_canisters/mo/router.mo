@@ -506,7 +506,7 @@ shared({caller = _installer}) actor class Router() = this {
             var end : ?Nat64 = null;
 
             while (cnt < max) {
-                Cycles.add(200_000_000_000);
+                Cycles.add(1_000_000_000_000);
   
                 let {canister_id} = await IC.create_canister({settings = ?{
                     controllers = ?[_installer, Principal.fromActor(this)];

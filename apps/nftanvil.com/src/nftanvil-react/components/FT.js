@@ -143,7 +143,9 @@ export const FT = ({ token, aid, bal, onClick }) => {
       <FTImage id={token.id} />
       {meta ? (
         <div className="bal">
-          {AccountIdentifier.placeDecimal(bal, meta.decimals, 2)}
+          {"fractionless" in meta.kind
+            ? Math.round(Number(BigInt(bal) / 10000000n) / 10)
+            : AccountIdentifier.placeDecimal(bal, meta.decimals, 2)}
         </div>
       ) : null}
       <div className="border" />

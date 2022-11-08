@@ -1,10 +1,11 @@
 {
   "symbol": "ICP",
+  "kind": { "normal": null },
+  "origin": "https://nftanvil.com",
   "name": "Internet Computer Protocol",
   "desc": "",
   "decimals": 8,
   "fee": 10000,
   "transferable": true,
-  "max_accounts": 50000,
   "image": "./coin1.png"
 }

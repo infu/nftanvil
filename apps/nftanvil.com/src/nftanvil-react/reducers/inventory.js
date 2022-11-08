@@ -70,7 +70,7 @@ export const inventorySlice = createSlice({
             BigInt(state[from_aid].content[oldpos].bal) - BigInt(old.bal)
           ).toString();
           delete state[from_aid].content[oldpos].optimistic;
-          if (state[from_aid].content[oldpos].bal === "0")
+          if (BigInt(state[from_aid].content[oldpos].bal) <= 0)
             delete state[from_aid].content[oldpos];
         }
       } else delete state[from_aid].content[oldpos];

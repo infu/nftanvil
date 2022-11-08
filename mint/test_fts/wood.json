@@ -1,10 +1,11 @@
 {
   "symbol": "WOOD",
   "name": "Wood",
+  "kind": { "fractionless": null },
+  "origin": "https://nftanvil.com",
   "desc": "Chop some wood",
-  "decimals": 0,
-  "fee": 0,
+  "decimals": 8,
+  "fee": 1,
   "transferable": true,
-  "max_accounts": 10000,
   "image": "./coin3.png"
 }

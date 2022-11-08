@@ -7,25 +7,34 @@ module {
 
     public type Interface = actor {
         token_logistics : query (id: FTokenId) -> async FTLogistics;
-        track_usage : shared (id: FTokenId, used: Int32 ) -> ();
-    };
+        register : shared (RegisterRequest) -> async RegisterResponse;
+        mint : shared (MintRequest) -> async MintResponse;
 
+    };
+    public type MintRequest = {id: FTokenId; aid: Nft.AccountIdentifier; amount:Nat64; mintable:Bool};
+    public type MintResponse = Result.Result< {transactionId : Blob}, Text>;
     public type FTLogistics = {
         transferable : Bool;
         fee : Nat64;
-        account_creation_allowed : Bool;
+        kind: FTKind;
     };
 
+    public type FTKind = {
+        #fractionless;
+        #normal
+        };
 
     public type FTOptions = {
+        kind: FTKind;
+        origin: Text;
         symbol : Text;
         name : Text;
         desc : Text;
         decimals : Nat8;
-        max_accounts : Nat32;
         transferable : Bool;
         image : Blob;
         fee : Nat64;
+        controller: Principal;
     };
 
     public type FTMeta = {
@@ -37,13 +46,14 @@ module {
         fee : Nat64;
         total_supply: Nat64;
         mintable: Bool;
-        accounts: Nat32;
+        kind: FTKind;
+        origin: Text;
+        controller: Principal;
     };
 
     public type FTokenInfo = ({
         controller : Principal;
         var total_supply : Nat64;
-        var accounts : Nat32;
         var mintable : Bool;
     } and FTOptions);
 

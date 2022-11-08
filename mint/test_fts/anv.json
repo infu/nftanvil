@@ -1,10 +1,11 @@
 {
   "symbol": "ANV",
+  "kind": { "normal": null },
+  "origin": "https://nftanvil.com",
   "name": "Anvil Protocol",
   "desc": "",
   "decimals": 8,
-  "fee": 1000,
+  "fee": 10000,
   "transferable": true,
-  "max_accounts": 50000,
   "image": "./coin2.png"
 }

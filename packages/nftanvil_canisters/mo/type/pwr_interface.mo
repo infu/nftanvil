@@ -20,6 +20,8 @@ import Text "mo:base/Text";
 import Nft "./nft_interface";
 import Ledger "./ledger_interface";
 import Treasury "./treasury_interface";
+import Treg "./tokenregistry_interface";
+
 import Debug "mo:base/Debug";
 
 module {
@@ -31,12 +33,12 @@ module {
         pwr_transfer : shared TransferOldRequest -> async TransferOldResponse;
         transfer : shared TransferRequest -> async TransferResponse;
 
-        balanceAddExternal : shared (FTokenId, AccountIdentifier, Balance) -> async ();
+        balanceAddExternal : shared (FTokenId, AccountIdentifier, Balance, Treg.FTKind) -> async ();
         balanceAddExternalProtected : shared (
             FTokenId,
             AccountIdentifier,
             Balance,
-            Bool,
+            Treg.FTKind
         ) -> async Result.Result<(), Text>;
 
         // only for icp
@@ -44,14 +46,37 @@ module {
         pwr_purchase_intent : shared PurchaseIntentRequest -> async PurchaseIntentResponse;
         pwr_purchase_claim : shared PurchaseClaimRequest -> async PurchaseClaimResponse;
         nft_mint : shared (slot : Nft.CanisterSlot, request : Nft.MintRequest) -> async Nft.MintResponse;
-        ft_mint : shared ({ id : FTokenId; aid : AccountIdentifier; amount : Balance }) -> async ();
+        
+        ft_mint : shared ({ id : FTokenId; aid : AccountIdentifier; amount : Balance; kind: Treg.FTKind }) -> async ();
+        ft_register : shared (FtMintRequest) -> async FtMintResponse;
+
     };
+
+    public type FtMintRequest = {
+        user         : Nft.User;
+        subaccount : ?SubAccount;
+        options : Treg.RegisterRequest;
+        amount : Balance;
+    };
+    public type FtMintResponse = Result.Result<{id:FTokenId; transactionId: Blob}, Text>;
+
 
     public let TOKEN_ICP : FTokenId = 1;
     public let TOKEN_ANV : FTokenId = 2;
 
     public type BalanceRequest = {
         user : Nft.User;
+    };
+
+    public module Fractionless {
+        public func decode(enc : Balance) : {whole: Nat64; charges: Nat64} {
+           let whole = enc / (100000000 - 500);
+           let charges = 500 * whole - (whole * 100000000 - enc);
+           return {whole; charges};
+        };
+        public func encode(whole: Nat64, charges: Nat64) : Balance {
+           return whole * (100000000 - 500) + charges
+        };
     };
 
     public type BalanceResponse = {

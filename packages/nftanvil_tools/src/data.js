@@ -23,12 +23,15 @@ export const SerializableIC = (x) => {
     return x.map((y) => SerializableIC(y));
   }
 
-  if (typeof x === "object")
+  if (typeof x === "object") {
+    if ("toText" in x) return x.toText();
+
     return Object.fromEntries(
       Object.keys(x).map((k) => {
         return [k, SerializableIC(x[k])];
       })
     );
+  }
   return x;
 };
 

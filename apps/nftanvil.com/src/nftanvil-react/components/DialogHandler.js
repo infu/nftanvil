@@ -242,7 +242,13 @@ export const TransferModal = ({
 
   const meta = useSelector((state) => state.ft[token.id]);
 
-  const max = (BigInt(token.bal) - BigInt(meta.fee)).toString();
+  const max =
+    "fractionless" in meta.kind
+      ? Math.round(token.bal / (100000000 - 500))
+      : (BigInt(token.bal) - BigInt(meta.fee)).toString();
+
+  // let whole = Math.round(dt / (100000000 - 500));
+  // console.log(max, whole);
 
   const percentAmount = Number(
     (BigInt(100) * BigInt(digitalAmount)) / BigInt(max)
@@ -295,13 +301,16 @@ export const TransferModal = ({
                 let dt = ((BigInt(v) * BigInt(max)) / BigInt(100)).toString();
                 setDigitalAmount(dt);
 
-                setTextAmount(
-                  AccountIdentifier.placeDecimal(
-                    dt,
-                    meta.decimals,
-                    meta.decimals
-                  )
-                );
+                if ("fractionless" in meta.kind) {
+                  setTextAmount(dt);
+                } else
+                  setTextAmount(
+                    AccountIdentifier.placeDecimal(
+                      dt,
+                      meta.decimals,
+                      meta.decimals
+                    )
+                  );
               }}
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
@@ -335,13 +344,17 @@ export const TransferModal = ({
                 key="v"
                 value={textAmount}
                 onChange={(e) => {
-                  let v = AccountIdentifier.removeDecimal(
-                    e.target.value,
-                    meta.decimals
-                  );
+                  if ("fractionless" in meta.kind) {
+                    setDigitalAmount(e.target.value);
+                  } else {
+                    let v = AccountIdentifier.removeDecimal(
+                      e.target.value,
+                      meta.decimals
+                    );
 
-                  if (v > BigInt(max)) v = BigInt(max);
-                  setDigitalAmount(v.toString());
+                    if (v > BigInt(max)) v = BigInt(max);
+                    setDigitalAmount(v.toString());
+                  }
 
                   setTextAmount(e.target.value);
                 }}
@@ -350,13 +363,15 @@ export const TransferModal = ({
               <Button
                 onClick={() => {
                   setDigitalAmount(max);
-                  setTextAmount(
-                    AccountIdentifier.placeDecimal(
-                      max,
-                      meta.decimals,
-                      meta.decimals
-                    )
-                  );
+                  if ("fractionless" in meta.kind) setTextAmount(max);
+                  else
+                    setTextAmount(
+                      AccountIdentifier.placeDecimal(
+                        max,
+                        meta.decimals,
+                        meta.decimals
+                      )
+                    );
                 }}
               >
                 Max
@@ -380,7 +395,10 @@ export const TransferModal = ({
             ml={3}
             onClick={() =>
               onResult({
-                amount: digitalAmount,
+                amount:
+                  "fractionless" in meta.kind
+                    ? digitalAmount * 100000000
+                    : digitalAmount,
               })
             }
           >

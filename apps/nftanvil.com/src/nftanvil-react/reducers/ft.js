@@ -5,6 +5,7 @@ import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal
 import {
   BigIntToString,
   blobPrepare,
+  SerializableIC,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
@@ -14,6 +15,8 @@ import {
   chunkBlob,
   uploadFile,
 } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import { Principal } from "@dfinity/principal";
+
 export const ftSlice = createSlice({
   name: "ft",
   initialState: {},
@@ -41,7 +44,7 @@ export const ft_fetch_meta = (id) => async (dispatch, getState) => {
   });
 
   let token_meta = await treg.meta(id);
-  dispatch(loaded({ id: id.toString(), meta: BigIntToString(token_meta) }));
+  dispatch(loaded({ id: id.toString(), meta: SerializableIC(token_meta) }));
 };
 
 export const ft_transfer =
@@ -63,17 +66,29 @@ export const ft_transfer =
       }
     );
 
+    let meta = s.ft[id];
+    let real_amount =
+      "fractionless" in meta.kind
+        ? Math.round(Number(amount) / 100000000)
+        : Number(amount);
+
     let req = {
       token: Number(id),
-      amount: Number(amount),
+      amount: Number(real_amount),
       memo: [0],
       from: { address: AccountIdentifier.TextToArray(address) },
       to: { address: AccountIdentifier.TextToArray(to) },
       subaccount: subaccount,
     };
-
-    let trez = await pwr.transfer(req);
-
+    console.log(req);
+    let trez;
+    try {
+      trez = await pwr.transfer(req);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+    console.log(trez);
     if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
 
     // dispatch(user_refresh_balances(address));
@@ -82,9 +97,13 @@ export const ft_transfer =
   };
 
 export const ft_mint = (vals) => async (dispatch, getState) => {
+  let options = { ...vals };
   let s = getState();
 
   const address = Object.keys(s.user.accounts)[0];
+  const principal = s.user.accounts[address].principal;
+
+  options.controller = Principal.fromText(principal);
 
   let subaccount = [
     AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) || null,
@@ -102,22 +121,28 @@ export const ft_mint = (vals) => async (dispatch, getState) => {
 
   if (!address) throw Error("Annonymous cant mint"); // Wont let annonymous mint
 
-  vals.image = await blobPrepare(
-    await fetch(vals.image.url).then((r) => r.blob())
+  options.image = await blobPrepare(
+    await fetch(options.image.url).then((r) => r.blob())
   );
-  console.log(vals);
-  return;
-  let mrez = await pwr.ft_mint({
+
+  // options.kind = { fractionless: null };
+  const supply = options.supply * 100000000;
+  delete options.supply;
+
+  let req = {
     user: { address: AccountIdentifier.TextToArray(address) },
     subaccount,
-    metadata: vals,
-  });
-
-  if (mrez?.err?.OutOfMemory === null) {
-    // await dispatch(user_refresh_config());
-    await dispatch(ft_mint(vals));
-    return;
+    options: options,
+    amount: supply,
+  };
+  console.log(req);
+  let mrez;
+  try {
+    mrez = await pwr.ft_register(req);
+  } catch (e) {
+    console.log(e);
   }
+  console.log("mrez", mrez);
 
   if (mrez?.err?.InsufficientBalance === null) {
     throw Error("Insufficient Balance");

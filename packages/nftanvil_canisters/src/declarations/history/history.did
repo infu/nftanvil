@@ -142,6 +142,13 @@ type FtTransaction =
    to: AccountIdentifier;
    token: FTokenId;
  };
+type FtRegister = 
+ record {
+   cost: Balance;
+   created: Timestamp;
+   token: FTokenId;
+   user: AccountIdentifier;
+ };
 type FtMint = 
  record {
    amount: Balance;
@@ -151,8 +158,18 @@ type FtMint =
  };
 type FtEvent = 
  variant {
+   burn: FtBurn;
    mint: FtMint;
+   register: FtRegister;
    transfer: FtTransaction;
+ };
+type FtBurn = 
+ record {
+   amount: Balance;
+   created: Timestamp;
+   memo: Memo;
+   token: FTokenId;
+   user: AccountIdentifier;
  };
 type FTokenId = nat64;
 type EventInfo__1 = 

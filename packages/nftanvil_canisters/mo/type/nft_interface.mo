@@ -1289,6 +1289,8 @@ module {
     public type FtEvent = {
         #transfer : FtTransaction;
         #mint : FtMint;
+        #burn : FtBurn;
+        #register : FtRegister;
     };
 
     public type PwrEvent = {
@@ -1573,6 +1575,7 @@ module {
                         Blob.toArray(memo)
                     ])
                 };
+                
                 case (#mint({token;created;user;amount})) {
                     Array.flatten<Nat8>([
                         [10:Nat8],
@@ -1582,15 +1585,49 @@ module {
                         Blob_.nat64ToBytes(amount),
                     ])
                 };
+                case (#burn({token;user;amount;memo;created})) {
+                    Array.flatten<Nat8>([
+                        [11:Nat8],
+                        Blob_.nat64ToBytes(token),
+                        Blob_.intToBytes(created),
+                        Blob.toArray(user),
+                        Blob_.nat64ToBytes(amount),
+                        Blob.toArray(memo)
+                    ])
+                };
+                case (#register({token;cost;user;created})) {
+                    Array.flatten<Nat8>([
+                        [12:Nat8],
+                        Blob_.nat64ToBytes(token),
+                        Blob_.intToBytes(created),
+                        Blob.toArray(user),
+                        Blob_.nat64ToBytes(cost),
+                    ])
+                };
              }
         }
     };
 
-    public type FtTransaction =  {
+    public type FtTransaction = {
                     token: FTokenId;
                     created: Timestamp;
                     from: AccountIdentifier;
                     to: AccountIdentifier;
+                    amount: Balance;
+                    memo: Memo;
+                };
+
+    public type FtRegister = {
+                    token: FTokenId;
+                    created: Timestamp;
+                    user: AccountIdentifier;
+                    cost: Balance;
+                };
+
+    public type FtBurn = {
+                    token: FTokenId;
+                    created: Timestamp;
+                    user: AccountIdentifier;
                     amount: Balance;
                     memo: Memo;
                 };

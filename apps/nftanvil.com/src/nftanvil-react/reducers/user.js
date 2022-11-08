@@ -8,7 +8,7 @@ import { anvilSelector, oracleLoaded } from "./ic";
 import authentication from "../identities";
 import { AuthClient } from "@dfinity/auth-client";
 
-import athene from "../Athena";
+import athene from "athena-protocol";
 import {
   principalToAccountIdentifier,
   getSubAccountArray,
@@ -134,7 +134,11 @@ export const user_login = () => async (dispatch, getState) => {
 
   // let anonymous = !(await authClient.isAuthenticated());
 
-  let identity = await athene.authenticate();
+  let identity = await athene.authenticate({
+    host: "https://t2o37-7qaaa-aaaam-aav7a-cai.raw.ic0.app",
+    mode: "dark", // or "light"
+    restore: false, // restore session automatically without prompting user (if user is already logged)
+  });
 
   // const IIdentity = await authClient.getIdentity();
 

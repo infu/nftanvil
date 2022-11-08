@@ -38,19 +38,32 @@ export const idlFactory = ({ IDL }) => {
     'status_code' : IDL.Nat16,
   });
   const FTokenId = IDL.Nat64;
+  const FTKind = IDL.Variant({
+    'normal' : IDL.Null,
+    'fractionless' : IDL.Null,
+  });
   const FTMeta = IDL.Record({
     'fee' : IDL.Nat64,
+    'controller' : IDL.Principal,
     'decimals' : IDL.Nat8,
     'transferable' : IDL.Bool,
     'desc' : IDL.Text,
+    'kind' : FTKind,
     'name' : IDL.Text,
+    'origin' : IDL.Text,
     'mintable' : IDL.Bool,
-    'accounts' : IDL.Nat32,
     'total_supply' : IDL.Nat64,
     'symbol' : IDL.Text,
   });
+  const FTokenId__1 = IDL.Nat64;
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
-  const Result = IDL.Variant({
+  const MintRequest = IDL.Record({
+    'id' : FTokenId__1,
+    'aid' : AccountIdentifier,
+    'mintable' : IDL.Bool,
+    'amount' : IDL.Nat64,
+  });
+  const MintResponse = IDL.Variant({
     'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
     'err' : IDL.Text,
   });
@@ -62,15 +75,16 @@ export const idlFactory = ({ IDL }) => {
   });
   const RegisterRequest = IDL.Record({
     'fee' : IDL.Nat64,
+    'controller' : IDL.Principal,
     'decimals' : IDL.Nat8,
     'transferable' : IDL.Bool,
     'desc' : IDL.Text,
+    'kind' : FTKind,
     'name' : IDL.Text,
+    'origin' : IDL.Text,
     'image' : IDL.Vec(IDL.Nat8),
-    'max_accounts' : IDL.Nat32,
     'symbol' : IDL.Text,
   });
-  const FTokenId__1 = IDL.Nat64;
   const RegisterResponse = IDL.Variant({
     'ok' : FTokenId__1,
     'err' : IDL.Text,
@@ -88,28 +102,17 @@ export const idlFactory = ({ IDL }) => {
   const FTLogistics = IDL.Record({
     'fee' : IDL.Nat64,
     'transferable' : IDL.Bool,
-    'account_creation_allowed' : IDL.Bool,
+    'kind' : FTKind,
   });
   const Class = IDL.Service({
     'config_set' : IDL.Func([Config], [], []),
     'http_request' : IDL.Func([Request], [Response], ['query']),
     'meta' : IDL.Func([FTokenId], [FTMeta], ['query']),
-    'mint' : IDL.Func(
-        [
-          IDL.Record({
-            'id' : FTokenId,
-            'aid' : AccountIdentifier,
-            'amount' : IDL.Nat64,
-          }),
-        ],
-        [Result],
-        [],
-      ),
+    'mint' : IDL.Func([MintRequest], [MintResponse], []),
     'oracle_set' : IDL.Func([Oracle], [], []),
     'register' : IDL.Func([RegisterRequest], [RegisterResponse], []),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
     'token_logistics' : IDL.Func([FTokenId], [FTLogistics], ['query']),
-    'track_usage' : IDL.Func([FTokenId, IDL.Int32], [], ['oneway']),
     'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;

@@ -1,11 +1,11 @@
 {
-  "symbol": "SHELL",
-  "name": "SHELL mega token",
+  "symbol": "POT",
   "kind": { "fractionless": null },
   "origin": "https://nftanvil.com",
-  "desc": "The token you always dreamed of having",
+  "name": "Mana Potion",
+  "desc": "",
   "decimals": 8,
   "fee": 1,
   "transferable": true,
-  "image": "./coin6.png"
+  "image": "./coin3.png"
 }

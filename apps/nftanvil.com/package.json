@@ -17,6 +17,7 @@
     "@reduxjs/toolkit": "^1.8.6",
     "@vvv-interactive/nftanvil-canisters": "^0.46.0",
     "@vvv-interactive/nftanvil-tools": "^0.46.0",
+    "athena-protocol": "/Users/cool/vvv-interactive/athena/packages/athena-client/",
     "formik": "^2.2.9",
     "framer-motion": "^6",
     "moment": "^2.29.4",

@@ -59,18 +59,32 @@ export function pwrToE8s(x) {
   }
 }
 // ANV
+
 export function eToAnv(x) {
   if (!x) return null;
-  return (Number((BigInt(x) * 100n) / 100000n) / 100).toFixed(2);
+  return (Number((BigInt(x) * 10000n) / 100000000n) / 10000).toFixed(4);
 }
 
 export function anvToE(x) {
   try {
-    return BigInt(Math.round(x * 100000));
+    return BigInt(Math.round(x * 100000000));
   } catch (e) {
     return 0n;
   }
 }
+
+// export function eToAnv(x) {
+//   if (!x) return null;
+//   return (Number((BigInt(x) * 100n) / 100000n) / 100).toFixed(2);
+// }
+
+// export function anvToE(x) {
+//   try {
+//     return BigInt(Math.round(x * 100000));
+//   } catch (e) {
+//     return 0n;
+//   }
+// }
 
 export function TextToSlot(aid, range) {
   return (

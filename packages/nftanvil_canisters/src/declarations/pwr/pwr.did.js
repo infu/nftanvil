@@ -22,6 +22,10 @@ export const idlFactory = ({ IDL }) => {
   });
   const AccountIdentifier__2 = IDL.Vec(IDL.Nat8);
   const Balance__3 = IDL.Nat64;
+  const FTKind = IDL.Variant({
+    'normal' : IDL.Null,
+    'fractionless' : IDL.Null,
+  });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
@@ -37,6 +41,29 @@ export const idlFactory = ({ IDL }) => {
     'history_range' : CanisterRange,
     'router' : IDL.Principal,
     'treasury' : CanisterSlot,
+  });
+  const SubAccount = IDL.Vec(IDL.Nat8);
+  const RegisterRequest = IDL.Record({
+    'fee' : IDL.Nat64,
+    'controller' : IDL.Principal,
+    'decimals' : IDL.Nat8,
+    'transferable' : IDL.Bool,
+    'desc' : IDL.Text,
+    'kind' : FTKind,
+    'name' : IDL.Text,
+    'origin' : IDL.Text,
+    'image' : IDL.Vec(IDL.Nat8),
+    'symbol' : IDL.Text,
+  });
+  const FtMintRequest = IDL.Record({
+    'user' : User__2,
+    'subaccount' : IDL.Opt(SubAccount),
+    'amount' : Balance,
+    'options' : RegisterRequest,
+  });
+  const FtMintResponse = IDL.Variant({
+    'ok' : IDL.Record({ 'id' : FTokenId, 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'err' : IDL.Text,
   });
   const ContentType = IDL.Text;
   const IPFS_CID = IDL.Text;
@@ -198,7 +225,6 @@ export const idlFactory = ({ IDL }) => {
     'principal' : IDL.Principal,
     'address' : AccountIdentifier,
   });
-  const SubAccount = IDL.Vec(IDL.Nat8);
   const PurchaseClaimRequest = IDL.Record({
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
@@ -271,12 +297,12 @@ export const idlFactory = ({ IDL }) => {
   const Class = IDL.Service({
     'balance' : IDL.Func([BalanceRequest], [BalanceResponse], ['query']),
     'balanceAddExternal' : IDL.Func(
-        [FTokenId, AccountIdentifier__2, Balance__3],
+        [FTokenId, AccountIdentifier__2, Balance__3, FTKind],
         [],
         [],
       ),
     'balanceAddExternalProtected' : IDL.Func(
-        [FTokenId, AccountIdentifier__2, Balance__3, IDL.Bool],
+        [FTokenId, AccountIdentifier__2, Balance__3, FTKind],
         [Result],
         [],
       ),
@@ -287,12 +313,14 @@ export const idlFactory = ({ IDL }) => {
           IDL.Record({
             'id' : FTokenId,
             'aid' : AccountIdentifier__2,
+            'kind' : FTKind,
             'amount' : Balance__3,
           }),
         ],
         [],
         [],
       ),
+    'ft_register' : IDL.Func([FtMintRequest], [FtMintResponse], []),
     'nft_mint' : IDL.Func([CanisterSlot, MintRequest], [MintResponse], []),
     'nft_purchase' : IDL.Func(
         [CanisterSlot, PurchaseRequest],

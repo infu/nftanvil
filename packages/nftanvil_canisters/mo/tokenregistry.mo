@@ -67,17 +67,16 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
  
  
     public shared({caller}) func register(options: Tr.RegisterRequest) : async Tr.RegisterResponse {
-        // assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
-        assert(options.image.size() <= 131072);
+        assert(Nft.APrincipal.isLegitimate(_conf.space, caller) or caller == Principal.fromText("b7ihm-iv47w-qsaly-gzhrn-ycz2y-d46ml-tttpj-mygjd-5evvp-h3xsv-jqe"));
 
         let id = _total_tokens + 1;
         _total_tokens += 1;
 
-        let {symbol; name; desc; decimals; transferable; fee; image; max_accounts} = options;
-
+        let {symbol; name; desc; decimals; transferable; fee; image; kind; origin; controller} = options;
+    
         let token : Tr.FTokenInfo = {
-            symbol; name; desc; decimals; transferable; fee; image; max_accounts;
-            controller = caller;
+            symbol; name; desc; decimals; transferable; fee; image; kind; origin; 
+            controller;
             var total_supply = 0;
             var accounts = 0;
             var mintable = true;
@@ -88,42 +87,39 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
         #ok(Nat64.fromNat(id));
     };
 
-    public shared({caller}) func mint({id: FTokenId; aid: Nft.AccountIdentifier; amount:Nat64}) : async Result.Result< {transactionId : Blob}, Text> {
+    public shared({caller}) func mint({id: FTokenId; aid: Nft.AccountIdentifier; amount:Nat64; mintable:Bool} : Tr.MintRequest) : async Tr.MintResponse {
         let t = switch(_state[Nat64.toNat(id)]) { case (?x) x; case(_) return #err("Token doesn't exist"); };
 
         if (t.mintable != true) return #err("Not mintable");
-        if (t.controller != caller) return #err("Not token controller");
+        if (t.controller != caller and Nft.APrincipal.isLegitimate(_conf.space, caller) == false) return #err("Not token controller");
 
-        await Cluster.pwrFromAid(_conf, aid).ft_mint({id; aid; amount});
+        await Cluster.pwrFromAid(_conf, aid).ft_mint({id; aid; amount; kind = t.kind});
         
         let transactionId = await Cluster.history(_conf).add(#ft(#mint({token = id; created=Time.now(); user=aid; amount=amount})));
         
         t.total_supply += amount;
+        t.mintable := mintable;
 
         #ok({transactionId});
     };
 
 
-    public shared({caller}) func track_usage(id: FTokenId, used: Int32 ) : () {
-        assert(Nft.APrincipal.isLegitimate(_conf.space, caller));
-        let ?t = _state[Nat64.toNat(id)];
 
-         t.accounts := Int32.toNat32( Int32.fromNat32(t.accounts) + used ) ;
-       
-    };
 
     public query func meta(id: FTokenId) : async Tr.FTMeta {
         let ?t = _state[Nat64.toNat(id)];
         {
             symbol = t.symbol;
             name = t.name;
+            origin = t.origin;
+            kind = t.kind;
             desc = t.desc;
             decimals = t.decimals;
             transferable = t.transferable;
             fee = t.fee;
             mintable = t.mintable;
             total_supply = t.total_supply;
-            accounts = t.accounts;
+            controller = t.controller;
         }
     };
 
@@ -133,7 +129,7 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
         return {
             transferable = t.transferable;
             fee = t.fee;
-            account_creation_allowed = t.accounts < t.max_accounts
+            kind = t.kind;
         };
     };
 

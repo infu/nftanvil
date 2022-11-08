@@ -22,11 +22,6 @@ type StatsResponse =
    rts_total_allocation: nat;
    rts_version: text;
  };
-type Result = 
- variant {
-   err: text;
-   ok: record {transactionId: blob;};
- };
 type Response = 
  record {
    body: blob;
@@ -48,12 +43,14 @@ type RegisterResponse =
  };
 type RegisterRequest = 
  record {
+   controller: principal;
    decimals: nat8;
    desc: text;
    fee: nat64;
    image: blob;
-   max_accounts: nat32;
+   kind: FTKind;
    name: text;
+   origin: text;
    symbol: text;
    transferable: bool;
  };
@@ -64,6 +61,18 @@ type Oracle =
    icpFee: nat64;
    pwrFee: nat64;
  };
+type MintResponse = 
+ variant {
+   err: text;
+   ok: record {transactionId: blob;};
+ };
+type MintRequest = 
+ record {
+   aid: AccountIdentifier;
+   amount: nat64;
+   id: FTokenId__1;
+   mintable: bool;
+ };
 type HeaderField = 
  record {
    text;
@@ -73,21 +82,28 @@ type FTokenId__1 = nat64;
 type FTokenId = nat64;
 type FTMeta = 
  record {
-   accounts: nat32;
+   controller: principal;
    decimals: nat8;
    desc: text;
    fee: nat64;
+   kind: FTKind;
    mintable: bool;
    name: text;
+   origin: text;
    symbol: text;
    total_supply: nat64;
    transferable: bool;
  };
 type FTLogistics = 
  record {
-   account_creation_allowed: bool;
    fee: nat64;
+   kind: FTKind;
    transferable: bool;
+ };
+type FTKind = 
+ variant {
+   fractionless;
+   normal;
  };
 type Config = 
  record {
@@ -108,16 +124,11 @@ type Class =
    config_set: (Config) -> ();
    http_request: (Request) -> (Response) query;
    meta: (FTokenId) -> (FTMeta) query;
-   mint: (record {
-            aid: AccountIdentifier;
-            amount: nat64;
-            id: FTokenId;
-          }) -> (Result);
+   mint: (MintRequest) -> (MintResponse);
    oracle_set: (Oracle) -> ();
    register: (RegisterRequest) -> (RegisterResponse);
    stats: () -> (StatsResponse) query;
    token_logistics: (FTokenId) -> (FTLogistics) query;
-   track_usage: (FTokenId, int32) -> () oneway;
    wallet_receive: () -> ();
  };
 type CanisterSlot = nat64;

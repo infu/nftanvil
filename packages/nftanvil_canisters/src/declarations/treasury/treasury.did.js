@@ -65,6 +65,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'stats' : IDL.Func([], [StatsResponse], ['query']),
+    'wallet_receive' : IDL.Func([], [], []),
   });
   return Class;
 };
