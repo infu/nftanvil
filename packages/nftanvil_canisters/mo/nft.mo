@@ -271,24 +271,37 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 switch(SNFT_tidxGet(tokenIndex)) {
                     case(?seller) {
 
-                        let {marketplace;  amount} = vars.price;
+                        let {marketplace;  amount; token} = vars.price;
+                        if (token != request.payment_token) return #err(#Rejected);
                         let {affiliate} = request;
                         if (amount == 0) return #err(#NotForSale);
 
-                        let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
+                        let {recharge_cost; payment} = switch(request.payment_token_kind) {
+                            case (#normal) {
+                                let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
 
-                        if (request.amount < amount) return #err(#InsufficientPayment(amount));
+                                if (request.amount < amount) return #err(#InsufficientPayment(amount));
 
-                        let recharge_cost = _oracle.pwrFee + diffStorage + diffOps;
+                                let recharge_cost = _oracle.pwrFee + diffStorage + diffOps;
 
-                        let payment = amount - recharge_cost;
+                                let payment = amount - recharge_cost;
 
-                        if (payment == 0) return #err(#Rejected);
+                                if (payment == 0) return #err(#Rejected);
 
-                        // recharge
-                        vars.pwrStorage := topStorage;
-                        vars.pwrOps := topOps;
-                        vars.ttl := null;
+                                // recharge
+                                vars.pwrStorage := topStorage;
+                                vars.pwrOps := topOps;
+                                vars.ttl := null;
+
+                                {recharge_cost; payment};
+
+                            };
+                            case (#fractionless) {
+                               if (request.amount < amount) return #err(#InsufficientPayment(amount));
+                               {recharge_cost:Balance=0; payment:Balance=amount}
+                            };
+                        };
+             
 
 
                         // move
@@ -313,14 +326,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                         };
 
                         try {
-                        let transactionId = await Cluster.history(_conf).add(#nft(#purchase(purchase)));
-                        addTransaction(vars, transactionId);
+                            let transactionId = await Cluster.history(_conf).add(#nft(#purchase(purchase)));
+                            addTransaction(vars, transactionId);
 
-                        #ok({transactionId; purchase});
+                            #ok({transactionId; purchase});
 
                         } catch (e) {
-                        _icall_errors += 1;
-                        #err(#ICE(debug_show(Error.code(e)) # " " # Error.message(e)));
+                            _icall_errors += 1;
+                            #err(#ICE(debug_show(Error.code(e)) # " " # Error.message(e)));
                         };
                     };
                     case (_) {
@@ -336,8 +349,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
   
 
     public shared({caller}) func set_price(request: Nft.SetPriceRequest) : async Nft.SetPriceResponse {
-            if ((request.price.amount != 0) and (request.price.amount < 100000)) return #err(#TooLow);
-            if (request.price.amount > 1000000000000) return #err(#TooHigh);
 
             if (Nft.User.validate(request.user) == false) return #err(#Other("Invalid user"));
             
@@ -353,19 +364,42 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             
                             if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
 
-                            let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
+                            let {amount; marketplace; token} = request.price;
+
+                            let { transferable; fee; kind } = await Cluster.tokenregistry(_conf).token_logistics(token);
+                            Debug.print(debug_show(kind));
+                            Debug.print(debug_show(amount));
+
+                            let new_price = switch(kind) {
+                                        case(#normal) {
+                                            if ((request.price.amount != 0) and (request.price.amount < 100000)) return #err(#TooLow);
+
+                                            let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
+
+                                            {
+                                            token = token;
+                                            amount = switch(amount != 0) {
+                                                case (true) amount + diffStorage + diffOps + _oracle.pwrFee;
+                                                case (false) amount
+                                            };
+                                            marketplace;
+                                            };
+
+                                        };
+                                        case (#fractionless) {
+                                            {
+                                            token = token;
+                                            amount;
+                                            marketplace = null;
+                                            };
+                                        };
+                                    };
                             
-                            let {amount; marketplace} = request.price;
-                            
-                            let new_price = {
-                                amount = switch(amount != 0) {
-                                    case (true) amount + diffStorage + diffOps + _oracle.pwrFee;
-                                    case (false) amount
-                                };
-                                marketplace;
-                                };
+                            Debug.print(debug_show(new_price));
+
                                 
                             vars.price := new_price;
+                            
 
                             _priceIndex := _priceIndex + 1;
 
@@ -978,7 +1012,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 };
              var cooldownUntil = null; // in minutes
              var sockets = [];
-             var price = m.price;
+             var price = Nft.Price.NotForSale();
              var pwrStorage = mintPricePwrStorage;
              var pwrOps = mintPricePwrOps;
              var ttl = m.ttl;
@@ -989,16 +1023,17 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         };
 
-        let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(md, mvar);
+        // let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(md, mvar);
                             
-        let {amount; marketplace} = m.price;
+        // let {amount; marketplace} = m.price;
 
-        if (amount != 0) {
-            mvar.price := {
-                amount = amount + diffStorage + diffOps + _oracle.pwrFee;
-                marketplace;
-                };
-        };
+        // if (amount != 0) {
+        //     mvar.price := {
+        //         token = 0;
+        //         amount = amount + diffStorage + diffOps + _oracle.pwrFee;
+        //         marketplace;
+        //         };
+        // };
 
 
 
@@ -1066,12 +1101,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
             case (_) ();
         };
 
-
+    
         if (Nft.MetadataInput.validate(request.metadata) == false) return #err(#Invalid("Meta invalid - Out of boundaries"));
 
         if (Nft.Share.validate(request.metadata.authorShare) == false) return #err(#Invalid("Minter share has to be between 0 and 100 (0-1%)"));
 
-        if (request.metadata.rechargeable == false and request.metadata.price.amount != 0) return #err(#Invalid("Meta invalid - Can't sell non rechargeable NFTs"));
+        // if (request.metadata.rechargeable == false and request.metadata.price.amount != 0) return #err(#Invalid("Meta invalid - Can't sell non rechargeable NFTs"));
 
 
         await SNFT_mint(author, request);

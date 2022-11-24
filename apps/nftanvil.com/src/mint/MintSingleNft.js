@@ -31,6 +31,7 @@ import {
   Text,
   Grid,
   Tag,
+  Image,
 } from "@chakra-ui/react";
 
 import {
@@ -85,7 +86,7 @@ import {
   validateDomain,
   validateTagName,
 } from "@vvv-interactive/nftanvil-tools/cjs/validate.js";
-
+import mint_nft from "../assets/mint_nft.svg";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 export const MintSingleNft = () => {
@@ -184,7 +185,7 @@ const record2request = (v) => {
 
 export const MintForm = () => {
   const dispatch = useDispatch();
-
+  const address = useSelector((state) => state.user.main_account);
   return (
     <Center>
       <Formik
@@ -211,7 +212,9 @@ export const MintForm = () => {
         }}
         onSubmit={async (values, actions) => {
           try {
-            await dispatch(nft_mint(record2request(form2record(values))));
+            await dispatch(
+              nft_mint(address, record2request(form2record(values)))
+            );
             actions.setSubmitting(false);
           } catch (e) {
             actions.setSubmitting(false);
@@ -232,7 +235,7 @@ const FormInner = ({ props }) => {
 
   const { width, height } = useWindowSize();
   const isDesktop = width > 480;
-  const address = useSelector((state) => Object.keys(state.user.accounts)[0]);
+  const address = useSelector((state) => state.user.main_account);
 
   const pro = useSelector((state) => state.ui.pro);
 
@@ -261,18 +264,28 @@ const FormInner = ({ props }) => {
     <>
       <Stack mt="80px" direction={isDesktop ? "row" : "column"}>
         <Box
-          bg={boxColor}
+          bg={"linear-gradient(339deg, rgb(31 29 46) 0%, rgb(38 31 44) 100%);"}
           borderRadius={"md"}
-          border={1}
           maxW={480}
           minW={isDesktop ? 480 : width - 32}
           w={isDesktop ? 480 : width - 32}
           p={5}
+          sx={{ position: "relative" }}
+          border="2px solid #3c2449"
         >
+          <Image
+            src={mint_nft}
+            sx={{
+              position: "absolute",
+              left: "-8px",
+              top: "-42px",
+              width: "150px",
+            }}
+          />
           <Form>
             <Flex
               mb="8"
-              bg={boxHeadColor}
+              bg={"#3c2449"}
               mt="-5"
               ml="-5"
               mr="-5"
@@ -281,8 +294,12 @@ const FormInner = ({ props }) => {
               borderTopRightRadius="md"
             >
               <Text
-                fontSize="24px"
-                sx={{ fontWeight: "bold", fontFamily: "Greycliff" }}
+                fontSize="16px"
+                sx={{
+                  fontWeight: "bold",
+                  fontFamily: "Greycliff",
+                  paddingLeft: "112px",
+                }}
               >
                 Mint Non-Fungible Token
               </Text>

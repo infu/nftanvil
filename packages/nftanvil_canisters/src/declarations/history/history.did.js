@@ -31,11 +31,22 @@ export const idlFactory = ({ IDL }) => {
     'memo' : Memo,
     'amount' : Balance,
   });
+  const TokenIdentifier = IDL.Nat64;
+  const EventPromoteTarget = IDL.Variant({ 'nft' : TokenIdentifier });
+  const EventPromote = IDL.Record({
+    'created' : Timestamp,
+    'user' : AccountIdentifier,
+    'target' : EventPromoteTarget,
+    'amount' : Balance,
+    'location' : IDL.Nat64,
+    'payment_token' : FTokenId,
+  });
   const FtEvent = IDL.Variant({
     'burn' : FtBurn,
     'mint' : FtMint,
     'register' : FtRegister,
     'transfer' : FtTransaction,
+    'promote' : EventPromote,
   });
   const EventFungibleTransaction = IDL.Record({
     'to' : AccountIdentifier,
@@ -45,15 +56,53 @@ export const idlFactory = ({ IDL }) => {
     'amount' : Balance,
   });
   const AnvEvent = IDL.Variant({ 'transfer' : EventFungibleTransaction });
+  const DexAddLiquidity = IDL.Record({
+    'created' : Timestamp,
+    'token_two_amount' : Balance,
+    'user' : AccountIdentifier,
+    'token_one_amount' : Balance,
+    'token_one' : FTokenId,
+    'token_two' : FTokenId,
+  });
+  const DexSwap = IDL.Record({
+    'created' : Timestamp,
+    'reverse' : IDL.Bool,
+    'user' : AccountIdentifier,
+    'amount_recieved' : Balance,
+    'token_one' : FTokenId,
+    'token_two' : FTokenId,
+    'amount' : Balance,
+  });
+  const DexRemLiquidity = IDL.Record({
+    'created' : Timestamp,
+    'token_two_amount' : Balance,
+    'user' : AccountIdentifier,
+    'token_one_amount' : Balance,
+    'token_one' : FTokenId,
+    'token_two' : FTokenId,
+  });
+  const DexCreatePool = IDL.Record({
+    'created' : Timestamp,
+    'cost' : Balance,
+    'user' : AccountIdentifier,
+    'token_one' : FTokenId,
+    'token_two' : FTokenId,
+  });
+  const DexEvent = IDL.Variant({
+    'add_liquidity' : DexAddLiquidity,
+    'swap' : DexSwap,
+    'rem_liquidity' : DexRemLiquidity,
+    'create_pool' : DexCreatePool,
+  });
   const Cooldown = IDL.Nat32;
   const ItemUse = IDL.Variant({
     'consume' : IDL.Null,
     'prove' : IDL.Null,
     'cooldown' : Cooldown,
   });
-  const TokenIdentifier = IDL.Nat64;
   const Share = IDL.Nat16;
   const Price = IDL.Record({
+    'token' : FTokenId,
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
     ),
@@ -149,6 +198,7 @@ export const idlFactory = ({ IDL }) => {
   const EventInfo__1 = IDL.Variant({
     'ft' : FtEvent,
     'anv' : AnvEvent,
+    'dex' : DexEvent,
     'nft' : NftEvent,
     'pwr' : PwrEvent,
   });
@@ -172,6 +222,7 @@ export const idlFactory = ({ IDL }) => {
   const EventInfo = IDL.Variant({
     'ft' : FtEvent,
     'anv' : AnvEvent,
+    'dex' : DexEvent,
     'nft' : NftEvent,
     'pwr' : PwrEvent,
   });

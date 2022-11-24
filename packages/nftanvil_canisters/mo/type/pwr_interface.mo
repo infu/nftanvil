@@ -52,6 +52,31 @@ module {
 
     };
 
+   public type CreatePoolRequest = {
+      token_one : FTokenId;
+      token_two : FTokenId;
+    };
+
+    public type PromoteRequest = {
+        user         : Nft.User;
+        subaccount : ?SubAccount;
+        location: Nat64;
+        payment_token: FTokenId;
+        target : Nft.EventPromoteTarget;
+        amount : Balance;
+    };
+    
+    public type PromoteResponse = Result.Result<{
+        transactionId: Blob;
+    },{
+            #Rejected;
+            #InvalidToken;
+            #InsufficientBalance;
+            #RechargeUnnecessary;
+            #Unauthorized;
+            #InsufficientPayment : Balance;
+        }>;
+
     public type FtMintRequest = {
         user         : Nft.User;
         subaccount : ?SubAccount;

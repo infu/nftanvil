@@ -80,6 +80,16 @@ type HeaderField =
  };
 type FTokenId__1 = nat64;
 type FTokenId = nat64;
+type FTShort = 
+ record {
+   controller: principal;
+   id: FTokenId__1;
+   kind: FTKind;
+   name: text;
+   origin: text;
+   symbol: text;
+   transferable: bool;
+ };
 type FTMeta = 
  record {
    controller: principal;
@@ -96,6 +106,7 @@ type FTMeta =
  };
 type FTLogistics = 
  record {
+   decimals: nat8;
    fee: nat64;
    kind: FTKind;
    transferable: bool;
@@ -121,6 +132,7 @@ type Config =
  };
 type Class = 
  service {
+   all_tokens: () -> (vec FTShort) query;
    config_set: (Config) -> ();
    http_request: (Request) -> (Response) query;
    meta: (FTokenId) -> (FTMeta) query;

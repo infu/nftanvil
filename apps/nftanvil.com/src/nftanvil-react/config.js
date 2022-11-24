@@ -9,3 +9,5 @@ export const AFFILIATE_SHARE = 100;
 
 // This is the nft which curates the storefront
 export const MARKETPLACE_STAKE_TOKEN_AUTHOR_AID = "aid";
+
+export const DEX_SWAP_FEE = 0.01;

@@ -7,6 +7,8 @@ import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accounti
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
+  ft_fetch_meta,
+  useFT,
 } from "../index.js";
 
 import { Tooltip } from "@chakra-ui/react";
@@ -184,8 +186,70 @@ export const ANV = ({ children }) => {
   let [a, b] = val.toString().split(".");
   return (
     <Sanv>
-      {a}.<span>{b}</span> <b>ANV</b>
+      {a}
+      {b !== "0000" ? (
+        <>
+          .<span>{b}</span>
+        </>
+      ) : null}{" "}
+      <b>ANV</b>
     </Sanv>
+  );
+};
+
+const Sft = styled.span`
+  font-family: Hexaframe;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgb(220, 80, 255);
+  .fractions {
+    color: rgb(160, 0, 255);
+    vertical-align: super;
+    font-size: 8px;
+    position: relative;
+    top: 0.1em;
+  }
+  b {
+    color: rgb(160, 40, 250);
+  }
+  .idnum {
+    font-size: 10px;
+    color: rgb(160, 40, 250);
+    opacity: 0.7;
+  }
+`;
+
+export const FTI = ({ id, amount }) => {
+  let meta = useFT(id);
+
+  if (!meta)
+    return (
+      <Sanv>
+        <b>...</b>
+      </Sanv>
+    );
+
+  let { symbol, kind } = meta;
+
+  if (!amount)
+    return (
+      <Sanv>
+        <b>{symbol.toUpperCase()}</b>
+      </Sanv>
+    );
+  if ("fractionless" in kind)
+    return (
+      <Sft>
+        {amount} <b>{symbol.toUpperCase()}</b>{" "}
+        <span className="idnum">#{id.padStart(4, 0)}</span>
+      </Sft>
+    );
+  let val = AccountIdentifier.placeDecimal(amount, meta.decimals, 4);
+  let [a, b] = val.toString().split(".");
+  return (
+    <Sft>
+      {a}.<span className="fractions">{b}</span> <b>{symbol.toUpperCase()}</b>
+    </Sft>
   );
 };
 

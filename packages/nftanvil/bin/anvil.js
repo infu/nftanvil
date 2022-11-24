@@ -1004,6 +1004,7 @@ const ftMint = async (id, aid, amount, opts) => {
     id: BigInt(id),
     aid: AccountIdentifier.TextToArray(aid),
     amount: BigInt(amount),
+    mintable: true,
   });
 
   console.log(rez);

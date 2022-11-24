@@ -12,7 +12,7 @@ import {
   user_login_ii,
   user_logout,
 } from "../index.js";
-
+import Athene from "../assets/athene.svg";
 export function Auth() {
   const authenticated = useSelector((state) => state.user.authenticated);
 
@@ -20,14 +20,15 @@ export function Auth() {
 
   return !authenticated ? (
     <Button
-      variant="solid"
-      // rightIcon={
-      //   <img src={Athene} style={{ width: "32px", height: "32px" }} alt="" />
-      // }
+      size="lg"
+      variant="outline"
+      rightIcon={
+        <img src={Athene} style={{ width: "32px", height: "32px" }} alt="" />
+      }
       colorScheme="gray"
       onClick={() => dispatch(user_login())}
     >
-      Authenticate
+      Athena Identity
     </Button>
   ) : null;
 }
@@ -40,9 +41,12 @@ export function AuthII() {
   return !authenticated ? (
     <Button
       variant="outline"
-      size="sm"
+      size="lg"
       colorScheme="gray"
       onClick={() => dispatch(user_login_ii())}
+      rightIcon={
+        <img src={Dfinity} style={{ width: "32px", height: "32px" }} alt="" />
+      }
     >
       Internet Identity
     </Button>

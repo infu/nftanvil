@@ -14,27 +14,12 @@ export const Logo = () => {
           sx={{
             fontFamily: "Greycliff",
             position: "absolute",
-            top: "-5px",
+            top: "0px",
             left: "30px",
             color: theme === "dark" ? "gray.300" : "gray.800",
           }}
         >
-          NFT<b>ANVIL</b>
-        </Text>
-        <Text
-          mt="7px"
-          fontSize="11.4px"
-          ml="10px"
-          sx={{
-            position: "absolute",
-            left: "30px",
-            top: "12px",
-            width: "85px",
-            fontFamily: "Greycliff",
-            color: theme === "dark" ? "gray.300" : "gray.800",
-          }}
-        >
-          mint a promise
+          <b>ANVIL</b>
         </Text>
       </Stack>
     </Box>

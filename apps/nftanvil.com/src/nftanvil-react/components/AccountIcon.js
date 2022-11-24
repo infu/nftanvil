@@ -22,8 +22,12 @@ import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
 
 import { toast } from "react-toastify";
 
-export const AccountIcon = ({ address, provider, onClick }) => {
+export const AccountIcon = ({ address, onClick }) => {
   const dispatch = useDispatch();
+
+  const provider = useSelector(
+    (state) => state.user.accounts[address]?.provider
+  );
 
   const { onCopy } = useClipboard(address);
 

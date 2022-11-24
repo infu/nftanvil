@@ -6,6 +6,17 @@ import {
   useAnvilSelector,
   tokenSelector,
   dialog_open,
+  inv_clear_temporary,
+  inv_send_temporary,
+  inv_create_offer,
+  TaskButton,
+  task_start,
+  task_end,
+  task_run,
+  inv_offer_info,
+  FTAbstract,
+  NFT,
+  inv_accept_offer,
 } from "../nftanvil-react";
 import {
   Stack,
@@ -17,9 +28,13 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+
+import { ArrowForwardIcon, AddIcon } from "@chakra-ui/icons";
+
+import { useParams } from "react-router-dom";
 
 import { LayoutOneIcon, LayoutTwoIcon } from "../nftanvil-react/icons";
-
 export const InventoryPage = () => {
   let [count, setCount] = useState(1);
   return (
@@ -40,19 +55,19 @@ export const InventoryPage = () => {
 
 export const InventorySingle = () => {
   let dispatch = useAnvilDispatch();
-  const accounts = useAnvilSelector((state) => state.user.accounts);
-
-  const [address1, setAddress1] = useState(Object.keys(accounts)[0]);
+  const address = useAnvilSelector((state) => state.user.main_account);
+  const [addressOne, setAddressOne] = useState(address);
 
   const navigate = useNavigate();
 
   return (
     <Box>
       <Inventory
-        key={address1}
+        key={address}
         cols={10}
         rows={8}
-        initialAddress={address1}
+        address={addressOne}
+        onChangeAddress={setAddressOne}
         onClickNft={(id) => {
           navigate("/" + id);
         }}
@@ -63,39 +78,179 @@ export const InventorySingle = () => {
 
 export const InventoryDouble = () => {
   let dispatch = useAnvilDispatch();
-  const accounts = useAnvilSelector((state) => state.user.accounts);
-
-  const [address1, setAddress1] = useState(Object.keys(accounts)[0]);
-  const [address2, setAddress2] = useState(Object.keys(accounts)[1]);
+  // const accounts = useAnvilSelector((state) => state.user.accounts);
+  const address = useAnvilSelector((state) => state.user.main_account);
 
   const navigate = useNavigate();
 
-  return (
-    <Stack direction="horizontal">
-      <Box mr={4}>
-        <Inventory
-          key={address1}
-          cols={5}
-          rows={8}
-          initialAddress={address1}
-          onClickNft={(id) => {
-            navigate("/" + id);
-          }}
-        />
-      </Box>
+  const task_id = address + "create_offer";
 
-      <Box>
-        <Inventory
-          key={address2}
-          cols={5}
-          rows={8}
-          onClickNft={(id) => {
-            navigate("/" + id);
-          }}
-          initialAddress={address2}
-          onOpenNft={(id) => {}}
-        />
+  const [addressOne, setAddressOne] = useState(address);
+  const [addressTwo, setAddressTwo] = useState(null);
+
+  const tmp_one = useAnvilSelector(
+    (state) => state.inventory["tmp.attached." + addressOne]
+  );
+  const tmp_two = useAnvilSelector(
+    (state) => state.inventory["tmp.attached." + addressTwo]
+  );
+
+  useEffect(() => {
+    return () => {
+      // unmount
+      dispatch(inv_clear_temporary());
+    };
+  }, []);
+
+  const tmp_one_has_content = tmp_one?.content
+    ? Object.keys(tmp_one.content).length > 0
+    : false;
+  const tmp_two_has_content = tmp_two?.content
+    ? Object.keys(tmp_two.content).length > 0
+    : false;
+  const onCreateOffer = () => {
+    dispatch(
+      task_run(
+        task_id,
+        async () => {
+          let code = await dispatch(
+            inv_create_offer({ from_aid: addressOne, to_aid: addressTwo })
+          );
+
+          navigator.clipboard.writeText("https://nftanvil.com/offer/" + code);
+        },
+        { successMsg: "Copied to clipboard" }
+      )
+    );
+  };
+
+  const onSend = () => {
+    dispatch(inv_send_temporary({ from_aid: addressOne, to_aid: addressTwo }));
+  };
+
+  return (
+    <Stack>
+      <Stack direction="horizontal">
+        <Box mr={4}>
+          <Inventory
+            key={address}
+            cols={5}
+            rows={8}
+            address={addressOne}
+            onChangeAddress={setAddressOne}
+            onClickNft={(id) => {
+              navigate("/" + id);
+            }}
+          />
+        </Box>
+
+        <Box>
+          <Inventory
+            cols={5}
+            rows={8}
+            onChangeAddress={setAddressTwo}
+            onClickNft={(id) => {
+              navigate("/" + id);
+            }}
+            address={addressTwo}
+            onOpenNft={(id) => {}}
+          />
+        </Box>
+      </Stack>
+      <Box pt="5">
+        <Center>
+          {tmp_one_has_content && tmp_two_has_content ? (
+            <TaskButton
+              task_id={task_id}
+              size="lg"
+              colorScheme="purple"
+              rightIcon={<AddIcon />}
+              onClick={onCreateOffer}
+            >
+              Create offer
+            </TaskButton>
+          ) : null}
+          {!tmp_one_has_content && tmp_two_has_content ? (
+            <Button
+              size="lg"
+              colorScheme="purple"
+              rightIcon={<ArrowForwardIcon />}
+              onClick={onSend}
+            >
+              Send
+            </Button>
+          ) : null}
+        </Center>
       </Box>
     </Stack>
+  );
+};
+
+export const OfferPage = () => {
+  const [offer, setOffer] = useState(null);
+  const { code } = useParams();
+  const task_id = "accept_offer";
+
+  let dispatch = useAnvilDispatch();
+  const address = useAnvilSelector((state) => state.user.main_account);
+
+  useEffect(() => {
+    dispatch(inv_offer_info(code)).then(setOffer);
+  }, []);
+
+  const onAcceptOffer = () => {
+    dispatch(
+      task_run(
+        task_id,
+        async () => {
+          console.log("offer", offer);
+          await dispatch(
+            inv_accept_offer({
+              aid: offer.code.aid,
+              containerId: offer.code.containerId,
+              my_tokens: offer.requirements,
+            })
+          );
+        },
+        { successMsg: "Success!" }
+      )
+    );
+  };
+  const displaySide = (tokens) => {
+    return tokens.map((token, idx) => {
+      if ("nft" in token) {
+        return <NFT key={idx} token={{ id: tokenToText(token.nft.id) }} />;
+      } else if ("ft" in token) {
+        return (
+          <FTAbstract
+            key={idx}
+            id={Number(token.ft.id).toString()}
+            bal={Number(token.ft.balance)}
+          />
+        );
+      }
+    });
+  };
+  if (!offer) return null;
+  return (
+    <Center mt={"50px"}>
+      <Stack w="400px" textAlign={"center"}>
+        <HStack>
+          <HStack>{displaySide(offer.requirements)}</HStack>
+          <ArrowForwardIcon />
+          <HStack>{displaySide(offer.tokens)}</HStack>
+        </HStack>
+
+        <TaskButton
+          task_id={task_id}
+          size="lg"
+          colorScheme="purple"
+          rightIcon={<ArrowForwardIcon />}
+          onClick={onAcceptOffer}
+        >
+          Accept offer
+        </TaskButton>
+      </Stack>
+    </Center>
   );
 };

@@ -42,6 +42,45 @@ export const idlFactory = ({ IDL }) => {
     'router' : IDL.Principal,
     'treasury' : CanisterSlot,
   });
+  const Balance__4 = IDL.Nat64;
+  const FTokenId__2 = IDL.Nat64;
+  const AddLiquidityRequest = IDL.Record({
+    'aid' : AccountIdentifier,
+    'token_two_amount' : Balance__4,
+    'token_one_amount' : Balance__4,
+    'token_one' : FTokenId__2,
+    'token_two' : FTokenId__2,
+  });
+  const SubAccount__2 = IDL.Vec(IDL.Nat8);
+  const AddLiquidityResponse = IDL.Variant({
+    'ok' : IDL.Float64,
+    'err' : IDL.Text,
+  });
+  const CreatePoolRequest = IDL.Record({
+    'token_one' : FTokenId,
+    'token_two' : FTokenId,
+  });
+  const CreatePoolResponse = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const RemLiquidityRequest = IDL.Record({
+    'aid' : AccountIdentifier,
+    'token_one' : FTokenId__2,
+    'token_two' : FTokenId__2,
+  });
+  const RemLiquidityResponse = IDL.Variant({
+    'ok' : IDL.Record({ 'one' : Balance__4, 'two' : Balance__4 }),
+    'err' : IDL.Text,
+  });
+  const SwapRequest = IDL.Record({
+    'reverse' : IDL.Bool,
+    'amount_required' : Balance__4,
+    'token_one' : FTokenId__2,
+    'token_two' : FTokenId__2,
+    'amount' : Balance__4,
+  });
+  const SwapResponse = IDL.Variant({
+    'ok' : IDL.Record({ 'recieve' : IDL.Nat64, 'refund' : IDL.Nat64 }),
+    'err' : IDL.Text,
+  });
   const SubAccount = IDL.Vec(IDL.Nat8);
   const RegisterRequest = IDL.Record({
     'fee' : IDL.Nat64,
@@ -88,12 +127,6 @@ export const idlFactory = ({ IDL }) => {
   const Tags = IDL.Vec(Tag);
   const Attribute = IDL.Tuple(IDL.Text, IDL.Nat16);
   const Attributes = IDL.Vec(Attribute);
-  const Price = IDL.Record({
-    'marketplace' : IDL.Opt(
-      IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
-    ),
-    'amount' : IDL.Nat64,
-  });
   const ItemTransfer = IDL.Variant({
     'unrestricted' : IDL.Null,
     'bindsForever' : IDL.Null,
@@ -113,12 +146,10 @@ export const idlFactory = ({ IDL }) => {
     'tags' : Tags,
     'secret' : IDL.Bool,
     'attributes' : Attributes,
-    'price' : Price,
     'transfer' : ItemTransfer,
     'rechargeable' : IDL.Bool,
     'customVar' : IDL.Opt(CustomVar),
   });
-  const SubAccount__2 = IDL.Vec(IDL.Nat8);
   const MintRequest = IDL.Record({
     'metadata' : MetadataInput,
     'user' : User__2,
@@ -154,14 +185,20 @@ export const idlFactory = ({ IDL }) => {
   });
   const TokenIdentifier = IDL.Nat64;
   const Balance__2 = IDL.Nat64;
+  const FTokenId__1 = IDL.Nat64;
   const PurchaseRequest = IDL.Record({
     'token' : TokenIdentifier,
     'user' : User__2,
     'subaccount' : IDL.Opt(SubAccount__2),
+    'payment_token_kind' : IDL.Variant({
+      'normal' : IDL.Null,
+      'fractionless' : IDL.Null,
+    }),
     'affiliate' : IDL.Opt(
       IDL.Record({ 'address' : AccountIdentifier, 'amount' : Balance__2 })
     ),
     'amount' : Balance__2,
+    'payment_token' : FTokenId__1,
   });
   const Time = IDL.Int;
   const NFTPurchase = IDL.Record({
@@ -220,6 +257,26 @@ export const idlFactory = ({ IDL }) => {
     'anvFee' : IDL.Nat64,
     'icpCycles' : IDL.Nat64,
     'pwrFee' : IDL.Nat64,
+  });
+  const EventPromoteTarget = IDL.Variant({ 'nft' : TokenIdentifier });
+  const PromoteRequest = IDL.Record({
+    'user' : User__2,
+    'subaccount' : IDL.Opt(SubAccount),
+    'target' : EventPromoteTarget,
+    'amount' : Balance,
+    'location' : IDL.Nat64,
+    'payment_token' : FTokenId,
+  });
+  const PromoteResponse = IDL.Variant({
+    'ok' : IDL.Record({ 'transactionId' : IDL.Vec(IDL.Nat8) }),
+    'err' : IDL.Variant({
+      'InsufficientPayment' : Balance,
+      'RechargeUnnecessary' : IDL.Null,
+      'InsufficientBalance' : IDL.Null,
+      'InvalidToken' : IDL.Null,
+      'Rejected' : IDL.Null,
+      'Unauthorized' : IDL.Null,
+    }),
   });
   const User = IDL.Variant({
     'principal' : IDL.Principal,
@@ -307,6 +364,26 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'config_set' : IDL.Func([Config], [], []),
+    'dex_add_liquidity' : IDL.Func(
+        [AddLiquidityRequest, User__2, IDL.Opt(SubAccount__2)],
+        [AddLiquidityResponse],
+        [],
+      ),
+    'dex_create_pool' : IDL.Func(
+        [CreatePoolRequest, User__2, IDL.Opt(SubAccount__2)],
+        [CreatePoolResponse],
+        [],
+      ),
+    'dex_rem_liquidity' : IDL.Func(
+        [RemLiquidityRequest, User__2, IDL.Opt(SubAccount__2)],
+        [RemLiquidityResponse],
+        [],
+      ),
+    'dex_swap' : IDL.Func(
+        [SwapRequest, User__2, IDL.Opt(SubAccount__2)],
+        [SwapResponse],
+        [],
+      ),
     'exists' : IDL.Func([AccountIdentifier], [IDL.Bool], ['query']),
     'ft_mint' : IDL.Func(
         [
@@ -333,6 +410,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'oracle_set' : IDL.Func([Oracle], [], []),
+    'promote' : IDL.Func([PromoteRequest], [PromoteResponse], []),
     'pwr_purchase_claim' : IDL.Func(
         [PurchaseClaimRequest],
         [PurchaseClaimResponse],

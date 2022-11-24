@@ -2,6 +2,25 @@ type TransactionId = blob;
 type TokenIndex = nat16;
 type TokenIdentifier__1 = nat64;
 type TokenIdentifier = nat64;
+type SubAccount = blob;
+type Result_2 = 
+ variant {
+   err: text;
+   ok: record {
+         c_aid: AccountIdentifier__1;
+         containerId: nat;
+       };
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: ContainerPublic;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
 type Oracle = 
  record {
    anvFee: nat64;
@@ -9,6 +28,19 @@ type Oracle =
    icpFee: nat64;
    pwrFee: nat64;
  };
+type ContainerToken = 
+ variant {
+   ft: CFT;
+   nft: CNFT;
+ };
+type ContainerPublic = 
+ record {
+   requirements: vec ContainerToken;
+   tokens: vec ContainerToken;
+   unlocked: bool;
+   verifications: vec bool;
+ };
+type ContainerId = nat;
 type Config = 
  record {
    account: CanisterRange;
@@ -28,6 +60,18 @@ type Class =
    add: (AccountIdentifier, TokenIndex) -> ();
    add_transaction: (AccountIdentifier, TransactionId) -> ();
    config_set: (Config) -> ();
+   container_create: (opt SubAccount, vec ContainerToken,
+    vec ContainerToken) -> (Result_2);
+   container_info: (AccountIdentifier__1, ContainerId) -> (Result_1) query;
+   container_list: (opt SubAccount) ->
+    (vec record {
+           ContainerId;
+           ContainerPublic;
+         });
+   container_swap: (opt SubAccount, ContainerId, ContainerId,
+    AccountIdentifier__1) -> (Result);
+   container_unlock: (opt SubAccount, ContainerId) -> (Result);
+   container_verify: (opt SubAccount, ContainerId, nat) -> (Result);
    list: (AccountIdentifier, nat, nat) -> (vec TokenIdentifier__1) query;
    meta: (AccountIdentifier) -> (opt AccountMeta) query;
    oracle_set: (Oracle) -> ();
@@ -52,6 +96,13 @@ type CanisterRange =
    CanisterSlot;
    CanisterSlot;
  };
+type CNFT = record {id: nat64;};
+type CFT = 
+ record {
+   balance: Balance;
+   id: nat64;
+ };
+type Balance = nat64;
 type AddressInfo = 
  record {
    avatar: TokenIdentifier;
@@ -63,5 +114,6 @@ type AccountMeta =
    info: opt AddressInfo;
    transactions: vec TransactionId;
  };
+type AccountIdentifier__1 = blob;
 type AccountIdentifier = blob;
 service : () -> Class

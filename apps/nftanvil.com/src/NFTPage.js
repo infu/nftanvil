@@ -56,11 +56,11 @@ export const NFTPage = ({ address, code, renderButtons }) => {
     }
   };
 
-  const accounts = useSelector((state) => state.user.accounts);
+  const main_account = useSelector((state) => state.user.main_account);
 
   if (!meta) return null;
 
-  const owner = meta.bearer in accounts;
+  const owner = meta.bearer === main_account;
 
   return (
     <Stack ml={"10px"} mr={"10px"} mt={"4vh"}>

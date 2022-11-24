@@ -17,6 +17,28 @@ export const idlFactory = ({ IDL }) => {
     'router' : IDL.Principal,
     'treasury' : CanisterSlot,
   });
+  const SubAccount = IDL.Vec(IDL.Nat8);
+  const Balance = IDL.Nat64;
+  const CFT = IDL.Record({ 'id' : IDL.Nat64, 'balance' : Balance });
+  const CNFT = IDL.Record({ 'id' : IDL.Nat64 });
+  const ContainerToken = IDL.Variant({ 'ft' : CFT, 'nft' : CNFT });
+  const AccountIdentifier__1 = IDL.Vec(IDL.Nat8);
+  const Result_2 = IDL.Variant({
+    'ok' : IDL.Record({
+      'containerId' : IDL.Nat,
+      'c_aid' : AccountIdentifier__1,
+    }),
+    'err' : IDL.Text,
+  });
+  const ContainerId = IDL.Nat;
+  const ContainerPublic = IDL.Record({
+    'unlocked' : IDL.Bool,
+    'tokens' : IDL.Vec(ContainerToken),
+    'verifications' : IDL.Vec(IDL.Bool),
+    'requirements' : IDL.Vec(ContainerToken),
+  });
+  const Result_1 = IDL.Variant({ 'ok' : ContainerPublic, 'err' : IDL.Text });
+  const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const TokenIdentifier__1 = IDL.Nat64;
   const TokenIdentifier = IDL.Nat64;
   const AddressInfo = IDL.Record({
@@ -38,6 +60,36 @@ export const idlFactory = ({ IDL }) => {
     'add' : IDL.Func([AccountIdentifier, TokenIndex], [], []),
     'add_transaction' : IDL.Func([AccountIdentifier, TransactionId], [], []),
     'config_set' : IDL.Func([Config], [], []),
+    'container_create' : IDL.Func(
+        [IDL.Opt(SubAccount), IDL.Vec(ContainerToken), IDL.Vec(ContainerToken)],
+        [Result_2],
+        [],
+      ),
+    'container_info' : IDL.Func(
+        [AccountIdentifier__1, ContainerId],
+        [Result_1],
+        ['query'],
+      ),
+    'container_list' : IDL.Func(
+        [IDL.Opt(SubAccount)],
+        [IDL.Vec(IDL.Tuple(ContainerId, ContainerPublic))],
+        [],
+      ),
+    'container_swap' : IDL.Func(
+        [IDL.Opt(SubAccount), ContainerId, ContainerId, AccountIdentifier__1],
+        [Result],
+        [],
+      ),
+    'container_unlock' : IDL.Func(
+        [IDL.Opt(SubAccount), ContainerId],
+        [Result],
+        [],
+      ),
+    'container_verify' : IDL.Func(
+        [IDL.Opt(SubAccount), ContainerId, IDL.Nat],
+        [Result],
+        [],
+      ),
     'list' : IDL.Func(
         [AccountIdentifier, IDL.Nat, IDL.Nat],
         [IDL.Vec(TokenIdentifier__1)],

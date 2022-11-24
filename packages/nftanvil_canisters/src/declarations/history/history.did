@@ -22,6 +22,7 @@ type Price =
                       address: AccountIdentifier;
                       share: Share;
                     };
+   token: FTokenId;
  };
 type Oracle = 
  record {
@@ -160,6 +161,7 @@ type FtEvent =
  variant {
    burn: FtBurn;
    mint: FtMint;
+   promote: EventPromote;
    register: FtRegister;
    transfer: FtTransaction;
  };
@@ -172,9 +174,20 @@ type FtBurn =
    user: AccountIdentifier;
  };
 type FTokenId = nat64;
+type EventPromoteTarget = variant {nft: TokenIdentifier;};
+type EventPromote = 
+ record {
+   amount: Balance;
+   created: Timestamp;
+   location: nat64;
+   payment_token: FTokenId;
+   target: EventPromoteTarget;
+   user: AccountIdentifier;
+ };
 type EventInfo__1 = 
  variant {
    anv: AnvEvent;
+   dex: DexEvent;
    ft: FtEvent;
    nft: NftEvent;
    pwr: PwrEvent;
@@ -182,6 +195,7 @@ type EventInfo__1 =
 type EventInfo = 
  variant {
    anv: AnvEvent;
+   dex: DexEvent;
    ft: FtEvent;
    nft: NftEvent;
    pwr: PwrEvent;
@@ -205,6 +219,49 @@ type Event =
  record {
    hash: blob;
    info: EventInfo;
+ };
+type DexSwap = 
+ record {
+   amount: Balance;
+   amount_recieved: Balance;
+   created: Timestamp;
+   reverse: bool;
+   token_one: FTokenId;
+   token_two: FTokenId;
+   user: AccountIdentifier;
+ };
+type DexRemLiquidity = 
+ record {
+   created: Timestamp;
+   token_one: FTokenId;
+   token_one_amount: Balance;
+   token_two: FTokenId;
+   token_two_amount: Balance;
+   user: AccountIdentifier;
+ };
+type DexEvent = 
+ variant {
+   add_liquidity: DexAddLiquidity;
+   create_pool: DexCreatePool;
+   rem_liquidity: DexRemLiquidity;
+   swap: DexSwap;
+ };
+type DexCreatePool = 
+ record {
+   cost: Balance;
+   created: Timestamp;
+   token_one: FTokenId;
+   token_two: FTokenId;
+   user: AccountIdentifier;
+ };
+type DexAddLiquidity = 
+ record {
+   created: Timestamp;
+   token_one: FTokenId;
+   token_one_amount: Balance;
+   token_two: FTokenId;
+   token_two_amount: Balance;
+   user: AccountIdentifier;
  };
 type Cooldown = nat32;
 type Config = 

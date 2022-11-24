@@ -9,6 +9,8 @@ import Account "./account_interface";
 import Ledger "./ledger_interface";
 import Treasury "./treasury_interface";
 import Tokenregistry "./tokenregistry_interface";
+import Anvil "./anvil_interface";
+
 
 import Float "mo:base/Float";
 import Int64 "mo:base/Int64";
@@ -82,6 +84,10 @@ module {
 
     public func tokenregistry(conf : Config) : Tokenregistry.Interface {
         actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.tokenregistry))) :  Tokenregistry.Interface;
+    };
+
+    public func anvil(conf : Config) : Anvil.Interface {
+        actor(Principal.toText(Nft.APrincipal.fromSlot(conf.space, conf.anvil))) :  Anvil.Interface;
     };
 
     public func treasury_address(conf : Config) : Nft.AccountIdentifier {

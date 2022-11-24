@@ -41,7 +41,6 @@ import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
 import { NftHistory } from "./History";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token";
 import { useDrop, useDrag } from "react-dnd";
-import { Auth } from "./Auth";
 
 import {
   SunIcon,
@@ -113,16 +112,19 @@ const PageDiv = styled.div`
 `;
 
 const PageIcon = ({ aid, from, to, idx, onClick, selected }) => {
-  const [{ canDrop, isOver }, drop] = useDrop(() => ({
-    // The type (or types) to accept - strings or symbols
-    accept: "token",
-    // Props to collect
-    drop: () => ({ pos: from, aid }),
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
+  const [{ canDrop, isOver }, drop] = useDrop(
+    () => ({
+      // The type (or types) to accept - strings or symbols
+      accept: "token",
+      // Props to collect
+      drop: () => ({ pos: from, aid }),
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+        canDrop: monitor.canDrop(),
+      }),
     }),
-  }));
+    [aid]
+  );
 
   return (
     <PageDiv ref={drop} isOver={isOver} onClick={onClick} selected={selected}>
@@ -132,16 +134,19 @@ const PageIcon = ({ aid, from, to, idx, onClick, selected }) => {
 };
 
 export const Empty = ({ pos, aid }) => {
-  const [{ canDrop, isOver }, drop] = useDrop(() => ({
-    // The type (or types) to accept - strings or symbols
-    accept: "token",
-    // Props to collect
-    drop: () => ({ pos, aid }),
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
+  const [{ canDrop, isOver }, drop] = useDrop(
+    () => ({
+      // The type (or types) to accept - strings or symbols
+      accept: "token",
+      // Props to collect
+      drop: () => ({ pos, aid }),
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+        canDrop: monitor.canDrop(),
+      }),
     }),
-  }));
+    [aid]
+  );
 
   return (
     <>
@@ -204,12 +209,12 @@ export const Inventory = ({
   cols,
   rows,
   pagination = true,
-  initialAddress,
+  address,
+  onChangeAddress = () => {},
 }) => {
   const maxItems = cols * rows;
 
   // console.log("INVENTORY ADDRESS", address);
-  const [address, setAddress] = useState(initialAddress);
 
   const temporary = address?.indexOf("tmp") === 0;
   const ready = useSelector(anvil_ready);
@@ -224,7 +229,15 @@ export const Inventory = ({
       dialog_open({
         name: "select_account",
       })
-    ).then(setAddress);
+    ).then(onChangeAddress);
+  };
+
+  const onSelectAnotherAccount = () => {
+    dispatch(
+      dialog_open({
+        name: "select_another_account",
+      })
+    ).then(onChangeAddress);
   };
 
   useEffect(() => {
@@ -252,23 +265,29 @@ export const Inventory = ({
         sx={{
           border: "3px solid #111",
           borderRadius: "10px",
-          cursor: "pointer",
         }}
-        onClick={onSelectAccount}
         w={cols * 72}
         h={(rows + 1) * 72 + 18}
         position="relative"
       >
-        <SelectIcon
-          color="gray.500"
-          w="30px"
-          h="30px"
-          position="absolute"
-          top="50%"
-          left="50%"
-          ml="-15px"
-          mt="-15px"
-        />
+        <Center mt={"300px"}>
+          <Stack>
+            <Button
+              onClick={onSelectAccount}
+              variant="outline"
+              rightIcon={<SelectIcon />}
+            >
+              My account
+            </Button>
+            <Button
+              onClick={onSelectAnotherAccount}
+              size="sm"
+              variant="outline"
+            >
+              Another account
+            </Button>
+          </Stack>
+        </Center>
       </Box>
     );
 
@@ -314,6 +333,7 @@ export const Inventory = ({
         ) : null}
 
         <InventoryGrid
+          key={"base-" + address}
           bg={bg}
           address={address}
           pageFrom={pageFrom}
@@ -325,6 +345,7 @@ export const Inventory = ({
 
         {extended ? (
           <InventoryGrid
+            key={"extended-" + address}
             bg={itemgrid_tmp}
             address={tmp_address}
             pageFrom={0}

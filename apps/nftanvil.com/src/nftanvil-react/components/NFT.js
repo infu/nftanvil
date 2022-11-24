@@ -28,6 +28,7 @@ import {
   nft_recharge,
   nft_recharge_quote,
 } from "../reducers/nft";
+import { ft_fetch_meta, ft_promote } from "../reducers/ft";
 import { task_start, task_end, task_run } from "../reducers/task";
 import {
   NumberInput,
@@ -35,6 +36,7 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Select,
 } from "@chakra-ui/react";
 
 import { move_item } from "../reducers/inventory";
@@ -44,12 +46,15 @@ import { NftHistory } from "./History";
 import { Spinner } from "@chakra-ui/react";
 import { LoginRequired } from "./LoginRequired";
 import { toast } from "react-toastify";
-
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
   dialog_open,
+  ft_all_tokens,
+  FTSelect,
 } from "../index.js";
+import { tokenFromText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+
 import {
   Center,
   Button,
@@ -101,7 +106,7 @@ import {
   TransactionToast,
   TransactionFailed,
 } from "../components/TransactionToast";
-import { TX, ACC, NFTA, HASH, ICP, PWR } from "./Code";
+import { TX, ACC, NFTA, HASH, ICP, ANV, PWR, FTI } from "./Code";
 import { toHexString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { MARKETPLACE_AID, MARKETPLACE_SHARE, ANVIL_SHARE } from "../config.js";
 import {
@@ -237,6 +242,8 @@ export const NFTMenu = ({ id, meta, owner, nobuy = false, renderButtons }) => {
         <Wrap spacing="3">
           {renderButtons ? renderButtons({ id, meta }) : null}
           <RechargeButton id={id} meta={meta} />
+          <PromoteButton id={id} meta={meta} />
+
           <UseButton id={id} meta={meta} />
           <TransferButton id={id} meta={meta} />
           <TransferLinkButton id={id} meta={meta} />
@@ -259,16 +266,20 @@ export const NFTMenu = ({ id, meta, owner, nobuy = false, renderButtons }) => {
 
 function SetPriceButton({ address, id, meta }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [token, setToken] = useState(false);
   const dispatch = useDispatch();
+
   // const address = useSelector((state) => state.user.address);
   const task_id = id + "sell";
 
   const initialRef = React.useRef();
+
   const removeSale = async () => {
     onClose();
 
     let price = {
       amount: 0,
+      token: 0,
       marketplace: [
         {
           address: AccountIdentifier.TextToArray(MARKETPLACE_AID),
@@ -294,14 +305,21 @@ function SetPriceButton({ address, id, meta }) {
   };
   const setPriceOk = async () => {
     let priceval = parseFloat(initialRef.current.value);
+    let payment_token = parseFloat(token.id);
 
-    let amount = AccountIdentifier.icpToE8s(
-      priceval /
-        (1 - (MARKETPLACE_SHARE + ANVIL_SHARE + meta.authorShare) / 10000)
-    );
+    let amount;
+    if ("fractionless" in token.kind) {
+      amount = priceval;
+    } else {
+      amount = AccountIdentifier.icpToE8s(
+        priceval /
+          (1 - (MARKETPLACE_SHARE + ANVIL_SHARE + meta.authorShare) / 10000)
+      );
+    }
 
     let price = {
       amount: amount,
+      token: payment_token,
       marketplace: [
         {
           address: AccountIdentifier.TextToArray(MARKETPLACE_AID),
@@ -354,42 +372,62 @@ function SetPriceButton({ address, id, meta }) {
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
-              <FormLabel>
-                Price in <ICP />
-              </FormLabel>
+              <HStack>
+                <FTSelect
+                  value={token?.id}
+                  onChange={(t) => {
+                    setToken(t);
+                  }}
+                />
 
-              <NumberInput
-                w={"100%"}
-                precision={4}
-                step={0.01}
-                //max="0.12"
-                min="0"
-                variant="filled"
-              >
-                <NumberInputField ref={initialRef} />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-
+                {token ? (
+                  <NumberInput
+                    w={"100%"}
+                    {...("normal" in token.kind
+                      ? {
+                          precision: 4,
+                          step: 0.01,
+                        }
+                      : {
+                          precision: 0,
+                          step: 1,
+                        })}
+                    //max="0.12"
+                    min="0"
+                    variant="filled"
+                  >
+                    <NumberInputField ref={initialRef} />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                ) : null}
+              </HStack>
               {/* <Input  ref={initialRef} placeholder="0.001" max="0.06" min="0.0004"/> */}
             </FormControl>
-            <Box fontSize="12px" mt={2}>
-              <Text>The amount you specify is increased by:</Text>
-              <Text>
-                {(MARKETPLACE_SHARE / 100).toFixed(2)}% Marketplace share.
-              </Text>
-              <Text>
-                {(ANVIL_SHARE / 100).toFixed(2)}% Anvil protocol share.
-              </Text>
-              <Text>
-                {(meta.authorShare / 100).toFixed(2)}% NFT author share.
-              </Text>
-              <Text>
-                Additional flat recharge fee if it's not fully charged.
-              </Text>
-            </Box>
+            {token && "normal" in token.kind ? (
+              <Box fontSize="12px" mt={2}>
+                <Text>The amount you specify is increased by:</Text>
+                <Text>
+                  {(MARKETPLACE_SHARE / 100).toFixed(2)}% Marketplace share.
+                </Text>
+                <Text>
+                  {(ANVIL_SHARE / 100).toFixed(2)}% Anvil protocol share.
+                </Text>
+                <Text>
+                  {(meta.authorShare / 100).toFixed(2)}% NFT author share.
+                </Text>
+                <Text>
+                  Additional flat recharge fee if it's not fully charged.
+                </Text>
+              </Box>
+            ) : (
+              <Box fontSize="12px" mt={2}>
+                When priced in fractionless tokens, there are no royalties and
+                fees
+              </Box>
+            )}
           </ModalBody>
           <ModalFooter>
             <Button onClick={onClose}>Cancel</Button>
@@ -786,19 +824,28 @@ export const BuyButton = ({ id, meta }) => {
   const cancelRef = React.useRef();
 
   let amount = BigInt(meta.price.amount);
+  const payment_token = Number(meta.price.token);
+  const ftmeta = useSelector((s) => s.ft[payment_token]);
+  const address = useSelector((s) => s.user.main_account);
 
+  useEffect(() => {
+    dispatch(ft_fetch_meta(payment_token));
+  }, [payment_token, dispatch]);
+  if (!ftmeta) return null;
   const buyOk = async () => {
     onClose();
 
-    let address = await dispatch(
-      dialog_open({
-        name: "select_account",
-      })
-    );
-
     dispatch(
       task_run(task_id, async () => {
-        await dispatch(nft_purchase({ address, id, amount }));
+        await dispatch(
+          nft_purchase({
+            address,
+            id,
+            payment_token,
+            payment_token_kind: ftmeta.kind,
+            amount,
+          })
+        );
       })
     );
   };
@@ -974,6 +1021,78 @@ export const RechargeButton = ({ id, meta }) => {
               </Button>
               <Button colorScheme="blue" onClick={rechargeOk} ml={3}>
                 Recharge
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </>
+  );
+};
+
+export const PromoteButton = ({ id, meta }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const task_id = id + "promote";
+  const onClose = () => setIsOpen(false);
+  const dispatch = useDispatch();
+  const address = useSelector((s) => s.user.main_account);
+  const cancelRef = React.useRef();
+
+  const amount = 100000000;
+
+  const promoteOk = async () => {
+    onClose();
+
+    const target = {
+      nft: tokenFromText(id),
+    };
+    const location = 1;
+
+    dispatch(
+      task_run(task_id, async () => {
+        await dispatch(
+          ft_promote({ payment_token: 2, target, location, address, amount })
+        );
+      })
+    );
+  };
+
+  return (
+    <>
+      <TaskButton
+        task_id={task_id}
+        onClick={() => setIsOpen(true)}
+        w={"240px"}
+        loadingText="Promoting"
+      >
+        <Text mr="2">Promote for </Text>
+        <ANV>{amount}</ANV>
+      </TaskButton>
+
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+        preserveScrollBarGap={true}
+        isCentered
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Promote NFT to Homepage
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure? This will take <ANV>{amount}</ANV> from your
+              balance.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button colorScheme="blue" onClick={promoteOk} ml={3}>
+                Promote
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -1529,7 +1648,7 @@ export const NFTInfo = ({ id, meta }) => {
     ) : null,
     meta.price.amount && meta.price.amount !== "0" ? (
       <Text key="icpPrice">
-        <ICP>{meta.price.amount}</ICP>
+        <FTI id={meta.price.token} amount={meta.price.amount} />
       </Text>
     ) : null,
     id ? (

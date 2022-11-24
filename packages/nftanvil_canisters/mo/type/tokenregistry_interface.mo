@@ -17,6 +17,17 @@ module {
         transferable : Bool;
         fee : Nat64;
         kind: FTKind;
+        decimals : Nat8;
+    };
+
+    public type FTShort = {
+        id: FTokenId;
+        name : Text;
+        transferable : Bool;
+        symbol : Text;
+        kind: FTKind;
+        controller: Principal;
+        origin: Text;
     };
 
     public type FTKind = {

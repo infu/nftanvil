@@ -86,7 +86,7 @@ import {
   validateDomain,
   validateTagName,
 } from "@vvv-interactive/nftanvil-tools/cjs/validate.js";
-
+import mint_ft from "../assets/mint_ft.svg";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
 export const MintFt = () => {
@@ -95,7 +95,7 @@ export const MintFt = () => {
 
 export const MintForm = () => {
   const dispatch = useDispatch();
-
+  const address = useSelector((s) => s.user.main_account);
   return (
     <Center>
       <Formik
@@ -114,7 +114,7 @@ export const MintForm = () => {
         }}
         onSubmit={async (values, actions) => {
           try {
-            await dispatch(ft_mint(values));
+            await dispatch(ft_mint(address, values));
             actions.setSubmitting(false);
           } catch (e) {
             actions.setSubmitting(false);
@@ -147,18 +147,28 @@ const FormInner = ({ props }) => {
     <>
       <Stack mt="80px" direction={isDesktop ? "row" : "column"}>
         <Box
-          bg={boxColor}
+          bg={"#25273d"}
           borderRadius={"md"}
-          border={1}
           maxW={480}
           minW={isDesktop ? 480 : width - 32}
           w={isDesktop ? 480 : width - 32}
           p={5}
+          sx={{ position: "relative" }}
+          border="2px solid #2b3455"
         >
+          <Image
+            src={mint_ft}
+            sx={{
+              position: "absolute",
+              left: "-8px",
+              top: "-38px",
+              width: "150px",
+            }}
+          />
           <Form>
             <Flex
               mb="8"
-              bg={boxHeadColor}
+              bg={"#262f58"}
               mt="-5"
               ml="-5"
               mr="-5"
@@ -167,8 +177,12 @@ const FormInner = ({ props }) => {
               borderTopRightRadius="md"
             >
               <Text
-                fontSize="24px"
-                sx={{ fontWeight: "bold", fontFamily: "Greycliff" }}
+                fontSize="20px"
+                sx={{
+                  fontWeight: "bold",
+                  fontFamily: "Greycliff",
+                  paddingLeft: "112px",
+                }}
               >
                 Mint Fractionless Fungible Token
               </Text>
@@ -181,8 +195,7 @@ const FormInner = ({ props }) => {
                 We are taking the reverse gas model one step further, so you
                 don't have to give your friends 0.9895 cups of coffe. Anvil's
                 fractionless fungible tokens are made for the purposes of
-                gamification. Only whole tokens can be transferred. If you want
-                a token more suitable for businesses then use SNS.
+                gamification. Only whole tokens can be transferred.
               </Text>
               <Box sx={{ position: "relative" }}>
                 <File
@@ -200,6 +213,16 @@ const FormInner = ({ props }) => {
                           true,
                           "image/png"
                         );
+
+                        if (x.size > 131072) {
+                          x = await resizeImage(
+                            info.url,
+                            180,
+                            180,
+                            true,
+                            "image/png"
+                          );
+                        }
                         props.setFieldValue("image", x);
 
                         toast.info(

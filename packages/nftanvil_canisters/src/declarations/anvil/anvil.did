@@ -1,9 +1,69 @@
+type SwapResponse = 
+ variant {
+   err: text;
+   ok: record {
+         recieve: nat64;
+         refund: nat64;
+       };
+ };
+type SwapRequest = 
+ record {
+   amount: Balance;
+   amount_required: Balance;
+   reverse: bool;
+   token_one: FTokenId;
+   token_two: FTokenId;
+ };
+type RemLiquidityResponse = 
+ variant {
+   err: text;
+   ok: record {
+         one: Balance;
+         two: Balance;
+       };
+ };
+type RemLiquidityRequest = 
+ record {
+   aid: AccountIdentifier;
+   token_one: FTokenId;
+   token_two: FTokenId;
+ };
+type PoolsResponse = vec PoolPublic;
+type PoolsRequest = record {aid: AccountIdentifier;};
+type PoolPublic = 
+ record {
+   balance: float64;
+   id: LPKey;
+   reserve_one: nat64;
+   reserve_two: nat64;
+   token_one_decimals: nat8;
+   token_two_decimals: nat8;
+   total: float64;
+ };
 type Oracle = 
  record {
    anvFee: nat64;
    icpCycles: nat64;
    icpFee: nat64;
    pwrFee: nat64;
+ };
+type LPKey = 
+ record {
+   nat64;
+   nat64;
+ };
+type FTokenId = nat64;
+type CreatePoolResponse = 
+ variant {
+   err: text;
+   ok;
+ };
+type CreatePoolRequest = 
+ record {
+   token_one: FTokenId;
+   token_one_decimals: nat8;
+   token_two: FTokenId;
+   token_two_decimals: nat8;
  };
 type Config = 
  record {
@@ -21,8 +81,15 @@ type Config =
  };
 type Class = 
  service {
+   add_liquidity: (AddLiquidityRequest) -> (AddLiquidityResponse);
+   balance_liquidity: (BalanceLiquidityRequest) ->
+    (BalanceLiquidityResponse) query;
    config_set: (Config) -> ();
+   create_pool: (CreatePoolRequest) -> (CreatePoolResponse);
+   get_pools: (PoolsRequest) -> (PoolsResponse) query;
    oracle_set: (Oracle) -> ();
+   rem_liquidity: (RemLiquidityRequest) -> (RemLiquidityResponse);
+   swap: (SwapRequest) -> (SwapResponse);
    wallet_receive: () -> ();
  };
 type CanisterSlot = nat64;
@@ -31,4 +98,30 @@ type CanisterRange =
    CanisterSlot;
    CanisterSlot;
  };
+type BalanceLiquidityResponse = 
+ variant {
+   err: text;
+   ok: float64;
+ };
+type BalanceLiquidityRequest = 
+ record {
+   aid: AccountIdentifier;
+   token_one: FTokenId;
+   token_two: FTokenId;
+ };
+type Balance = nat64;
+type AddLiquidityResponse = 
+ variant {
+   err: text;
+   ok: float64;
+ };
+type AddLiquidityRequest = 
+ record {
+   aid: AccountIdentifier;
+   token_one: FTokenId;
+   token_one_amount: Balance;
+   token_two: FTokenId;
+   token_two_amount: Balance;
+ };
+type AccountIdentifier = blob;
 service : () -> Class

@@ -463,7 +463,6 @@ shared({caller = _installer}) actor class Router() = this {
                   case (#treasury) _wasm_treasury;
                   case (#tokenregistry) _wasm_tokenregistry;
 
-
               };
               mode;
               canister_id = canister_id;

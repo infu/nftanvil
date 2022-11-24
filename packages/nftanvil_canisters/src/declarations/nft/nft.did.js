@@ -172,7 +172,9 @@ export const idlFactory = ({ IDL }) => {
     'rechargeable' : IDL.Bool,
   });
   const Sockets = IDL.Vec(TokenIdentifier);
+  const FTokenId = IDL.Nat64;
   const Price = IDL.Record({
+    'token' : FTokenId,
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
     ),
@@ -211,7 +213,6 @@ export const idlFactory = ({ IDL }) => {
     'tags' : Tags,
     'secret' : IDL.Bool,
     'attributes' : Attributes,
-    'price' : Price,
     'transfer' : ItemTransfer,
     'rechargeable' : IDL.Bool,
     'customVar' : IDL.Opt(CustomVar),
@@ -276,10 +277,15 @@ export const idlFactory = ({ IDL }) => {
     'token' : TokenIdentifier,
     'user' : User,
     'subaccount' : IDL.Opt(SubAccount),
+    'payment_token_kind' : IDL.Variant({
+      'normal' : IDL.Null,
+      'fractionless' : IDL.Null,
+    }),
     'affiliate' : IDL.Opt(
       IDL.Record({ 'address' : AccountIdentifier, 'amount' : Balance })
     ),
     'amount' : Balance,
+    'payment_token' : FTokenId,
   });
   const Time = IDL.Int;
   const NFTPurchase = IDL.Record({

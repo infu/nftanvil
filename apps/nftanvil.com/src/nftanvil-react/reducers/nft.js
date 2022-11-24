@@ -49,6 +49,7 @@ export const nftSlice = createSlice({
 export const { loaded, setBusy } = nftSlice.actions;
 
 export const nft_fetch = (id) => async (dispatch, getState) => {
+  if (!id) return;
   let s = getState();
 
   let tid = tokenFromText(id);
@@ -62,6 +63,7 @@ export const nft_fetch = (id) => async (dispatch, getState) => {
   });
 
   let resp = await nftcan.metadata(tid);
+
   if (!resp) throw Error("Can't fetch NFT meta");
   if (resp.err)
     throw Error("Fetching NFT meta error " + JSON.stringify(resp.err));
@@ -196,13 +198,19 @@ const nft_fetch_file = async (
 };
 
 export const nft_purchase =
-  ({ address, id, amount, affiliate = [] }) =>
+  ({
+    address,
+    payment_token,
+    payment_token_kind,
+    id,
+    amount,
+    affiliate = [],
+  }) =>
   async (dispatch, getState) => {
     let s = getState();
 
     let tid = tokenFromText(id);
     let { slot } = decodeTokenId(tid);
-
     let subaccount = [
       AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
         null,
@@ -219,14 +227,17 @@ export const nft_purchase =
         agentOptions: authentication.getAgentOptions(address),
       }
     );
-
-    let prez = await pwr.nft_purchase(BigInt(slot), {
-      token: tokenFromText(id),
+    let req = {
+      payment_token,
+      payment_token_kind,
+      token: tid,
       user: { address: AccountIdentifier.TextToArray(address) },
       subaccount,
       affiliate,
       amount,
-    });
+    };
+    console.log(req);
+    let prez = await pwr.nft_purchase(BigInt(slot), req);
 
     if (prez.err) throw prez.err;
 
@@ -286,13 +297,13 @@ export const nft_set_price =
       AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
         null,
     ].filter(Boolean);
-
-    let t = await nftcan.set_price({
+    const req = {
       user: { address: AccountIdentifier.TextToArray(address) },
       token: tid,
       price: price,
       subaccount,
-    });
+    };
+    let t = await nftcan.set_price(req);
     if (!("ok" in t)) throw t.err;
     dispatch(nft_fetch(id));
   };
@@ -634,12 +645,12 @@ export const nft_mint_quote = (vals) => async (dispatch, getState) => {
   return { transfer, ops, storage };
 };
 
-export const nft_mint = (vals) => async (dispatch, getState) => {
+export const nft_mint = (address, vals) => async (dispatch, getState) => {
   let s = getState();
 
   let available = s.ic.anvil.nft_avail;
   let slot = available[Math.floor(Math.random() * available.length)];
-  const address = Object.keys(s.user.accounts)[0];
+
   console.log(available, slot);
   let canisterId = PrincipalFromSlot(s.ic.anvil.space, slot);
 

@@ -30,6 +30,9 @@ export const ftSlice = createSlice({
 export const { loaded } = ftSlice.actions;
 
 export const ft_fetch_meta = (id) => async (dispatch, getState) => {
+  if (!id) return;
+
+  id = Number(id);
   let s = getState();
 
   if (s.ft[id]) return; // already initialised
@@ -46,6 +49,47 @@ export const ft_fetch_meta = (id) => async (dispatch, getState) => {
   let token_meta = await treg.meta(id);
   dispatch(loaded({ id: id.toString(), meta: SerializableIC(token_meta) }));
 };
+
+export const ft_promote =
+  ({ target, location, payment_token, address, amount }) =>
+  async (dispatch, getState) => {
+    let s = getState();
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
+    ].filter(Boolean);
+
+    let pwr = pwrCanister(
+      PrincipalFromSlot(
+        s.ic.anvil.space,
+        AccountIdentifier.TextToSlot(address, s.ic.anvil.pwr)
+      ),
+      {
+        agentOptions: authentication.getAgentOptions(address),
+      }
+    );
+
+    let req = {
+      payment_token: Number(payment_token),
+      amount: Number(amount),
+      location,
+      target,
+      user: { address: AccountIdentifier.TextToArray(address) },
+      subaccount: subaccount,
+    };
+    console.log(req);
+    let trez;
+    try {
+      trez = await pwr.promote(req);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+    console.log(trez);
+    if (!("ok" in trez)) throw new Error(JSON.stringify(trez));
+
+    return trez;
+  };
 
 export const ft_transfer =
   ({ id, address, to, amount, memo = [] }) =>
@@ -96,11 +140,28 @@ export const ft_transfer =
     return trez;
   };
 
-export const ft_mint = (vals) => async (dispatch, getState) => {
+export const ft_all_tokens = () => async (dispatch, getState) => {
+  let s = getState();
+
+  let canister = PrincipalFromSlot(
+    s.ic.anvil.space,
+    s.ic.anvil.tokenregistry
+  ).toText();
+
+  let treg = tokenregistryCanister(canister, {
+    agentOptions: authentication.getAgentOptions(false),
+  });
+
+  let resp = await treg.all_tokens();
+  resp = SerializableIC(resp);
+  console.log(resp);
+  return resp;
+};
+
+export const ft_mint = (address, vals) => async (dispatch, getState) => {
   let options = { ...vals };
   let s = getState();
 
-  const address = Object.keys(s.user.accounts)[0];
   const principal = s.user.accounts[address].principal;
 
   options.controller = Principal.fromText(principal);

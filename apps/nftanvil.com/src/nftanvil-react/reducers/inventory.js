@@ -5,7 +5,10 @@ import { accountCanister } from "@vvv-interactive/nftanvil-canisters/cjs/account
 import authentication from "../identities";
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
-import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+import {
+  tokenToText,
+  tokenFromText,
+} from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import debounce from "lodash/debounce";
 import { restoreVar } from "../util";
 import { nft_transfer } from "./nft";
@@ -48,7 +51,12 @@ export const inventorySlice = createSlice({
         }
       }
     },
-    tokenMovedSuccess: (state, action) => {
+    inv_clear_temporary: (state, action) => {
+      for (let k in state) {
+        if (k.indexOf("tmp.attached.") === 0) delete state[k];
+      }
+    },
+    tokenClearOptimistic: (state, action) => {
       let { aid, id, token } = action.payload;
 
       let pos = findToken(state[aid].content, id);
@@ -126,7 +134,8 @@ const findNewPos = (inv, start) => {
   return freeIdx;
 };
 
-export const { tokenMovedSuccess, tokenMoved, loaded } = inventorySlice.actions;
+export const { tokenClearOptimistic, tokenMoved, loaded, inv_clear_temporary } =
+  inventorySlice.actions;
 
 export const load_author = (aid) => async (dispatch, getState) => {
   let x = await fetch("https://nftpkg.com/api/v1/marketplace/" + aid).then(
@@ -139,12 +148,357 @@ const splitTmpName = (txt) => {
   let [_, id, address] = txt.split(".");
   return { id, address };
 };
+export const inv_accept_offer =
+  ({ aid, containerId, my_tokens }) =>
+  async (dispatch, getState) => {
+    console.log("inv_accept_offer", { aid, containerId, my_tokens });
+    let s = getState();
+    let address = s.user.main_account;
+
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
+    ].filter(Boolean);
+
+    let can = PrincipalFromSlot(
+      s.ic.anvil.space,
+      AccountIdentifier.TextToSlot(aid, s.ic.anvil.account)
+    );
+
+    let acc = accountCanister(can, {
+      agentOptions: authentication.getAgentOptions(address),
+    });
+    // fill your own container
+
+    let tokens = my_tokens;
+    let requirements = [];
+
+    let cc = await acc.container_create(subaccount, tokens, requirements);
+    console.log("container_create RESP", cc);
+
+    let takerContainerId = cc.ok.containerId;
+    let c_aid = cc.ok.c_aid;
+    console.log("XQWE", invConvertBack(tokens));
+
+    // send
+    await dispatch(
+      inv_send_all({
+        from_aid: address,
+        to_aid: AccountIdentifier.ArrayToText(c_aid),
+        tokens: invConvertBack(tokens),
+      })
+    );
+
+    // verify
+    await Promise.all(
+      tokens.map((t, idx) => {
+        return acc
+          .container_verify(subaccount, takerContainerId, idx)
+          .then((re) => {
+            console.log(`verification of ${idx}`, re);
+          });
+      })
+    );
+
+    // initiate the swap
+
+    let resp = await acc.container_swap(
+      subaccount,
+      takerContainerId,
+      containerId,
+      AccountIdentifier.TextToArray(aid)
+    );
+    console.log("container_swap", resp);
+    // fetch everything
+    let swapresp = await acc.container_unlock(subaccount, containerId);
+    console.log("container_unlock", swapresp);
+    return swapresp;
+  };
+
+export const inv_offer_info = (code) => async (dispatch, getState) => {
+  let { aid, containerId } = JSON.parse(window.atob(code));
+  console.log({ aid, containerId });
+
+  let s = getState();
+
+  let can = PrincipalFromSlot(
+    s.ic.anvil.space,
+    AccountIdentifier.TextToSlot(aid, s.ic.anvil.account)
+  );
+
+  let acc = accountCanister(can, {
+    agentOptions: authentication.getAgentOptions(aid),
+  });
+
+  let info = await acc.container_info(
+    AccountIdentifier.TextToArray(aid),
+    BigInt(containerId)
+  );
+
+  console.log(info.ok);
+  return {
+    code: { aid, containerId },
+    ...info.ok,
+  };
+};
+
+const inv_send_all =
+  ({ from_aid, to_aid, tokens }) =>
+  async (dispatch, getState) => {
+    let s = getState();
+    console.log("inv_send_all", { from_aid, to_aid, tokens });
+
+    for (let pos in tokens) {
+      let token = tokens[pos];
+
+      if (token.t === 0) {
+        // nft
+        console.log("nft send", {
+          address: from_aid,
+          toAddress: to_aid,
+          id: token.id,
+        });
+        await dispatch(
+          nft_transfer({
+            address: from_aid,
+            toAddress: to_aid,
+            id: token.id,
+          })
+        );
+      }
+      if (token.t === 1) {
+        // ft
+        let meta = s.ft[token.id];
+        // let fee = "fractionless" in meta.kind ? 0n : BigInt(meta.fee);
+
+        console.log("ft send", {
+          id: token.id,
+          address: from_aid,
+          to: to_aid,
+          amount: BigInt(token.bal),
+        });
+        await dispatch(
+          ft_transfer({
+            id: token.id,
+            address: from_aid,
+            to: to_aid,
+            amount: BigInt(token.bal),
+          })
+        );
+      }
+    }
+  };
+
+export const inv_send_temporary =
+  ({ from_aid, to_aid }) =>
+  async (dispatch, getState) => {
+    const tmp_two = "tmp.attached." + to_aid;
+
+    const s = getState();
+
+    let inv_two = s.inventory[tmp_two];
+
+    console.log({ from_aid, to_aid, inv_two });
+
+    for (let pos in inv_two.content) {
+      let token = inv_two.content[pos];
+
+      if (token.t === 0) {
+        // nft
+
+        dispatch(tokenMoved({ from_aid: tmp_two, to_aid, token, pos: 0 }));
+
+        await dispatch(
+          nft_transfer({
+            address: from_aid,
+            toAddress: to_aid,
+            id: token.id,
+          })
+        )
+          .then((rez) => {
+            dispatch(
+              tokenClearOptimistic({
+                aid: to_aid,
+                id: token.id,
+              })
+            );
+            return rez;
+          })
+          .catch((e) => {
+            dispatch(
+              tokenMoved({
+                from_aid: to_aid,
+                to_aid: tmp_two,
+                token,
+                pos,
+              })
+            );
+
+            console.log("ERRX", e);
+
+            // dispatch(
+            //   tokenClearOptimistic({
+            //     aid: tmp_two,
+            //     id: token.id,
+            //   })
+            // );
+          });
+      }
+      if (token.t === 1) {
+        // ft
+
+        dispatch(
+          tokenMoved({
+            from_aid: tmp_two,
+            to_aid,
+            token: { ...token, optimistic: true },
+            pos: 0,
+            old: token,
+          })
+        );
+
+        await dispatch(
+          ft_transfer({
+            id: token.id,
+            address: from_aid,
+            to: to_aid,
+            amount: BigInt(token.bal),
+          })
+        ).catch((e) => {
+          dispatch(
+            tokenMoved({
+              from_aid: to_aid,
+              to_aid: tmp_two,
+              token,
+              pos,
+              old: token,
+            })
+          );
+        });
+
+        // clear optimistic flag
+        dispatch(
+          tokenClearOptimistic({
+            aid: to_aid,
+            id: token.id,
+          })
+        );
+      }
+    }
+  };
+
+const invConvert = (inv) =>
+  Object.keys(inv).map((x) =>
+    inv[x].t === 0
+      ? {
+          nft: {
+            id: tokenFromText(inv[x].id),
+          },
+        }
+      : {
+          ft: {
+            id: BigInt(inv[x].id),
+            balance: BigInt(inv[x].bal),
+          },
+        }
+  );
+
+const invConvertBack = (inv) =>
+  Object.assign(
+    {},
+    ...inv.map((x, idx) =>
+      "nft" in x
+        ? {
+            [idx]: {
+              t: 0,
+              id: tokenToText(x.nft.id),
+            },
+          }
+        : {
+            [idx]: {
+              t: 1,
+              id: x.ft.id.toString(),
+              bal: Number(x.ft.balance),
+            },
+          }
+    )
+  );
+
+export const inv_create_offer =
+  ({ from_aid, to_aid }) =>
+  async (dispatch, getState) => {
+    const tmp_one = "tmp.attached." + from_aid;
+    const tmp_two = "tmp.attached." + to_aid;
+
+    const s = getState();
+
+    let inv_one = s.inventory[tmp_one];
+    let inv_two = s.inventory[tmp_two];
+
+    console.log({ from_aid, to_aid, inv_one, inv_two });
+
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.accounts[from_aid].subaccount) ||
+        null,
+    ].filter(Boolean);
+
+    let can = PrincipalFromSlot(
+      s.ic.anvil.space,
+      AccountIdentifier.TextToSlot(from_aid, s.ic.anvil.account)
+    );
+
+    let acc = accountCanister(can, {
+      agentOptions: authentication.getAgentOptions(from_aid),
+    });
+    console.log({ inv_one, inv_two });
+
+    let tokens = invConvert(inv_two.content);
+    let requirements = invConvert(inv_one.content);
+    console.log("container_create REQ", subaccount, tokens, requirements);
+    let resp = await acc.container_create(subaccount, tokens, requirements);
+    console.log("container_create RESP", resp);
+
+    let { containerId, c_aid } = resp.ok;
+
+    console.log("Container address", AccountIdentifier.ArrayToText(c_aid));
+
+    // send
+    await dispatch(
+      inv_send_all({
+        from_aid: from_aid,
+        to_aid: AccountIdentifier.ArrayToText(c_aid),
+        tokens: inv_two.content,
+      })
+    );
+
+    // verify
+    await Promise.all(
+      tokens.map((t, idx) => {
+        return acc.container_verify(subaccount, containerId, idx).then((re) => {
+          console.log(`verification of ${idx}`, re);
+        });
+      })
+    );
+
+    let list = await acc.container_list(subaccount);
+
+    console.log("list", list);
+    let code = window.btoa(
+      JSON.stringify({
+        aid: from_aid,
+        containerId: Number(containerId),
+      })
+    );
+    return code;
+  };
 
 export const move_item =
   ({ from_aid, to_aid, token, pos }) =>
   async (dispatch, getState) => {
     let tid = token.id;
-    // console.log({ from_aid, to_aid, tid, pos, token });
+
+    console.log({ from_aid, to_aid, tid, pos, token });
+
     let s = getState();
 
     let from =
@@ -197,7 +551,7 @@ export const move_item =
         let { newtoken, old } = await dispatch(
           fungibleAmountDialog({ from_aid, to_aid, token, pos })
         );
-        // console.log({ newtoken, old });
+        console.log({ newtoken, old }, BigInt(newtoken.bal));
 
         dispatch(
           tokenMoved({
@@ -232,7 +586,7 @@ export const move_item =
 
         // clear optimistic flag
         dispatch(
-          tokenMovedSuccess({
+          tokenClearOptimistic({
             aid: to_aid,
             id: token.id,
           })

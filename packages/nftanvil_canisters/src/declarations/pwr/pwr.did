@@ -77,6 +77,22 @@ type TokenIdentifier = nat64;
 type Time = int;
 type Tags = vec Tag;
 type Tag = text;
+type SwapResponse = 
+ variant {
+   err: text;
+   ok: record {
+         recieve: nat64;
+         refund: nat64;
+       };
+ };
+type SwapRequest = 
+ record {
+   amount: Balance__4;
+   amount_required: Balance__4;
+   reverse: bool;
+   token_one: FTokenId__2;
+   token_two: FTokenId__2;
+ };
 type SubAccount__2 = blob;
 type SubAccount__1 = blob;
 type SubAccount = blob;
@@ -85,6 +101,20 @@ type Result =
  variant {
    err: text;
    ok;
+ };
+type RemLiquidityResponse = 
+ variant {
+   err: text;
+   ok: record {
+         one: Balance__4;
+         two: Balance__4;
+       };
+ };
+type RemLiquidityRequest = 
+ record {
+   aid: AccountIdentifier;
+   token_one: FTokenId__2;
+   token_two: FTokenId__2;
  };
 type RegisterRequest = 
  record {
@@ -148,6 +178,11 @@ type PurchaseRequest =
                     amount: Balance__2;
                   };
    amount: Balance__2;
+   payment_token: FTokenId__1;
+   payment_token_kind: variant {
+                         fractionless;
+                         normal;
+                       };
    subaccount: opt SubAccount__2;
    token: TokenIdentifier;
    user: User__2;
@@ -175,13 +210,27 @@ type PurchaseClaimRequest =
    subaccount: opt SubAccount;
    user: User;
  };
-type Price = 
+type PromoteResponse = 
+ variant {
+   err:
+    variant {
+      InsufficientBalance;
+      InsufficientPayment: Balance;
+      InvalidToken;
+      RechargeUnnecessary;
+      Rejected;
+      Unauthorized;
+    };
+   ok: record {transactionId: blob;};
+ };
+type PromoteRequest = 
  record {
-   amount: nat64;
-   marketplace: opt record {
-                      address: AccountIdentifier;
-                      share: Share;
-                    };
+   amount: Balance;
+   location: nat64;
+   payment_token: FTokenId;
+   subaccount: opt SubAccount;
+   target: EventPromoteTarget;
+   user: User__2;
  };
 type Oracle__1 = 
  record {
@@ -252,7 +301,6 @@ type MetadataInput =
    domain: opt DomainName;
    lore: opt text;
    name: opt text;
-   price: Price;
    quality: Quality;
    rechargeable: bool;
    secret: bool;
@@ -285,6 +333,8 @@ type FtMintRequest =
    subaccount: opt SubAccount;
    user: User__2;
  };
+type FTokenId__2 = nat64;
+type FTokenId__1 = nat64;
 type FTokenId = nat64;
 type FTKind = 
  variant {
@@ -292,9 +342,20 @@ type FTKind =
    normal;
  };
 type ExternalUrl = text;
+type EventPromoteTarget = variant {nft: TokenIdentifier;};
 type DomainName = text;
 type CustomVar = blob;
 type CustomData = blob;
+type CreatePoolResponse = 
+ variant {
+   err: text;
+   ok;
+ };
+type CreatePoolRequest = 
+ record {
+   token_one: FTokenId;
+   token_two: FTokenId;
+ };
 type ContentType = text;
 type Content = 
  variant {
@@ -331,6 +392,13 @@ type Class =
    balanceAddExternalProtected: (FTokenId, AccountIdentifier__2, Balance__3,
     FTKind) -> (Result);
    config_set: (Config) -> ();
+   dex_add_liquidity: (AddLiquidityRequest, User__2, opt SubAccount__2) ->
+    (AddLiquidityResponse);
+   dex_create_pool: (CreatePoolRequest, User__2, opt SubAccount__2) ->
+    (CreatePoolResponse);
+   dex_rem_liquidity: (RemLiquidityRequest, User__2, opt SubAccount__2) ->
+    (RemLiquidityResponse);
+   dex_swap: (SwapRequest, User__2, opt SubAccount__2) -> (SwapResponse);
    exists: (AccountIdentifier) -> (bool) query;
    ft_mint:
     (record {
@@ -344,6 +412,7 @@ type Class =
    nft_purchase: (CanisterSlot, PurchaseRequest) -> (PurchaseResponse);
    nft_recharge: (CanisterSlot, RechargeRequest) -> (RechargeResponse);
    oracle_set: (Oracle) -> ();
+   promote: (PromoteRequest) -> (PromoteResponse);
    pwr_purchase_claim: (PurchaseClaimRequest) -> (PurchaseClaimResponse);
    pwr_purchase_intent: (PurchaseIntentRequest) -> (PurchaseIntentResponse);
    pwr_transfer: (TransferOldRequest) -> (TransferOldResponse);
@@ -381,6 +450,7 @@ type CanisterRange =
    CanisterSlot;
  };
 type BlockIndex = nat64;
+type Balance__4 = nat64;
 type Balance__3 = nat64;
 type Balance__2 = nat64;
 type Balance__1 = nat64;
@@ -398,6 +468,19 @@ type Attribute =
  record {
    text;
    nat16;
+ };
+type AddLiquidityResponse = 
+ variant {
+   err: text;
+   ok: float64;
+ };
+type AddLiquidityRequest = 
+ record {
+   aid: AccountIdentifier;
+   token_one: FTokenId__2;
+   token_one_amount: Balance__4;
+   token_two: FTokenId__2;
+   token_two_amount: Balance__4;
  };
 type AccountRecordSerialized = 
  vec record {

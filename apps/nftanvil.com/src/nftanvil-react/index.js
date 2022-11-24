@@ -12,6 +12,7 @@ import userReducer, {
   user_refresh_config,
   user_transfer_icp,
   user_refresh_all_balances,
+  user_set_main_account,
 } from "./reducers/user";
 import historyReducer, {
   history_load_info,
@@ -32,6 +33,11 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { DialogHandler } from "./components/DialogHandler";
 import inventoryReducer, {
+  inv_accept_offer,
+  inv_offer_info,
+  inv_send_temporary,
+  inv_create_offer,
+  inv_clear_temporary,
   load_inventory,
   load_author,
   tokenSelector,
@@ -40,6 +46,7 @@ import inventoryReducer, {
 import dialogReducer, { dialog_open } from "./reducers/dialog";
 
 import { Auth, AuthII } from "./components/Auth";
+import { AccountIcon } from "./components/AccountIcon";
 
 import nftReducer, {
   nft_fetch,
@@ -60,7 +67,13 @@ import nftReducer, {
   nft_mint_quote,
 } from "./reducers/nft";
 
-import ftReducer, { ft_transfer, ft_mint } from "./reducers/ft";
+import ftReducer, {
+  ft_transfer,
+  ft_all_tokens,
+  ft_fetch_meta,
+  ft_mint,
+  ft_promote,
+} from "./reducers/ft";
 
 import uiReducer, {
   window_focus,
@@ -68,6 +81,16 @@ import uiReducer, {
   ui_pro_set,
 } from "./reducers/ui";
 
+import dexReducer, {
+  dex_create_pool,
+  dex_add_liquidity,
+  dex_rem_liquidity,
+  dex_swap,
+  dex_pools,
+  dex_add_liquidity_dialog,
+} from "./reducers/dex";
+
+import { FTSelect, FT, FTMeta, FTImage, FTAbstract } from "./components/FT";
 import icReducer, { anvil_discover } from "./reducers/ic";
 import verifyReducer, {
   verify_domain_twitter,
@@ -75,15 +98,15 @@ import verifyReducer, {
 } from "./reducers/verify";
 
 import toastReducer, { toast_create, toast_update } from "./reducers/toast";
-import taskReducer, { task_start, task_end } from "./reducers/task";
-
+import taskReducer, { task_start, task_end, task_run } from "./reducers/task";
+import { TaskButton } from "./components/TaskButton";
 import { ColorModeScript } from "@chakra-ui/react";
 import { ToastHandler } from "./components/ToastHandler";
 import { Inventory } from "./components/Inventory";
 
 import { InventoryLarge } from "./components/InventoryLarge";
 
-import { TX, ICP, ANV, ACC, PRI, NFTA, HASH } from "./components/Code";
+import { TX, ICP, ANV, ACC, PRI, NFTA, HASH, FTI } from "./components/Code";
 import { theme } from "./theme.js";
 import {
   MarketplaceLoad,
@@ -96,23 +119,40 @@ import {
   NFTMenu,
   NFTProInfo,
   NFTPreview,
+  NFT,
 } from "./components/NFT";
-
+import { useDexPools, useFT, useInventoryToken } from "./Hooks";
+export { useDexPools, useFT, useInventoryToken };
 export { InventoryLarge };
-
-export { TX, ICP, ANV, ACC, PRI, NFTA, HASH };
+export { FTSelect, FT, FTMeta, FTImage, FTAbstract };
+export { TX, ICP, ANV, ACC, PRI, NFTA, FTI, HASH };
 export { Inventory };
 export { ui_pro_set };
-export { ft_transfer };
+export {
+  dex_create_pool,
+  dex_add_liquidity,
+  dex_rem_liquidity,
+  dex_swap,
+  dex_pools,
+  dex_add_liquidity_dialog,
+};
+export { TaskButton };
+export { ft_transfer, ft_all_tokens, ft_mint, ft_fetch_meta, ft_promote };
 export { Auth, AuthII };
-export { task_start, task_end };
+export { task_start, task_end, task_run };
 export { LoginRequired, NftHistory, HistoryEvent };
 export { MarketplaceLoad, MarketplaceFilters };
 export { history_load_info, history_load };
-export { NFTContent, NFTInfo, NFTThumb, NFTMenu, NFTProInfo, NFTPreview };
+export { NFT, NFTContent, NFTInfo, NFTThumb, NFTMenu, NFTProInfo, NFTPreview };
 export { toast_create, toast_update };
 export { dialog_open };
+export { AccountIcon };
 export {
+  inv_accept_offer,
+  inv_offer_info,
+  inv_clear_temporary,
+  inv_send_temporary,
+  inv_create_offer,
   load_author,
   load_inventory,
   verify_domain,
@@ -127,11 +167,11 @@ export {
   user_refresh_balances,
   user_refresh_config,
   user_transfer_icp,
+  user_set_main_account,
 };
 
 export {
   nft_fetch,
-  ft_mint,
   nft_mint,
   nft_mint_quote,
   nft_media_get,
@@ -172,6 +212,7 @@ export const store = configureStore({
     ui: uiReducer,
     verify: verifyReducer,
     history: historyReducer,
+    dex: dexReducer,
   },
   devTools: process.env.NODE_ENV !== "production",
   middleware: (getDefaultMiddleware) =>

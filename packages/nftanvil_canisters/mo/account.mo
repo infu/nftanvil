@@ -27,6 +27,9 @@ import Cluster  "./type/Cluster";
 import Account "./type/account_interface";
 import TrieRecord "./lib/TrieRecord";
 
+import Map "./lib/zh/Map";
+import Debug "mo:base/Debug";
+
 
 shared({ caller = _installer }) actor class Class() = this {
     private stable var _conf : Cluster.Config = Cluster.Config.default();
@@ -35,6 +38,9 @@ shared({ caller = _installer }) actor class Class() = this {
     private stable var _slot : Nft.CanisterSlot = 0;
 
     private stable var _total_accounts : Nat = 0;
+
+    let { bhash; nhash } = Map; // different hash types
+
 
      // TYPE ALIASES
     type AccountIdentifier = Nft.AccountIdentifier;
@@ -46,6 +52,10 @@ shared({ caller = _installer }) actor class Class() = this {
 
     private var _account: TrieRecord.TrieRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized> = TrieRecord.TrieRecord<AccountIdentifier, Account.AccountRecord, Account.AccountRecordSerialized>( _tmpAccount.vals(),  Nft.AccountIdentifier.equal, Nft.AccountIdentifier.hash, Account.AccountRecordSerialize, Account.AccountRecordUnserialize);
    
+    let containers = Map.new<AccountIdentifier, Account.ContainerStore>();
+
+    private var _nextContainerId : Account.ContainerId = 20;
+
     //Handle canister upgrades
     system func preupgrade() {
         _tmpAccount := Iter.toArray(_account.serialize());
@@ -57,6 +67,256 @@ shared({ caller = _installer }) actor class Class() = this {
     };
     
     private let ledger : Ledger.Interface = actor("ryjl3-tyaaa-aaaaa-aaaba-cai");
+
+
+    public shared({caller}) func container_create(subaccount: ?Nft.SubAccount, tokens: [Account.ContainerToken], requirements: [Account.ContainerToken]) : async Result.Result<{containerId: Nat; c_aid: Nft.AccountIdentifier}, Text> {
+
+        let aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
+
+        let tokens_count = Iter.size(Iter.fromArray(tokens));
+
+        let container : Account.Container = {
+            var unlocked = false;
+            tokens;
+            requirements;
+            verifications = Array.init(tokens_count, false)
+        };
+
+        let containerId = _nextContainerId;
+        _nextContainerId += 1;
+
+        let cstore : Account.ContainerStore = switch(Map.get(containers, bhash, aid)) {
+            case (?cstore) {
+                cstore
+            };
+            case (null) {
+                let cstore = Map.new<Account.ContainerId, Account.Container>();
+                Map.set(containers, bhash, aid,  cstore);
+                cstore
+            };
+        };
+
+        Map.set(cstore, nhash, containerId, container);
+
+        let container_subaccount = Nft.SubAccount.fromNat(100000 + containerId);
+        let container_aid =  Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?container_subaccount);
+
+        #ok({containerId; c_aid = container_aid})
+    };
+
+    public shared({caller}) func container_swap(subaccount: ?Nft.SubAccount, takerContainerId: Account.ContainerId, makerContainerId: Account.ContainerId, makerAid: Nft.AccountIdentifier) : async Result.Result<(), Text> {
+        let aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
+
+        switch(Map.get(containers, bhash, aid)) {
+            case (?tstore) {
+                switch(Map.get(tstore, nhash, takerContainerId)) {
+                    case (?takerContainer) {
+                        if (takerContainer.unlocked) return #err("takerContainer unlocked, swap impossible");
+
+                        switch(Map.get(containers, bhash, makerAid)) {
+                                case (?mstore) {
+                                    switch(Map.get(mstore, nhash, makerContainerId)) {
+                                        case (?makerContainer) {
+                                            if (makerContainer.unlocked) return #err("makerContainer unlocked, swap impossible");
+
+                                            // make sure requirements are covered 
+                                            var all_ok = true;
+                                            for (makerReqToken in Iter.fromArray(makerContainer.requirements)) {
+                                            
+                                                var matching = false;
+                                                var idx = 0;
+                                                for (takerToken in Iter.fromArray(takerContainer.tokens)) {
+                                                    if (takerToken == makerReqToken and takerContainer.verifications[idx] == true) matching := true;
+                                                    idx += 1;
+                                                };
+                                                if (matching == false) all_ok := false;
+                                            
+                                            };
+
+                                            if (all_ok == false) return #err("Mismatched contents and requirements");
+                                            // make the actual swap
+                                            Map.delete(tstore, nhash, takerContainerId);
+                                            Map.delete(mstore, nhash, makerContainerId);
+
+                                            Map.set(mstore, nhash, takerContainerId, takerContainer);
+                                            Map.set(tstore, nhash, makerContainerId, makerContainer);
+
+                                            #ok();
+                                            
+                                        };
+                                        case(null) {
+                                            return #err("makerContainer not found");
+                                        };
+                                    };
+                                };
+                                case (null) {
+                                    return #err("Maker account not found");
+                                };
+                            };
+
+                    };
+                    case(null) {
+                        return #err("takerContainer not found");
+                    };
+                };
+            };
+            case (null) {
+                return #err("Taker account not found");
+            };
+        };
+
+    };
+
+    public query func container_info(aid: Nft.AccountIdentifier, containerId: Account.ContainerId) : async Result.Result<Account.ContainerPublic, Text> {
+          switch(Map.get(containers, bhash, aid)) {
+            case (?tstore) {
+                switch(Map.get(tstore, nhash, containerId)) {
+                    case (?v) {
+                        let res : Account.ContainerPublic = {
+                            unlocked = v.unlocked;
+                            tokens = v.tokens;
+                            requirements = v.requirements;
+                            verifications = Array.freeze(v.verifications)
+                        };
+                        #ok(res);
+                    };
+                    case (null) {
+                        return #err("Container not found")
+                    };
+                };
+            };
+            case (null) {
+                return #err("Account not found")
+            };
+        }
+    };
+
+    public shared({caller}) func container_list(subaccount: ?Nft.SubAccount) : async [(Account.ContainerId, Account.ContainerPublic)] {
+
+        let aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
+
+        switch(Map.get(containers, bhash, aid)) {
+            case (?cstore) {
+                
+               Iter.toArray(Iter.map<(Account.ContainerId, Account.Container), (Account.ContainerId, Account.ContainerPublic)>(Map.entries(cstore), func(id, v)  { 
+                (id, {
+                    unlocked = v.unlocked;
+                    tokens = v.tokens;
+                    requirements = v.requirements;
+                    verifications = Array.freeze(v.verifications)
+                })
+               }));
+            };
+            case (null) {
+                []
+            };
+        };
+    };
+
+    public shared({caller}) func container_verify(subaccount: ?Nft.SubAccount, containerId: Account.ContainerId, tokenIndex: Nat) : async Result.Result<(), Text> {
+        let aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
+        let container_subaccount = Nft.SubAccount.fromNat(100000 + containerId);
+        let container_aid =  Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?container_subaccount);
+
+        switch(Map.get(containers, bhash, aid)) {
+            case (?cstore) {
+                switch(Map.get(cstore, nhash, containerId)) {
+                    case (?container) {
+                            switch(container.tokens[tokenIndex]) {
+                                case (#nft(nft)) {
+                                    switch(await Cluster.nftFromTid(_conf, nft.id).bearer(nft.id)) {
+                                        case (#ok(bearer)) {
+                                            if (bearer == container_aid) {
+                                                container.verifications[tokenIndex] := true;
+                                                #ok();
+                                            } else return #err("NFT Bearer is different");
+                                        };
+                                        case (#err(e)) {
+                                            return #err(debug_show(e));
+                                        };
+                                    };
+                                };
+                                case (#ft(contft)) {
+                                    let {ft} = await Cluster.pwrFromAid(_conf, container_aid).balance({user = #address(container_aid)});
+                                    Debug.print("HELLO");
+                                    Debug.print(debug_show(ft));
+                                    Debug.print(debug_show(contft));
+
+                                    for ((id, balance) in Iter.fromArray(ft)) {
+                                        if (id == contft.id and balance == contft.balance) {
+                                            container.verifications[tokenIndex] := true;
+                                            return #ok();
+                                        };
+                                    };
+                                    return #err("FT couldn't be verified")
+                              
+                                };
+                            };                   
+                    };
+                    case (null) {
+                        return #err("Container not found");
+                    };
+                };
+            };
+            case (null) {
+                return #err("Account not found");
+
+            };
+        };
+    };
+
+    public shared({caller}) func container_unlock(subaccount: ?Nft.SubAccount, containerId: Account.ContainerId) : async Result.Result<(), Text> {
+        let aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
+        let container_subaccount = Nft.SubAccount.fromNat(100000 + containerId);
+        let container_aid =  Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?container_subaccount);
+
+        switch(Map.get(containers, bhash, aid)) {
+            case (?cstore) {
+                switch(Map.get(cstore, nhash, containerId)) {
+                    case (?container) {
+                            container.unlocked := true;
+                            // transfer tokens back
+                            let tokens_count = Iter.size(Iter.fromArray(container.tokens));
+
+                            var idx = 0;
+                            while (idx < tokens_count) {
+                                switch(container.tokens[idx]) {
+                                    case (#nft(nft)) {
+                                        ignore Cluster.nftFromTid(_conf, nft.id).transfer({
+                                            token = nft.id;
+                                            from = #address(container_aid);
+                                            to = #address(aid);
+                                            memo = Blob.fromArray([]);
+                                            subaccount = ?container_subaccount;  
+                                        });
+                                    };
+                                    case (#ft(ft)) {
+                                        ignore Cluster.pwrFromAid(_conf, container_aid).transfer({
+                                            token = ft.id;
+                                            amount = ft.balance;
+                                            from = #address(container_aid);
+                                            to = #address(aid);
+                                            memo = Blob.fromArray([]);
+                                            subaccount = ?container_subaccount;
+                                        });
+                                    };
+                                };
+                                idx += 1;
+                            };
+
+                            // Map.delete(cstore, nhash, containerId);
+                            #ok();
+                    };
+                    case (null) {
+                        return #err("Container not found");
+                    }
+                }
+            };
+            case (null) {
+                return #err("Account not found");
+            };
+        };
+    };
 
     public func wallet_receive() : async () {
         let available = Cycles.available();

@@ -4,6 +4,7 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
   Center,
+  Box,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 
@@ -27,7 +28,7 @@ export const Breadcrumbs = ({ collections }) => {
   const breadcrumbs = useBreadcrumbs(routes);
 
   return (
-    <Center mb={3}>
+    <Box mb={3} pl="22px" color="gray.600">
       <Breadcrumb fontWeight="medium" fontSize="sm">
         {breadcrumbs.map(({ match, breadcrumb }) => (
           <BreadcrumbItem key={match.pathname}>
@@ -37,6 +38,6 @@ export const Breadcrumbs = ({ collections }) => {
           </BreadcrumbItem>
         ))}
       </Breadcrumb>
-    </Center>
+    </Box>
   );
 };

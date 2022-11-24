@@ -37,6 +37,9 @@ export const userSlice = createSlice({
 
       state.accounts = { ...state.accounts, ...action.payload.accounts };
     },
+    user_set_main_account: (state, action) => {
+      state.main_account = action.payload;
+    },
   },
 });
 
@@ -44,8 +47,13 @@ export const anvil_ready = (s) =>
   s.ic.anvil.account && s.ic.anvil.account.length !== 0;
 
 // Action creators are generated for each case reducer function
-export const { resetReducer, authenticated, focusSet, discovered } =
-  userSlice.actions;
+export const {
+  resetReducer,
+  authenticated,
+  focusSet,
+  discovered,
+  user_set_main_account,
+} = userSlice.actions;
 
 const calc_auth = (map, identity, provider, accountNum, prefix) => {
   let principal = identity.getPrincipal().toString();

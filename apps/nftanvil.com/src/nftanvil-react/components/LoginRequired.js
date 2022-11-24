@@ -1,19 +1,30 @@
 import React, { useEffect, useState } from "react";
 
-import { user_login } from "../reducers/user";
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
+  dialog_open,
+  user_set_main_account,
 } from "../index.js";
 import { Button } from "@chakra-ui/react";
 import Dfinity from "../assets/dfinity.svg";
 
 export function LoginRequired({ label, children }) {
-  const authenticated = useSelector((state) => state.user.authenticated);
-
   const dispatch = useDispatch();
 
-  return !authenticated ? (
+  const main_account = useSelector((s) => s.user.main_account);
+
+  const auth = () => {
+    dispatch(
+      dialog_open({
+        name: "select_account",
+      })
+    ).then((address) => {
+      dispatch(user_set_main_account(address));
+    });
+  };
+
+  return !main_account ? (
     <>
       <Button
         variant="solid"
@@ -24,7 +35,7 @@ export function LoginRequired({ label, children }) {
         w={"100%"}
         colorScheme="teal"
         size="lg"
-        onClick={() => dispatch(user_login())}
+        onClick={auth}
       >
         {label || "Authenticate"}
       </Button>

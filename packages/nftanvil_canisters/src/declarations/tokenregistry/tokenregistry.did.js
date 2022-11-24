@@ -1,4 +1,18 @@
 export const idlFactory = ({ IDL }) => {
+  const FTokenId__1 = IDL.Nat64;
+  const FTKind = IDL.Variant({
+    'normal' : IDL.Null,
+    'fractionless' : IDL.Null,
+  });
+  const FTShort = IDL.Record({
+    'id' : FTokenId__1,
+    'controller' : IDL.Principal,
+    'transferable' : IDL.Bool,
+    'kind' : FTKind,
+    'name' : IDL.Text,
+    'origin' : IDL.Text,
+    'symbol' : IDL.Text,
+  });
   const CanisterSlot = IDL.Nat64;
   const CanisterRange = IDL.Tuple(CanisterSlot, CanisterSlot);
   const Config = IDL.Record({
@@ -38,10 +52,6 @@ export const idlFactory = ({ IDL }) => {
     'status_code' : IDL.Nat16,
   });
   const FTokenId = IDL.Nat64;
-  const FTKind = IDL.Variant({
-    'normal' : IDL.Null,
-    'fractionless' : IDL.Null,
-  });
   const FTMeta = IDL.Record({
     'fee' : IDL.Nat64,
     'controller' : IDL.Principal,
@@ -55,7 +65,6 @@ export const idlFactory = ({ IDL }) => {
     'total_supply' : IDL.Nat64,
     'symbol' : IDL.Text,
   });
-  const FTokenId__1 = IDL.Nat64;
   const AccountIdentifier = IDL.Vec(IDL.Nat8);
   const MintRequest = IDL.Record({
     'id' : FTokenId__1,
@@ -101,10 +110,12 @@ export const idlFactory = ({ IDL }) => {
   });
   const FTLogistics = IDL.Record({
     'fee' : IDL.Nat64,
+    'decimals' : IDL.Nat8,
     'transferable' : IDL.Bool,
     'kind' : FTKind,
   });
   const Class = IDL.Service({
+    'all_tokens' : IDL.Func([], [IDL.Vec(FTShort)], ['query']),
     'config_set' : IDL.Func([Config], [], []),
     'http_request' : IDL.Func([Request], [Response], ['query']),
     'meta' : IDL.Func([FTokenId], [FTMeta], ['query']),

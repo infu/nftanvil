@@ -266,6 +266,11 @@ type PurchaseRequest =
                     amount: Balance;
                   };
    amount: Balance;
+   payment_token: FTokenId;
+   payment_token_kind: variant {
+                         fractionless;
+                         normal;
+                       };
    subaccount: opt SubAccount;
    token: TokenIdentifier;
    user: User;
@@ -277,6 +282,7 @@ type Price =
                       address: AccountIdentifier;
                       share: Share;
                     };
+   token: FTokenId;
  };
 type PlugResponse = 
  variant {
@@ -384,7 +390,6 @@ type MetadataInput =
    domain: opt DomainName;
    lore: opt text;
    name: opt text;
-   price: Price;
    quality: Quality;
    rechargeable: bool;
    secret: bool;
@@ -443,6 +448,7 @@ type FetchChunkRequest =
    subaccount: opt SubAccount;
    tokenIndex: TokenIndex;
  };
+type FTokenId = nat64;
 type ExternalUrl = text;
 type DomainName = text;
 type CustomVar = blob;

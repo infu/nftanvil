@@ -150,6 +150,9 @@ export const HistoryEvent = ({
         if (key === "use") {
           val = JSON.stringify(val);
         }
+        if (key === "target") {
+          val = JSON.stringify(val);
+        }
 
         if (key === "memo") {
           val = toHexString(val);

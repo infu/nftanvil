@@ -103,7 +103,22 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
         #ok({transactionId});
     };
 
-
+    public query func all_tokens() : async [Tr.FTShort] {
+        
+        Array.tabulate<Tr.FTShort>(_total_tokens, func(idx) {
+            let id = idx + 1;
+            let ?x = _state[id];
+            {
+                id=Nat64.fromNat(id);
+                name= x.name;
+                symbol = x.symbol;
+                transferable= x.transferable;
+                kind= x.kind;
+                controller= x.controller;
+                origin =  x.origin;
+            }
+        })
+    };
 
 
     public query func meta(id: FTokenId) : async Tr.FTMeta {
@@ -130,6 +145,7 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
             transferable = t.transferable;
             fee = t.fee;
             kind = t.kind;
+            decimals = t.decimals;
         };
     };
 

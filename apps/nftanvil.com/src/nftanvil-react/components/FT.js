@@ -8,8 +8,11 @@ import {
   Box,
   useColorModeValue,
   AbsoluteCenter,
+  Select,
 } from "@chakra-ui/react";
+
 import { itemQuality } from "@vvv-interactive/nftanvil-tools/cjs/items.js";
+
 import {
   nft_fetch,
   nft_enter_code,
@@ -42,9 +45,13 @@ import {
   tokenFromText,
   fungibleUrl,
 } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
+
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
+  ft_all_tokens,
+  ft_fetch_meta,
+  useFT,
 } from "../index.js";
 
 import styled from "@emotion/styled";
@@ -62,8 +69,11 @@ const FTokenDiv = styled.div`
   position: relative;
   box-overflow: hidden;
   .ftimage {
-    width: 56px;
-    height: 56px;
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: 60px;
+    height: 60px;
     margin: 8px;
   }
   .bal {
@@ -89,9 +99,45 @@ const FTokenDiv = styled.div`
   }
 `;
 
+export const FTSelect = ({ onChange, value, initialValue = "1" }) => {
+  const [allTokens, setAllTokens] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(ft_all_tokens()).then((at) => {
+      let selected = at.find((x) => x.id === initialValue);
+      setAllTokens(at);
+      onChange(selected);
+    });
+  }, []);
+
+  if (!allTokens) return null;
+
+  return (
+    <Select
+      value={value?.id}
+      variant="filled"
+      onChange={(e) => {
+        let val = e.target.value;
+        const selected_token = allTokens.find((x) => x.id === val);
+        onChange(selected_token);
+      }}
+    >
+      <option key="false" value={false}>
+        - Select token -
+      </option>
+      {allTokens.map((x, idx) => (
+        <option key={idx} value={x.id}>
+          {x.symbol.toUpperCase()} - {x.name}
+        </option>
+      ))}
+    </Select>
+  );
+};
+
 export const FT = ({ token, aid, bal, onClick }) => {
   const dispatch = useDispatch();
-  const meta = useSelector((state) => state.ft[token.id]);
+  const meta = useFT(token.id);
 
   const [{ opacity, dragging }, dragRef] = useDrag(
     () => ({
@@ -124,7 +170,6 @@ export const FT = ({ token, aid, bal, onClick }) => {
 
   return (
     <FTokenDiv
-      bal={bal}
       ref={dragRef}
       style={{
         opacity: token.optimistic ? "0.3" : opacity,
@@ -149,6 +194,21 @@ export const FT = ({ token, aid, bal, onClick }) => {
         </div>
       ) : null}
       <div className="border" />
+      <Box
+        sx={{
+          position: "absolute",
+          top: "8px",
+          left: "10px",
+          right: "10px",
+          fontWeight: "bold",
+          textAlign: "left",
+          fontSize: "11px",
+
+          textShadow: " 0px 0px 3px #000",
+        }}
+      >
+        {meta?.symbol}
+      </Box>
       {popoverOpen ? (
         <Box
           sx={{
@@ -159,7 +219,7 @@ export const FT = ({ token, aid, bal, onClick }) => {
             width: "400px",
           }}
         >
-          {meta ? <FTMeta token={token} meta={meta} /> : null}
+          {meta ? <FTMeta id={token.id} bal={token.bal} meta={meta} /> : null}
         </Box>
       ) : null}
     </FTokenDiv>
@@ -168,14 +228,16 @@ export const FT = ({ token, aid, bal, onClick }) => {
 
 const capitalize = (x) => x.charAt(0).toUpperCase() + x.slice(1);
 
-export const FTMeta = ({ token, meta }) => {
+export const FTMeta = ({ id, bal, meta }) => {
   const mode = useColorModeValue("light", "dark");
 
   const bg = useColorModeValue("gray.100", "gray.700");
   const textColor = useColorModeValue("gray.900", "gray.100");
   const isDark = mode === "dark";
   let nowMinutes = Math.floor(Date.now() / 1000 / 60);
-  let quantity = AccountIdentifier.placeDecimal(token.bal, meta.decimals, 8);
+  let quantity = bal
+    ? AccountIdentifier.placeDecimal(bal, meta.decimals, 8)
+    : 0;
   return (
     <Box bg={bg} color={textColor} borderRadius="md" w={350} p={2}>
       <Stack spacing={0}>
@@ -198,7 +260,6 @@ export const FTMeta = ({ token, meta }) => {
           Total supply:{" "}
           {AccountIdentifier.placeDecimal(meta.total_supply, meta.decimals, 0)}
         </Text>
-        <Text pt="6px">{quantity}</Text>
       </Stack>
     </Box>
   );
@@ -209,4 +270,70 @@ export const FTImage = ({ id, style = {} }) => {
 
   let imgsrc = fungibleUrl(map, id);
   return <img className="ftimage" alt="" src={imgsrc} style={style} />;
+};
+
+export const FTAbstract = ({ id, aid, bal, onClick }) => {
+  const dispatch = useDispatch();
+  console.log("FTAbstract", { id, bal });
+  const meta = useFT(id);
+
+  const [mouseOver, setMouseOver] = useState(false);
+  const popoverOpen = mouseOver;
+  if (!meta) return null;
+
+  return (
+    <FTokenDiv
+      bal={bal}
+      style={{
+        zIndex: popoverOpen ? 10 : 0,
+      }}
+      onMouseOver={() => {
+        setMouseOver(true);
+      }}
+      onMouseDown={() => {
+        setMouseOver(false);
+      }}
+      onMouseOut={() => {
+        setMouseOver(false);
+      }}
+    >
+      <FTImage id={id} />
+      {bal ? (
+        <div className="bal">
+          {"fractionless" in meta.kind
+            ? bal
+            : AccountIdentifier.placeDecimal(bal, meta.decimals, 4)}
+        </div>
+      ) : null}
+      <div className="border" />
+      <Box
+        sx={{
+          position: "absolute",
+          top: "8px",
+          left: "10px",
+          right: "10px",
+          fontWeight: "bold",
+          textAlign: "left",
+          fontSize: "11px",
+
+          textShadow: " 0px 0px 3px #000",
+        }}
+      >
+        {meta.symbol}
+      </Box>
+      {popoverOpen ? (
+        <Box
+          sx={{
+            pointerEvents: "none",
+            position: "absolute",
+            top: "56px",
+            left: "56px",
+            width: "400px",
+          }}
+        >
+          <FTMeta id={id} meta={meta} />
+        </Box>
+      ) : null}
+    </FTokenDiv>
+  );
 };
