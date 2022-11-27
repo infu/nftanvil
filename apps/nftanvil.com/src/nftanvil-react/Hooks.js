@@ -31,7 +31,7 @@ export const useFT = (id) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(ft_fetch_meta(id[0]));
+    if (id && id[0]) dispatch(ft_fetch_meta(id[0]));
   }, [dispatch, id]);
 
   return ft;

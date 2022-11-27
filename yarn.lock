@@ -5122,7 +5122,7 @@ at-least-node@^1.0.0:
   resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
   integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
-athena-protocol@/Users/cool/vvv-interactive/athena/packages/athena-client/:
+"athena-protocol@file:../athena/packages/athena-client":
   version "1.0.4"
 
 autoprefixer@^10.4.11:
