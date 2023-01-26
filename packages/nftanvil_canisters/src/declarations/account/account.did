@@ -70,7 +70,7 @@ type Class =
          });
    container_swap: (opt SubAccount, ContainerId, ContainerId,
     AccountIdentifier__1) -> (Result);
-   container_unlock: (opt SubAccount, ContainerId) -> (Result);
+   container_unlock: (AccountIdentifier__1, ContainerId) -> (Result);
    container_verify: (opt SubAccount, ContainerId, nat) -> (Result);
    list: (AccountIdentifier, nat, nat) -> (vec TokenIdentifier__1) query;
    meta: (AccountIdentifier) -> (opt AccountMeta) query;

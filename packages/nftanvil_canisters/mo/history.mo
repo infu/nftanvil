@@ -28,14 +28,15 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
 
     private stable var _nextTransaction : Nat32 = 0;
-    private stable var _lastDigestedAccount : Nat32 = 0;
+    // private stable var _lastDigestedAccount : Nat32 = 0;
 
     private stable var _prevHistoryCanister : ?Principal = null;
 
     private stable var _conf : Cluster.Config = Cluster.Config.default();
     private stable var _slot : Nft.CanisterSlot = 0;
 
-    private let _transactions_soft_cap: Nat32 = 1000000;
+    private let _transactions_soft_cap: Nat32 = 140000;
+    private let _transactions_hard_cap: Nat32 = 143000;
 
     private stable var _cycles_recieved : Nat = Cycles.balance();
 
@@ -68,6 +69,8 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
             }
         };
 
+        assert(_nextTransaction < _transactions_hard_cap);
+
         let index = _nextTransaction - 1;
         
         let previousTransactionHash : [Nat8] = switch(index > 0) {
@@ -76,7 +79,7 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
                 case (null) [] // Perhaps put hash of last transaction from previous canister (if any)
             };
             case (false) [];
-            };
+        };
 
 
         let event = {
@@ -129,26 +132,25 @@ shared({caller = _installer}) actor class Class() : async H.Interface = this {
         
     };
 
-    system func heartbeat() : async () {
+    // system func heartbeat() : async () {
        
+    //     if (_nextTransaction != _lastDigestedAccount) {
 
-        if (_nextTransaction != _lastDigestedAccount) {
+    //         switch(_transactions[Nat32.toNat(_lastDigestedAccount)]) {
+    //             case (?t) {
+    //                 await digestAccountNotification(_lastDigestedAccount, t);
+    //             };
+    //             case (_) {
+    //                 ()
+    //             };
+    //         };
 
-            switch(_transactions[Nat32.toNat(_lastDigestedAccount)]) {
-                case (?t) {
-                    await digestAccountNotification(_lastDigestedAccount, t);
-                };
-                case (_) {
-                    ()
-                };
-            };
-
-            _lastDigestedAccount := _lastDigestedAccount + 1;
-            return;
-        };
+    //         _lastDigestedAccount := _lastDigestedAccount + 1;
+    //         return;
+    //     };
 
 
-    };
+    // };
 
   
 

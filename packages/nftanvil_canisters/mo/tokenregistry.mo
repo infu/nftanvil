@@ -53,7 +53,6 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
   stable var _storedState : State = #v1(Array.init<?Tr.FTokenInfo>(100000, null)); 
   let _state = switch(_storedState) { case (#v1(st)) st; case (_) Debug.trap("Unexpected stored state") };
 
-
   //Handle canister upgrades
   system func preupgrade() {
 
@@ -103,8 +102,7 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
         #ok({transactionId});
     };
 
-    public query func all_tokens() : async [Tr.FTShort] {
-        
+    public query func all_tokens() : async [Tr.FTShort] {   
         Array.tabulate<Tr.FTShort>(_total_tokens, func(idx) {
             let id = idx + 1;
             let ?x = _state[id];
@@ -119,6 +117,27 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
             }
         })
     };
+
+    // public query func meta_selected(ids: [FTokenId]) : async [Tr.FTMeta] {
+    //     Array.map(ids, func(id : FTokenId) {
+    //         let ?t = _state[Nat64.toNat(id)];
+    //         {
+    //             symbol = t.symbol;
+    //             name = t.name;
+    //             origin = t.origin;
+    //             kind = t.kind;
+    //             desc = t.desc;
+    //             decimals = t.decimals;
+    //             transferable = t.transferable;
+    //             fee = t.fee;
+    //             mintable = t.mintable;
+    //             total_supply = t.total_supply;
+    //             controller = t.controller;
+    //         }
+    //     });
+
+        
+    // };
 
 
     public query func meta(id: FTokenId) : async Tr.FTMeta {

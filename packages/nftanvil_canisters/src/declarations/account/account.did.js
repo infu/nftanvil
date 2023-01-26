@@ -81,7 +81,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'container_unlock' : IDL.Func(
-        [IDL.Opt(SubAccount), ContainerId],
+        [AccountIdentifier__1, ContainerId],
         [Result],
         [],
       ),

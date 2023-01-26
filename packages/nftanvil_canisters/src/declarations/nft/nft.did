@@ -282,7 +282,6 @@ type Price =
                       address: AccountIdentifier;
                       share: Share;
                     };
-   token: FTokenId;
  };
 type PlugResponse = 
  variant {
@@ -332,7 +331,6 @@ type NFTPurchase =
                     };
    recharge: Balance;
    seller: AccountIdentifier;
-   token: TokenIdentifier;
  };
 type MintResponse = 
  variant {

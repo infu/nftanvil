@@ -102,7 +102,6 @@ export const idlFactory = ({ IDL }) => {
   });
   const Share = IDL.Nat16;
   const Price = IDL.Record({
-    'token' : FTokenId,
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
     ),
@@ -111,7 +110,6 @@ export const idlFactory = ({ IDL }) => {
   const Time = IDL.Int;
   const NFTPurchase = IDL.Record({
     'created' : Time,
-    'token' : TokenIdentifier,
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
     ),
@@ -166,7 +164,6 @@ export const idlFactory = ({ IDL }) => {
     }),
     'price' : IDL.Record({
       'created' : Timestamp,
-      'token' : TokenIdentifier,
       'user' : AccountIdentifier,
       'price' : Price,
     }),

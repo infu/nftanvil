@@ -80,8 +80,8 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     private stable var _oracle : Cluster.Oracle = Cluster.Oracle.default();
     private stable var _slot : Nft.CanisterSlot = 0;
 
-    private stable var _statsCollections : Nat32  = 0;
-    private stable var _statsTransfers : Nat32  = 0;
+    private stable var _statsCollections : Nat32 = 0;
+    private stable var _statsTransfers : Nat32 = 0;
     private stable var _statsBurned : Nat32 = 0;
 
     private stable var _nextTokenId : Nft.TokenIndex = 1;
@@ -168,6 +168,16 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     };
 
 
+
+// Example improvement: 
+// pipe6(
+//     nftGet(request.tokenId),
+//     requireOwner(caller, request.subaccount),
+//     requireBalance(1),
+//     requireNotTransferBound(),
+//     consumePwr(2),
+//     createLink(request.hash)
+// )
 
     public shared({caller}) func transfer_link(request : Nft.TransferLinkRequest) : async Nft.TransferLinkResponse {
         
@@ -271,13 +281,13 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 switch(SNFT_tidxGet(tokenIndex)) {
                     case(?seller) {
 
-                        let {marketplace;  amount; token} = vars.price;
-                        if (token != request.payment_token) return #err(#Rejected);
+                        let {marketplace;  amount} = vars.price; //; token
+                        // if (token != request.payment_token) return #err(#Rejected);
                         let {affiliate} = request;
                         if (amount == 0) return #err(#NotForSale);
 
-                        let {recharge_cost; payment} = switch(request.payment_token_kind) {
-                            case (#normal) {
+                        // let {recharge_cost; payment} = { switch(request.payment_token_kind)
+                        //  case (#normal) {
                                 let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
 
                                 if (request.amount < amount) return #err(#InsufficientPayment(amount));
@@ -293,24 +303,23 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                 vars.pwrOps := topOps;
                                 vars.ttl := null;
 
-                                {recharge_cost; payment};
+                        //         {recharge_cost; payment};
+                        // }
 
-                            };
-                            case (#fractionless) {
-                               if (request.amount < amount) return #err(#InsufficientPayment(amount));
-                               {recharge_cost:Balance=0; payment:Balance=amount}
-                            };
-                        };
+                        //     };
+                        //     case (#fractionless) {
+                        //        if (request.amount < amount) return #err(#InsufficientPayment(amount));
+                        //        {recharge_cost:Balance=0; payment:Balance=amount}
+                        //     };
+                        // };
              
-
-
                         // move
                         let purchase = {
                             created = Time.now();
                             buyer = toUserAID;
                             amount = payment; 
                             seller;
-                            token = request.token;
+                            // token = request.token;
                             recharge = recharge_cost;
                             author = {address=meta.author; share=meta.authorShare};
                             marketplace;
@@ -364,20 +373,20 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             
                             if (PWRConsume(tokenIndex, 1) == false) return #err(#OutOfPower);
 
-                            let {amount; marketplace; token} = request.price;
+                            let {amount; marketplace; } = request.price; //token
 
-                            let { transferable; fee; kind } = await Cluster.tokenregistry(_conf).token_logistics(token);
-                            Debug.print(debug_show(kind));
-                            Debug.print(debug_show(amount));
+                            // let { transferable; fee; kind } = await Cluster.tokenregistry(_conf).token_logistics(token);
+                            // Debug.print(debug_show(kind));
+                            // Debug.print(debug_show(amount));
 
-                            let new_price = switch(kind) {
-                                        case(#normal) {
+                            // let new_price = switch(kind) {
+                            //             case(#normal) {
                                             if ((request.price.amount != 0) and (request.price.amount < 100000)) return #err(#TooLow);
 
                                             let (topStorage, topOps, diffStorage, diffOps) = charge_calc_missing(meta, vars);
 
-                                            {
-                                            token = token;
+                                            let new_price = {
+                                            // token = token;
                                             amount = switch(amount != 0) {
                                                 case (true) amount + diffStorage + diffOps + _oracle.pwrFee;
                                                 case (false) amount
@@ -385,17 +394,17 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                                             marketplace;
                                             };
 
-                                        };
-                                        case (#fractionless) {
-                                            {
-                                            token = token;
-                                            amount;
-                                            marketplace = null;
-                                            };
-                                        };
-                                    };
+                                    //     };
+                                    //     case (#fractionless) {
+                                    //         {
+                                    //         token = token;
+                                    //         amount;
+                                    //         marketplace = null;
+                                    //         };
+                                    //     };
+                                    // };
                             
-                            Debug.print(debug_show(new_price));
+                            // Debug.print(debug_show(new_price));
 
                                 
                             vars.price := new_price;
@@ -459,7 +468,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             addTransaction(vars, transactionId);
 
                             return #ok({transactionId});
-                             } catch (e) {
+                            } catch (e) {
                                 _icall_errors += 1;
                                 #err(#ICE(debug_show(Error.code(e)) # " " # Error.message(e)));
                                 };
@@ -589,8 +598,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
        
        let (slot, tokenIndex) = Nft.TokenIdentifier.decode(token);
 
-
-        
         if (slot != _slot) return #err(#InvalidToken);
 
         switch(SNFT_tidxGet(tokenIndex)) {
@@ -615,7 +622,6 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                 #err(#InvalidToken);
             };
         }
-
            
     };
  
@@ -642,9 +648,10 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
     public shared({caller}) func upload_chunk(request: Nft.UploadChunkRequest) : async () {
         let caller_user:Nft.User = #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
 
+        //pycqe-daaaa-aaaam-aa4oq-cai is a placeholder for future moderation system
         assert((switch(getMeta(request.tokenIndex)) {
                     case (#ok((meta,vars,t))) {
-                          (meta.author == Nft.User.toAccountIdentifier(caller_user)); // and ((meta.created + 30) > timeInMinutes()); // allows upload of assets up to 30min after minting
+                          (meta.author == Nft.User.toAccountIdentifier(caller_user) or Principal.fromText("pycqe-daaaa-aaaam-aa4oq-cai") == caller); // and ((meta.created + 30) > timeInMinutes()); // allows upload of assets up to 30min after minting
                     };
                     case (#err()) {
                        false
@@ -655,6 +662,14 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
 
         switch(getToken(request.tokenIndex)) {
             case (#ok(t)) {
+
+                switch(t.content[ Nat32.toNat(request.chunkIdx)]) {
+                    case (?something) {
+                        if (Principal.fromText("pycqe-daaaa-aaaam-aa4oq-cai") != caller) Debug.trap("Can't reupload"); // cant upload if already uploaded
+                    };
+                    case (null) ();
+                };
+
                 switch(request.position) {
                         case (#content) {
                             assert(request.chunkIdx <  Nft.Chunks.MAX_CONTENT_CHUNKS);
@@ -707,7 +722,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             case (false) true;
                             case (true) {
                                 let callerAid = Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount);
-                                Nft.AccountIdentifier.equal(t.owner, callerAid);
+                                Nft.AccountIdentifier.equal(t.owner, callerAid) or Principal.fromText("pycqe-daaaa-aaaam-aa4oq-cai") == caller;
                             }
                         };
                         if (allowed == false) return null;

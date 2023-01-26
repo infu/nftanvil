@@ -54,7 +54,7 @@ shared({ caller = _installer }) actor class Class() = this {
    
     let containers = Map.new<AccountIdentifier, Account.ContainerStore>();
 
-    private var _nextContainerId : Account.ContainerId = 20;
+    private var _nextContainerId : Account.ContainerId = 50;
 
     //Handle canister upgrades
     system func preupgrade() {
@@ -141,8 +141,12 @@ shared({ caller = _installer }) actor class Class() = this {
                                             Map.set(mstore, nhash, takerContainerId, takerContainer);
                                             Map.set(tstore, nhash, makerContainerId, makerContainer);
 
+                                            ignore container_unlock(makerAid, takerContainerId); // try to unlock, if it fails the frontend can unlock them too
+                                            ignore container_unlock(aid, makerContainerId);
+
                                             #ok();
                                             
+
                                         };
                                         case(null) {
                                             return #err("makerContainer not found");
@@ -238,12 +242,11 @@ shared({ caller = _installer }) actor class Class() = this {
                                 };
                                 case (#ft(contft)) {
                                     let {ft} = await Cluster.pwrFromAid(_conf, container_aid).balance({user = #address(container_aid)});
-                                    Debug.print("HELLO");
-                                    Debug.print(debug_show(ft));
-                                    Debug.print(debug_show(contft));
-
                                     for ((id, balance) in Iter.fromArray(ft)) {
-                                        if (id == contft.id and balance == contft.balance) {
+                                        // Debug.print("FT VERIFY");
+                                        // Debug.print(debug_show(contft));
+                                        // Debug.print(debug_show(balance));
+                                        if (id == contft.id and balance >= contft.balance) {
                                             container.verifications[tokenIndex] := true;
                                             return #ok();
                                         };
@@ -265,10 +268,12 @@ shared({ caller = _installer }) actor class Class() = this {
         };
     };
 
-    public shared({caller}) func container_unlock(subaccount: ?Nft.SubAccount, containerId: Account.ContainerId) : async Result.Result<(), Text> {
-        let aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
+    public shared({caller}) func container_unlock(aid: Nft.AccountIdentifier, containerId: Account.ContainerId) : async Result.Result<(), Text> {
+        //let aid = Nft.AccountIdentifier.fromPrincipal(caller, subaccount);
         let container_subaccount = Nft.SubAccount.fromNat(100000 + containerId);
         let container_aid =  Nft.AccountIdentifier.fromPrincipal(Principal.fromActor(this), ?container_subaccount);
+
+        // Debug.print(debug_show({aid; containerId}));
 
         switch(Map.get(containers, bhash, aid)) {
             case (?cstore) {
@@ -282,29 +287,49 @@ shared({ caller = _installer }) actor class Class() = this {
                             while (idx < tokens_count) {
                                 switch(container.tokens[idx]) {
                                     case (#nft(nft)) {
-                                        ignore Cluster.nftFromTid(_conf, nft.id).transfer({
+                                        switch(await Cluster.nftFromTid(_conf, nft.id).transfer({
                                             token = nft.id;
                                             from = #address(container_aid);
                                             to = #address(aid);
                                             memo = Blob.fromArray([]);
                                             subaccount = ?container_subaccount;  
-                                        });
+                                        })) {
+                                            case (#ok(r)) {
+                                                ();
+                                            };
+                                            case (#err(e)) {
+                                                return #err(debug_show(e));
+                                            }
+                                        };
                                     };
                                     case (#ft(ft)) {
-                                        ignore Cluster.pwrFromAid(_conf, container_aid).transfer({
-                                            token = ft.id;
-                                            amount = ft.balance;
-                                            from = #address(container_aid);
-                                            to = #address(aid);
-                                            memo = Blob.fromArray([]);
-                                            subaccount = ?container_subaccount;
-                                        });
+                                        let ba = await Cluster.pwrFromAid(_conf, container_aid).balance({user = #address(container_aid)});
+                                        for ((id, balance) in Iter.fromArray(ba.ft)) {
+                                            if (id == ft.id) {
+                                                switch(await Cluster.pwrFromAid(_conf, container_aid).transfer({
+                                                    token = ft.id;
+                                                    amount = balance;
+                                                    from = #address(container_aid);
+                                                    to = #address(aid);
+                                                    memo = Blob.fromArray([]);
+                                                    subaccount = ?container_subaccount;
+                                                })) {
+                                                    case (#ok(r)) {
+                                                        ();
+                                                    };
+                                                    case (#err(e)) {
+                                                        return #err(debug_show(e));
+                                                    }
+                                                };
+                                            };
+                                        };
+                                        
                                     };
                                 };
                                 idx += 1;
                             };
 
-                            // Map.delete(cstore, nhash, containerId);
+                            Map.delete(cstore, nhash, containerId);
                             #ok();
                     };
                     case (null) {

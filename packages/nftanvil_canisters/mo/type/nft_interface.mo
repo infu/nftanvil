@@ -688,7 +688,7 @@ module {
                 created : Time.Time;
                 amount : Balance;
 
-                token: TokenIdentifier;
+                // token: TokenIdentifier;
                 
                 buyer : AccountIdentifier;
                 seller : AccountIdentifier;
@@ -774,7 +774,7 @@ module {
 
     public type ContentType = Text;
     public module ContentType = {
-        public let Allowed:[ContentType] = ["application/octet-stream","image/jpeg","image/gif","image/png","video/ogg","video/mpeg","video/mp4","video/webm","image/webp","audio/mpeg","audio/aac","audio/ogg","audio/opus","audio/webm","image/svg+xml"]; // Warning: Allowing other types shoud go trough security check
+        public let Allowed:[ContentType] = ["application/octet-stream","application/wasm","application/pdf","text/plain","text/markdown","application/json","application/blast","image/jpeg","image/gif","image/png","image/apng","video/ogg","video/mpeg","video/mp4","video/webm","image/webp","audio/mpeg","audio/aac","audio/ogg","audio/opus","audio/webm","image/svg+xml"]; // Warning: Allowing other types shoud go trough security check
         public func validate(t : ContentType) : Bool {
             switch(Array.find(Allowed, func (a : ContentType) : Bool { a == t })) {
                 case (?x) true;
@@ -1187,7 +1187,7 @@ module {
 
     public type Price = {
         amount : Nat64;
-        token : FTokenId;
+//        token : FTokenId;   // BREAKING UPGRADE
         marketplace : ?{
                 address : AccountIdentifier;
                 share : Share 
@@ -1199,7 +1199,7 @@ module {
             {
                 amount = 0;
                 marketplace = null;
-                token = 0;
+ //               token = 0;
                 // affiliate = null;
             }
         };
@@ -1212,7 +1212,8 @@ module {
                             Array.flatten<Nat8>([
                                 Blob.toArray(address),
                                 Blob_.nat16ToBytes(share),
-                                Blob_.nat64ToBytes(x.token)]
+                              //  Blob_.nat64ToBytes(x.token)
+                              ]
                             )
                         };
                         case (null) {
@@ -1428,7 +1429,7 @@ module {
         #price : {
             created: Timestamp;
             user: AccountIdentifier;
-            token: TokenIdentifier;
+            // token: TokenIdentifier;
             price: Price;
         };
 
@@ -1550,12 +1551,12 @@ module {
                         Blob.toArray(memo)
                     ])
                 };
-                case (#price({created;user;token;price})) {
+                case (#price({created;user;price})) { //token;
                     Array.flatten<Nat8>([
                         [5:Nat8],
                         Blob_.intToBytes(created),
                         Blob.toArray(user),
-                        Blob_.nat64ToBytes(token),
+                        // Blob_.nat64ToBytes(token),
                         Price.hash(price)
                     ])
                 };
@@ -1615,7 +1616,7 @@ module {
                             [9:Nat8],
                             Blob_.intToBytes(e.created),
                             Blob_.nat64ToBytes(e.amount),
-                            Blob_.nat64ToBytes(e.token),
+                            // Blob_.nat64ToBytes(e.token),
                             Blob.toArray(e.buyer),
                             Blob.toArray(e.seller),
                             Blob.toArray(e.author.address),

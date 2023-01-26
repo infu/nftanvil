@@ -128,6 +128,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
   public query func balance(request : Pwr.BalanceRequest) : async Pwr.BalanceResponse {
     let aid = Nft.User.toAccountIdentifier(request.user);
+
     assert (Cluster.pwr2slot(_conf, aid) == _slot);
 
     switch (_state.get(aid)) {
@@ -184,7 +185,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
     let cost:Nat64 = 20 * 100000000;
 
-    switch (balanceRem(Pwr.TOKEN_ANV, aid, cost, _oracle.anvFee, #normal)) {
+    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.anvFee, #normal)) {
       case (#ok(deduced)) ();
       case (#err(e)) return #err(debug_show(e));
     };
@@ -200,7 +201,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
           #ok();
         };
         case (#err(t)) {
-          balanceAdd(Pwr.TOKEN_ANV, aid, cost, #normal);
+          balanceAdd(Pwr.TOKEN_ICP, aid, cost, #normal);
           #err(t);
         };
     };
@@ -373,7 +374,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     assert(image.size() <= 131072);
     assert(origin.size() < 255);
 
-    switch (balanceRem(Pwr.TOKEN_ANV, aid, cost, _oracle.anvFee, #normal)) {
+    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.anvFee, #normal)) {
       case (#ok(deduced)) ();
       case (#err(e)) return #err(debug_show(e));
     };
@@ -391,14 +392,14 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
                 #ok({transactionId; id});
             };
             case (#err(t)) {
-              balanceAdd(Pwr.TOKEN_ANV, aid, cost, kind);
+              balanceAdd(Pwr.TOKEN_ICP, aid, cost, kind);
               return #err(t);
             }
           }
 
         };
         case (#err(t)) {
-          balanceAdd(Pwr.TOKEN_ANV, aid, cost, kind);
+          balanceAdd(Pwr.TOKEN_ICP, aid, cost, kind);
           #err(t);
         };
     };
@@ -527,8 +528,11 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
         #address(Nft.AccountIdentifier.fromPrincipal(caller, request.subaccount));
       };
     };
-
+    
     let { transferable; fee; kind } = await Cluster.tokenregistry(_conf).token_logistics(request.token);
+    var real_fee = fee;
+    if (isAnvil) real_fee := 0;
+
     if (transferable == false) return #err(#Rejected);
 
     if (Nft.Memo.validate(request.memo) == false) return #err(#Other("Invalid memo"));
@@ -541,12 +545,12 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
         // resist small account creation
         if (kind == #normal) switch (Pwr.AccountRecordFindToken(ac, request.token)) {
           case (?tidx) {
-            let amount_a = ac[tidx].1 - request.amount - fee;
+            let amount_a = ac[tidx].1 - request.amount - real_fee;
             let amount_b = request.amount;
             if (amount_b != 0 and amount_a != 0) {
               // new account is getting created
-              if (amount_a <= fee * 100) return #err(#Other("You need to leave at least 100 times the fee, or send everything"));
-              if (amount_b <= fee * 100) return #err(#Other("You need to send at least 100 times the fee, or send everything"));
+              if (amount_a <= real_fee * 100) return #err(#Other("You need to leave at least 100 times the fee, or send everything"));
+              if (amount_b <= real_fee * 100) return #err(#Other("You need to send at least 100 times the fee, or send everything"));
             };
           };
           case (null) {
@@ -554,7 +558,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
           };
         };
   
-        switch (balanceRem(request.token, aid, request.amount, fee, kind)) {
+        switch (balanceRem(request.token, aid, request.amount, real_fee, kind)) {
           case (#ok(deduced)) {
 
             switch (await Cluster.pwrFromAid(_conf, to_aid).balanceAddExternalProtected(request.token, to_aid, deduced, kind)) {
@@ -568,7 +572,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
               };
             };
 
-            _fees_charged += fee;
+            _fees_charged += real_fee;
             // TODO separate counters or report back to
 
             if (isAnvil) {
@@ -673,7 +677,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     // _fees_charged += _oracle.pwrFee;
 
     // take amount out
-    switch (balanceRem(Pwr.TOKEN_ANV, aid, cost, _oracle.pwrFee, #normal)) {
+    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.pwrFee, #normal)) {
       case (#ok(deduced))();
       case (#err(e)) return #err(e);
     };
@@ -686,7 +690,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(Pwr.TOKEN_ANV, aid, cost, #normal);
+        balanceAdd(Pwr.TOKEN_ICP, aid, cost, #normal);
         // return because of fail TODO: Do not return pwrFee if error was intentional (if that is possible)
 
         return #err(e);
@@ -794,7 +798,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
                   marketplace_cut,
                   #normal
                 );
-                Debug.print("Marketplace cut " # debug_show (marketplace_cut) # " " # debug_show (marketplace));
+                // Debug.print("Marketplace cut " # debug_show (marketplace_cut) # " " # debug_show (marketplace));
               };
               case (null)();
             };
@@ -809,7 +813,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
                   affiliate.amount,
                   #normal
                 );
-                Debug.print("Affiliate cut " # debug_show (affiliate.amount) # " " # debug_show (affiliate));
+                // Debug.print("Affiliate cut " # debug_show (affiliate.amount) # " " # debug_show (affiliate));
               };
               case (null)();
             };
@@ -955,7 +959,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     let cost : Nat64 = request.amount;
 
     // take amount out
-    switch (balanceRem(Pwr.TOKEN_ANV, aid, cost, _oracle.pwrFee, #normal)) {
+    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.pwrFee, #normal)) {
       case (#ok(deduced))();
       case (#err(e)) return #err(e);
     };
@@ -969,7 +973,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
         return #ok(resp);
       };
       case (#err(e)) {
-        balanceAdd(Pwr.TOKEN_ANV, aid, cost, #normal);
+        balanceAdd(Pwr.TOKEN_ICP, aid, cost, #normal);
         // return because of fail
 
         return #err(e);
@@ -1054,7 +1058,8 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
               balanceAdd(target, aid, amount, kind);
             };
             case (#fractionless) {
-              balanceAdd(target, aid, Pwr.Fractionless.encode(amount, amount*499), kind);
+              balanceAdd(target, aid, amount, kind);
+              // balanceAdd(target, aid, Pwr.Fractionless.encode(amount, amount*499), kind);
             };
           };
   };
@@ -1129,29 +1134,37 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
                 amount
               };
               case (#fractionless) {
-                let {whole; charges} = Pwr.Fractionless.decode(ac[tidx].1);
-                if (charges <= 1) return #err(#InsufficientBalance);
-                if (whole < amount) return #err(#InsufficientBalance);
-                if (whole == amount) {
-                  let all = ac[tidx].1;
-                    ac[tidx] := (
-                    ac[tidx].0,
-                    0,
-                  );
-
-                  all - fee;
-                } else {
-                  let chargesPerOne = charges / whole;
-
-                  let amountDeduced = Pwr.Fractionless.encode(amount, chargesPerOne*amount);
-                  let wholeRemaining = whole - amount;
-                  ac[tidx] := (
-                    ac[tidx].0,
-                    Pwr.Fractionless.encode(wholeRemaining, Nat64.min(wholeRemaining*499, charges - chargesPerOne*amount)),
-                  );
+                if (ac[tidx].1 < (amount)) return #err(#InsufficientBalance);
                 
-                  amountDeduced - fee;
-                }
+                ac[tidx] := (
+                  ac[tidx].0,
+                  ac[tidx].1 - (amount),
+                );
+
+                amount
+                // let {whole; charges} = Pwr.Fractionless.decode(ac[tidx].1);
+                // if (charges <= 1) return #err(#InsufficientBalance);
+                // if (whole < amount) return #err(#InsufficientBalance);
+                // if (whole == amount) {
+                //   let all = ac[tidx].1;
+                //   ac[tidx] := (
+                //     ac[tidx].0,
+                //     0,
+                //   );
+
+                //   all - fee;
+                // } else {
+                //   let chargesPerOne = charges / whole;
+
+                //   let amountDeduced = Pwr.Fractionless.encode(amount, chargesPerOne*amount);
+                //   let wholeRemaining = whole - amount;
+                //   ac[tidx] := (
+                //     ac[tidx].0,
+                //     Pwr.Fractionless.encode(wholeRemaining, Nat64.min(wholeRemaining*499, charges - chargesPerOne*amount)),
+                //   );
+                
+                //   amountDeduced - fee;
+                // }
               };
             };
             
