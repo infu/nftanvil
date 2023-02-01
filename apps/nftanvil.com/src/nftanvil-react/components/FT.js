@@ -112,7 +112,6 @@ export const FTSelect = ({ onChange, value, initialValue = "1" }) => {
   }, []);
 
   if (!allTokens) return null;
-
   return (
     <Select
       value={value?.id}
@@ -123,14 +122,16 @@ export const FTSelect = ({ onChange, value, initialValue = "1" }) => {
         onChange(selected_token);
       }}
     >
-      <option key="false" value={false}>
+      {/* <option key="false" value={false}>
         - Select token -
-      </option>
-      {allTokens.map((x, idx) => (
-        <option key={idx} value={x.id}>
-          {x.symbol.toUpperCase()} - {x.name}
-        </option>
-      ))}
+      </option> */}
+      {allTokens
+        .filter((x) => x.id === "1")
+        .map((x, idx) => (
+          <option key={idx} value={x.id}>
+            {x.symbol.toUpperCase()} - {x.name}
+          </option>
+        ))}
     </Select>
   );
 };
@@ -189,7 +190,7 @@ export const FT = ({ token, aid, bal, onClick }) => {
       {meta ? (
         <div className="bal">
           {"fractionless" in meta.kind
-            ? Math.round(Number(BigInt(bal) / 10000000n) / 10)
+            ? bal // Math.round(Number(BigInt(bal) / 10000000n) / 10)
             : AccountIdentifier.placeDecimal(bal, meta.decimals, 2)}
         </div>
       ) : null}

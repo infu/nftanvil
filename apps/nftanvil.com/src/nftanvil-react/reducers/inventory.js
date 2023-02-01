@@ -210,7 +210,10 @@ export const inv_accept_offer =
     );
     console.log("container_swap", resp);
     // fetch everything
-    let swapresp = await acc.container_unlock(subaccount, containerId);
+    let swapresp = await acc.container_unlock(
+      AccountIdentifier.TextToArray(address),
+      containerId
+    );
     console.log("container_unlock", swapresp);
     return swapresp;
   };
@@ -269,20 +272,20 @@ const inv_send_all =
       if (token.t === 1) {
         // ft
         let meta = s.ft[token.id];
-        // let fee = "fractionless" in meta.kind ? 0n : BigInt(meta.fee);
+        let fee = "fractionless" in meta.kind ? 0n : BigInt(meta.fee);
 
         console.log("ft send", {
           id: token.id,
           address: from_aid,
           to: to_aid,
-          amount: BigInt(token.bal),
+          amount: BigInt(token.bal) + fee,
         });
         await dispatch(
           ft_transfer({
             id: token.id,
             address: from_aid,
             to: to_aid,
-            amount: BigInt(token.bal),
+            amount: BigInt(token.bal) + fee,
           })
         );
       }

@@ -113,7 +113,7 @@ export const ft_transfer =
     let meta = s.ft[id];
     let real_amount =
       "fractionless" in meta.kind
-        ? Math.round(Number(amount) / 100000000)
+        ? Number(amount) //Math.round(Number(amount) / 100000000)
         : Number(amount);
 
     let req = {
@@ -129,7 +129,7 @@ export const ft_transfer =
     try {
       trez = await pwr.transfer(req);
     } catch (e) {
-      console.log(e);
+      console.log("pwr.transfer", e);
       throw e;
     }
     console.log(trez);

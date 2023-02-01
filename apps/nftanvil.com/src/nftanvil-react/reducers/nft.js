@@ -299,7 +299,7 @@ export const nft_set_price =
     ].filter(Boolean);
     const req = {
       user: { address: AccountIdentifier.TextToArray(address) },
-      token: tid,
+      // token: tid,
       price: price,
       subaccount,
     };

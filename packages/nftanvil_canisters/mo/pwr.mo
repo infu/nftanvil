@@ -1033,7 +1033,6 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
         _icp_deposited += amount.e8s;
 
         balanceAdd(Pwr.TOKEN_ICP, toUserAID, amount.e8s, #normal);
-        // TODO: This 1000 is here for demo only
 
         let transactionId = await Cluster.history(_conf).add(#pwr(#mint({ created = Time.now(); user = Nft.User.toAccountIdentifier(request.user); amount = amount.e8s })));
 

@@ -353,7 +353,7 @@ export const TransferModal = ({
 
   const max =
     "fractionless" in meta.kind
-      ? Math.round(token.bal / (100000000 - 500))
+      ? token.bal // Math.round(token.bal / (100000000 - 500))
       : (BigInt(token.bal) - BigInt(meta.fee)).toString();
 
   // let whole = Math.round(dt / (100000000 - 500));
@@ -496,7 +496,7 @@ export const TransferModal = ({
               onResult({
                 amount:
                   "fractionless" in meta.kind
-                    ? amount_one * 100000000
+                    ? amount_one // * 100000000
                     : amount_one,
               })
             }
