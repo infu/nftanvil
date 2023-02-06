@@ -57,7 +57,7 @@ export const {
 
 const calc_auth = (map, identity, provider, accountNum, prefix) => {
   let principal = identity.getPrincipal().toString();
-
+  // console.log("Principal", principal);
   if (!map) {
     console.log("Map not loaded");
     return;

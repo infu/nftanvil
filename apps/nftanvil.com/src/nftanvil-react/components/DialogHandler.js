@@ -154,6 +154,8 @@ export const AccountSelectModal = ({ title, onClose, onResult }) => {
   const authenticated_ii = useSelector((state) => state.user.authenticated_ii);
   const dispatch = useDispatch();
 
+  const beta = window.localStorage.getItem("beta") || false;
+
   return (
     <Modal
       onClose={onClose}
@@ -184,7 +186,7 @@ export const AccountSelectModal = ({ title, onClose, onResult }) => {
         <ModalBody pb="10">
           <Center>
             <Stack justifyContent={"center"} textAlign="center" spacing="4">
-              {!authenticated ? (
+              {beta && !authenticated ? (
                 <>
                   {authenticated || authenticated_ii ? (
                     <Text fontSize="sm" color="gray.400" pt="8">

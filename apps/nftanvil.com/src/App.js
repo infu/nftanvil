@@ -96,6 +96,7 @@ function App() {
 function Header(p) {
   const dispatch = useAnvilDispatch();
   const main_account = useAnvilSelector((s) => s.user.main_account);
+  const beta = window.localStorage.getItem("beta") || false;
 
   const auth = () => {
     dispatch(
@@ -141,21 +142,28 @@ function Header(p) {
             </Button>
           )}
         </NavLink>
-        <NavLink to="/pools">
-          {({ isActive }) => (
-            <Button
-              _active={{
-                bg: "#7d2141",
-              }}
-              borderRadius="0px 0px 0px 0px"
-              isActive={isActive}
-              variant="solid"
-              colorScheme="gray"
-            >
-              Pools
-            </Button>
-          )}
-        </NavLink>
+        {beta ? (
+          <>
+            <NavLink to="/pools">
+              {({ isActive }) => (
+                <Button
+                  _active={{
+                    bg: "#7d2141",
+                  }}
+                  borderRadius="0px 0px 0px 0px"
+                  isActive={isActive}
+                  variant="solid"
+                  colorScheme="gray"
+                >
+                  Pools
+                </Button>
+              )}
+            </NavLink>
+          </>
+        ) : (
+          <></>
+        )}
+
         <NavLink to="/inventory">
           {({ isActive }) => (
             <Button

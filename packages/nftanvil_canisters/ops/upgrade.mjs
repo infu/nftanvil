@@ -45,7 +45,7 @@ let conf = await router.config_get();
 // modifying it here in case it losts its values
 // conf.tokenregistry = 24;
 // conf.tokenregistry = 5005;
-//console.log(conf);
+console.log(conf);
 
 //process.exit();
 

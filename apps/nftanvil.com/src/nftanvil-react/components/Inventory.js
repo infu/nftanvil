@@ -32,6 +32,7 @@ import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,
   dialog_open,
+  user_set_main_account,
 } from "../index.js";
 
 import { load_inventory } from "../reducers/inventory";
@@ -220,6 +221,7 @@ export const Inventory = ({
   const ready = useSelector(anvil_ready);
   const [pageIdx, setPageIdx] = useState(0);
   const [pageRoot, setPageRoot] = useState(0);
+  const main_account = useSelector((s) => s.user.main_account);
 
   let bg = useColorModeValue(itemgrid_light, itemgrid);
 
@@ -229,7 +231,10 @@ export const Inventory = ({
       dialog_open({
         name: "select_account",
       })
-    ).then(onChangeAddress);
+    ).then((address) => {
+      if (!main_account) dispatch(user_set_main_account(address));
+      onChangeAddress(address);
+    });
   };
 
   const onSelectAnotherAccount = () => {

@@ -185,7 +185,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
 
     let cost:Nat64 = 20 * 100000000;
 
-    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.anvFee, #normal)) {
+    switch (balanceRem(Pwr.TOKEN_ANV, aid, cost, _oracle.anvFee, #normal)) {
       case (#ok(deduced)) ();
       case (#err(e)) return #err(debug_show(e));
     };
@@ -201,7 +201,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
           #ok();
         };
         case (#err(t)) {
-          balanceAdd(Pwr.TOKEN_ICP, aid, cost, #normal);
+          balanceAdd(Pwr.TOKEN_ANV, aid, cost, #normal);
           #err(t);
         };
     };
@@ -374,7 +374,7 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
     assert(image.size() <= 131072);
     assert(origin.size() < 255);
 
-    switch (balanceRem(Pwr.TOKEN_ICP, aid, cost, _oracle.anvFee, #normal)) {
+    switch (balanceRem(Pwr.TOKEN_ANV, aid, cost, _oracle.anvFee, #normal)) {
       case (#ok(deduced)) ();
       case (#err(e)) return #err(debug_show(e));
     };
@@ -392,14 +392,14 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
                 #ok({transactionId; id});
             };
             case (#err(t)) {
-              balanceAdd(Pwr.TOKEN_ICP, aid, cost, kind);
+              balanceAdd(Pwr.TOKEN_ANV, aid, cost, kind);
               return #err(t);
             }
           }
 
         };
         case (#err(t)) {
-          balanceAdd(Pwr.TOKEN_ICP, aid, cost, kind);
+          balanceAdd(Pwr.TOKEN_ANV, aid, cost, kind);
           #err(t);
         };
     };
@@ -930,7 +930,6 @@ shared ({ caller = _installer }) actor class Class() : async Pwr.Interface = thi
         if (cost < 1) return #err(#InsufficientPayment(1));
       }
     };
-
 
     switch (balanceRem(request.payment_token, aid, cost, fee, kind)) {
       case (#ok(deduced))();

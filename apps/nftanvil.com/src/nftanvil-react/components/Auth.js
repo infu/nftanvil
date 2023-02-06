@@ -13,6 +13,7 @@ import {
   user_logout,
 } from "../index.js";
 import Athene from "../assets/athene.svg";
+
 export function Auth() {
   const authenticated = useSelector((state) => state.user.authenticated);
 
