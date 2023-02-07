@@ -1,6 +1,6 @@
 {
   "name": "@vvv-interactive/nftanvil-tools",
-  "version": "0.46.0",
+  "version": "0.47.0",
   "license": "MIT",
   "scripts": {
     "watch": "babel -d cjs src --copy-files --watch",
