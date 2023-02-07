@@ -651,7 +651,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         //pycqe-daaaa-aaaam-aa4oq-cai is a placeholder for future moderation system
         assert((switch(getMeta(request.tokenIndex)) {
                     case (#ok((meta,vars,t))) {
-                          (meta.author == Nft.User.toAccountIdentifier(caller_user) or Principal.fromText("pycqe-daaaa-aaaam-aa4oq-cai") == caller); // and ((meta.created + 30) > timeInMinutes()); // allows upload of assets up to 30min after minting
+                          (meta.author == Nft.User.toAccountIdentifier(caller_user)); // or Principal.fromText("pycqe-daaaa-aaaam-aa4oq-cai") == caller // and ((meta.created + 30) > timeInMinutes()); // allows upload of assets up to 30min after minting
                     };
                     case (#err()) {
                        false
@@ -663,12 +663,12 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
         switch(getToken(request.tokenIndex)) {
             case (#ok(t)) {
 
-                switch(t.content[ Nat32.toNat(request.chunkIdx)]) {
-                    case (?something) {
-                        if (Principal.fromText("pycqe-daaaa-aaaam-aa4oq-cai") != caller) Debug.trap("Can't reupload"); // cant upload if already uploaded
-                    };
-                    case (null) ();
-                };
+                // switch(t.content[ Nat32.toNat(request.chunkIdx)]) {
+                //     case (?something) {
+                //         if (Principal.fromText("pycqe-daaaa-aaaam-aa4oq-cai") != caller) Debug.trap("Can't reupload"); // cant upload if already uploaded
+                //     };
+                //     case (null) ();
+                // };
 
                 switch(request.position) {
                         case (#content) {
