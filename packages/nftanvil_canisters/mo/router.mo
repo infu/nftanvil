@@ -556,11 +556,11 @@ shared({caller = _installer}) actor class Router() = this {
     };
 
     public shared({caller}) func event_history_full() : async () {
-        switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
-            case (?slot) {
-                assert(slot == _conf.history);
-                log("event_history_full " # debug_show({slot}) );
-    
+        // switch(Nft.APrincipal.toSlot(_conf.space, caller)) {
+        //     case (?slot) {
+        //         //assert(slot == _conf.history);
+                log("event_history_full ");
+                assert(false);
                 job_add(#callback({
                     msg = "history canister switching";
                     callback = func () : async () {
@@ -584,11 +584,11 @@ shared({caller = _installer}) actor class Router() = this {
                  }}));
 
                
-            };
-            case (null) {
-                ();
-            }
-        }
+        //     };
+        //     case (null) {
+        //         ();
+        //     }
+        // }
     };
 
     public shared({caller}) func event_nft_full(x: Principal) : async () {
