@@ -142,6 +142,8 @@ export const nft_media_get = async (
   { id, contentType, size, position, subaccount = false }
 ) => {
   let tid = tokenFromText(id);
+  if (!s.nft[id]) return null;
+
   const address = s.nft[id].bearer;
 
   let { index, slot } = decodeTokenId(tid);

@@ -824,7 +824,7 @@ export const BuyButton = ({ id, meta }) => {
   const cancelRef = React.useRef();
 
   let amount = BigInt(meta.price.amount);
-  const payment_token = Number(meta.price.token);
+  const payment_token = Number(meta.price.token) || 1;
   const ftmeta = useSelector((s) => s.ft[payment_token]);
   const address = useSelector((s) => s.user.main_account);
 
