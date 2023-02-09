@@ -31,6 +31,8 @@ import {
 } from "react-redux";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { TouchBackend } from "react-dnd-touch-backend";
+
 import { DialogHandler } from "./components/DialogHandler";
 import inventoryReducer, {
   inv_accept_offer,
@@ -223,6 +225,14 @@ const rootEpic = combineEpics(...activeEpics);
 
 epicMiddleware.run(rootEpic);
 
+function isTouchDevice() {
+  return (
+    "ontouchstart" in window ||
+    navigator.maxTouchPoints > 0 ||
+    navigator.msMaxTouchPoints > 0
+  );
+}
+
 export function AnvilProvider({ children }) {
   return (
     <>
@@ -230,7 +240,7 @@ export function AnvilProvider({ children }) {
 
       <Provider context={MyContext} store={store}>
         <ChakraProvider theme={theme}>
-          <DndProvider backend={HTML5Backend}>
+          <DndProvider backend={isTouchDevice() ? TouchBackend : HTML5Backend}>
             {children}
             <ToastHandler />
             <DialogHandler />

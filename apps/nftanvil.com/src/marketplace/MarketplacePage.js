@@ -12,6 +12,7 @@ import {
   Spacer,
 } from "@chakra-ui/react";
 import { Routes, Route, Link, Outlet } from "react-router-dom";
+import { useWindowSize } from "react-use";
 
 import { ArrowForwardIcon } from "@chakra-ui/icons";
 import { NFT } from "../nftanvil-react/";
@@ -20,17 +21,26 @@ export const MarketplaceRoute = () => {
 };
 
 export const MarketplaceIndex = ({ collections }) => {
+  const { width, height } = useWindowSize();
+  const mob = width < 900;
+
   return (
     <>
       <Center mt="80px" pb="100px">
-        <Stack spacing={25} mr="10" ml="10" justify={"center"} w={900}>
+        <Stack
+          spacing={25}
+          mr={mob ? "2" : "10"}
+          ml={mob ? "2" : "10"}
+          justify={"center"}
+          w={900}
+        >
           {collections.map((x, idx) => (
-            <Flex key={idx}>
+            <Box key={idx} as={mob ? Box : Flex}>
               <Link to={x.author}>
                 <Box
-                  w={"300px"}
-                  h="300px"
-                  borderRadius={"10px 0px 0px 10px"}
+                  w={mob ? "100%" : "300px"}
+                  h={"300px"}
+                  borderRadius={mob ? "10px 10px 0px 0px" : "10px 0px 0px 10px"}
                   sx={{
                     position: "relative",
                     backgroundImage: `url(${x.cover})`, //linear-gradient(to top left, rgba(0, 0, 0, 20%), rgb(64 39 108 / 27%), rgb(205 170 246)),
@@ -44,11 +54,13 @@ export const MarketplaceIndex = ({ collections }) => {
                   "linear-gradient(339deg, rgb(31 29 46) 0%, rgb(38 31 44) 100%);"
                 }
                 w="100%"
+                h={"auto"}
                 pl="30px"
                 pt="20px"
                 pr="30px"
+                pb={mob ? "120px" : "0px"}
                 sx={{ position: "relative" }}
-                borderRadius="0px 10px 10px 0px"
+                borderRadius={mob ? "0px 00px 10px 10px" : "0px 10px 10px 0px"}
               >
                 <Text
                   sx={{
@@ -84,16 +96,24 @@ export const MarketplaceIndex = ({ collections }) => {
                 </Box>
 
                 <Box
-                  sx={{ position: "absolute", right: "16px", bottom: "16px" }}
+                  sx={
+                    mob
+                      ? { position: "absolute", right: "16px", top: "-16px" }
+                      : { position: "absolute", right: "16px", bottom: "16px" }
+                  }
                 >
                   <Link to={x.author} key={idx}>
-                    <Button bg="#5b2480" rightIcon={<ArrowForwardIcon />}>
+                    <Button
+                      bg="#5b2480"
+                      size={mob ? "sm" : null}
+                      rightIcon={<ArrowForwardIcon />}
+                    >
                       View collection
                     </Button>
                   </Link>
                 </Box>
               </Box>
-            </Flex>
+            </Box>
           ))}
         </Stack>
       </Center>

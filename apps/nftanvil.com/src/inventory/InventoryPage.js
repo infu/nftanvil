@@ -26,6 +26,7 @@ import {
   Text,
   HStack,
   IconButton,
+  VStack,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
@@ -33,6 +34,7 @@ import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 import { ArrowForwardIcon, AddIcon } from "@chakra-ui/icons";
 
 import { useParams } from "react-router-dom";
+import { useWindowSize } from "react-use";
 
 import { LayoutOneIcon, LayoutTwoIcon } from "../nftanvil-react/icons";
 export const InventoryPage = () => {
@@ -59,13 +61,15 @@ export const InventorySingle = () => {
   const [addressOne, setAddressOne] = useState(address);
 
   const navigate = useNavigate();
-
+  const { width, height } = useWindowSize();
+  const mob = width < 900;
+  const cols = mob ? Math.floor(width / 90) : 10;
   return (
     <Box>
       <Inventory
         key={address}
-        cols={10}
-        rows={8}
+        cols={cols}
+        rows={mob ? 4 : 8}
         address={addressOne}
         onChangeAddress={setAddressOne}
         onClickNft={(id) => {
@@ -94,6 +98,9 @@ export const InventoryDouble = () => {
   const tmp_two = useAnvilSelector(
     (state) => state.inventory["tmp.attached." + addressTwo]
   );
+  const { width, height } = useWindowSize();
+  const mob = width < 900;
+  const cols = mob ? Math.floor(width / 90) : 5;
 
   useEffect(() => {
     return () => {
@@ -130,12 +137,12 @@ export const InventoryDouble = () => {
 
   return (
     <Stack>
-      <Stack direction="horizontal">
-        <Box mr={4}>
+      <Box as={mob ? VStack : HStack}>
+        <Box>
           <Inventory
             key={address}
-            cols={5}
-            rows={8}
+            cols={cols}
+            rows={mob ? 4 : 8}
             address={addressOne}
             onChangeAddress={setAddressOne}
             onClickNft={(id) => {
@@ -146,8 +153,8 @@ export const InventoryDouble = () => {
 
         <Box>
           <Inventory
-            cols={5}
-            rows={8}
+            cols={cols}
+            rows={mob ? 4 : 8}
             onChangeAddress={setAddressTwo}
             onClickNft={(id) => {
               navigate("/" + id);
@@ -156,7 +163,7 @@ export const InventoryDouble = () => {
             onOpenNft={(id) => {}}
           />
         </Box>
-      </Stack>
+      </Box>
       <Box pt="5">
         <Center>
           {tmp_one_has_content && tmp_two_has_content ? (

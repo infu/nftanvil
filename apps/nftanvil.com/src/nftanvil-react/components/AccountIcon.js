@@ -38,7 +38,7 @@ export const AccountIcon = ({ address, onClick }) => {
           p={"10px"}
           w={"72px"}
           h={"72px"}
-          sx={{ cursor: "pointer", position: "relative" }}
+          sx={{ cursor: "pointer", overflow: "hidden", position: "relative" }}
           onClick={onClick}
         >
           <Hashicon value={address} size={52} />
@@ -59,7 +59,12 @@ export const AccountIcon = ({ address, onClick }) => {
           </Text>
         </Box>
       </PopoverTrigger>
-      <PopoverContent bg={"gray.800"} w={350} sx={{ textAlign: "left" }}>
+      <PopoverContent
+        bg={"gray.800"}
+        w={350}
+        sx={{ textAlign: "left" }}
+        rootProps={{ style: { transform: "scale(0)" } }} //workaround https://github.com/chakra-ui/chakra-ui/issues/4109
+      >
         <PopoverArrow bg={"gray.800"} />
         <PopoverBody>
           <Text mt={2} fontSize="sm">

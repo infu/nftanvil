@@ -157,12 +157,16 @@ const Thumb = styled.div`
     left: 0px;
     position: absolute;
     background: url(${thumb_bg});
+    user-select: none;
+    pointer-events: none;
     background-size: 72px 72px;
     width: 72px;
     height: 72px;
 
     &:hover {
       background-image: url(${thumb_over});
+      user-select: none;
+      pointer-events: none;
     }
   }
   .custom {
@@ -175,6 +179,11 @@ const Thumb = styled.div`
     height: 64px;
     width: 64px;
     border-radius: 8px;
+  }
+
+  img {
+    user-select: none;
+    pointer-events: none;
   }
 `;
 

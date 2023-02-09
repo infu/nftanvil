@@ -11,10 +11,34 @@ import {
   dialog_open,
   user_set_main_account,
   AccountIcon,
+  user_logout,
 } from "./nftanvil-react/";
 
 import { NavLink, Routes, Route, useNavigate } from "react-router-dom";
-import { Box, Button, Center, Wrap, Flex, Spacer } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Center,
+  Wrap,
+  Flex,
+  Spacer,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuItemOption,
+  MenuGroup,
+  MenuOptionGroup,
+  MenuDivider,
+  IconButton,
+} from "@chakra-ui/react";
+import {
+  AddIcon,
+  HamburgerIcon,
+  RepeatIcon,
+  CalendarIcon,
+} from "@chakra-ui/icons";
+import { useWindowSize } from "react-use";
 
 import { History, HistoryRedirect, HistoryTx } from "./History";
 import { InventoryPage, OfferPage } from "./inventory/InventoryPage";
@@ -43,6 +67,9 @@ function App() {
 
   const [collections, setCollections] = useState([]);
 
+  const { width, height } = useWindowSize();
+  const mob = width < 900;
+
   useEffect(() => {
     fetch("https://nftpkg.com/api/v1/collections")
       .then((x) => x.json())
@@ -55,8 +82,8 @@ function App() {
 
   return (
     <Box>
-      <Header />
-      <Breadcrumbs collections={collections} />
+      {mob ? <HeaderMobile /> : <Header />}
+      {/* <Breadcrumbs collections={collections} /> */}
 
       <Routes>
         <Route path="/mint" element={<Mint />}>
@@ -88,11 +115,86 @@ function App() {
 
         <Route path="/nfta:id/:code" element={<NFTPage />} />
         <Route path="/nfta:id" element={<NFTPage />} />
+        <Route exact path="/" element={<Home />} />
       </Routes>
     </Box>
   );
 }
 
+function Home() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate("/collections");
+  }, []);
+}
+
+function HeaderMobile() {
+  const dispatch = useAnvilDispatch();
+  const main_account = useAnvilSelector((s) => s.user.main_account);
+  const beta = window.localStorage.getItem("beta") || false;
+  const auth = () => {
+    dispatch(
+      dialog_open({
+        name: "select_account",
+      })
+    ).then((address) => {
+      dispatch(user_set_main_account(address));
+    });
+  };
+
+  const logout = () => {
+    dispatch(user_logout());
+  };
+
+  return (
+    <Flex mt={5} mb={"50px"} pl="4" pr="4">
+      <Logo />
+      <Spacer />
+
+      <Box>
+        {main_account ? (
+          <Box sx={{ position: "relative", top: "-16px" }}>
+            <AccountIcon address={main_account} onClick={auth} />
+          </Box>
+        ) : null}
+      </Box>
+      <Menu>
+        <MenuButton
+          as={IconButton}
+          aria-label="Options"
+          icon={<HamburgerIcon />}
+          variant="outline"
+        />
+        <MenuList>
+          <NavLink to="/collections">
+            {({ isActive }) => <MenuItem>Collections</MenuItem>}
+          </NavLink>
+          <NavLink to="/mint">
+            {({ isActive }) => <MenuItem icon={<AddIcon />}>Mint</MenuItem>}
+          </NavLink>
+          <NavLink to="/pools">
+            {({ isActive }) => <MenuItem icon={<RepeatIcon />}>Pools</MenuItem>}
+          </NavLink>
+          <NavLink to="/inventory">
+            {({ isActive }) => <MenuItem>Wallet</MenuItem>}
+          </NavLink>
+          <NavLink to="/history">
+            {({ isActive }) => (
+              <MenuItem icon={<CalendarIcon />}>Activity</MenuItem>
+            )}
+          </NavLink>
+
+          {!main_account ? (
+            <MenuItem onClick={auth}>Login</MenuItem>
+          ) : (
+            <MenuItem onClick={logout}>Logout</MenuItem>
+          )}
+        </MenuList>
+      </Menu>
+    </Flex>
+  );
+}
 function Header(p) {
   const dispatch = useAnvilDispatch();
   const main_account = useAnvilSelector((s) => s.user.main_account);
@@ -108,7 +210,7 @@ function Header(p) {
     });
   };
   return (
-    <Flex mt={5} mb={5} pl="4" pr="4">
+    <Flex mt={5} mb={"50px"} pl="4" pr="4">
       <Logo />
       <Spacer />
       <Wrap spacing="1px" justify="center" overflow="visible">

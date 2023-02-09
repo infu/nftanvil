@@ -303,9 +303,9 @@ const FormInner = ({ props }) => {
               >
                 Mint Non-Fungible Token
               </Text>
-
+              {/* 
               <Spacer />
-              <ProToggle />
+              <ProToggle /> */}
             </Flex>
 
             <Stack spacing={3}>

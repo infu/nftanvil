@@ -27,3 +27,7 @@
     font-weight: bold;
   }
   
+  body {
+  -webkit-user-select: none;
+  user-select: none;
+  }

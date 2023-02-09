@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 import {
   Box,
@@ -10,6 +10,7 @@ import {
   Text,
   IconButton,
   Button,
+  useDimensions,
 } from "@chakra-ui/react";
 import { SelectIcon } from "../icons";
 
@@ -59,9 +60,10 @@ const InventoryBox = styled.div`
   width: ${(props) => props.width}px;
   height: ${(props) => props.height}px;
   padding: 0px;
-
   border-radius: 8px;
   cursor: auto;
+  -webkit-user-select: none;
+  user-select: none;
 `;
 
 const EmptyDiv = styled.div`
@@ -222,6 +224,8 @@ export const Inventory = ({
   const [pageIdx, setPageIdx] = useState(0);
   const [pageRoot, setPageRoot] = useState(0);
   const main_account = useSelector((s) => s.user.main_account);
+  // const headerRef = useRef();
+  // const dimensions = useDimensions(headerRef);
 
   let bg = useColorModeValue(itemgrid_light, itemgrid);
 
@@ -260,7 +264,7 @@ export const Inventory = ({
   );
   const extended = items_tmp !== undefined && Object.keys(items_tmp).length > 0;
   const pageFrom = pageIdx * maxItems;
-
+  const shownPages = cols - 2;
   if (!address || !ready)
     return (
       <Box
@@ -275,7 +279,7 @@ export const Inventory = ({
         h={(rows + 1) * 72 + 18}
         position="relative"
       >
-        <Center mt={"300px"}>
+        <Center mt={(rows / 2) * 72 + "px"}>
           <Stack>
             <Button
               onClick={onSelectAccount}
@@ -312,7 +316,7 @@ export const Inventory = ({
               onClick={onSelectAccount}
             />
 
-            {Array(3)
+            {Array(shownPages)
               .fill(0)
               .map((_, idx) => {
                 let ridx = pageRoot + idx;
@@ -329,11 +333,17 @@ export const Inventory = ({
                 );
               })}
             <ArrPrev
-              onClick={() => setPageRoot(pageRoot - 3 >= 0 ? pageRoot - 3 : 0)}
+              onClick={() =>
+                setPageRoot(
+                  pageRoot - shownPages >= 0 ? pageRoot - shownPages : 0
+                )
+              }
             >
               &lt;
             </ArrPrev>
-            <ArrNext onClick={() => setPageRoot(pageRoot + 3)}>&gt;</ArrNext>
+            <ArrNext onClick={() => setPageRoot(pageRoot + shownPages)}>
+              &gt;
+            </ArrNext>
           </Stack>
         ) : null}
 

@@ -14,6 +14,7 @@ import {
   Stack,
   HStack,
   Wrap,
+  Center,
 } from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import {
@@ -33,11 +34,15 @@ import {
 import { Inventory, InventoryLarge } from "../nftanvil-react";
 
 import { useNavigate, useParams } from "react-router-dom";
+import { useWindowSize } from "react-use";
 
 export const Marketplace = ({ collections }) => {
   const { author } = useParams();
   let navigate = useNavigate();
   const [filterTags, setFilterTags] = useState([]);
+
+  const { width, height } = useWindowSize();
+  const mob = width < 900;
 
   const collection = collections.find((x) => x.author === author);
 
@@ -57,11 +62,21 @@ export const Marketplace = ({ collections }) => {
               tagsLeft,
             }) => {
               return (
-                <HStack spacing={10} p={3} alignItems="start">
-                  <Stack minW={"300px"} maxW={"600px"} pt="90px">
+                <Box
+                  spacing={10}
+                  p={3}
+                  alignItems={mob ? "center" : "start"}
+                  as={mob ? Stack : HStack}
+                >
+                  <Stack
+                    minW={"300px"}
+                    maxW={mob ? null : "600px"}
+                    pt={mob ? "10px" : "90px"}
+                    align={mob ? "center" : null}
+                  >
                     <Box fontSize="25px">{collection.name}</Box>
                     <Box>
-                      <Wrap pl="4">
+                      <Wrap pl="4" spacing="8">
                         <Stat>
                           <StatLabel>Items</StatLabel>
                           <StatNumber>{collection.items}</StatNumber>
@@ -74,20 +89,21 @@ export const Marketplace = ({ collections }) => {
                           <StatLabel>Listed</StatLabel>
                           <StatNumber>{collection.for_sale}</StatNumber>
                         </Stat>
+
+                        {stats ? (
+                          <>
+                            <Stat>
+                              <StatLabel>Floor</StatLabel>
+                              <StatNumber>{stats.floor}</StatNumber>
+                            </Stat>
+                            <Stat>
+                              <StatLabel>Mean</StatLabel>
+                              <StatNumber>{stats.mean}</StatNumber>
+                            </Stat>
+                          </>
+                        ) : null}
                       </Wrap>
                     </Box>
-                    {stats ? (
-                      <Wrap pl="4">
-                        <Stat>
-                          <StatLabel>Floor</StatLabel>
-                          <StatNumber>{stats.floor}</StatNumber>
-                        </Stat>
-                        <Stat>
-                          <StatLabel>Mean</StatLabel>
-                          <StatNumber>{stats.mean}</StatNumber>
-                        </Stat>
-                      </Wrap>
-                    ) : null}
                     <FormControl>
                       <FormLabel>Sort</FormLabel>
                       {fOrder}
@@ -141,15 +157,23 @@ export const Marketplace = ({ collections }) => {
                       </FormControl>
                     ) : null}
                   </Stack>
-
                   <Box>
-                    <Flex>
-                      <Spacer />
-                      <HStack>
-                        {goPageBack}
-                        {goPageNext}
-                      </HStack>
-                    </Flex>
+                    {mob ? (
+                      <Center>
+                        <HStack>
+                          {goPageBack}
+                          {goPageNext}
+                        </HStack>
+                      </Center>
+                    ) : (
+                      <Flex>
+                        <Spacer />
+                        <HStack>
+                          {goPageBack}
+                          {goPageNext}
+                        </HStack>
+                      </Flex>
+                    )}
 
                     <InventoryLarge
                       items={slice.map((x) => tokenToText(x[0]))}
@@ -164,15 +188,24 @@ export const Marketplace = ({ collections }) => {
                         navigate(id); //, { replace: true }
                       }}
                     />
-                    <Flex>
-                      <Spacer />
-                      <HStack>
-                        {goPageBack}
-                        {goPageNext}
-                      </HStack>
-                    </Flex>
+                    {mob ? (
+                      <Center>
+                        <HStack>
+                          {goPageBack}
+                          {goPageNext}
+                        </HStack>
+                      </Center>
+                    ) : (
+                      <Flex>
+                        <Spacer />
+                        <HStack>
+                          {goPageBack}
+                          {goPageNext}
+                        </HStack>
+                      </Flex>
+                    )}
                   </Box>
-                </HStack>
+                </Box>
               );
             }}
           </MarketplaceFilters>
