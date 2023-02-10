@@ -23,7 +23,7 @@ import {
   nft_fetch,
   nft_claim_link,
 } from "./nftanvil-react/";
-import { useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const NFTPage = ({ address, code, renderButtons }) => {
   let param = useParams();
@@ -55,6 +55,7 @@ export const NFTPage = ({ address, code, renderButtons }) => {
       setError(true);
     }
   };
+  const navigate = useNavigate();
 
   const main_account = useSelector((state) => state.user.main_account);
 
@@ -72,7 +73,12 @@ export const NFTPage = ({ address, code, renderButtons }) => {
           <NFTThumb meta={meta} />
           <NFTInfo id={id} meta={meta} />
 
-          <NFTProInfo id={id} meta={meta} />
+          <NFTProInfo
+            id={id}
+            meta={meta}
+            onAuthorClick={(addr) => navigate("/" + addr)}
+            onBearerClick={(addr) => navigate("/" + addr)}
+          />
         </Stack>
       </Center>
 

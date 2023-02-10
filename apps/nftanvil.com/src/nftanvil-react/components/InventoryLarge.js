@@ -4,7 +4,7 @@ import { Box, Wrap, useColorModeValue, Center, Stack } from "@chakra-ui/react";
 
 import { NFTLarge, NFT } from "./NFT";
 
-export const InventoryLarge = ({ items, onOpenNft, custom }) => {
+export const InventoryLarge = ({ items, onOpenNft, custom, width, height }) => {
   if (!items) return null;
 
   return (
@@ -18,6 +18,8 @@ export const InventoryLarge = ({ items, onOpenNft, custom }) => {
                   custom={custom}
                   id={id}
                   key={id}
+                  width={width}
+                  height={height}
                   onClick={() => onOpenNft(id)}
                 />
               ))}

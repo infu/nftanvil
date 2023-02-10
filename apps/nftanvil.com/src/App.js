@@ -112,9 +112,10 @@ function App() {
           />
           <Route path=":author/nfta:id" element={<NFTPage />} />
         </Route>
-
         <Route path="/nfta:id/:code" element={<NFTPage />} />
         <Route path="/nfta:id" element={<NFTPage />} />
+        <Route path="/:url_address" element={<InventoryPage />} />
+
         <Route exact path="/" element={<Home />} />
       </Routes>
     </Box>

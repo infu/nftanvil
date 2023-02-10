@@ -21,6 +21,7 @@ const Stx = styled.span`
   b {
     color: rgb(110, 200, 170);
   }
+  cursor: pointer;
 `;
 
 export const TX = ({ children, onClick = () => {} }) => {
@@ -42,6 +43,7 @@ const Sacc = styled.span`
   b {
     color: rgb(170, 255, 0);
   }
+  cursor: pointer;
 `;
 
 const hexColors = {
@@ -288,6 +290,7 @@ const Snfta = styled.span`
   b {
     color: rgb(250, 0, 120);
   }
+  cursor: pointer;
 `;
 
 export const NFTA = ({ children, onClick = () => {} }) => {

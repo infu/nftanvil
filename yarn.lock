@@ -2007,6 +2007,17 @@
     simple-cbor "^0.4.1"
     ts-node "^10.8.2"
 
+"@dfinity/auth-client@0.14":
+  version "0.14.1"
+  resolved "https://registry.yarnpkg.com/@dfinity/auth-client/-/auth-client-0.14.1.tgz#528fd3dfcad4fba01158365422eeceefb90b0627"
+  integrity sha512-7fzKrxcFo90nq6uOFE0HjSeDX1XuFIfLDrP2KwGH+qA38VDl/72+AGoajqzc93WS8/+AHnUh1mRSw+Jb9MlXoA==
+  dependencies:
+    "@types/jest" "^28.1.4"
+    idb "^7.0.2"
+    jest "^28.1.2"
+    ts-jest "^28.0.5"
+    ts-node "^10.8.2"
+
 "@dfinity/auth-client@^0.14.0":
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/@dfinity/auth-client/-/auth-client-0.14.0.tgz#74b16d3893d865157e9016ffa8d7a3cd1095b82b"
@@ -2042,6 +2053,15 @@
     ts-node "^10.8.2"
     tweetnacl "^1.0.1"
     vitest "^0.18.0"
+
+"@dfinity/identity@^0.15.3":
+  version "0.15.3"
+  resolved "https://registry.yarnpkg.com/@dfinity/identity/-/identity-0.15.3.tgz#2fe177b14b40bd9df3de6023158d80c0648c0e88"
+  integrity sha512-D5Sf01MvO3CO63nAYSdG2V8Ox4AEVAm+/O7oKU1oyg8m3z/9zklG6IyCOOKb6hQibWh81j+mduYuX4vYuEjSGw==
+  dependencies:
+    borc "^2.1.1"
+    js-sha256 "^0.9.0"
+    tweetnacl "^1.0.1"
 
 "@dfinity/principal@^0.14.0":
   version "0.14.0"

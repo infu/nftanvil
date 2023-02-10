@@ -55,6 +55,24 @@ export const {
   user_set_main_account,
 } = userSlice.actions;
 
+let iiAuthClient;
+// We have to keep the authClient object in memory because calling the `authClient.login` feature should be triggered by a user interaction without any async callbacks call before calling `window.open` to open II
+
+(async () => {
+  iiAuthClient = await AuthClient.create({
+    idleOptions: {
+      // idleTimeout: 1000 * 60 * 30, // default is 30 minutes
+      // onIdle: () => {
+      //   // invalidate identity in your actor
+      //   Actor.agentOf(actor).invalidateIdentity()
+      //   // prompt user to refresh their authentication
+      //   refreshLogin();
+      // },
+      disableIdle: true, // set to true to disable idle timeout
+    },
+  });
+})();
+
 const calc_auth = (map, identity, provider, accountNum, prefix) => {
   let principal = identity.getPrincipal().toString();
   // console.log("Principal", principal);
@@ -99,19 +117,21 @@ const calc_auth = (map, identity, provider, accountNum, prefix) => {
   return auth_obj;
 };
 
-export const user_login_ii = () => async (dispatch, getState) => {
-  let authClient = await AuthClient.create({
-    idleOptions: {
-      // idleTimeout: 1000 * 60 * 30, // default is 30 minutes
-      // onIdle: () => {
-      //   // invalidate identity in your actor
-      //   Actor.agentOf(actor).invalidateIdentity()
-      //   // prompt user to refresh their authentication
-      //   refreshLogin();
-      // },
-      disableIdle: true, // set to true to disable idle timeout
-    },
-  });
+export const user_login_ii = (e) => async (dispatch, getState) => {
+  console.log("Trusted", e.isTrusted);
+  let authClient = iiAuthClient;
+  // await AuthClient.create({
+  //   idleOptions: {
+  //     // idleTimeout: 1000 * 60 * 30, // default is 30 minutes
+  //     // onIdle: () => {
+  //     //   // invalidate identity in your actor
+  //     //   Actor.agentOf(actor).invalidateIdentity()
+  //     //   // prompt user to refresh their authentication
+  //     //   refreshLogin();
+  //     // },
+  //     disableIdle: true, // set to true to disable idle timeout
+  //   },
+  // });
 
   if (!(await authClient.isAuthenticated())) {
     await new Promise(async (resolve, reject) => {

@@ -102,7 +102,10 @@ export const History = () => {
         ev={events[idx] ? events[idx][0] : null}
         showThumb={true}
         onClickTx={(tx) => navigate("/" + tx)}
-        onClickAcc={() => {}}
+        onClickAcc={(acc) => {
+          console.log(acc);
+          navigate("/" + acc);
+        }}
         onClickNft={(id) => {
           console.log(id);
           navigate("/" + id);
@@ -183,7 +186,7 @@ export const HistoryTx = () => {
         {events.map((ev, idx) => (
           <HistoryEvent
             onClickTx={(tx) => navigate("/" + tx)}
-            onClickAcc={() => {}}
+            onClickAcc={(acc) => navigate("/" + acc)}
             onClickNft={(id) => {
               console.log(id);
               navigate("/" + id);

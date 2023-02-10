@@ -28,12 +28,11 @@ import {
   IconButton,
   VStack,
 } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
 import { ArrowForwardIcon, AddIcon } from "@chakra-ui/icons";
 
-import { useParams } from "react-router-dom";
 import { useWindowSize } from "react-use";
 
 import { LayoutOneIcon, LayoutTwoIcon } from "../nftanvil-react/icons";
@@ -56,8 +55,11 @@ export const InventoryPage = () => {
 };
 
 export const InventorySingle = () => {
+  const { url_address } = useParams();
   let dispatch = useAnvilDispatch();
-  const address = useAnvilSelector((state) => state.user.main_account);
+  const main_address = useAnvilSelector((state) => state.user.main_account);
+  const address = url_address || main_address;
+
   const [addressOne, setAddressOne] = useState(address);
 
   const navigate = useNavigate();
@@ -81,6 +83,8 @@ export const InventorySingle = () => {
 };
 
 export const InventoryDouble = () => {
+  const { url_address } = useParams();
+
   let dispatch = useAnvilDispatch();
   // const accounts = useAnvilSelector((state) => state.user.accounts);
   const address = useAnvilSelector((state) => state.user.main_account);
@@ -90,7 +94,7 @@ export const InventoryDouble = () => {
   const task_id = address + "create_offer";
 
   const [addressOne, setAddressOne] = useState(address);
-  const [addressTwo, setAddressTwo] = useState(null);
+  const [addressTwo, setAddressTwo] = useState(url_address);
 
   const tmp_one = useAnvilSelector(
     (state) => state.inventory["tmp.attached." + addressOne]

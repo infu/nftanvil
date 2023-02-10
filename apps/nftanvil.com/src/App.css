@@ -27,7 +27,6 @@
     font-weight: bold;
   }
   
-  body {
-  -webkit-user-select: none;
-  user-select: none;
-  }
+ body {
+  padding-bottom:50vh;
+ }

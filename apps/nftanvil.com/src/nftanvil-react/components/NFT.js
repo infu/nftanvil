@@ -190,20 +190,23 @@ const Thumb = styled.div`
 const ThumbLarge = styled.div`
   position: relative;
   box-overflow: hidden;
-  img {
-    background-color: #1e1b24;
-    border: 1px solid
-      ${(props) => (props.mode === "light" ? "#c4bcdb" : "#3f3855")};
-    border-bottom: 0px solid;
-  }
+  // img {
+  //   background-color: #1e1b24;
+  //   border: 1px solid
+  //     ${(props) => (props.mode === "light" ? "#c4bcdb" : "#3f3855")};
+  //   border-bottom: 0px solid;
+  // }
   .custom {
     top: 0px;
     left: 0px;
     position: absolute;
-    object-fit: cover;
-    object-position: center center;
-    height: 216px;
-    width: 216px;
+    // object-fit: cover;
+    background-position: center center;
+    // border: 1px solid red;
+    background: url(${(p) => p.img});
+    background-size: cover;
+    height: ${(p) => p.h - 54}px;
+    width: ${(p) => p.w}px;
     border-radius: 8px 8px 0px 0px;
   }
 
@@ -214,7 +217,7 @@ const ThumbLarge = styled.div`
     padding-left: 10px;
     border-radius: 0px 0px 6px 6px;
     left: 0px;
-    top: 216px;
+    top: ${(p) => p.h - 54}px;
     right: 0px;
     height: 54px;
 
@@ -251,7 +254,7 @@ export const NFTMenu = ({ id, meta, owner, nobuy = false, renderButtons }) => {
         <Wrap spacing="3">
           {renderButtons ? renderButtons({ id, meta }) : null}
           <RechargeButton id={id} meta={meta} />
-          <PromoteButton id={id} meta={meta} />
+          {/* <PromoteButton id={id} meta={meta} /> */}
 
           <UseButton id={id} meta={meta} />
           <TransferButton id={id} meta={meta} />
@@ -1126,6 +1129,8 @@ export const NFTLarge = ({
   onClick,
   custom = false,
   showDomain = false,
+  width = 216,
+  height = 270,
 }) => {
   const meta = useSelector((state) => state.nft[id]);
 
@@ -1140,23 +1145,22 @@ export const NFTLarge = ({
   // if (!meta) return null;
 
   return (
-    <Skeleton w="216px" h="270px" isLoaded={!!meta}>
+    <Skeleton w={width} h={height} isLoaded={!!meta}>
       {!!meta ? (
         <ThumbLarge
           mode={mode}
+          w={width}
+          h={height}
           onClick={onClick}
           style={{ cursor: onClick ? "pointer" : "auto" }}
-        >
-          {meta.thumb?.ipfs?.url ? (
-            <img alt="" className="custom" src={meta.thumb.ipfs.url} />
-          ) : meta.thumb?.internal?.url ? (
-            <img alt="" className="custom" src={meta.thumb.internal.url} />
-          ) : meta.thumb?.external ? (
-            <img alt="" className="custom" src={meta.thumb?.external} />
-          ) : (
+          img={
+            meta.thumb?.ipfs?.url ||
+            meta.thumb?.internal?.url ||
+            meta.thumb?.external ||
             ""
-          )}
-
+          }
+        >
+          <div className="custom"></div>
           <div className="info">
             {showDomain && meta.domain ? (
               meta.domain.indexOf("twitter.com/") !== -1 ? (
@@ -1748,7 +1752,12 @@ export const NFTBattery = ({ meta }) => {
   );
 };
 
-export const NFTProInfo = ({ id, meta }) => {
+export const NFTProInfo = ({
+  id,
+  meta,
+  onAuthorClick = () => {},
+  onBearerClick = () => {},
+}) => {
   const bg = useColorModeValue("gray.200", "gray.900");
   if (!meta || !("quality" in meta)) return null;
 
@@ -1773,12 +1782,18 @@ export const NFTProInfo = ({ id, meta }) => {
         ) : null}
         {meta.bearer ? (
           <Text fontSize="9px">
-            Bearer: <ACC short={true}>{meta.bearer}</ACC>
+            Bearer:{" "}
+            <ACC short={true} onClick={() => onBearerClick(meta.bearer)}>
+              {meta.bearer}
+            </ACC>
           </Text>
         ) : null}
         {meta.author ? (
           <Text fontSize="9px" sx={{}}>
-            Author: <ACC short={true}>{meta.author}</ACC>
+            Author:{" "}
+            <ACC short={true} onClick={() => onAuthorClick(meta.author)}>
+              {meta.author}
+            </ACC>
           </Text>
         ) : null}
         {meta.authorShare ? (

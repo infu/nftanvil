@@ -20,6 +20,7 @@ import { NFT } from "./NFT";
 import itemgrid from "../assets/itemgrid.png";
 import itemgrid_light from "../assets/itemgrid_light.png";
 import { useWindowSize, useInterval } from "react-use";
+import { Show, Hide } from "@chakra-ui/react";
 
 import moment from "moment";
 
@@ -130,8 +131,9 @@ export const HistoryEvent = ({
         let val = details[key];
         if (val.length === 32) {
           val = AccountIdentifier.ArrayToText(val);
+          let acc = val;
           val = (
-            <ACC short={true} onClick={() => onClickAcc(val)}>
+            <ACC short={true} onClick={() => onClickAcc(acc)}>
               {val}
             </ACC>
           );
@@ -170,7 +172,12 @@ export const HistoryEvent = ({
                 k={key}
                 v={
                   <HStack>
-                    <ACC short={true}>
+                    <ACC
+                      short={true}
+                      onClick={() =>
+                        onClickAcc(AccountIdentifier.ArrayToText(val.address))
+                      }
+                    >
                       {AccountIdentifier.ArrayToText(val.address)}
                     </ACC>
                     <div>{val.share / 100 + "%"}</div>
@@ -204,7 +211,16 @@ export const HistoryEvent = ({
                 <div>
                   marketplace share{" "}
                   {(val.marketplace[0].share / 100).toFixed(2)}% -
-                  <ACC short={true}>
+                  <ACC
+                    short={true}
+                    onClick={() =>
+                      onClickAcc(
+                        AccountIdentifier.ArrayToText(
+                          val.marketplace[0].address
+                        )
+                      )
+                    }
+                  >
                     {AccountIdentifier.ArrayToText(val.marketplace[0].address)}
                   </ACC>
                 </div>
@@ -223,11 +239,13 @@ export const HistoryEvent = ({
 
   return (
     <Stack direction="horizontal" spacing="0">
-      {"token" in details ? (
-        <Box w="250px" mb="7px" mr="7px">
-          <NFTLarge id={tokenToText(details.token)} />
-        </Box>
-      ) : null}
+      <Hide breakpoint="(max-width: 600px)">
+        {"token" in details ? (
+          <Box w="250px" mb="7px" mr="7px">
+            <NFTLarge id={tokenToText(details.token)} />
+          </Box>
+        ) : null}
+      </Hide>
       {inner}
     </Stack>
   );

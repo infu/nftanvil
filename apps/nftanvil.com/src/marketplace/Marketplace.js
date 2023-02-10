@@ -176,6 +176,8 @@ export const Marketplace = ({ collections }) => {
                     )}
 
                     <InventoryLarge
+                      width={mob ? width - 50 : 260}
+                      height={mob ? width - 50 + 54 : 260 + 54}
                       items={slice.map((x) => tokenToText(x[0]))}
                       custom={(meta) => {
                         return (

@@ -44,7 +44,7 @@ export function AuthII() {
       variant="outline"
       size="lg"
       colorScheme="gray"
-      onClick={() => dispatch(user_login_ii())}
+      onClick={(e) => dispatch(user_login_ii(e))}
       rightIcon={
         <img src={Dfinity} style={{ width: "32px", height: "32px" }} alt="" />
       }
