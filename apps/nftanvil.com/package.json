@@ -1,6 +1,6 @@
 {
   "name": "components_demo",
-  "version": "0.47.0",
+  "version": "0.48.0",
   "private": true,
   "dependencies": {
     "@chakra-ui/icons": "^2.0.11",
@@ -15,8 +15,8 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@reduxjs/toolkit": "^1.8.6",
-    "@vvv-interactive/nftanvil-canisters": "^0.47.0",
-    "@vvv-interactive/nftanvil-tools": "^0.47.0",
+    "@vvv-interactive/nftanvil-canisters": "^0.48.0",
+    "@vvv-interactive/nftanvil-tools": "^0.48.0",
     "athena-protocol": "/Users/cool/vvv-interactive/athena/packages/athena-client/",
     "formik": "^2.2.9",
     "framer-motion": "^6",
