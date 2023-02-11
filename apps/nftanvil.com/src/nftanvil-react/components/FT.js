@@ -110,7 +110,7 @@ export const FTSelect = ({ onChange, value, initialValue = "1" }) => {
       onChange(selected);
     });
   }, []);
-
+  console.log(allTokens);
   if (!allTokens) return null;
   return (
     <Select

@@ -154,7 +154,6 @@ export const ft_all_tokens = () => async (dispatch, getState) => {
 
   let resp = await treg.all_tokens();
   resp = SerializableIC(resp);
-  console.log(resp);
   return resp;
 };
 

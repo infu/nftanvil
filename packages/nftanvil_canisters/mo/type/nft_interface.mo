@@ -688,7 +688,7 @@ module {
                 created : Time.Time;
                 amount : Balance;
 
-                // token: TokenIdentifier;
+                token: TokenIdentifier;
                 
                 buyer : AccountIdentifier;
                 seller : AccountIdentifier;
@@ -1429,7 +1429,7 @@ module {
         #price : {
             created: Timestamp;
             user: AccountIdentifier;
-            // token: TokenIdentifier;
+            token: TokenIdentifier;
             price: Price;
         };
 

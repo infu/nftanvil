@@ -289,6 +289,7 @@ export const idlFactory = ({ IDL }) => {
   const Time = IDL.Int;
   const NFTPurchase = IDL.Record({
     'created' : Time,
+    'token' : TokenIdentifier,
     'marketplace' : IDL.Opt(
       IDL.Record({ 'share' : Share, 'address' : AccountIdentifier })
     ),

@@ -53,11 +53,13 @@ type NftEvent =
       token: TokenIdentifier;
       user: AccountIdentifier;
     };
-   price: record {
-            created: Timestamp;
-            price: Price;
-            user: AccountIdentifier;
-          };
+   price:
+    record {
+      created: Timestamp;
+      price: Price;
+      token: TokenIdentifier;
+      user: AccountIdentifier;
+    };
    purchase: NFTPurchase;
    socket:
     record {
@@ -111,6 +113,7 @@ type NFTPurchase =
                     };
    recharge: Balance;
    seller: AccountIdentifier;
+   token: TokenIdentifier;
  };
 type Memo = blob;
 type ListResponse = vec opt Event;

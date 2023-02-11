@@ -118,7 +118,6 @@ const calc_auth = (map, identity, provider, accountNum, prefix) => {
 };
 
 export const user_login_ii = (e) => async (dispatch, getState) => {
-  console.log("Trusted", e.isTrusted);
   let authClient = iiAuthClient;
   // await AuthClient.create({
   //   idleOptions: {

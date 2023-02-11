@@ -59,7 +59,7 @@ shared({caller = _installer}) actor class Class() : async Tr.Interface = this {
   };
 
   system func postupgrade() {
-    _total_tokens := 0;
+    // _total_tokens := 0;
         _cycles_recieved := Cycles.balance();
   };
 

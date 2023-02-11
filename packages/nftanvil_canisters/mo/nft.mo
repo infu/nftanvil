@@ -319,7 +319,7 @@ shared({caller = _installer}) actor class Class() : async Nft.Interface = this {
                             buyer = toUserAID;
                             amount = payment; 
                             seller;
-                            // token = request.token;
+                            token = request.token;
                             recharge = recharge_cost;
                             author = {address=meta.author; share=meta.authorShare};
                             marketplace;

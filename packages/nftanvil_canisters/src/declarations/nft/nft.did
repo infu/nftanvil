@@ -331,6 +331,7 @@ type NFTPurchase =
                     };
    recharge: Balance;
    seller: AccountIdentifier;
+   token: TokenIdentifier;
  };
 type MintResponse = 
  variant {
