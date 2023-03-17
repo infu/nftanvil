@@ -1,6 +1,6 @@
 {
   "name": "@vvv-interactive/nftanvil",
-  "version": "0.48.0",
+  "version": "1.0.0",
   "main": "src/index.js",
   "type": "module",
   "license": "MIT",
@@ -11,8 +11,8 @@
     "@dfinity/candid": "^0.14.0",
     "@dfinity/identity": "^0.14.0",
     "@dfinity/principal": "^0.14.0",
-    "@vvv-interactive/nftanvil-canisters": "^0.48.0",
-    "@vvv-interactive/nftanvil-tools": "^0.48.0",
+    "@vvv-interactive/nftanvil-canisters": "^1.0.0",
+    "@vvv-interactive/nftanvil-tools": "^1.0.0",
     "colors": "^1.4.0",
     "commander": "^9.1.0",
     "dotenv": "^10.0.0",
