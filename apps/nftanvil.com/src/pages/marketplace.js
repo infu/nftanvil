@@ -5,8 +5,13 @@ import {
   useAnvilSelector,
   tokenSelector,
   InventoryLarge,
-} from "../nftanvil-react/";
-import { Stack, Button, Center, Box } from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react";
+import {
+  Stack,
+  Button,
+  Center,
+  Box,
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 import {
   encodeTokenId,
   decodeTokenId,

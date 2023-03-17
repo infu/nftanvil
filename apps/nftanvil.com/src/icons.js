@@ -1,4 +1,4 @@
-import { createIcon } from "@chakra-ui/react";
+import { createIcon } from "@vvv-interactive/nftanvil-react/src/chakra.js";
 
 export const Zap = createIcon({
   displayName: "Zap",

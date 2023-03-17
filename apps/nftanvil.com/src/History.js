@@ -8,7 +8,7 @@ import {
   ButtonGroup,
   Spacer,
   Center,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 import { useEffect, useState } from "react";
 
 import { useInterval } from "react-use";
@@ -19,7 +19,7 @@ import {
   history_load_info,
   history_load,
   HistoryEvent,
-} from "./nftanvil-react/";
+} from "@vvv-interactive/nftanvil-react";
 
 import { PrincipalFromSlot } from "@vvv-interactive/nftanvil-tools/cjs/principal.js";
 

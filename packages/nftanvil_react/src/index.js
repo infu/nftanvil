@@ -46,7 +46,7 @@ import inventoryReducer, {
   load_author,
   tokenSelector,
 } from "./reducers/inventory";
-
+import * as icons from "./icons";
 import dialogReducer, { dialog_open } from "./reducers/dialog";
 
 import { Auth, AuthII } from "./components/Auth";
@@ -140,6 +140,7 @@ export {
   dex_pools,
   dex_add_liquidity_dialog,
 };
+export { icons };
 export { TaskButton };
 export { ft_transfer, ft_all_tokens, ft_mint, ft_fetch_meta, ft_promote };
 export { Auth, AuthII };

@@ -18,7 +18,8 @@ import {
   NFT,
   inv_accept_offer,
   Offers,
-} from "../nftanvil-react";
+  icons,
+} from "@vvv-interactive/nftanvil-react";
 import {
   Stack,
   Button,
@@ -28,7 +29,7 @@ import {
   HStack,
   IconButton,
   VStack,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 
@@ -36,7 +37,7 @@ import { ArrowForwardIcon, AddIcon } from "@chakra-ui/icons";
 
 import { useWindowSize } from "react-use";
 
-import { LayoutOneIcon, LayoutTwoIcon } from "../nftanvil-react/icons";
+const { LayoutOneIcon, LayoutTwoIcon } = icons;
 export const InventoryPage = () => {
   let [count, setCount] = useState(1);
   return (

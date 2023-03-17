@@ -8,7 +8,7 @@ import {
   Stack,
   Center,
   Button,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 
 import {
   useAnvilSelector as useSelector,
@@ -22,7 +22,7 @@ import {
   NftHistory,
   nft_fetch,
   nft_claim_link,
-} from "./nftanvil-react/";
+} from "@vvv-interactive/nftanvil-react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 export const NFTPage = ({ address, code, renderButtons }) => {

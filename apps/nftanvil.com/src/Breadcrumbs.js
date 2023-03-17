@@ -5,7 +5,7 @@ import {
   BreadcrumbSeparator,
   Center,
   Box,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 import { Link } from "react-router-dom";
 
 import useBreadcrumbs from "use-react-router-breadcrumbs";

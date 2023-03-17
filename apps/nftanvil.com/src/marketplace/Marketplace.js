@@ -1,4 +1,7 @@
-import { MarketplaceLoad, MarketplaceFilters } from "../nftanvil-react";
+import {
+  MarketplaceLoad,
+  MarketplaceFilters,
+} from "@vvv-interactive/nftanvil-react";
 
 import React, { useState, useEffect } from "react";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
@@ -15,7 +18,7 @@ import {
   HStack,
   Wrap,
   Center,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 import { CloseIcon } from "@chakra-ui/icons";
 import {
   Stat,
@@ -24,14 +27,14 @@ import {
   StatHelpText,
   StatArrow,
   StatGroup,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 import {
   FormControl,
   FormLabel,
   FormErrorMessage,
   FormHelperText,
-} from "@chakra-ui/react";
-import { Inventory, InventoryLarge } from "../nftanvil-react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+import { Inventory, InventoryLarge } from "@vvv-interactive/nftanvil-react";
 
 import { useNavigate, useParams } from "react-router-dom";
 import { useWindowSize } from "react-use";

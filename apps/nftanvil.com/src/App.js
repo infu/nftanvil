@@ -12,7 +12,7 @@ import {
   user_set_main_account,
   AccountIcon,
   user_logout,
-} from "./nftanvil-react/";
+} from "@vvv-interactive/nftanvil-react";
 
 import { NavLink, Routes, Route, useNavigate } from "react-router-dom";
 import {
@@ -31,7 +31,7 @@ import {
   MenuOptionGroup,
   MenuDivider,
   IconButton,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 import {
   AddIcon,
   HamburgerIcon,

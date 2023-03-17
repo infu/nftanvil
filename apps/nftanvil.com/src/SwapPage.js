@@ -22,7 +22,7 @@ import {
   useFT,
   dialog_open,
   FTI,
-} from "./nftanvil-react/";
+} from "@vvv-interactive/nftanvil-react";
 
 import * as AccountIdentifier from "@vvv-interactive/nftanvil-tools/cjs/accountidentifier.js";
 
@@ -34,7 +34,7 @@ import {
   Center,
   Text,
   Stack,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 
 import {
   Table,
@@ -46,7 +46,7 @@ import {
   Td,
   TableCaption,
   TableContainer,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 
 export const SwapPage = () => {
   const dispatch = useDispatch();

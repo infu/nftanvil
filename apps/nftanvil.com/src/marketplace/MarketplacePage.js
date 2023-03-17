@@ -10,12 +10,12 @@ import {
   Stack,
   Flex,
   Spacer,
-} from "@chakra-ui/react";
+} from "@vvv-interactive/nftanvil-react/src/chakra.js";
 import { Routes, Route, Link, Outlet } from "react-router-dom";
 import { useWindowSize } from "react-use";
 
 import { ArrowForwardIcon } from "@chakra-ui/icons";
-import { NFT } from "../nftanvil-react/";
+import { NFT } from "@vvv-interactive/nftanvil-react";
 export const MarketplaceRoute = () => {
   return <Outlet />;
 };
