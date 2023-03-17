@@ -29,7 +29,7 @@ import {
   HStack,
   IconButton,
   VStack,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { tokenToText } from "@vvv-interactive/nftanvil-tools/cjs/token.js";
 

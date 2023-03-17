@@ -1,10 +1,4 @@
-import {
-  Box,
-  useColorModeValue,
-  Stack,
-  Text,
-  Image,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+import { Box, useColorModeValue, Stack, Text, Image } from "@chakra-ui/react";
 import anvillogo from "./assets/anvillogo.svg";
 
 export const Logo = () => {

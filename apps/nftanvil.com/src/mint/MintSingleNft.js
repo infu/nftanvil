@@ -15,12 +15,7 @@ import {
   nft_mint_quote,
 } from "@vvv-interactive/nftanvil-react";
 
-import {
-  Button,
-  Box,
-  IconButton,
-  Tooltip,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+import { Button, Box, IconButton, Tooltip } from "@chakra-ui/react";
 
 import { useWindowSize, useDebounce } from "react-use";
 
@@ -37,7 +32,7 @@ import {
   Grid,
   Tag,
   Image,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 
 import {
   NumberInput,
@@ -48,20 +43,20 @@ import {
   Stack,
   Center,
   Spinner,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import {
   Slider,
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import { SmallCloseIcon, InfoOutlineIcon, CheckIcon } from "@chakra-ui/icons";
 
 import { AnvilIcon } from "../icons";
 
-import { Select } from "@vvv-interactive/nftanvil-react/src/chakra.js";
+import { Select } from "@chakra-ui/react";
 import { Formik, Field, Form, FieldArray } from "formik";
-import { Switch } from "@vvv-interactive/nftanvil-react/src/chakra.js";
+import { Switch } from "@chakra-ui/react";
 import { toast } from "react-toastify";
 
 import {

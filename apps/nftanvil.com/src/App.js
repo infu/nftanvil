@@ -31,7 +31,7 @@ import {
   MenuOptionGroup,
   MenuDivider,
   IconButton,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import {
   AddIcon,
   HamburgerIcon,

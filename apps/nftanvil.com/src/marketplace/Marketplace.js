@@ -18,7 +18,7 @@ import {
   HStack,
   Wrap,
   Center,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import { CloseIcon } from "@chakra-ui/icons";
 import {
   Stat,
@@ -27,13 +27,13 @@ import {
   StatHelpText,
   StatArrow,
   StatGroup,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import {
   FormControl,
   FormLabel,
   FormErrorMessage,
   FormHelperText,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import { Inventory, InventoryLarge } from "@vvv-interactive/nftanvil-react";
 
 import { useNavigate, useParams } from "react-router-dom";

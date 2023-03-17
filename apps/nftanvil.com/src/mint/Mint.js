@@ -1,10 +1,4 @@
-import {
-  Box,
-  Button,
-  Center,
-  HStack,
-  Wrap,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+import { Box, Button, Center, HStack, Wrap } from "@chakra-ui/react";
 import { Routes, Route, Link, Outlet, NavLink } from "react-router-dom";
 const beta = window.localStorage.getItem("beta") || false;
 

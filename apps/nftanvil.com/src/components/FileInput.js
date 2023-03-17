@@ -1,11 +1,6 @@
 import React from "react";
 
-import {
-  Button,
-  Box,
-  Center,
-  Stack,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+import { Button, Box, Center, Stack } from "@chakra-ui/react";
 import { UploadIcon } from "../icons";
 export const FileInput = (props) => {
   const inputRef = React.createRef();

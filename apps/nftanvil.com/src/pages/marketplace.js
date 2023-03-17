@@ -6,12 +6,7 @@ import {
   tokenSelector,
   InventoryLarge,
 } from "@vvv-interactive/nftanvil-react";
-import {
-  Stack,
-  Button,
-  Center,
-  Box,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+import { Stack, Button, Center, Box } from "@chakra-ui/react";
 import {
   encodeTokenId,
   decodeTokenId,

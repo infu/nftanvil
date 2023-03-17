@@ -10,7 +10,7 @@ import {
   Stack,
   Flex,
   Spacer,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import { Routes, Route, Link, Outlet } from "react-router-dom";
 import { useWindowSize } from "react-use";
 

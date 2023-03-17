@@ -8,7 +8,7 @@ import {
   ButtonGroup,
   Spacer,
   Center,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
 import { useInterval } from "react-use";

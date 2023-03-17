@@ -8,7 +8,7 @@ import {
   Stack,
   Center,
   Button,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 
 import {
   useAnvilSelector as useSelector,

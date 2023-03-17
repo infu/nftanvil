@@ -34,7 +34,7 @@ import {
   Center,
   Text,
   Stack,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 
 import {
   Table,
@@ -46,7 +46,7 @@ import {
   Td,
   TableCaption,
   TableContainer,
-} from "@vvv-interactive/nftanvil-react/src/chakra.js";
+} from "@chakra-ui/react";
 
 export const SwapPage = () => {
   const dispatch = useDispatch();
