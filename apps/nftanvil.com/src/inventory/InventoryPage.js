@@ -17,6 +17,7 @@ import {
   FTAbstract,
   NFT,
   inv_accept_offer,
+  Offers,
 } from "../nftanvil-react";
 import {
   Stack,
@@ -78,6 +79,8 @@ export const InventorySingle = () => {
           navigate("/" + id);
         }}
       />
+
+      <Offers address={address} />
     </Box>
   );
 };

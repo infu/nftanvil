@@ -162,7 +162,7 @@ export const user_login = () => async (dispatch, getState) => {
   // let anonymous = !(await authClient.isAuthenticated());
 
   let identity = await athene.authenticate({
-    host: "https://t2o37-7qaaa-aaaam-aav7a-cai.raw.ic0.app",
+    host: "https://authastic.com",
     mode: "dark", // or "light"
     restore: false, // restore session automatically without prompting user (if user is already logged)
   });

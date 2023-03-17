@@ -12,7 +12,10 @@ import {
 import debounce from "lodash/debounce";
 import { restoreVar } from "../util";
 import { nft_transfer } from "./nft";
-import { BigIntToString } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
+import {
+  BigIntToString,
+  SerializableIC,
+} from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 import { ft_transfer } from "./ft";
 import { pwrCanister } from "@vvv-interactive/nftanvil-canisters/cjs/pwr.js";
 import { dialog_open } from "./dialog";
@@ -246,7 +249,7 @@ export const inv_offer_info = (code) => async (dispatch, getState) => {
 };
 
 const inv_send_all =
-  ({ from_aid, to_aid, tokens }) =>
+  ({ from_aid, to_aid, tokens, internal = false }) =>
   async (dispatch, getState) => {
     let s = getState();
     console.log("inv_send_all", { from_aid, to_aid, tokens });
@@ -286,6 +289,7 @@ const inv_send_all =
             address: from_aid,
             to: to_aid,
             amount: BigInt(token.bal) + fee,
+            internal,
           })
         );
       }
@@ -427,6 +431,84 @@ const invConvertBack = (inv) =>
     )
   );
 
+export const inv_container_unlock =
+  ({ address, cid }) =>
+  async (dispatch, getState) => {
+    const s = getState();
+
+    // let subaccount = [
+    //   AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+    //     null,
+    // ].filter(Boolean);
+
+    let can = PrincipalFromSlot(
+      s.ic.anvil.space,
+      AccountIdentifier.TextToSlot(address, s.ic.anvil.account)
+    );
+
+    let acc = accountCanister(can, {
+      agentOptions: authentication.getAgentOptions(address),
+    });
+
+    let t = await acc.container_unlock(
+      AccountIdentifier.TextToArray(address),
+      Number(cid)
+    );
+
+    if (!("ok" in t)) throw t.err;
+  };
+
+export const inv_containers_list =
+  ({ address }) =>
+  async (dispatch, getState) => {
+    const s = getState();
+
+    let subaccount = [
+      AccountIdentifier.TextToArray(s.user.accounts[address].subaccount) ||
+        null,
+    ].filter(Boolean);
+
+    let can = PrincipalFromSlot(
+      s.ic.anvil.space,
+      AccountIdentifier.TextToSlot(address, s.ic.anvil.account)
+    );
+
+    let acc = accountCanister(can, {
+      agentOptions: authentication.getAgentOptions(address),
+    });
+
+    let list = await acc.container_list(subaccount);
+    list = SerializableIC(list);
+    console.log(list);
+
+    const transform_tokens = (list) =>
+      list.map((tk) => {
+        let tp = Object.keys(tk)[0];
+        let obj = tk[tp];
+
+        if (tp === "nft") return { id: tokenToText(obj.id), t: TYPE_NFT };
+        if (tp === "ft") return { id: obj.id, bal: obj.balance, t: TYPE_FT };
+        return null;
+      });
+
+    list = list.map(([id, info]) => {
+      let { requirements, tokens, unlocked, verifications } = info;
+      return [
+        id,
+        {
+          requirements: transform_tokens(requirements),
+          tokens: transform_tokens(tokens),
+
+          unlocked,
+          verifications,
+        },
+      ];
+    });
+
+    console.log(list);
+    return list;
+  };
+
 export const inv_create_offer =
   ({ from_aid, to_aid }) =>
   async (dispatch, getState) => {
@@ -471,6 +553,7 @@ export const inv_create_offer =
         from_aid: from_aid,
         to_aid: AccountIdentifier.ArrayToText(c_aid),
         tokens: inv_two.content,
+        internal: true,
       })
     );
 

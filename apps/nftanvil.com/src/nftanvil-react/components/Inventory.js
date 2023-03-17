@@ -11,6 +11,7 @@ import {
   IconButton,
   Button,
   useDimensions,
+  HStack,
 } from "@chakra-ui/react";
 import { SelectIcon } from "../icons";
 
@@ -20,6 +21,7 @@ import {
   ChevronRightIcon,
 } from "@chakra-ui/icons";
 import { AccountIcon } from "./AccountIcon";
+import { ArrowForwardIcon } from "@chakra-ui/icons";
 
 import { FT } from "./FT";
 import { NFTLarge, NFT } from "./NFT";
@@ -34,9 +36,14 @@ import {
   useAnvilDispatch as useDispatch,
   dialog_open,
   user_set_main_account,
+  FTAbstract,
+  TaskButton,
+  task_run,
+  inv_container_unlock,
 } from "../index.js";
+import { SerializableIC } from "@vvv-interactive/nftanvil-tools/cjs/data.js";
 
-import { load_inventory } from "../reducers/inventory";
+import { load_inventory, inv_containers_list } from "../reducers/inventory";
 import { user_login, user_logout, anvil_ready } from "../reducers/user";
 import styled from "@emotion/styled";
 import { TX, ACC, NFTA, HASH, PWR, ICP } from "./Code";
@@ -204,6 +211,116 @@ const InventoryGrid = ({
           })}
       </Wrap>
     </InventoryBox>
+  );
+};
+
+export const OfferOne = ({ cid, offer, address }) => {
+  const task_id = "cancel_offer_" + cid;
+
+  let dispatch = useDispatch();
+
+  const onCancel = () => {
+    dispatch(
+      task_run(
+        task_id,
+        async () => {
+          await dispatch(
+            inv_container_unlock({
+              address,
+              cid,
+            })
+          );
+        },
+        { successMsg: "Success!" }
+      )
+    );
+  };
+
+  const displaySide = (tokens) => {
+    return tokens.map((token, idx) => {
+      if (token.t === 0) {
+        return <NFT key={idx} token={{ id: token.id }} />;
+      } else if (token.t === 1) {
+        return (
+          <FTAbstract
+            key={idx}
+            id={Number(token.id).toString()}
+            bal={Number(token.bal)}
+          />
+        );
+      }
+    });
+  };
+
+  return (
+    <HStack>
+      <HStack>{displaySide(offer.tokens)}</HStack>
+      <ArrowForwardIcon />
+      <HStack>{displaySide(offer.requirements)}</HStack>
+      <TaskButton
+        task_id={task_id}
+        size="sm"
+        colorScheme="gray"
+        onClick={onCancel}
+      >
+        Cancel
+      </TaskButton>
+    </HStack>
+  );
+};
+
+export const Offers = ({ address }) => {
+  const dispatch = useDispatch();
+  const [list, setList] = useState([]);
+
+  useEffect(() => {
+    dispatch(inv_containers_list({ address })).then(setList);
+  }, [address]);
+
+  if (!list.length) return null;
+
+  return (
+    <Stack mt="5">
+      <Box color="gray.500" pl="4">
+        Your offers:
+      </Box>
+      {list.map(([id, info]) => {
+        return (
+          <Box
+            key={id}
+            p={2}
+            w="98%"
+            sx={{
+              boxSizing: "border-box",
+              border: "3px solid #111",
+              borderRadius: "10px",
+            }}
+          >
+            <OfferOne offer={info} cid={id} address={address} />
+            {/* <InventoryGrid
+              key={"offer-tokens-" + id}
+              bg={itemgrid_tmp}
+              // address={tmp_address}
+              pageFrom={0}
+              rows={2}
+              // onClickNft={onClickNft}
+              cols={5}
+              items={info.tokens}
+            />
+            <InventoryGrid
+              key={"offer-requirements-" + id}
+              bg={itemgrid_tmp}
+              // address={tmp_address}
+              pageFrom={0}
+              rows={2}
+              // onClickNft={onClickNft}
+              cols={5}
+              items={info.requirements}
+            /> */}
+          </Box>
+        );
+      })}
+    </Stack>
   );
 };
 

@@ -275,7 +275,6 @@ export const FTImage = ({ id, style = {} }) => {
 
 export const FTAbstract = ({ id, aid, bal, onClick }) => {
   const dispatch = useDispatch();
-  console.log("FTAbstract", { id, bal });
   const meta = useFT(id);
 
   const [mouseOver, setMouseOver] = useState(false);

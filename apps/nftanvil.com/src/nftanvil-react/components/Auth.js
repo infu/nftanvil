@@ -29,7 +29,7 @@ export function Auth() {
       colorScheme="gray"
       onClick={() => dispatch(user_login())}
     >
-      Athena Identity
+      Authastic
     </Button>
   ) : null;
 }

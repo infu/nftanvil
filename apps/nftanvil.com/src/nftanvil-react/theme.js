@@ -21,16 +21,17 @@ export const theme = extendTheme({
           color: mode("gray.800", "whiteAlpha.900")(props),
           // bg: mode("gray.400", "gray.800")(props),
           lineHeight: "base",
+          bg: "transparent",
           // bg: "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(40, 23, 32, 1) 100%)",
+        },
+        html: {
+          overflow: "-moz-scrollbars-vertical",
+          overflowY: "scroll",
           bg: mode(
             "linear-gradient(153deg, #d5d1cd 0%, #b2b3ba 100%)",
             "linear-gradient(153deg,rgba(27, 32, 43, 1) 0%,rgba(40, 23, 32, 1) 100%)"
           )(props),
           backgroundAttachment: "fixed",
-        },
-        html: {
-          overflow: "-moz-scrollbars-vertical",
-          overflowY: "scroll",
         },
         "*::placeholder": {
           color: mode("gray.400", "whiteAlpha.400")(props),

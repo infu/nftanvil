@@ -1313,11 +1313,11 @@ export const NFTContent = ({ meta, preset = "fullscreen" }) => {
 
   let slib = {
     fullscreen: {
-      maxW: "85vw",
+      maxW: "95vw",
       maxH: "85vh",
       mb: "5vh",
       mt: "1vh",
-      w: "85vw",
+      w: "95vw",
       h: "auto",
       objectFit: "contain",
       borderRadius: "6px",

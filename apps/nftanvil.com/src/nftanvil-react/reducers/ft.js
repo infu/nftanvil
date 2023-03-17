@@ -92,7 +92,7 @@ export const ft_promote =
   };
 
 export const ft_transfer =
-  ({ id, address, to, amount, memo = [] }) =>
+  ({ id, address, to, amount, memo = [], internal = false }) =>
   async (dispatch, getState) => {
     let s = getState();
     let subaccount = [
@@ -127,7 +127,19 @@ export const ft_transfer =
     console.log(req);
     let trez;
     try {
-      trez = await pwr.transfer(req);
+      if (Number(id) === 1 && !internal) {
+        // ICP
+        // ICP has to be sent unwrapped or external to Anvil addresses won't get it
+        trez = await pwr.pwr_withdraw({
+          from: { address: AccountIdentifier.TextToArray(address) },
+          to: { address: AccountIdentifier.TextToArray(to) },
+          subaccount: subaccount,
+          amount: Number(real_amount),
+        });
+      } else {
+        // Other tokens
+        trez = await pwr.transfer(req);
+      }
     } catch (e) {
       console.log("pwr.transfer", e);
       throw e;

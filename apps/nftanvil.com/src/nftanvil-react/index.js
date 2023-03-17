@@ -35,6 +35,8 @@ import { TouchBackend } from "react-dnd-touch-backend";
 
 import { DialogHandler } from "./components/DialogHandler";
 import inventoryReducer, {
+  inv_container_unlock,
+  inv_containers_list,
   inv_accept_offer,
   inv_offer_info,
   inv_send_temporary,
@@ -104,7 +106,7 @@ import taskReducer, { task_start, task_end, task_run } from "./reducers/task";
 import { TaskButton } from "./components/TaskButton";
 import { ColorModeScript } from "@chakra-ui/react";
 import { ToastHandler } from "./components/ToastHandler";
-import { Inventory } from "./components/Inventory";
+import { Inventory, Offers } from "./components/Inventory";
 
 import { InventoryLarge } from "./components/InventoryLarge";
 
@@ -128,7 +130,7 @@ export { useDexPools, useFT, useInventoryToken };
 export { InventoryLarge };
 export { FTSelect, FT, FTMeta, FTImage, FTAbstract };
 export { TX, ICP, ANV, ACC, PRI, NFTA, FTI, HASH };
-export { Inventory };
+export { Inventory, Offers };
 export { ui_pro_set };
 export {
   dex_create_pool,
@@ -150,6 +152,8 @@ export { toast_create, toast_update };
 export { dialog_open };
 export { AccountIcon };
 export {
+  inv_container_unlock,
+  inv_containers_list,
   inv_accept_offer,
   inv_offer_info,
   inv_clear_temporary,
