@@ -20,8 +20,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "xwatch": "babel  -d cjs src --copy-files --watch --source-maps inline",
-    "xbuild": "babel -d cjs src --copy-files --source-maps inline"
+    "watch": "babel  -d cjs src --copy-files --watch --source-maps inline",
+    "build": "babel -d cjs src --copy-files --source-maps inline"
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.16.7",
