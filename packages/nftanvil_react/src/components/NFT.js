@@ -45,7 +45,7 @@ import { verify_domain, verify_domain_twitter } from "../reducers/verify";
 import { NftHistory } from "./History";
 import { Spinner } from "@chakra-ui/react";
 import { LoginRequired } from "./LoginRequired";
-import { toast } from "react-toastify";
+
 import {
   useAnvilSelector as useSelector,
   useAnvilDispatch as useDispatch,

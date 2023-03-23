@@ -20,12 +20,12 @@
     ]
   },
   "dependencies": {
-    "@dfinity/agent": "^0.14.0",
-    "@dfinity/auth-client": "^0.14.0",
-    "@dfinity/authentication": "^0.14.0",
-    "@dfinity/candid": "^0.14.0",
-    "@dfinity/identity": "^0.14.0",
-    "@dfinity/principal": "^0.14.0",
+    "@dfinity/agent": "0.14.0",
+    "@dfinity/auth-client": "0.14.0",
+    "@dfinity/authentication": "0.14.0",
+    "@dfinity/candid": "0.14.0",
+    "@dfinity/identity": "0.14.0",
+    "@dfinity/principal": "0.14.0",
     "base-x": "^3.0.9"
   },
   "gitHead": "67a309187a4c57cb5444a3992ac48df916986680"

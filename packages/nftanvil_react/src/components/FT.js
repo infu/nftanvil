@@ -257,10 +257,10 @@ export const FTMeta = ({ id, bal, meta }) => {
             "{capitalize(meta.desc)}"
           </Text>
         ) : null}
-        <Text key={"ts"} color={"white"} fontSize="14px">
+        {/* <Text key={"ts"} color={"white"} fontSize="14px">
           Total supply:{" "}
           {AccountIdentifier.placeDecimal(meta.total_supply, meta.decimals, 0)}
-        </Text>
+        </Text> */}
       </Stack>
     </Box>
   );
