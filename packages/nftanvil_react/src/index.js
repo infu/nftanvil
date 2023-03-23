@@ -22,7 +22,7 @@ import historyReducer, {
 import { NftHistory, HistoryEvent } from "./components/History";
 import { LoginRequired } from "./components/LoginRequired";
 import { ChakraProvider } from "@chakra-ui/react";
-import identities from "../identities";
+import identities from "./identities.js";
 
 import {
   Provider,
