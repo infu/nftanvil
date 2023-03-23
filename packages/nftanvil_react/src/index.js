@@ -22,6 +22,7 @@ import historyReducer, {
 import { NftHistory, HistoryEvent } from "./components/History";
 import { LoginRequired } from "./components/LoginRequired";
 import { ChakraProvider } from "@chakra-ui/react";
+import identities from "../identities";
 
 import {
   Provider,
@@ -166,7 +167,7 @@ export {
   verify_domain_twitter,
   tokenSelector,
 };
-
+export { identities };
 export {
   user_login,
   user_login_ii,
