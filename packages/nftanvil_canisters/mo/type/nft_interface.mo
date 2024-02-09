@@ -840,23 +840,23 @@ module {
     //(Metadata
     public type Metadata = {
 
-        domain: ?DomainName;
-        name: ?ItemName;
+        domain: ?DomainName; //>>> variant, - authority
+        name: ?ItemName; //>>> these should be in attributes
         lore: ?ItemLore;
         quality: Quality;
         transfer: ItemTransfer;
         author: AccountIdentifier;
-        authorShare: Share; // min 0 ; max 10000 - which is 100%
-        content: ?Content;
+        authorShare: Share; // min 0 ; max 10000 - which is 100%   >>> Royalties
+        content: ?Content; //>>> array of variants - video, text, md, etc
         thumb: Content; // may overwrite class
         entropy: Blob;
         created: Nat32; // in minutes
-        attributes: Attributes;
+        attributes: Attributes; // >>> values can be also strings or numbers
         tags:Tags;
         custom: ?CustomData;
-        secret: Bool;
-        rechargeable: Bool;
-
+        secret: Bool; //>>> this needs to use vetKeys
+        rechargeable: Bool; 
+        //>>> Add inscription (can be done once)
         // Idea: Have maturity rating
     };
 
@@ -888,7 +888,6 @@ module {
         custom: ?CustomData;
         customVar: ?CustomVar;
         authorShare: Share;
-        // price: Price;
         rechargeable: Bool;
     };
 
@@ -916,16 +915,17 @@ module {
 
     public type Metavars = {
         var boundUntil: ?Nat32; // in minutes
-        var cooldownUntil: ?Nat32; // in minutes
-        var sockets: Sockets;
-        var price: Price;
+        var cooldownUntil: ?Nat32; // in minutes   //>>> Need multiple cooldowns. Principal.Key->Cooldown 
+        var sockets: Sockets; //>>> Remove sockets can be replaced with nft ownership of ledger assets
+        var price: Price; //>>> Prices should be in any fungible token
         var pwrStorage : Nat64;
         var pwrOps : Nat64;
         var ttl : ?Nat32; // time to live
-        var history : [Blob];
-        var allowance : ?Principal;
+        var history : [Blob]; // Last N transactions
+        var allowance : ?Principal; //>>> Get rid of this
         var customVar : ?CustomVar; //256bit / 32bytes
         var lastTransfer : Nat32; // in minutes 
+        
     };
 
     public type MetavarsFrozen = {

@@ -29,6 +29,8 @@ export const NFTPage = ({ address, code, renderButtons }) => {
   let param = useParams();
   const id = "nfta" + param.id;
 
+  console.log("nfta", { id });
+
   const meta = useSelector((state) => state.nft[id]);
   // s.ic.anvil.space
   const [claimed, setClaimed] = useState(false);

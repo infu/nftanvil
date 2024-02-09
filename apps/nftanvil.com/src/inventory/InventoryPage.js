@@ -49,7 +49,6 @@ export const InventoryPage = () => {
             <IconButton icon={<LayoutTwoIcon />} onClick={() => setCount(2)} />
           </HStack>
         </Center>
-        {count === 1 ? "HEY" : "YO"}
         {count === 1 ? <InventorySingle /> : <InventoryDouble />}
       </Stack>
     </Center>
